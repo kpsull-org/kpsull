@@ -1,10 +1,10 @@
-model User {
-  id        Int      @id @default(autoincrement())
+// model User {
+//   id        Int      @id @default(autoincrement())
 
-  email     String   @unique
-  name      String?
-  role      Role     @default(USER)
+//   email     String   @unique
+//   name      String?
+//   role      Role     @default(USER)
 
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
-}
+//   createdAt              DateTime            @default(now())
+//   updatedAt              DateTime            @updatedAt
+// }
