@@ -1,0 +1,34 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+build
+.next
+out
+coverage
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# Misc
+.DS_Store
+*.pem
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Prisma
+prisma/migrations
+
+# Test results
+playwright-report
+test-results

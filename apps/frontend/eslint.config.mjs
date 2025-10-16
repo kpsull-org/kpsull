@@ -20,6 +20,13 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      "@next/next/no-html-link-for-pages": ["error", "src/app"],
+    },
+    files: ["**/*.ts", "**/*.tsx"],
+    ignores: ["src/app/not-found.tsx", "src/app/error.tsx", "src/app/global-error.tsx"],
+  },
 ];
 
 export default eslintConfig;

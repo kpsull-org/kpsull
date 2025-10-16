@@ -1,8 +1,6 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-export const dynamic = 'force-dynamic'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function Home() {
   return (
@@ -24,9 +22,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">
-              Bienvenue sur KpSull
-            </h2>
+            <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">Bienvenue sur KpSull</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Plateforme de connexion entre créateurs et clients avec authentification sécurisée
             </p>
@@ -36,9 +32,7 @@ export default function Home() {
             <Card>
               <CardHeader>
                 <CardTitle>Fonctionnalités</CardTitle>
-                <CardDescription>
-                  Ce qui est déjà disponible
-                </CardDescription>
+                <CardDescription>Ce qui est déjà disponible</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm">
@@ -57,9 +51,7 @@ export default function Home() {
             <Card>
               <CardHeader>
                 <CardTitle>Prochaines étapes</CardTitle>
-                <CardDescription>
-                  À développer
-                </CardDescription>
+                <CardDescription>À développer</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-muted-foreground">
@@ -75,14 +67,10 @@ export default function Home() {
           </div>
 
           <div className="text-center space-y-4 pt-8">
-            <p className="text-muted-foreground">
-              Prêt à commencer ?
-            </p>
+            <p className="text-muted-foreground">Prêt à commencer ?</p>
             <div className="flex gap-4 justify-center">
               <Link href="/auth/register">
-                <Button size="lg">
-                  Créer un compte gratuit
-                </Button>
+                <Button size="lg">Créer un compte gratuit</Button>
               </Link>
               <Link href="/auth/login">
                 <Button size="lg" variant="outline">

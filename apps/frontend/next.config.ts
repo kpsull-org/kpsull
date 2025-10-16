@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -10,8 +10,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Skip static page generation errors during build
-  staticPageGenerationTimeout: 1000,
-};
+  reactStrictMode: true,
+  // Skip static page generation for now due to Next.js 15 bug
+  staticPageGenerationTimeout: 0,
+}
 
-export default nextConfig;
+export default nextConfig
