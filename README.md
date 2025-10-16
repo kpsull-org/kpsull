@@ -1,135 +1,230 @@
-# Turborepo starter
+# KpSull - Plateforme Créateurs & Clients
 
-This Turborepo starter is maintained by the Turborepo core team.
+> Plateforme moderne de connexion entre créateurs de contenu et clients avec authentification sécurisée et gestion d'abonnements.
 
-## Using this example
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-black)](https://nextjs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10.x-red)](https://nestjs.com/)
+[![Tests](https://img.shields.io/badge/Tests-23%20passing-success)](/)
 
-Run the following command:
+## Documentation IA
 
-```sh
-npx create-turbo@latest
+Pour une documentation complète du projet, de l'architecture et des bonnes pratiques, consultez **[CLAUDE.md](./CLAUDE.md)** qui contient :
+
+- Architecture monorepo détaillée
+- Principes SOLID avec exemples TypeScript
+- Méthodologie TDD (Red-Green-Refactor)
+- Conventions de code et Git workflow
+- Stack technique et dépendances
+
+## Démarrage rapide
+
+### Prérequis
+
+- Node.js 20+
+- PostgreSQL 16+
+- npm/pnpm/yarn
+
+### Installation
+
+```bash
+# Cloner le projet
+git clone <repository-url>
+cd kpsull
+
+# Installer les dépendances
+npm install
+
+# Configurer les variables d'environnement
+cp apps/frontend/.env.example apps/frontend/.env
+cp apps/backend/.env.example apps/backend/.env
+
+# Configurer la base de données
+cd apps/backend
+npx prisma migrate dev
+npx prisma generate
+cd ../..
 ```
 
-## What's inside?
+### Lancement en développement
 
-This Turborepo includes the following packages/apps:
+```bash
+# Lancer tous les projets (frontend + backend)
+npm run dev
 
-### Apps and Packages
+# Ou lancer séparément
+npm run dev --filter=frontend  # Frontend sur http://localhost:3000
+npm run dev --filter=backend   # Backend sur http://localhost:3001
+```
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Structure du monorepo
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+```
+kpsull/
+├── apps/
+│   ├── frontend/          # Next.js 15 + TypeScript + Tailwind 4
+│   │   ├── src/
+│   │   │   ├── app/       # App Router (pages)
+│   │   │   ├── components/# Composants React + shadcn/ui
+│   │   │   ├── lib/       # Utilities (BetterAuth, etc.)
+│   │   │   └── types/     # Types TypeScript
+│   │   ├── e2e/           # Tests Playwright
+│   │   └── vitest.config.ts
+│   │
+│   └── backend/           # NestJS 10 + Prisma + PostgreSQL
+│       ├── src/
+│       │   ├── auth/      # Module d'authentification
+│       │   ├── users/     # Module utilisateurs
+│       │   └── prisma/    # Prisma client
+│       └── test/          # Tests E2E
+│
+├── packages/
+│   ├── eslint-config/     # Configurations ESLint partagées
+│   ├── typescript-config/ # Configurations TypeScript partagées
+│   └── utils/             # Utilitaires partagés
+│
+├── .github/
+│   └── workflows/         # CI/CD GitHub Actions
+│
+├── CLAUDE.md              # Documentation complète pour IA
+├── sonar-project.properties
+├── commitlint.config.js
+└── turbo.json
+```
 
-### Utilities
+## Stack technique
 
-This Turborepo has some additional tools already setup for you:
+### Frontend
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+- **Framework**: Next.js 15 (App Router)
+- **Langage**: TypeScript 5
+- **Styling**: Tailwind CSS 4
+- **Components**: shadcn/ui + Radix UI
+- **Auth**: BetterAuth (JWT + OAuth)
+- **Forms**: React Hook Form + Zod
+- **Tests**: Vitest + Playwright
+
+### Backend
+
+- **Framework**: NestJS 10
+- **Langage**: TypeScript 5
+- **Database**: PostgreSQL 16 + Prisma ORM
+- **Auth**: JWT + BetterAuth
+- **Tests**: Vitest + Supertest
+
+### DevOps
+
+- **Monorepo**: Turborepo
+- **CI/CD**: GitHub Actions
+- **Quality**: SonarQube, ESLint, Prettier
+- **Git Hooks**: Husky + Commitlint
+
+## Scripts disponibles
+
+### Développement
+
+```bash
+npm run dev              # Lancer tous les projets
+npm run dev --filter=frontend
+npm run dev --filter=backend
+```
+
+### Tests
+
+```bash
+npm run test             # Tous les tests unitaires
+npm run test:coverage    # Tests avec couverture
+npm run test:e2e         # Tests E2E (Playwright + Supertest)
+npm run test:all         # Unit + E2E
+```
+
+### Qualité
+
+```bash
+npm run quality          # Lint + format check + coverage
+npm run quality:fix      # Lint fix + format
+npm run lint             # ESLint
+npm run format           # Prettier
+```
 
 ### Build
 
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npm run build            # Build tous les projets
+npm run build --filter=frontend
+npm run build --filter=backend
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+> **Note**: Le build Next.js 15.5.5 a un problème connu avec la pré-génération de la page 404. Voir [apps/frontend/BUILD_KNOWN_ISSUES.md](./apps/frontend/BUILD_KNOWN_ISSUES.md). Le mode développement fonctionne parfaitement.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+## Conventions Git
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+Ce projet utilise **Conventional Commits** avec Commitlint :
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```bash
+feat: ajout d'une nouvelle fonctionnalité
+fix: correction d'un bug
+docs: modification de documentation
+style: formatage du code
+refactor: refactoring sans changement fonctionnel
+test: ajout ou modification de tests
+chore: tâches de maintenance
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Les commits sont validés automatiquement via Husky hooks.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+## Tests et TDD
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+Le projet suit une approche **Test-Driven Development** stricte :
 
-### Remote Caching
+1. **Red**: Écrire un test qui échoue
+2. **Green**: Écrire le code minimal pour passer le test
+3. **Refactor**: Améliorer le code en gardant les tests verts
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### Couverture de code
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+Seuils minimums (80%) :
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+- Lines: 80%
+- Functions: 80%
+- Branches: 80%
+- Statements: 80%
 
-```
-cd my-turborepo
+### Tests actuels
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+- ✅ 23 tests frontend (Vitest + React Testing Library)
+- ✅ Tests backend E2E (Supertest)
+- ✅ Tests E2E frontend (Playwright)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+## Fonctionnalités
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Implémenté
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+- ✅ Authentification Email/Password
+- ✅ OAuth Google & Apple (configuration)
+- ✅ Gestion des rôles (CLIENT/CREATOR)
+- ✅ Interface utilisateur moderne
+- ✅ Tests automatisés (23 tests)
+- ✅ CI/CD GitHub Actions
+- ✅ Quality gates (SonarQube, ESLint, Prettier)
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+### Roadmap
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+- [ ] Plans payants pour créateurs (3 formules)
+- [ ] Dashboard créateur avancé
+- [ ] Système de paiement
+- [ ] Gestion de contenu
+- [ ] Analytics et statistiques
+- [ ] Messagerie entre utilisateurs
 
-## Useful Links
+## Documentation complémentaire
 
-Learn more about the power of Turborepo:
+- **[CLAUDE.md](./CLAUDE.md)**: Documentation complète pour IA et développeurs
+- **[apps/frontend/BUILD_KNOWN_ISSUES.md](./apps/frontend/BUILD_KNOWN_ISSUES.md)**: Problèmes connus de build
+- **[Turborepo Docs](https://turborepo.com/docs)**: Documentation Turborepo
+- **[Next.js Docs](https://nextjs.org/docs)**: Documentation Next.js
+- **[NestJS Docs](https://docs.nestjs.com/)**: Documentation NestJS
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+## Support
+
+Pour toute question ou problème, veuillez ouvrir une issue sur GitHub.
