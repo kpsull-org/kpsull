@@ -1,6 +1,6 @@
-import { betterAuth } from "better-auth"
-import { prismaAdapter } from "better-auth/adapters/prisma"
-import { PrismaClient } from "@prisma/client"
+import { betterAuth } from 'better-auth'
+import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { PrismaClient } from '@prisma/client'
 
 // Lazy initialization of Prisma
 let prisma: PrismaClient | null = null
@@ -13,10 +13,10 @@ function getPrisma() {
 }
 
 export const auth = betterAuth({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   secret: process.env.BETTER_AUTH_SECRET as string,
   database: prismaAdapter(getPrisma(), {
-    provider: "postgresql",
+    provider: 'postgresql',
   }),
   emailAndPassword: {
     enabled: true,
@@ -29,6 +29,12 @@ export const auth = betterAuth({
       enabled: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
     },
   },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['google'],
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 jours
     updateAge: 60 * 60 * 24, // 1 jour
@@ -36,9 +42,9 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: {
-        type: "string",
+        type: 'string',
         required: false,
-        defaultValue: "USER",
+        defaultValue: 'USER',
       },
     },
   },

@@ -1,45 +1,49 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { signUp, signIn } from "@/lib/auth-client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { signUp, signIn } from '@/lib/auth-client'
+import { Button } from '@/components/ui/button'
+import { FormInput } from '@/components/ui/form-input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { GoogleIcon } from '@/components/icons/GoogleIcon'
 
 export const dynamic = 'force-dynamic'
 
-type AccountType = "USER" | "CREATOR" | null
+type AccountType = 'USER' | 'CREATOR' | null
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [step, setStep] = useState<"choose" | "form">("choose")
+  const [step, setStep] = useState<'choose' | 'form'>('choose')
   const [accountType, setAccountType] = useState<AccountType>(null)
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleAccountTypeSelect = (type: AccountType) => {
     setAccountType(type)
-    setStep("form")
+    setStep('form')
   }
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+    setError('')
 
+    // Les validations de format sont déjà gérées par FormInput
+    // On vérifie juste la correspondance des mots de passe
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas")
-      return
-    }
-
-    if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères")
+      setError('Les mots de passe ne correspondent pas')
       return
     }
 
@@ -51,7 +55,7 @@ export default function RegisterPage() {
         password,
         name,
       })
-      router.push("/dashboard")
+      router.push('/dashboard')
     } catch (err) {
       const error = err as Error
       setError(error?.message || "Erreur lors de l'inscription")
@@ -65,8 +69,8 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await signIn.social({
-        provider: "google",
-        callbackURL: "/dashboard",
+        provider: 'google',
+        callbackURL: '/dashboard',
       })
     } catch (err) {
       setError("Erreur lors de l'inscription avec Google")
@@ -75,7 +79,7 @@ export default function RegisterPage() {
     }
   }
 
-  if (step === "choose") {
+  if (step === 'choose') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-2xl">
@@ -89,13 +93,11 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card
                 className="cursor-pointer hover:border-primary transition-colors"
-                onClick={() => handleAccountTypeSelect("USER")}
+                onClick={() => handleAccountTypeSelect('USER')}
               >
                 <CardHeader>
                   <CardTitle className="text-xl">Client</CardTitle>
-                  <CardDescription>
-                    Accédez aux services et contenus des créateurs
-                  </CardDescription>
+                  <CardDescription>Accédez aux services et contenus des créateurs</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2 text-sm text-muted-foreground">
@@ -108,7 +110,7 @@ export default function RegisterPage() {
 
               <Card
                 className="cursor-pointer hover:border-primary transition-colors border-primary/50"
-                onClick={() => handleAccountTypeSelect("CREATOR")}
+                onClick={() => handleAccountTypeSelect('CREATOR')}
               >
                 <CardHeader>
                   <CardTitle className="text-xl flex items-center gap-2">
@@ -136,7 +138,7 @@ export default function RegisterPage() {
           </CardContent>
           <CardFooter>
             <p className="text-sm text-muted-foreground text-center w-full">
-              Vous avez déjà un compte ?{" "}
+              Vous avez déjà un compte ?{' '}
               <Link href="/auth/login" className="text-primary hover:underline">
                 Se connecter
               </Link>
@@ -151,16 +153,11 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setStep("choose")}
-            className="w-fit"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setStep('choose')} className="w-fit">
             ← Retour
           </Button>
           <CardTitle className="text-2xl font-bold text-center">
-            Inscription {accountType === "CREATOR" ? "Créateur" : "Client"}
+            Inscription {accountType === 'CREATOR' ? 'Créateur' : 'Client'}
           </CardTitle>
           <CardDescription className="text-center">
             Créez votre compte pour commencer
@@ -174,84 +171,72 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleEmailRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom complet</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Jean Dupont"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="nom@exemple.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                minLength={8}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={loading}
-                minLength={8}
-              />
-            </div>
+            <FormInput
+              id="name"
+              label="Nom complet"
+              validationType="text"
+              placeholder="Jean Dupont"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              disabled={loading}
+            />
+            <FormInput
+              id="email"
+              label="Email"
+              validationType="email"
+              placeholder="nom@exemple.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+            />
+            <FormInput
+              id="password"
+              label="Mot de passe"
+              validationType="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
+            <FormInput
+              id="confirmPassword"
+              label="Confirmer le mot de passe"
+              validationType="confirmPassword"
+              compareValue={password}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Création..." : "Créer mon compte"}
+              {loading ? 'Création...' : 'Créer mon compte'}
             </Button>
           </form>
 
-          <div className="relative">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou continuer avec
-              </span>
+              <span className="bg-background px-2 text-muted-foreground">Ou continuer avec</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            <Button
-              variant="outline"
-              onClick={handleGoogleSignup}
-              disabled={loading}
-              className="w-full"
-            >
-              Google
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={handleGoogleSignup}
+            disabled={loading}
+            className="w-full"
+          >
+            <GoogleIcon size={18} />
+            Google
+          </Button>
         </CardContent>
         <CardFooter>
           <p className="text-sm text-muted-foreground text-center w-full">
-            Vous avez déjà un compte ?{" "}
+            Vous avez déjà un compte ?{' '}
             <Link href="/auth/login" className="text-primary hover:underline">
               Se connecter
             </Link>
