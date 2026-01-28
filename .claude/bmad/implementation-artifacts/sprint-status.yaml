@@ -32,7 +32,7 @@ development_status:
   # Epic 2: Onboarding Créateur
   epic-2: in-progress
   2-1-initiation-upgrade-createur: review
-  2-2-saisie-informations-professionnelles: ready-for-dev
+  2-2-saisie-informations-professionnelles: review
   2-3-verification-siret-insee: ready-for-dev
   2-4-onboarding-stripe-connect: ready-for-dev
   2-5-activation-compte-createur: ready-for-dev
@@ -123,6 +123,6 @@ stats:
   total_stories: 52
   completed_stories: 1
   in_progress_stories: 0
-  review_stories: 5
-  ready_for_dev_stories: 46
+  review_stories: 6
+  ready_for_dev_stories: 45
   backlog_stories: 0

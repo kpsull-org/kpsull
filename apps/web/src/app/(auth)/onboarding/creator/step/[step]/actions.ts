@@ -2,79 +2,60 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
 import { auth } from '@/lib/auth/auth';
 import { PrismaCreatorOnboardingRepository } from '@/modules/creators/infrastructure/repositories/prisma-creator-onboarding.repository';
+import { SubmitProfessionalInfoUseCase } from '@/modules/creators/application/use-cases/submit-professional-info.use-case';
 
 const creatorOnboardingRepository = new PrismaCreatorOnboardingRepository();
+const submitProfessionalInfoUseCase = new SubmitProfessionalInfoUseCase(
+  creatorOnboardingRepository
+);
 
 // ============================================
-// Schemas
-// ============================================
-
-const professionalInfoSchema = z.object({
-  brandName: z.string().min(1, 'Le nom de marque est requis').max(100),
-  siret: z
-    .string()
-    .length(14, 'Le SIRET doit contenir exactement 14 chiffres')
-    .regex(/^\d{14}$/, 'Le SIRET ne doit contenir que des chiffres'),
-  professionalAddress: z.string().min(1, "L'adresse est requise").max(500),
-});
-
-// ============================================
-// Actions
+// Types
 // ============================================
 
 interface ActionResult {
   success: boolean;
   error?: string;
+  fieldErrors?: Record<string, string>;
+}
+
+export interface ProfessionalInfoInput {
+  brandName: string;
+  siret: string;
+  street: string;
+  city: string;
+  postalCode: string;
 }
 
 /**
  * Submit professional info (Step 1)
+ *
+ * Uses the SubmitProfessionalInfoUseCase for domain validation.
  */
-export async function submitProfessionalInfo(input: {
-  brandName: string;
-  siret: string;
-  professionalAddress: string;
-}): Promise<ActionResult> {
+export async function submitProfessionalInfo(
+  input: ProfessionalInfoInput
+): Promise<ActionResult> {
   const session = await auth();
 
   if (!session?.user?.id) {
     redirect('/login');
   }
 
-  // Validate input
-  const validationResult = professionalInfoSchema.safeParse(input);
-  if (!validationResult.success) {
-    const firstError = validationResult.error.issues[0];
-    return { success: false, error: firstError?.message ?? 'Données invalides' };
-  }
-
-  const { brandName, siret, professionalAddress } = validationResult.data;
-
-  // Get onboarding
-  const onboarding = await creatorOnboardingRepository.findByUserId(
-    session.user.id
-  );
-
-  if (!onboarding) {
-    return { success: false, error: 'Onboarding non trouvé' };
-  }
-
-  // Complete professional info
-  const result = onboarding.completeProfessionalInfo({
-    brandName,
-    siret,
-    professionalAddress,
+  // Execute use case with domain validation
+  const result = await submitProfessionalInfoUseCase.execute({
+    userId: session.user.id,
+    brandName: input.brandName,
+    siret: input.siret,
+    street: input.street,
+    city: input.city,
+    postalCode: input.postalCode,
   });
 
   if (result.isFailure) {
     return { success: false, error: result.error! };
   }
-
-  // Save
-  await creatorOnboardingRepository.save(onboarding);
 
   revalidatePath('/onboarding/creator');
 
