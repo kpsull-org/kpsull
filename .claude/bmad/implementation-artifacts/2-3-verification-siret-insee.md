@@ -1,6 +1,6 @@
 # Story 2.3: Vérification SIRET via API INSEE
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 

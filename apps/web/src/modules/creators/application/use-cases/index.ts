@@ -7,3 +7,9 @@ export {
   SubmitProfessionalInfoUseCase,
   type SubmitProfessionalInfoInput,
 } from './submit-professional-info.use-case';
+
+export {
+  VerifySiretUseCase,
+  type VerifySiretInput,
+  type VerifySiretOutput,
+} from './verify-siret.use-case';

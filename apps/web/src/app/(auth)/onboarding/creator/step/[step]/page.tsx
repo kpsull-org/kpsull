@@ -112,6 +112,7 @@ export default async function StepPage({ params }: StepPageProps) {
         <SiretVerificationForm
           siret={onboarding.siret ?? ''}
           isVerified={onboarding.siretVerified}
+          brandName={onboarding.brandName ?? undefined}
         />
       );
     case 3:
