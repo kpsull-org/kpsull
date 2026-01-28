@@ -1,0 +1,169 @@
+// Prisma schema for Kpsull - SaaS marketplace for French creators
+// Auth.js compatible with hexagonal architecture
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  CLIENT
+  CREATOR
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  PAUSED
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  VALIDATION_PENDING
+  COMPLETED
+  DISPUTE_OPENED
+  RETURN_SHIPPED
+  RETURN_RECEIVED
+  REFUNDED
+  CANCELED
+}
+
+enum SectionType {
+  HERO
+  ABOUT
+  BENTO_GRID
+  PRODUCTS_FEATURED
+  PRODUCTS_GRID
+  TESTIMONIALS
+  CONTACT
+  CUSTOM
+}
+
+// ============================================
+// USER & AUTH (Auth.js compatible)
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  role          Role      @default(CLIENT)
+
+  // Account type flags
+  accountTypeChosen Boolean @default(false)
+  wantsToBeCreator  Boolean @default(false)
+
+  // OAuth (Auth.js)
+  accounts Account[]
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// CREATOR ONBOARDING
+// ============================================
+
+enum OnboardingStep {
+  PROFESSIONAL_INFO
+  SIRET_VERIFICATION
+  STRIPE_CONNECT
+  COMPLETED
+}
+
+model CreatorOnboarding {
+  id        String         @id @default(cuid())
+  userId    String         @unique
+
+  currentStep               OnboardingStep @default(PROFESSIONAL_INFO)
+  professionalInfoCompleted Boolean        @default(false)
+  siretVerified             Boolean        @default(false)
+  stripeOnboarded           Boolean        @default(false)
+
+  // Professional info
+  brandName           String?
+  siret               String?
+  professionalAddress String?
+
+  // Stripe
+  stripeAccountId String?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("creator_onboardings")
+}
