@@ -34,6 +34,7 @@
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^22.15.3",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.1",
@@ -42,6 +43,7 @@
     "eslint": "^9.34.0",
     "eslint-config-next": "^16.1.6",
     "globals": "^17.2.0",
+    "tailwindcss": "^4.1.18",
     "typescript": "5.9.2",
     "typescript-eslint": "^8.54.0",
     "vitest": "^4.0.18"
