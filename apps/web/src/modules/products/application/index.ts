@@ -34,3 +34,22 @@ export {
   type CreateProductInput,
   type CreateProductOutput,
 } from './use-cases/products/create-product.use-case';
+
+export {
+  PublishProductUseCase,
+  type PublishProductInput,
+  type PublishProductOutput,
+} from './use-cases/products/publish-product.use-case';
+
+export {
+  UnpublishProductUseCase,
+  type UnpublishProductInput,
+  type UnpublishProductOutput,
+} from './use-cases/products/unpublish-product.use-case';
+
+// Services
+export type {
+  SubscriptionService,
+  LimitCheckResult,
+  LimitStatus,
+} from './ports/subscription.service.interface';
