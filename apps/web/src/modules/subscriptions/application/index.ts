@@ -35,3 +35,15 @@ export {
   type DowngradeToFreeInput,
   type DowngradeToFreeOutput,
 } from './use-cases/downgrade-to-free.use-case';
+export {
+  ExtendSubscriptionUseCase,
+  type ExtendSubscriptionInput,
+  type ExtendSubscriptionOutput,
+} from './use-cases/extend-subscription.use-case';
+export {
+  ListSubscriptionsUseCase,
+  type AdminSubscriptionRepository,
+  type SubscriptionListItem,
+  type ListSubscriptionsInput,
+  type ListSubscriptionsOutput,
+} from './use-cases/list-subscriptions.use-case';

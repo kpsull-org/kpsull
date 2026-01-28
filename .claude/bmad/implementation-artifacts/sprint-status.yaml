@@ -38,12 +38,12 @@ development_status:
   2-5-activation-compte-createur: review
 
   # Epic 3: Gestion des Abonnements
-  epic-3: in-progress
+  epic-3: review
   3-1-consultation-plan-abonnement: review
   3-2-notification-limites-atteintes: review
   3-3-upgrade-plan-pro: review
   3-4-gestion-paiement-recurrent: review
-  3-5-administration-abonnements: ready-for-dev
+  3-5-administration-abonnements: review
 
   # Epic 4: Catalogue Produits
   epic-4: ready-for-dev
@@ -123,6 +123,6 @@ stats:
   total_stories: 52
   completed_stories: 1
   in_progress_stories: 0
-  review_stories: 13
-  ready_for_dev_stories: 38
+  review_stories: 14
+  ready_for_dev_stories: 37
   backlog_stories: 0
