@@ -1,5 +1,6 @@
 // Ports
 export type { ProjectRepository } from './ports/project.repository.interface';
+export type { ProductRepository } from './ports/product.repository.interface';
 
 // Use Cases - Projects
 export {
@@ -26,3 +27,10 @@ export {
   type ListProjectsOutput,
   type ProjectListItem,
 } from './use-cases/projects/list-projects.use-case';
+
+// Use Cases - Products
+export {
+  CreateProductUseCase,
+  type CreateProductInput,
+  type CreateProductOutput,
+} from './use-cases/products/create-product.use-case';
