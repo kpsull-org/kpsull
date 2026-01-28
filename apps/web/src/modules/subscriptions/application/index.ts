@@ -15,3 +15,13 @@ export {
   type CheckLimitForActionInput,
   type CheckLimitForActionOutput,
 } from './use-cases/check-limit-for-action.use-case';
+export {
+  UpgradeToProUseCase,
+  type UpgradeToProInput,
+  type UpgradeToProOutput,
+} from './use-cases/upgrade-to-pro.use-case';
+export type {
+  IStripeBillingService,
+  CreateCheckoutSessionInput,
+  CheckoutSessionResult,
+} from './ports/stripe-billing.service.interface';
