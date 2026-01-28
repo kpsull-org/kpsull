@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { CreateProductUseCase } from '../products/create-product.use-case';
 import { ProductRepository } from '../../ports/product.repository.interface';
 import { Product } from '../../../domain/entities/product.entity';
-import { ProductStatusValue } from '../../../domain/value-objects/product-status.vo';
 
 // Mock repository
 class MockProductRepository implements ProductRepository {
