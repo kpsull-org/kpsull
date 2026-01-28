@@ -167,3 +167,28 @@ model CreatorOnboarding {
   @@index([userId])
   @@map("creator_onboardings")
 }
+
+// ============================================
+// SUBSCRIPTIONS
+// ============================================
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String             @unique
+  creatorId String             @unique
+
+  plan                Plan               @default(FREE)
+  status              SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart  DateTime           @default(now())
+  currentPeriodEnd    DateTime
+  productsUsed        Int                @default(0)
+  salesUsed           Int                @default(0)
+  stripeSubscriptionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([creatorId])
+  @@map("subscriptions")
+}
