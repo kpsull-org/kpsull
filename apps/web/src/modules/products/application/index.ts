@@ -47,6 +47,14 @@ export {
   type UnpublishProductOutput,
 } from './use-cases/products/unpublish-product.use-case';
 
+export {
+  ListProductsUseCase,
+  type ListProductsInput,
+  type ListProductsOutput,
+  type ProductListItem,
+  type ProductListRepository,
+} from './use-cases/products/list-products.use-case';
+
 // Services
 export type {
   SubscriptionService,
