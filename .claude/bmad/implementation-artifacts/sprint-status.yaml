@@ -1,0 +1,128 @@
+# Sprint Status - Kpsull
+# Generated: 2026-01-28
+# Updated: 2026-01-28 - All 51 stories created and ready for development
+# Project: Kpsull - Marketplace SaaS for French Creators
+
+# =============================================================================
+# STATUS DEFINITIONS
+# =============================================================================
+# backlog       - Not yet started, waiting in queue
+# ready-for-dev - Story file created, ready for implementation
+# in-progress   - Currently being implemented
+# review        - Implementation complete, awaiting code review
+# done          - Fully implemented and reviewed
+# blocked       - Cannot proceed due to external dependency
+# =============================================================================
+
+project:
+  name: Kpsull
+  phase: implementation
+  current_epic: 1
+  sprint_start: 2026-01-28
+
+development_status:
+  # Epic 1: Fondations & Authentification
+  epic-1: in-progress
+  1-1-setup-nextjs-architecture-hexagonale: done
+  1-2-inscription-google-oauth: review
+  1-3-choix-type-compte: review
+  1-4-connexion-deconnexion: review
+  1-5-modification-profil: review
+
+  # Epic 2: Onboarding Créateur
+  epic-2: in-progress
+  2-1-initiation-upgrade-createur: review
+  2-2-saisie-informations-professionnelles: ready-for-dev
+  2-3-verification-siret-insee: ready-for-dev
+  2-4-onboarding-stripe-connect: ready-for-dev
+  2-5-activation-compte-createur: ready-for-dev
+
+  # Epic 3: Gestion des Abonnements
+  epic-3: ready-for-dev
+  3-1-consultation-plan-abonnement: ready-for-dev
+  3-2-notification-limites-atteintes: ready-for-dev
+  3-3-upgrade-plan-pro: ready-for-dev
+  3-4-gestion-paiement-recurrent: ready-for-dev
+  3-5-administration-abonnements: ready-for-dev
+
+  # Epic 4: Catalogue Produits
+  epic-4: ready-for-dev
+  4-1-creation-gestion-projets: ready-for-dev
+  4-2-creation-produit-base: ready-for-dev
+  4-3-upload-images-cloudinary: ready-for-dev
+  4-4-gestion-variantes: ready-for-dev
+  4-5-publication-depublication: ready-for-dev
+  4-6-liste-filtrage-produits: ready-for-dev
+
+  # Epic 5: Page Builder
+  epic-5: ready-for-dev
+  5-1-creation-page-createur: ready-for-dev
+  5-2-choix-template: ready-for-dev
+  5-3-gestion-sections: ready-for-dev
+  5-4-edition-contenu-sections: ready-for-dev
+  5-5-previsualisation: ready-for-dev
+  5-6-publication-url-unique: ready-for-dev
+
+  # Epic 6: Vitrine Publique & Catalogue
+  epic-6: ready-for-dev
+  6-1-affichage-page-createur-publique: ready-for-dev
+  6-2-parcours-catalogue-produits: ready-for-dev
+  6-3-affichage-details-produit: ready-for-dev
+
+  # Epic 7: Panier & Checkout
+  epic-7: ready-for-dev
+  7-1-ajout-produits-panier: ready-for-dev
+  7-2-gestion-panier: ready-for-dev
+  7-3-authentification-checkout: ready-for-dev
+  7-4-saisie-adresse-livraison: ready-for-dev
+  7-5-paiement-stripe-connect-escrow: ready-for-dev
+  7-6-confirmation-commande-email: ready-for-dev
+
+  # Epic 8: Gestion Commandes Créateur
+  epic-8: ready-for-dev
+  8-1-liste-commandes-recues: ready-for-dev
+  8-2-details-commande: ready-for-dev
+  8-3-expedition-tracking: ready-for-dev
+  8-4-selection-transporteur: ready-for-dev
+  8-5-annulation-remboursement: ready-for-dev
+  8-6-limite-ventes-free: ready-for-dev
+
+  # Epic 9: Suivi Livraison & Escrow
+  epic-9: ready-for-dev
+  9-1-integration-aftership: ready-for-dev
+  9-2-liberation-fonds-48h: ready-for-dev
+  9-3-signalement-litige: ready-for-dev
+  9-4-initiation-retour: ready-for-dev
+  9-5-validation-retour-remboursement: ready-for-dev
+
+  # Epic 10: Dashboard Créateur & Analytics
+  epic-10: ready-for-dev
+  10-1-dashboard-statistiques-cles: ready-for-dev
+  10-2-evolution-ventes-periode: ready-for-dev
+  10-3-liste-historique-clients: ready-for-dev
+  10-4-analytics-avances-pro: ready-for-dev
+  10-5-export-rapports-pro: ready-for-dev
+
+  # Epic 11: Administration Plateforme
+  epic-11: ready-for-dev
+  11-1-dashboard-admin-kpis: ready-for-dev
+  11-2-liste-gestion-createurs: ready-for-dev
+  11-3-desactivation-compte: ready-for-dev
+  11-4-notification-nouveaux-createurs: ready-for-dev
+  11-5-controle-contenu: ready-for-dev
+  11-6-export-statistiques: ready-for-dev
+
+  # Epic 12: Espace Client
+  epic-12: ready-for-dev
+  12-1-historique-commandes-client: ready-for-dev
+  12-2-suivi-commande-cours: ready-for-dev
+
+# Summary Statistics
+stats:
+  total_epics: 12
+  total_stories: 52
+  completed_stories: 1
+  in_progress_stories: 0
+  review_stories: 5
+  ready_for_dev_stories: 46
+  backlog_stories: 0
