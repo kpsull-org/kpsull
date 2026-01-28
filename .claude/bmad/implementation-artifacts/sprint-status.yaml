@@ -35,7 +35,7 @@ development_status:
   2-2-saisie-informations-professionnelles: review
   2-3-verification-siret-insee: review
   2-4-onboarding-stripe-connect: review
-  2-5-activation-compte-createur: ready-for-dev
+  2-5-activation-compte-createur: review
 
   # Epic 3: Gestion des Abonnements
   epic-3: ready-for-dev
@@ -123,6 +123,6 @@ stats:
   total_stories: 52
   completed_stories: 1
   in_progress_stories: 0
-  review_stories: 8
-  ready_for_dev_stories: 43
+  review_stories: 9
+  ready_for_dev_stories: 42
   backlog_stories: 0

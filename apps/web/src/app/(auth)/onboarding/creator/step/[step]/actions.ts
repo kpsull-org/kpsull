@@ -7,8 +7,10 @@ import { PrismaCreatorOnboardingRepository } from '@/modules/creators/infrastruc
 import { SubmitProfessionalInfoUseCase } from '@/modules/creators/application/use-cases/submit-professional-info.use-case';
 import { VerifySiretUseCase } from '@/modules/creators/application/use-cases/verify-siret.use-case';
 import { CreateStripeAccountUseCase } from '@/modules/creators/application/use-cases/create-stripe-account.use-case';
+import { ActivateCreatorAccountUseCase } from '@/modules/creators/application/use-cases/activate-creator-account.use-case';
 import { MockSiretService } from '@/modules/creators/infrastructure/services/mock-siret.service';
 import { MockStripeConnectService } from '@/modules/creators/infrastructure/services/mock-stripe-connect.service';
+import { PrismaUserRoleRepository } from '@/modules/creators/infrastructure/repositories/prisma-user-role.repository';
 
 const creatorOnboardingRepository = new PrismaCreatorOnboardingRepository();
 const submitProfessionalInfoUseCase = new SubmitProfessionalInfoUseCase(
@@ -26,6 +28,12 @@ const stripeService = new MockStripeConnectService();
 const createStripeAccountUseCase = new CreateStripeAccountUseCase(
   creatorOnboardingRepository,
   stripeService
+);
+
+const userRoleRepository = new PrismaUserRoleRepository();
+const activateCreatorAccountUseCase = new ActivateCreatorAccountUseCase(
+  creatorOnboardingRepository,
+  userRoleRepository
 );
 
 // ============================================
@@ -228,4 +236,31 @@ export async function checkStripeStatus(): Promise<ActionResult & { isOnboarded?
     success: true,
     isOnboarded: status.isFullyOnboarded,
   };
+}
+
+/**
+ * Activate creator account
+ *
+ * Called after completing all onboarding steps to activate the creator account.
+ * Changes user role from CLIENT to CREATOR.
+ */
+export async function activateCreatorAccount(): Promise<ActionResult> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect('/login');
+  }
+
+  const result = await activateCreatorAccountUseCase.execute({
+    userId: session.user.id,
+  });
+
+  if (result.isFailure) {
+    return { success: false, error: result.error! };
+  }
+
+  revalidatePath('/onboarding/creator');
+  revalidatePath('/dashboard');
+
+  return { success: true };
 }

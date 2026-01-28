@@ -19,3 +19,10 @@ export {
   type CreateStripeAccountInput,
   type CreateStripeAccountOutput,
 } from './create-stripe-account.use-case';
+
+export {
+  ActivateCreatorAccountUseCase,
+  type ActivateCreatorAccountInput,
+  type ActivateCreatorAccountOutput,
+  type UserRoleRepository,
+} from './activate-creator-account.use-case';

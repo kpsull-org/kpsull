@@ -86,8 +86,8 @@ export function StripeConnectForm({
     }
   }
 
-  function handleGoToDashboard() {
-    router.push('/dashboard');
+  function handleGoToComplete() {
+    router.push('/onboarding/creator/complete');
     router.refresh();
   }
 
@@ -119,7 +119,7 @@ export function StripeConnectForm({
           <h4 className="text-sm font-medium">Félicitations !</h4>
           <p className="mt-1 text-xs text-muted-foreground">
             Vous avez terminé toutes les étapes d&apos;inscription créateur.
-            Vous pouvez maintenant créer vos produits et commencer à vendre.
+            Passez à l&apos;étape finale pour activer votre compte.
           </p>
         </div>
 
@@ -131,8 +131,8 @@ export function StripeConnectForm({
           >
             Retour
           </Button>
-          <Button onClick={handleGoToDashboard}>
-            Accéder au dashboard
+          <Button onClick={handleGoToComplete}>
+            Finaliser l&apos;inscription
           </Button>
         </div>
       </div>
