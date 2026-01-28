@@ -77,6 +77,26 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
     return count > 0;
   }
 
+  async findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<Subscription | null> {
+    const record = await prisma.subscription.findFirst({
+      where: { stripeSubscriptionId },
+    });
+
+    if (!record) {
+      return null;
+    }
+
+    return this.toDomain(record);
+  }
+
+  async findAllPastDue(): Promise<Subscription[]> {
+    const records = await prisma.subscription.findMany({
+      where: { status: 'PAST_DUE' },
+    });
+
+    return records.map((record) => this.toDomain(record));
+  }
+
   private toDomain(record: {
     id: string;
     userId: string;

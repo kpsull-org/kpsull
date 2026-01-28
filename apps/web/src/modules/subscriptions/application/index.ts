@@ -25,3 +25,13 @@ export type {
   CreateCheckoutSessionInput,
   CheckoutSessionResult,
 } from './ports/stripe-billing.service.interface';
+export {
+  HandlePaymentFailedUseCase,
+  type HandlePaymentFailedInput,
+  type HandlePaymentFailedOutput,
+} from './use-cases/handle-payment-failed.use-case';
+export {
+  DowngradeToFreeUseCase,
+  type DowngradeToFreeInput,
+  type DowngradeToFreeOutput,
+} from './use-cases/downgrade-to-free.use-case';

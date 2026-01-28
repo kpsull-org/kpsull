@@ -37,6 +37,8 @@ describe('GetSubscription Use Case', () => {
       findByCreatorId: vi.fn(),
       save: vi.fn(),
       existsByUserId: vi.fn(),
+      findByStripeSubscriptionId: vi.fn(),
+      findAllPastDue: vi.fn(),
     };
 
     useCase = new GetSubscriptionUseCase(mockRepository);

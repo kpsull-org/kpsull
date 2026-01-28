@@ -62,6 +62,25 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
     return this.subscriptions.has(userId);
   }
 
+  async findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<Subscription | null> {
+    for (const sub of this.subscriptions.values()) {
+      if (sub.stripeSubscriptionId === stripeSubscriptionId) {
+        return sub;
+      }
+    }
+    return null;
+  }
+
+  async findAllPastDue(): Promise<Subscription[]> {
+    const pastDue: Subscription[] = [];
+    for (const sub of this.subscriptions.values()) {
+      if (sub.status === 'PAST_DUE') {
+        pastDue.push(sub);
+      }
+    }
+    return pastDue;
+  }
+
   /**
    * Create a subscription for a user (for development purposes)
    */

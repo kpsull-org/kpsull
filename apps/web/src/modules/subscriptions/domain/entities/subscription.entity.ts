@@ -14,6 +14,8 @@ interface SubscriptionProps {
   productsUsed: number;
   salesUsed: number;
   stripeSubscriptionId: string | null;
+  stripeCustomerId: string | null;
+  gracePeriodStart: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +37,8 @@ interface ReconstituteSubscriptionProps {
   productsUsed: number;
   salesUsed: number;
   stripeSubscriptionId: string | null;
+  stripeCustomerId?: string | null;
+  gracePeriodStart?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,6 +93,14 @@ export class Subscription extends Entity<SubscriptionProps> {
 
   get stripeSubscriptionId(): string | null {
     return this.props.stripeSubscriptionId;
+  }
+
+  get stripeCustomerId(): string | null {
+    return this.props.stripeCustomerId;
+  }
+
+  get gracePeriodStart(): Date | null {
+    return this.props.gracePeriodStart;
   }
 
   get createdAt(): Date {
@@ -176,6 +188,36 @@ export class Subscription extends Entity<SubscriptionProps> {
     this.props.updatedAt = new Date();
   }
 
+  markAsPastDue(gracePeriodStart: Date): Result<void> {
+    if (this.props.status === 'CANCELLED') {
+      return Result.fail('Impossible de marquer un abonnement annulé comme impayé');
+    }
+
+    this.props.status = 'PAST_DUE';
+    this.props.gracePeriodStart = gracePeriodStart;
+    this.props.updatedAt = new Date();
+
+    return Result.ok();
+  }
+
+  downgradeToFree(): Result<void> {
+    this.props.plan = Plan.free();
+    this.props.status = 'CANCELLED';
+    this.props.stripeSubscriptionId = null;
+    this.props.gracePeriodStart = null;
+    this.props.updatedAt = new Date();
+
+    return Result.ok();
+  }
+
+  renewPeriod(periodStart: Date, periodEnd: Date): void {
+    this.props.status = 'ACTIVE';
+    this.props.currentPeriodStart = periodStart;
+    this.props.currentPeriodEnd = periodEnd;
+    this.props.gracePeriodStart = null;
+    this.props.updatedAt = new Date();
+  }
+
   // Factory methods
   static create(props: CreateSubscriptionProps): Result<Subscription> {
     if (!props.userId?.trim()) {
@@ -205,6 +247,8 @@ export class Subscription extends Entity<SubscriptionProps> {
         productsUsed: 0,
         salesUsed: 0,
         stripeSubscriptionId: null,
+        stripeCustomerId: null,
+        gracePeriodStart: null,
         createdAt: now,
         updatedAt: now,
       })
@@ -229,6 +273,8 @@ export class Subscription extends Entity<SubscriptionProps> {
           productsUsed: props.productsUsed,
           salesUsed: props.salesUsed,
           stripeSubscriptionId: props.stripeSubscriptionId,
+          stripeCustomerId: props.stripeCustomerId ?? null,
+          gracePeriodStart: props.gracePeriodStart ?? null,
           createdAt: props.createdAt,
           updatedAt: props.updatedAt,
         },

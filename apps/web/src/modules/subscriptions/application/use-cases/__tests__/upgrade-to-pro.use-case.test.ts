@@ -32,6 +32,14 @@ class MockSubscriptionRepository implements SubscriptionRepository {
   async existsByUserId(): Promise<boolean> {
     return false;
   }
+
+  async findByStripeSubscriptionId(): Promise<Subscription | null> {
+    return null;
+  }
+
+  async findAllPastDue(): Promise<Subscription[]> {
+    return [];
+  }
 }
 
 describe('UpgradeToProUseCase', () => {

@@ -30,4 +30,14 @@ export interface SubscriptionRepository {
    * Check if user has a subscription
    */
   existsByUserId(userId: string): Promise<boolean>;
+
+  /**
+   * Find subscription by Stripe subscription ID
+   */
+  findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<Subscription | null>;
+
+  /**
+   * Find all subscriptions with PAST_DUE status
+   */
+  findAllPastDue(): Promise<Subscription[]>;
 }

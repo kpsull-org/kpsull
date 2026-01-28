@@ -42,7 +42,7 @@ development_status:
   3-1-consultation-plan-abonnement: review
   3-2-notification-limites-atteintes: review
   3-3-upgrade-plan-pro: review
-  3-4-gestion-paiement-recurrent: ready-for-dev
+  3-4-gestion-paiement-recurrent: review
   3-5-administration-abonnements: ready-for-dev
 
   # Epic 4: Catalogue Produits
@@ -123,6 +123,6 @@ stats:
   total_stories: 52
   completed_stories: 1
   in_progress_stories: 0
-  review_stories: 12
-  ready_for_dev_stories: 39
+  review_stories: 13
+  ready_for_dev_stories: 38
   backlog_stories: 0
