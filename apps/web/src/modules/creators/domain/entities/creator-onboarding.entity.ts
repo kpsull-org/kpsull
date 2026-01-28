@@ -246,6 +246,25 @@ export class CreatorOnboarding extends Entity<CreatorOnboardingProps> {
   }
 
   /**
+   * Sets the Stripe account ID (without completing onboarding)
+   * Called when the Stripe Connect account is created but onboarding not yet complete
+   */
+  setStripeAccountId(stripeAccountId: string): Result<void> {
+    if (!this.props.siretVerified) {
+      return Result.fail('SIRET must be verified first');
+    }
+
+    if (!stripeAccountId || stripeAccountId.trim() === '') {
+      return Result.fail('Stripe account ID is required');
+    }
+
+    this.props.stripeAccountId = stripeAccountId;
+    this.props.updatedAt = new Date();
+
+    return Result.ok(undefined);
+  }
+
+  /**
    * Completes the Stripe onboarding
    */
   completeStripeOnboarding(stripeAccountId: string): Result<void> {

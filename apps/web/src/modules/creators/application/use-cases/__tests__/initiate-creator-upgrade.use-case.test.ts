@@ -17,6 +17,7 @@ describe('InitiateCreatorUpgradeUseCase', () => {
     mockRepository = {
       findById: vi.fn(),
       findByUserId: vi.fn(),
+      findByStripeAccountId: vi.fn(),
       save: vi.fn(),
       existsByUserId: vi.fn(),
       delete: vi.fn(),

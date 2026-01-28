@@ -42,6 +42,7 @@ describe('VerifySiret Use Case', () => {
     mockRepository = {
       findByUserId: vi.fn().mockResolvedValue(mockOnboarding),
       findById: vi.fn(),
+      findByStripeAccountId: vi.fn(),
       save: vi.fn().mockResolvedValue(undefined),
       existsByUserId: vi.fn().mockResolvedValue(false),
       delete: vi.fn().mockResolvedValue(undefined),

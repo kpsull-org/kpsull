@@ -38,4 +38,11 @@ export interface CreatorOnboardingRepository {
    * @param id - The onboarding's unique identifier
    */
   delete(id: string): Promise<void>;
+
+  /**
+   * Finds a creator onboarding by Stripe account ID
+   * @param stripeAccountId - The Stripe Connect account ID
+   * @returns The onboarding if found, null otherwise
+   */
+  findByStripeAccountId(stripeAccountId: string): Promise<CreatorOnboarding | null>;
 }

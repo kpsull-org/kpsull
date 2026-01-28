@@ -80,4 +80,21 @@ export class PrismaCreatorOnboardingRepository
       where: { id },
     });
   }
+
+  /**
+   * Finds a creator onboarding by Stripe account ID
+   */
+  async findByStripeAccountId(
+    stripeAccountId: string
+  ): Promise<CreatorOnboarding | null> {
+    const prismaOnboarding = await prisma.creatorOnboarding.findFirst({
+      where: { stripeAccountId },
+    });
+
+    if (!prismaOnboarding) {
+      return null;
+    }
+
+    return CreatorOnboardingMapper.toDomain(prismaOnboarding);
+  }
 }

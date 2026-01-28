@@ -13,3 +13,9 @@ export {
   type VerifySiretInput,
   type VerifySiretOutput,
 } from './verify-siret.use-case';
+
+export {
+  CreateStripeAccountUseCase,
+  type CreateStripeAccountInput,
+  type CreateStripeAccountOutput,
+} from './create-stripe-account.use-case';

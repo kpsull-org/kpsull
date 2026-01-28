@@ -1,6 +1,6 @@
 # Story 2.4: Onboarding Stripe Connect
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
