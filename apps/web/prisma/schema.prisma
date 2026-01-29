@@ -184,6 +184,8 @@ model Subscription {
   productsUsed        Int                @default(0)
   salesUsed           Int                @default(0)
   stripeSubscriptionId String?
+  stripeCustomerId     String?
+  gracePeriodStart     DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -191,4 +193,196 @@ model Subscription {
   @@index([userId])
   @@index([creatorId])
   @@map("subscriptions")
+}
+
+// ============================================
+// CREATOR PAGE & SECTIONS
+// ============================================
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model CreatorPage {
+  id          String     @id @default(cuid())
+  creatorId   String     @unique
+  slug        String     @unique
+  title       String
+  description String?
+  templateId  String?
+  status      PageStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  sections PageSection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@map("creator_pages")
+}
+
+model PageSection {
+  id        String      @id @default(cuid())
+  pageId    String
+  type      SectionType
+  title     String
+  content   Json        @default("{}")
+  position  Int         @default(0)
+  isVisible Boolean     @default(true)
+
+  page CreatorPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageId])
+  @@index([position])
+  @@map("page_sections")
+}
+
+// ============================================
+// ORDERS
+// ============================================
+
+model Order {
+  id                    String      @id @default(cuid())
+  orderNumber           String      @unique
+  creatorId             String
+  customerId            String
+  customerName          String
+  customerEmail         String
+
+  status                OrderStatus @default(PENDING)
+  totalAmount           Int         // in cents
+
+  // Shipping address (stored as separate fields)
+  shippingStreet        String
+  shippingCity          String
+  shippingPostalCode    String
+  shippingCountry       String
+
+  // Stripe integration
+  stripePaymentIntentId String?
+  stripeRefundId        String?
+
+  // Shipping info
+  trackingNumber        String?
+  carrier               String?
+
+  // Cancellation/refund
+  cancellationReason    String?
+
+  // Timeline
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
+
+  items                 OrderItem[]
+
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([creatorId])
+  @@index([customerId])
+  @@index([status])
+  @@index([orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  variantId   String?
+  productName String
+  variantInfo String?
+  price       Int     // in cents
+  quantity    Int
+  image       String?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ============================================
+// PRODUCTS & PROJECTS
+// ============================================
+
+model Project {
+  id          String  @id @default(cuid())
+  creatorId   String
+  name        String
+  description String?
+  coverImage  String?
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId])
+  @@map("projects")
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  creatorId   String
+  projectId   String?
+  name        String
+  description String?
+  price       Int           // in cents
+  currency    String        @default("EUR")
+  status      ProductStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  project  Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  variants ProductVariant[]
+  images   ProductImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId])
+  @@index([projectId])
+  @@index([status])
+  @@map("products")
+}
+
+model ProductVariant {
+  id            String  @id @default(cuid())
+  productId     String
+  name          String
+  sku           String?
+  priceOverride Int?    // in cents, if different from product price
+  stock         Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, sku])
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        String @id @default(cuid())
+  productId String
+  url       String
+  alt       String @default("")
+  position  Int    @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([position])
+  @@map("product_images")
 }

@@ -38,14 +38,19 @@ export class ActivateCreatorAccountUseCase
   async execute(
     input: ActivateCreatorAccountInput
   ): Promise<Result<ActivateCreatorAccountOutput>> {
-    // 1. Get onboarding
+    // 1. Validate input
+    if (!input.userId?.trim()) {
+      return Result.fail('User ID est requis');
+    }
+
+    // 2. Get onboarding
     const onboarding = await this.onboardingRepository.findByUserId(input.userId);
 
     if (!onboarding) {
       return Result.fail('Onboarding non trouvé');
     }
 
-    // 2. Verify prerequisites
+    // 3. Verify prerequisites
     if (!onboarding.siretVerified) {
       return Result.fail("Le SIRET n'est pas vérifié");
     }
@@ -54,7 +59,7 @@ export class ActivateCreatorAccountUseCase
       return Result.fail("Le compte Stripe n'est pas configuré");
     }
 
-    // 3. Update user role to CREATOR
+    // 4. Update user role to CREATOR
     await this.userRepository.updateRole(input.userId, 'CREATOR');
 
     // TODO: In future stories:

@@ -3,11 +3,15 @@ import { ValueObject, Result } from '@/shared/domain';
 export type OrderStatusValue =
   | 'PENDING'
   | 'PAID'
-  | 'PROCESSING'
   | 'SHIPPED'
   | 'DELIVERED'
-  | 'CANCELLED'
-  | 'REFUNDED';
+  | 'VALIDATION_PENDING'
+  | 'COMPLETED'
+  | 'DISPUTE_OPENED'
+  | 'RETURN_SHIPPED'
+  | 'RETURN_RECEIVED'
+  | 'REFUNDED'
+  | 'CANCELED';
 
 interface OrderStatusProps {
   value: OrderStatusValue;
@@ -35,10 +39,6 @@ export class OrderStatus extends ValueObject<OrderStatusProps> {
     return this.value === 'PAID';
   }
 
-  get isProcessing(): boolean {
-    return this.value === 'PROCESSING';
-  }
-
   get isShipped(): boolean {
     return this.value === 'SHIPPED';
   }
@@ -47,8 +47,20 @@ export class OrderStatus extends ValueObject<OrderStatusProps> {
     return this.value === 'DELIVERED';
   }
 
-  get isCancelled(): boolean {
-    return this.value === 'CANCELLED';
+  get isValidationPending(): boolean {
+    return this.value === 'VALIDATION_PENDING';
+  }
+
+  get isCompleted(): boolean {
+    return this.value === 'COMPLETED';
+  }
+
+  get isDisputeOpened(): boolean {
+    return this.value === 'DISPUTE_OPENED';
+  }
+
+  get isCanceled(): boolean {
+    return this.value === 'CANCELED';
   }
 
   get isRefunded(): boolean {
@@ -60,7 +72,7 @@ export class OrderStatus extends ValueObject<OrderStatusProps> {
   }
 
   get canBeShipped(): boolean {
-    return this.isPaid || this.isProcessing;
+    return this.isPaid;
   }
 
   get canBeRefunded(): boolean {
@@ -75,10 +87,6 @@ export class OrderStatus extends ValueObject<OrderStatusProps> {
     return new OrderStatus({ value: 'PAID' });
   }
 
-  static processing(): OrderStatus {
-    return new OrderStatus({ value: 'PROCESSING' });
-  }
-
   static shipped(): OrderStatus {
     return new OrderStatus({ value: 'SHIPPED' });
   }
@@ -87,8 +95,20 @@ export class OrderStatus extends ValueObject<OrderStatusProps> {
     return new OrderStatus({ value: 'DELIVERED' });
   }
 
+  static validationPending(): OrderStatus {
+    return new OrderStatus({ value: 'VALIDATION_PENDING' });
+  }
+
+  static completed(): OrderStatus {
+    return new OrderStatus({ value: 'COMPLETED' });
+  }
+
+  static disputeOpened(): OrderStatus {
+    return new OrderStatus({ value: 'DISPUTE_OPENED' });
+  }
+
   static cancelled(): OrderStatus {
-    return new OrderStatus({ value: 'CANCELLED' });
+    return new OrderStatus({ value: 'CANCELED' });
   }
 
   static refunded(): OrderStatus {
@@ -99,11 +119,15 @@ export class OrderStatus extends ValueObject<OrderStatusProps> {
     const validStatuses: OrderStatusValue[] = [
       'PENDING',
       'PAID',
-      'PROCESSING',
       'SHIPPED',
       'DELIVERED',
-      'CANCELLED',
+      'VALIDATION_PENDING',
+      'COMPLETED',
+      'DISPUTE_OPENED',
+      'RETURN_SHIPPED',
+      'RETURN_RECEIVED',
       'REFUNDED',
+      'CANCELED',
     ];
 
     if (!validStatuses.includes(value as OrderStatusValue)) {

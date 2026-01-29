@@ -14,7 +14,7 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
     const now = new Date();
     const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const demoSubscription = Subscription.reconstitute({
+    const demoResult = Subscription.reconstitute({
       id: 'sub-demo-123',
       userId: 'demo-user',
       creatorId: 'demo-creator',
@@ -27,7 +27,13 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
       stripeSubscriptionId: null,
       createdAt: now,
       updatedAt: now,
-    }).value!;
+    });
+
+    if (demoResult.isFailure) {
+      throw new Error(`Failed to create demo subscription: ${demoResult.error}`);
+    }
+
+    const demoSubscription = demoResult.value!;
 
     this.subscriptions.set(demoSubscription.userId, demoSubscription);
   }
@@ -88,7 +94,7 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
     const now = new Date();
     const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const subscription = Subscription.reconstitute({
+    const result = Subscription.reconstitute({
       id: `sub-${userId}`,
       userId,
       creatorId,
@@ -101,7 +107,13 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
       stripeSubscriptionId: plan === 'PRO' ? `sub_stripe_${userId}` : null,
       createdAt: now,
       updatedAt: now,
-    }).value!;
+    });
+
+    if (result.isFailure) {
+      throw new Error(`Failed to create subscription for user ${userId}: ${result.error}`);
+    }
+
+    const subscription = result.value!;
 
     this.subscriptions.set(userId, subscription);
     return subscription;

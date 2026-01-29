@@ -1,6 +1,7 @@
 import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
 import { SubscriptionRepository } from '../ports/subscription.repository.interface';
+import { IAuthorizationService } from '../ports/authorization.service.interface';
 
 export interface ExtendSubscriptionInput {
   subscriptionId: string;
@@ -25,7 +26,10 @@ export interface ExtendSubscriptionOutput {
 export class ExtendSubscriptionUseCase
   implements UseCase<ExtendSubscriptionInput, ExtendSubscriptionOutput>
 {
-  constructor(private readonly subscriptionRepository: SubscriptionRepository) {}
+  constructor(
+    private readonly subscriptionRepository: SubscriptionRepository,
+    private readonly authorizationService: IAuthorizationService
+  ) {}
 
   async execute(input: ExtendSubscriptionInput): Promise<Result<ExtendSubscriptionOutput>> {
     // Validate input
@@ -39,6 +43,12 @@ export class ExtendSubscriptionUseCase
 
     if (!input.adminId?.trim()) {
       return Result.fail('Admin ID est requis');
+    }
+
+    // Verify admin authorization
+    const isAdmin = await this.authorizationService.isAdmin(input.adminId);
+    if (!isAdmin) {
+      return Result.fail('Seuls les administrateurs peuvent étendre les abonnements');
     }
 
     // Find subscription

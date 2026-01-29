@@ -3,6 +3,16 @@ import { CreateUserUseCase, CreateUserInput } from '../create-user.use-case';
 import { UserRepository } from '../../ports/user.repository.interface';
 import { RoleType } from '../../../domain/value-objects/role.vo';
 
+/**
+ * Creates a PostgreSQL unique constraint violation error
+ * PostgreSQL error code 23505 = unique_violation
+ */
+function createUniqueConstraintError(): Error {
+  const error = new Error('duplicate key value violates unique constraint "users_email_unique"');
+  (error as Error & { code: string }).code = '23505';
+  return error;
+}
+
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
   let mockUserRepository: UserRepository;
@@ -27,7 +37,6 @@ describe('CreateUserUseCase', () => {
 
   describe('execute', () => {
     it('should create a new user successfully', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
       vi.mocked(mockUserRepository.save).mockResolvedValue();
 
       const result = await useCase.execute(validInput);
@@ -40,7 +49,6 @@ describe('CreateUserUseCase', () => {
     });
 
     it('should create a user with default CLIENT role', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
       vi.mocked(mockUserRepository.save).mockResolvedValue();
 
       const result = await useCase.execute(validInput);
@@ -50,7 +58,6 @@ describe('CreateUserUseCase', () => {
     });
 
     it('should create a user with specified role', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
       vi.mocked(mockUserRepository.save).mockResolvedValue();
 
       const result = await useCase.execute({
@@ -62,19 +69,24 @@ describe('CreateUserUseCase', () => {
       expect(result.value.role).toBe(RoleType.CREATOR);
     });
 
-    it('should fail if email already exists', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(true);
+    it('should fail if email already exists (unique constraint violation)', async () => {
+      vi.mocked(mockUserRepository.save).mockRejectedValue(createUniqueConstraintError());
 
       const result = await useCase.execute(validInput);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('User with this email already exists');
-      expect(mockUserRepository.save).not.toHaveBeenCalled();
+      expect(result.error).toBe('Un utilisateur avec cet email existe deja');
+      expect(mockUserRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('should rethrow non-unique-constraint database errors', async () => {
+      const genericError = new Error('Database connection failed');
+      vi.mocked(mockUserRepository.save).mockRejectedValue(genericError);
+
+      await expect(useCase.execute(validInput)).rejects.toThrow('Database connection failed');
     });
 
     it('should fail with invalid email format', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
-
       const result = await useCase.execute({
         ...validInput,
         email: 'invalid-email',
@@ -86,8 +98,6 @@ describe('CreateUserUseCase', () => {
     });
 
     it('should fail with empty email', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
-
       const result = await useCase.execute({
         ...validInput,
         email: '',
@@ -99,7 +109,6 @@ describe('CreateUserUseCase', () => {
     });
 
     it('should call repository save with the created user', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
       vi.mocked(mockUserRepository.save).mockResolvedValue();
 
       await useCase.execute(validInput);
@@ -117,7 +126,6 @@ describe('CreateUserUseCase', () => {
     });
 
     it('should generate a unique ID for the new user', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
       vi.mocked(mockUserRepository.save).mockResolvedValue();
 
       const result1 = await useCase.execute(validInput);
@@ -129,7 +137,6 @@ describe('CreateUserUseCase', () => {
     });
 
     it('should set emailVerified to null by default', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
       vi.mocked(mockUserRepository.save).mockResolvedValue();
 
       const result = await useCase.execute(validInput);
@@ -139,7 +146,6 @@ describe('CreateUserUseCase', () => {
     });
 
     it('should create user with provided emailVerified date', async () => {
-      vi.mocked(mockUserRepository.existsByEmail).mockResolvedValue(false);
       vi.mocked(mockUserRepository.save).mockResolvedValue();
       const verifiedDate = new Date('2024-01-01');
 
@@ -150,6 +156,14 @@ describe('CreateUserUseCase', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.emailVerified).toEqual(verifiedDate);
+    });
+
+    it('should not call existsByEmail (atomic transaction)', async () => {
+      vi.mocked(mockUserRepository.save).mockResolvedValue();
+
+      await useCase.execute(validInput);
+
+      expect(mockUserRepository.existsByEmail).not.toHaveBeenCalled();
     });
   });
 });

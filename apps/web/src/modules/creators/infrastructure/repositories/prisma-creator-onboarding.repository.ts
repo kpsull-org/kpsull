@@ -41,24 +41,17 @@ export class PrismaCreatorOnboardingRepository
 
   /**
    * Saves a creator onboarding (creates or updates)
+   * Uses upsert for atomic operation to prevent race conditions
    */
   async save(onboarding: CreatorOnboarding): Promise<void> {
-    const existing = await prisma.creatorOnboarding.findUnique({
-      where: { id: onboarding.id.value },
-    });
+    const createData = CreatorOnboardingMapper.toPrismaCreate(onboarding);
+    const updateData = CreatorOnboardingMapper.toPrismaUpdate(onboarding);
 
-    if (existing) {
-      const updateData = CreatorOnboardingMapper.toPrismaUpdate(onboarding);
-      await prisma.creatorOnboarding.update({
-        where: { id: onboarding.id.value },
-        data: updateData,
-      });
-    } else {
-      const createData = CreatorOnboardingMapper.toPrismaCreate(onboarding);
-      await prisma.creatorOnboarding.create({
-        data: createData,
-      });
-    }
+    await prisma.creatorOnboarding.upsert({
+      where: { id: onboarding.id.value },
+      create: createData,
+      update: updateData,
+    });
   }
 
   /**

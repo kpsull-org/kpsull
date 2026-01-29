@@ -10,3 +10,12 @@ export {
   type ProcessPaymentOutput,
   type ProcessPaymentAction,
 } from './process-payment.use-case';
+
+export {
+  CalculateEscrowReleaseUseCase,
+  type CalculateEscrowReleaseInput,
+  type CalculateEscrowReleaseOutput,
+  type EscrowStatus,
+  ESCROW_RELEASE_DELAY_MS,
+  ESCROW_RELEASE_DELAY_HOURS,
+} from './calculate-escrow-release.use-case';

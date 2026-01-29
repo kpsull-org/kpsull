@@ -200,7 +200,7 @@ describe('Order Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(order.status.isCancelled).toBe(true);
+      expect(order.status.isCanceled).toBe(true);
       expect(order.cancellationReason).toBe('Client a changé d\'avis');
     });
 
@@ -214,7 +214,7 @@ describe('Order Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(order.status.isCancelled).toBe(true);
+      expect(order.status.isCanceled).toBe(true);
     });
 
     it('should fail to cancel shipped order', () => {

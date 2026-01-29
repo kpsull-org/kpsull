@@ -1,5 +1,6 @@
 import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
+import { validateImageFile } from '@/lib/utils/file-validation';
 import { ProductImage } from '../../../domain/entities/product-image.entity';
 import { ImageUrl } from '../../../domain/value-objects/image-url.vo';
 import { ImageUploadService } from '../../ports/image-upload.service.interface';
@@ -37,14 +38,10 @@ export class UploadProductImageUseCase
   ) {}
 
   async execute(input: UploadProductImageInput): Promise<Result<UploadProductImageOutput>> {
-    // Validate file
-    if (!input.file || input.file.length === 0) {
-      return Result.fail('Le fichier est requis');
-    }
-
-    // Validate filename
-    if (!input.filename?.trim()) {
-      return Result.fail('Le nom du fichier est requis');
+    // Validate image file (size, extension, MIME type)
+    const validationResult = validateImageFile(input.file, input.filename);
+    if (validationResult.isFailure) {
+      return Result.fail(validationResult.error!);
     }
 
     // Verify product exists

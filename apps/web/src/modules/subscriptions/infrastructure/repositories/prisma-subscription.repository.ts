@@ -56,6 +56,8 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
       productsUsed: subscription.productsUsed,
       salesUsed: subscription.salesUsed,
       stripeSubscriptionId: subscription.stripeSubscriptionId,
+      stripeCustomerId: subscription.stripeCustomerId,
+      gracePeriodStart: subscription.gracePeriodStart,
       updatedAt: subscription.updatedAt,
     };
 
@@ -108,6 +110,8 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
     productsUsed: number;
     salesUsed: number;
     stripeSubscriptionId: string | null;
+    stripeCustomerId: string | null;
+    gracePeriodStart: Date | null;
     createdAt: Date;
     updatedAt: Date;
   }): Subscription {
@@ -122,9 +126,15 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
       productsUsed: record.productsUsed,
       salesUsed: record.salesUsed,
       stripeSubscriptionId: record.stripeSubscriptionId,
+      stripeCustomerId: record.stripeCustomerId,
+      gracePeriodStart: record.gracePeriodStart,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
+
+    if (result.isFailure) {
+      throw new Error(`Failed to reconstitute Subscription ${record.id}: ${result.error}`);
+    }
 
     return result.value!;
   }

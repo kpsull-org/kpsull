@@ -1,6 +1,14 @@
 import { ValueObject, Result } from '@/shared/domain';
 
-export type SectionTypeValue = 'HERO' | 'ABOUT' | 'PRODUCTS' | 'GALLERY' | 'CONTACT' | 'CUSTOM';
+export type SectionTypeValue =
+  | 'HERO'
+  | 'ABOUT'
+  | 'BENTO_GRID'
+  | 'PRODUCTS_FEATURED'
+  | 'PRODUCTS_GRID'
+  | 'TESTIMONIALS'
+  | 'CONTACT'
+  | 'CUSTOM';
 
 interface SectionTypeProps {
   value: SectionTypeValue;
@@ -28,12 +36,20 @@ export class SectionType extends ValueObject<SectionTypeProps> {
     return this.value === 'ABOUT';
   }
 
-  get isProducts(): boolean {
-    return this.value === 'PRODUCTS';
+  get isProductsGrid(): boolean {
+    return this.value === 'PRODUCTS_GRID';
   }
 
-  get isGallery(): boolean {
-    return this.value === 'GALLERY';
+  get isProductsFeatured(): boolean {
+    return this.value === 'PRODUCTS_FEATURED';
+  }
+
+  get isBentoGrid(): boolean {
+    return this.value === 'BENTO_GRID';
+  }
+
+  get isTestimonials(): boolean {
+    return this.value === 'TESTIMONIALS';
   }
 
   get isContact(): boolean {
@@ -52,12 +68,20 @@ export class SectionType extends ValueObject<SectionTypeProps> {
     return new SectionType({ value: 'ABOUT' });
   }
 
-  static products(): SectionType {
-    return new SectionType({ value: 'PRODUCTS' });
+  static productsGrid(): SectionType {
+    return new SectionType({ value: 'PRODUCTS_GRID' });
   }
 
-  static gallery(): SectionType {
-    return new SectionType({ value: 'GALLERY' });
+  static productsFeatured(): SectionType {
+    return new SectionType({ value: 'PRODUCTS_FEATURED' });
+  }
+
+  static bentoGrid(): SectionType {
+    return new SectionType({ value: 'BENTO_GRID' });
+  }
+
+  static testimonials(): SectionType {
+    return new SectionType({ value: 'TESTIMONIALS' });
   }
 
   static contact(): SectionType {
@@ -69,7 +93,16 @@ export class SectionType extends ValueObject<SectionTypeProps> {
   }
 
   static fromString(value: string): Result<SectionType> {
-    const validTypes: SectionTypeValue[] = ['HERO', 'ABOUT', 'PRODUCTS', 'GALLERY', 'CONTACT', 'CUSTOM'];
+    const validTypes: SectionTypeValue[] = [
+      'HERO',
+      'ABOUT',
+      'BENTO_GRID',
+      'PRODUCTS_FEATURED',
+      'PRODUCTS_GRID',
+      'TESTIMONIALS',
+      'CONTACT',
+      'CUSTOM',
+    ];
 
     if (!validTypes.includes(value as SectionTypeValue)) {
       return Result.fail(`Type de section invalide: ${value}`);

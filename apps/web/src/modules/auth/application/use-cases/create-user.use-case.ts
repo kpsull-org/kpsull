@@ -20,7 +20,8 @@ export interface CreateUserInput {
  * Use case for creating a new user
  *
  * This use case handles the business logic for creating a new user account.
- * It validates the input, checks for duplicate emails, and persists the user.
+ * It validates the input and persists the user atomically, relying on the
+ * database unique constraint for email to prevent race conditions.
  *
  * @example
  * ```typescript
@@ -40,7 +41,7 @@ export class CreateUserUseCase implements UseCase<CreateUserInput, UserDTO> {
   constructor(private readonly userRepository: UserRepository) {}
 
   async execute(input: CreateUserInput): Promise<Result<UserDTO>> {
-    // First validate the email format before checking existence
+    // First validate the email format
     // This is done by attempting to create the user entity
     const userResult = User.create({
       email: input.email,
@@ -54,19 +55,32 @@ export class CreateUserUseCase implements UseCase<CreateUserInput, UserDTO> {
       return Result.fail(userResult.error!);
     }
 
-    // Check if email already exists
-    const emailExists = await this.userRepository.existsByEmail(input.email);
-    if (emailExists) {
-      return Result.fail('User with this email already exists');
-    }
-
     const user = userResult.value;
 
-    // Persist the user
-    await this.userRepository.save(user);
+    // Persist the user - rely on database unique constraint for atomicity
+    // This eliminates the race condition between check and insert
+    try {
+      await this.userRepository.save(user);
+      return Result.ok(this.toDTO(user));
+    } catch (error) {
+      if (this.isUniqueConstraintError(error)) {
+        return Result.fail('Un utilisateur avec cet email existe deja');
+      }
+      throw error;
+    }
+  }
 
-    // Return the user DTO
-    return Result.ok(this.toDTO(user));
+  /**
+   * Checks if the error is a PostgreSQL unique constraint violation
+   * PostgreSQL error code 23505 = unique_violation
+   */
+  private isUniqueConstraintError(error: unknown): boolean {
+    if (error === null || typeof error !== 'object') {
+      return false;
+    }
+
+    const pgError = error as { code?: string };
+    return pgError.code === '23505';
   }
 
   private toDTO(user: User): UserDTO {

@@ -97,6 +97,22 @@ describe('ActivateCreatorAccountUseCase', () => {
     );
   });
 
+  it('should fail if userId is empty', async () => {
+    const result = await useCase.execute({ userId: '' });
+
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toBe('User ID est requis');
+    expect(mockOnboardingRepository.findByUserId).not.toHaveBeenCalled();
+  });
+
+  it('should fail if userId is whitespace only', async () => {
+    const result = await useCase.execute({ userId: '   ' });
+
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toBe('User ID est requis');
+    expect(mockOnboardingRepository.findByUserId).not.toHaveBeenCalled();
+  });
+
   it('should fail if onboarding not found', async () => {
     vi.mocked(mockOnboardingRepository.findByUserId).mockResolvedValue(null);
 

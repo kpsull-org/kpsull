@@ -28,3 +28,11 @@ export {
   type ReorderSectionsInput,
   type ReorderSectionsOutput,
 } from './manage-sections.use-case';
+
+// Public use cases
+export {
+  GetPublicPageUseCase,
+  type GetPublicPageInput,
+  type GetPublicPageOutput,
+  type PublicSectionOutput,
+} from './get-public-page.use-case';
