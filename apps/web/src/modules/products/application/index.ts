@@ -1,6 +1,7 @@
 // Ports
 export type { ProjectRepository } from './ports/project.repository.interface';
 export type { ProductRepository } from './ports/product.repository.interface';
+export type { VariantRepository } from './ports/variant.repository.interface';
 
 // Use Cases - Projects
 export {
@@ -54,6 +55,32 @@ export {
   type ProductListItem,
   type ProductListRepository,
 } from './use-cases/products/list-products.use-case';
+
+// Use Cases - Variants
+export {
+  CreateVariantUseCase,
+  type CreateVariantInput,
+  type CreateVariantOutput,
+} from './use-cases/variants/create-variant.use-case';
+
+export {
+  UpdateVariantUseCase,
+  type UpdateVariantInput,
+  type UpdateVariantOutput,
+} from './use-cases/variants/update-variant.use-case';
+
+export {
+  DeleteVariantUseCase,
+  type DeleteVariantInput,
+  type DeleteVariantOutput,
+} from './use-cases/variants/delete-variant.use-case';
+
+export {
+  ListVariantsUseCase,
+  type ListVariantsInput,
+  type ListVariantsOutput,
+  type VariantOutput,
+} from './use-cases/variants/list-variants.use-case';
 
 // Services
 export type {

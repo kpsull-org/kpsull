@@ -33,6 +33,14 @@ class MockProductRepository implements ProductRepository {
   async countByCreatorId(): Promise<number> {
     return 0;
   }
+
+  async findVariantsByProductId(): Promise<never[]> {
+    return [];
+  }
+
+  async saveVariant(): Promise<void> {}
+
+  async deleteVariant(): Promise<void> {}
 }
 
 class MockSubscriptionService implements SubscriptionService {

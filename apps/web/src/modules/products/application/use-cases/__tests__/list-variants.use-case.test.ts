@@ -1,0 +1,310 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { ListVariantsUseCase, type ListVariantsInput } from '../variants/list-variants.use-case';
+import type { VariantRepository } from '../../ports/variant.repository.interface';
+import type { ProductRepository } from '../../ports/product.repository.interface';
+import { Product } from '../../../domain/entities/product.entity';
+import { ProductVariant } from '../../../domain/entities/product-variant.entity';
+
+describe('ListVariantsUseCase', () => {
+  let useCase: ListVariantsUseCase;
+  let mockVariantRepo: {
+    findById: Mock;
+    findByProductId: Mock;
+    findBySku: Mock;
+    save: Mock;
+    delete: Mock;
+    countByProductId: Mock;
+  };
+  let mockProductRepo: {
+    findById: Mock;
+    findByCreatorId: Mock;
+    save: Mock;
+    delete: Mock;
+    countByCreatorId: Mock;
+  };
+  let validProduct: Product;
+
+  beforeEach(() => {
+    mockVariantRepo = {
+      findById: vi.fn(),
+      findByProductId: vi.fn(),
+      findBySku: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      countByProductId: vi.fn(),
+    };
+
+    mockProductRepo = {
+      findById: vi.fn(),
+      findByCreatorId: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      countByCreatorId: vi.fn(),
+    };
+
+    // Create a valid product for tests
+    validProduct = Product.reconstitute({
+      id: 'product-123',
+      creatorId: 'creator-123',
+      name: 'Mon Produit',
+      priceAmount: 2999,
+      priceCurrency: 'EUR',
+      status: 'PUBLISHED',
+      publishedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).value!;
+
+    mockProductRepo.findById.mockResolvedValue(validProduct);
+    mockVariantRepo.findByProductId.mockResolvedValue([]);
+
+    useCase = new ListVariantsUseCase(
+      mockVariantRepo as unknown as VariantRepository,
+      mockProductRepo as unknown as ProductRepository
+    );
+  });
+
+  describe('execute', () => {
+    it('should list variants for a product successfully', async () => {
+      // Arrange
+      const testVariants = [
+        ProductVariant.reconstitute({
+          id: 'variant-1',
+          productId: 'product-123',
+          name: 'Taille S',
+          stock: 5,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).value!,
+        ProductVariant.reconstitute({
+          id: 'variant-2',
+          productId: 'product-123',
+          name: 'Taille M',
+          stock: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).value!,
+      ];
+
+      mockVariantRepo.findByProductId.mockResolvedValue(testVariants);
+
+      const input: ListVariantsInput = {
+        productId: 'product-123',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      const resultVariants = result.value?.variants ?? [];
+      expect(resultVariants).toHaveLength(2);
+      expect(resultVariants[0]?.name).toBe('Taille S');
+      expect(resultVariants[1]?.name).toBe('Taille M');
+    });
+
+    it('should return empty list when no variants exist', async () => {
+      // Arrange
+      mockVariantRepo.findByProductId.mockResolvedValue([]);
+
+      const input: ListVariantsInput = {
+        productId: 'product-123',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.value!.variants).toHaveLength(0);
+      expect(result.value!.total).toBe(0);
+    });
+
+    it('should fail when product does not exist', async () => {
+      // Arrange
+      mockProductRepo.findById.mockResolvedValue(null);
+
+      const input: ListVariantsInput = {
+        productId: 'nonexistent-product',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('produit');
+    });
+
+    it('should return variants with all properties', async () => {
+      // Arrange
+      const variant = ProductVariant.reconstitute({
+        id: 'variant-1',
+        productId: 'product-123',
+        name: 'Version Premium',
+        sku: 'SKU-PREMIUM',
+        priceOverrideAmount: 3999,
+        priceOverrideCurrency: 'EUR',
+        stock: 15,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-15'),
+      }).value!;
+
+      mockVariantRepo.findByProductId.mockResolvedValue([variant]);
+
+      const input: ListVariantsInput = {
+        productId: 'product-123',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      const variants = result.value?.variants ?? [];
+      expect(variants[0]).toEqual({
+        id: 'variant-1',
+        productId: 'product-123',
+        name: 'Version Premium',
+        sku: 'SKU-PREMIUM',
+        priceOverride: 39.99,
+        stock: 15,
+        isAvailable: true,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+    });
+
+    it('should return total count of variants', async () => {
+      // Arrange
+      const variants = [
+        ProductVariant.reconstitute({
+          id: 'variant-1',
+          productId: 'product-123',
+          name: 'Taille S',
+          stock: 5,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).value!,
+        ProductVariant.reconstitute({
+          id: 'variant-2',
+          productId: 'product-123',
+          name: 'Taille M',
+          stock: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).value!,
+        ProductVariant.reconstitute({
+          id: 'variant-3',
+          productId: 'product-123',
+          name: 'Taille L',
+          stock: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).value!,
+      ];
+
+      mockVariantRepo.findByProductId.mockResolvedValue(variants);
+
+      const input: ListVariantsInput = {
+        productId: 'product-123',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.value!.total).toBe(3);
+    });
+
+    it('should return variants without price override as undefined', async () => {
+      // Arrange
+      const variant = ProductVariant.reconstitute({
+        id: 'variant-1',
+        productId: 'product-123',
+        name: 'Taille S',
+        stock: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).value!;
+
+      mockVariantRepo.findByProductId.mockResolvedValue([variant]);
+
+      const input: ListVariantsInput = {
+        productId: 'product-123',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      const variants = result.value?.variants ?? [];
+      expect(variants[0]?.priceOverride).toBeUndefined();
+    });
+
+    it('should return variants without SKU as undefined', async () => {
+      // Arrange
+      const variant = ProductVariant.reconstitute({
+        id: 'variant-1',
+        productId: 'product-123',
+        name: 'Taille S',
+        stock: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).value!;
+
+      mockVariantRepo.findByProductId.mockResolvedValue([variant]);
+
+      const input: ListVariantsInput = {
+        productId: 'product-123',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      const variants = result.value?.variants ?? [];
+      expect(variants[0]?.sku).toBeUndefined();
+    });
+
+    it('should indicate variant availability based on stock', async () => {
+      // Arrange
+      const variants = [
+        ProductVariant.reconstitute({
+          id: 'variant-1',
+          productId: 'product-123',
+          name: 'En stock',
+          stock: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).value!,
+        ProductVariant.reconstitute({
+          id: 'variant-2',
+          productId: 'product-123',
+          name: 'Rupture',
+          stock: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).value!,
+      ];
+
+      mockVariantRepo.findByProductId.mockResolvedValue(variants);
+
+      const input: ListVariantsInput = {
+        productId: 'product-123',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      const variantsList = result.value?.variants ?? [];
+      expect(variantsList[0]?.isAvailable).toBe(true);
+      expect(variantsList[1]?.isAvailable).toBe(false);
+    });
+  });
+});

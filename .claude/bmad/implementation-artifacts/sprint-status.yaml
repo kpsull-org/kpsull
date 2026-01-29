@@ -46,13 +46,13 @@ development_status:
   3-5-administration-abonnements: review
 
   # Epic 4: Catalogue Produits
-  epic-4: ready-for-dev
-  4-1-creation-gestion-projets: ready-for-dev
-  4-2-creation-produit-base: ready-for-dev
+  epic-4: in-progress
+  4-1-creation-gestion-projets: done
+  4-2-creation-produit-base: done
   4-3-upload-images-cloudinary: ready-for-dev
   4-4-gestion-variantes: ready-for-dev
-  4-5-publication-depublication: ready-for-dev
-  4-6-liste-filtrage-produits: ready-for-dev
+  4-5-publication-depublication: done
+  4-6-liste-filtrage-produits: done
 
   # Epic 5: Page Builder
   epic-5: ready-for-dev
@@ -70,8 +70,8 @@ development_status:
   6-3-affichage-details-produit: ready-for-dev
 
   # Epic 7: Panier & Checkout
-  epic-7: ready-for-dev
-  7-1-ajout-produits-panier: ready-for-dev
+  epic-7: in-progress
+  7-1-ajout-produits-panier: done
   7-2-gestion-panier: ready-for-dev
   7-3-authentification-checkout: ready-for-dev
   7-4-saisie-adresse-livraison: ready-for-dev
@@ -79,8 +79,8 @@ development_status:
   7-6-confirmation-commande-email: ready-for-dev
 
   # Epic 8: Gestion Commandes Créateur
-  epic-8: ready-for-dev
-  8-1-liste-commandes-recues: ready-for-dev
+  epic-8: in-progress
+  8-1-liste-commandes-recues: done
   8-2-details-commande: ready-for-dev
   8-3-expedition-tracking: ready-for-dev
   8-4-selection-transporteur: ready-for-dev
