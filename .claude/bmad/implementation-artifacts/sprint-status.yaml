@@ -46,11 +46,11 @@ development_status:
   3-5-administration-abonnements: review
 
   # Epic 4: Catalogue Produits
-  epic-4: in-progress
+  epic-4: done
   4-1-creation-gestion-projets: done
   4-2-creation-produit-base: done
-  4-3-upload-images-cloudinary: ready-for-dev
-  4-4-gestion-variantes: ready-for-dev
+  4-3-upload-images-cloudinary: done
+  4-4-gestion-variantes: done
   4-5-publication-depublication: done
   4-6-liste-filtrage-produits: done
 
