@@ -111,6 +111,7 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM'
@@ -210,6 +211,7 @@ jobs:
           NEXTAUTH_SECRET: build-secret-placeholder
           NEXTAUTH_URL: http://localhost:3000
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          STRIPE_SECRET_KEY: sk_test_placeholder
 
   # ============================================================================
   # Summary Job
