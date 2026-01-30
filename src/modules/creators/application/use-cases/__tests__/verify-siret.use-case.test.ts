@@ -148,7 +148,7 @@ describe('VerifySiret Use Case', () => {
     it('should return PENDING_MANUAL status on timeout', async () => {
       mockSiretService.verifySiret = vi
         .fn()
-        .mockResolvedValue(Result.fail('TIMEOUT_API_INSEE'));
+        .mockResolvedValue(Result.fail('Le service est temporairement indisponible. Veuillez réessayer.'));
 
       const result = await useCase.execute(VALID_INPUT);
 
@@ -158,20 +158,21 @@ describe('VerifySiret Use Case', () => {
       expect(result.value.message).toContain('indisponible');
     });
 
-    it('should still allow continuation on timeout', async () => {
+    it('should still allow continuation on rate limit', async () => {
       mockSiretService.verifySiret = vi
         .fn()
-        .mockResolvedValue(Result.fail('TIMEOUT_API_INSEE'));
+        .mockResolvedValue(Result.fail('Trop de requêtes. Veuillez réessayer dans quelques secondes.'));
 
       const result = await useCase.execute(VALID_INPUT);
 
+      expect(result.isSuccess).toBe(true);
       expect(result.value.canContinue).toBe(true);
     });
 
     it('should save onboarding with pending status on timeout', async () => {
       mockSiretService.verifySiret = vi
         .fn()
-        .mockResolvedValue(Result.fail('TIMEOUT_API_INSEE'));
+        .mockResolvedValue(Result.fail('Le service est temporairement indisponible. Veuillez réessayer.'));
 
       await useCase.execute(VALID_INPUT);
 

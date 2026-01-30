@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Package, Mail, ArrowRight } from 'lucide-react';
@@ -33,6 +33,25 @@ import {
  * - AC5: Lien vers suivi de commande
  */
 export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={<ConfirmationSkeleton />}>
+      <ConfirmationContent />
+    </Suspense>
+  );
+}
+
+function ConfirmationSkeleton() {
+  return (
+    <div className="container py-8">
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 w-48 bg-muted rounded" />
+        <div className="h-96 bg-muted rounded" />
+      </div>
+    </div>
+  );
+}
+
+function ConfirmationContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order');
   const [order, setOrder] = useState<OrderConfirmation | null>(null);
@@ -60,14 +79,7 @@ export default function ConfirmationPage() {
     }).format(cents / 100);
 
   if (!mounted) {
-    return (
-      <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-muted rounded" />
-          <div className="h-96 bg-muted rounded" />
-        </div>
-      </div>
-    );
+    return <ConfirmationSkeleton />;
   }
 
   if (!orderId || !order) {
