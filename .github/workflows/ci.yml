@@ -32,11 +32,9 @@ jobs:
 
       - name: TypeScript Check
         run: bun run check
-        working-directory: apps/web
 
       - name: ESLint
         run: bun run lint
-        working-directory: apps/web
 
   # ============================================================================
   # Tests
@@ -59,14 +57,13 @@ jobs:
 
       - name: Run Tests
         run: bun run test
-        working-directory: apps/web
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v4
         if: always()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: apps/web/coverage/lcov.info
+          files: coverage/lcov.info
           fail_ci_if_error: false
 
   # ============================================================================
@@ -199,11 +196,9 @@ jobs:
 
       - name: Generate Prisma Client
         run: bunx prisma generate
-        working-directory: apps/web
 
       - name: Build
         run: bun run build
-        working-directory: apps/web
         env:
           # Add required env vars for build
           NEXTAUTH_SECRET: build-secret-placeholder

@@ -16,8 +16,9 @@ vulnerability:
   # Ignore unfixed vulnerabilities
   ignore-unfixed: true
 
-  # Vulnerability types to detect
-  type:
+# Package types to detect (replaces deprecated vulnerability.type)
+pkg:
+  types:
     - os
     - library
 
