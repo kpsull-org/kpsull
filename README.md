@@ -1,135 +1,79 @@
-# Turborepo starter
+# Kpsull - Marketplace SaaS
 
-This Turborepo starter is maintained by the Turborepo core team.
+Plateforme marketplace permettant aux créateurs de vendre leurs produits.
 
-## Using this example
+## Stack Technique
 
-Run the following command:
+- **Runtime:** [Bun](https://bun.sh/)
+- **Frontend:** Next.js 15, React 19, TailwindCSS
+- **Backend:** Next.js API Routes, Prisma 7, PostgreSQL
+- **Auth:** NextAuth v5 (Auth.js)
+- **Paiements:** Stripe Connect
 
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+## Structure
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+.
+├── src/              # Code source Next.js
+│   ├── app/          # Routes (App Router)
+│   ├── components/   # Composants React
+│   ├── lib/          # Utilitaires et configs
+│   ├── modules/      # Modules métier (hexagonal)
+│   └── shared/       # Code partagé
+├── prisma/           # Schéma et migrations
+├── public/           # Assets statiques
+└── docker/           # Configs Docker
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Installation
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+```bash
+# Prérequis: Bun et Docker
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+# Installer les dépendances
+bun install
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+# Copier les variables d'environnement
+cp .env.example .env.local
+# Éditer .env.local avec vos clés
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Développement
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+```bash
+# Démarrer PostgreSQL
+docker compose -f docker/docker-compose.postgres.yml up -d
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+# Setup base de données
+bun run db:generate
+bun run db:push
+bun run db:seed
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+# Lancer le serveur
+bun run dev
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Ouvrir [http://localhost:3000](http://localhost:3000)
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## Scripts
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+| Commande | Description |
+|----------|-------------|
+| `bun run dev` | Serveur de développement |
+| `bun run build` | Build de production |
+| `bun run start` | Démarrer le build |
+| `bun run lint` | Linter ESLint |
+| `bun run check` | Vérification TypeScript |
+| `bun run test` | Tests unitaires |
+| `bun run test:watch` | Tests en mode watch |
+| `bun run format` | Formater (Prettier) |
+| `bun run db:generate` | Générer client Prisma |
+| `bun run db:push` | Appliquer schéma |
+| `bun run db:migrate` | Créer migration |
+| `bun run db:studio` | Prisma Studio |
+| `bun run db:seed` | Peupler données test |
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+## Documentation
 
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+- [Configuration environnement](.env.example)
+- [Schéma base de données](prisma/schema.prisma)

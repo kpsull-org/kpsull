@@ -1,9 +1,5 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # Dependencies
 node_modules
-.pnp
-.pnp.js
 
 # Local env files
 .env
@@ -15,24 +11,23 @@ node_modules
 # Testing
 coverage
 
-# Turbo
-.turbo
-
-# Vercel
-.vercel
-
-# Build Outputs
+# Next.js
 .next/
 out/
+
+# Build
 build
 dist
 
+# Prisma
+*.tsbuildinfo
 
 # Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.log
 
 # Misc
 .DS_Store
 *.pem
+
+# Vercel
+.vercel

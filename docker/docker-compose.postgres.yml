@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+  kpsull_bdd:
+    image: postgres:15
+    container_name: kpsull_bdd
+    restart: always
+    environment:
+      - POSTGRES_DB=kpsull-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - kpsull-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kpsull-db"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+    volumes:
+      - kpsull_postgres_data:/var/lib/postgresql/data
+    command: postgres -c listen_addresses='*'
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  kpsull-network:
+
+volumes:
+  kpsull_postgres_data:
