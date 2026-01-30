@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: bunx prisma generate
+
       - name: TypeScript Check
         run: bun run check
 
@@ -54,6 +57,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: bunx prisma generate
 
       - name: Run Tests
         run: bun run test
