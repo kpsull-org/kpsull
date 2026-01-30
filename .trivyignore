@@ -1,0 +1,8 @@
+# Trivy Ignore File
+# https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/#by-trivyignore
+#
+# Add CVEs to ignore here with a comment explaining why
+# Format: CVE-YYYY-NNNNN # reason
+
+# Example:
+# CVE-2023-12345 # False positive - not exploitable in our context

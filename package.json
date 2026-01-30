@@ -1,24 +1,80 @@
 {
   "name": "kpsull",
+  "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "seed": "bun run prisma/seed.ts"
+  },
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset",
+    "db:local:push": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma db push",
+    "db:local:studio": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma studio",
+    "db:local:seed": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma db seed",
+    "dev:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next dev",
+    "build:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next build"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@types/dompurify": "^3.2.0",
+    "bcryptjs": "^3.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.3.1",
+    "isomorphic-dompurify": "^2.35.0",
+    "lucide-react": "^0.563.0",
+    "next": "^15.5.0",
+    "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.17.2",
+    "prisma": "^7.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "stripe": "^20.2.0",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@next/eslint-plugin-next": "^15.5.0",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^22.15.3",
+    "@types/pg": "^8.16.0",
+    "@types/react": "19.1.0",
+    "@types/react-dom": "19.1.1",
+    "@vitest/coverage-v8": "^4.0.18",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.34.0",
+    "eslint-config-next": "^16.1.6",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-only-warn": "^1.1.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.2.0",
     "prettier": "^3.6.2",
-    "turbo": "^2.5.8",
-    "typescript": "5.9.2"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "packageManager": "npm@11.5.2",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+    "tailwindcss": "^4.1.18",
+    "typescript": "5.9.2",
+    "typescript-eslint": "^8.54.0",
+    "vitest": "^4.0.18"
+  }
 }

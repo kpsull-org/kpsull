@@ -1,0 +1,65 @@
+# Trivy Configuration
+# https://aquasecurity.github.io/trivy/latest/docs/references/configuration/config-file/
+
+# Scan options
+scan:
+  # Skip directories
+  skip-dirs:
+    - node_modules
+    - .next
+    - coverage
+    - dist
+    - .git
+
+# Vulnerability options
+vulnerability:
+  # Ignore unfixed vulnerabilities
+  ignore-unfixed: true
+
+# Package types to detect (replaces deprecated vulnerability.type)
+pkg:
+  types:
+    - os
+    - library
+
+# Secret scanning
+secret:
+  # Config file for secret patterns
+  # config: trivy-secret.yaml
+
+# Severity levels
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+
+# Misconfiguration scanning
+misconfiguration:
+  # Enable Dockerfile, Kubernetes, Terraform scanning
+  scanners:
+    - dockerfile
+    - terraform
+
+# License scanning
+license:
+  # Full: check all licenses
+  # Restricted: check only copyleft licenses
+  full: false
+
+  # Ignored licenses
+  ignored:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+    - 0BSD
+
+# Output format
+format: table
+
+# Exit code when vulnerabilities found
+exit-code: 1
+
+# Timeout
+timeout: 10m
