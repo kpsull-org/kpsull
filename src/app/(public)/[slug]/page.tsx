@@ -13,13 +13,19 @@ interface PageProps {
 
 // Generate static params for popular creators
 export async function generateStaticParams() {
-  const pages = await prisma.creatorPage.findMany({
-    where: { status: 'PUBLISHED' },
-    select: { slug: true },
-    take: 100,
-  });
+  try {
+    const pages = await prisma.creatorPage.findMany({
+      where: { status: 'PUBLISHED' },
+      select: { slug: true },
+      take: 100,
+    });
 
-  return pages.map((page) => ({ slug: page.slug }));
+    return pages.map((page) => ({ slug: page.slug }));
+  } catch {
+    // Return empty array during CI build when DB is not available
+    // Pages will be generated on-demand with ISR
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
