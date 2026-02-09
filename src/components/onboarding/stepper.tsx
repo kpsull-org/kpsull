@@ -6,13 +6,11 @@ import { Check } from 'lucide-react';
 export interface Step {
   id: number;
   title: string;
-  description: string;
 }
 
 const ONBOARDING_STEPS: Step[] = [
-  { id: 1, title: 'Informations', description: 'Informations professionnelles' },
-  { id: 2, title: 'SIRET', description: 'Vérification SIRET' },
-  { id: 3, title: 'Paiements', description: 'Configuration Stripe' },
+  { id: 1, title: 'Informations' },
+  { id: 2, title: 'Paiements' },
 ];
 
 interface OnboardingStepperProps {
@@ -26,19 +24,16 @@ export function OnboardingStepper({
 }: OnboardingStepperProps) {
   return (
     <nav aria-label="Progress" className={cn('w-full', className)}>
-      <ol className="flex items-center justify-between">
+      <ol className="flex items-center justify-center">
         {ONBOARDING_STEPS.map((step, index) => {
           const isCompleted = step.id < currentStep;
           const isCurrent = step.id === currentStep;
           const isLast = index === ONBOARDING_STEPS.length - 1;
 
           return (
-            <li
-              key={step.id}
-              className={cn('relative flex-1', !isLast && 'pr-4 sm:pr-8')}
-            >
-              <div className="flex items-center">
-                {/* Step circle */}
+            <li key={step.id} className="flex items-center">
+              {/* Step circle + label */}
+              <div className="flex flex-col items-center">
                 <div
                   className={cn(
                     'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-medium',
@@ -54,34 +49,26 @@ export function OnboardingStepper({
                     step.id
                   )}
                 </div>
-
-                {/* Connector line */}
-                {!isLast && (
-                  <div
-                    className={cn(
-                      'ml-4 hidden h-0.5 w-full sm:block',
-                      isCompleted ? 'bg-primary' : 'bg-muted-foreground/30'
-                    )}
-                  />
-                )}
-              </div>
-
-              {/* Step label */}
-              <div className="mt-2">
                 <span
                   className={cn(
-                    'text-sm font-medium',
-                    isCurrent && 'text-primary',
-                    isCompleted && 'text-primary',
+                    'mt-2 text-sm font-medium',
+                    (isCurrent || isCompleted) && 'text-primary',
                     !isCompleted && !isCurrent && 'text-muted-foreground'
                   )}
                 >
                   {step.title}
                 </span>
-                <p className="hidden text-xs text-muted-foreground sm:block">
-                  {step.description}
-                </p>
               </div>
+
+              {/* Connector line */}
+              {!isLast && (
+                <div
+                  className={cn(
+                    'mx-6 mb-6 h-0.5 w-20',
+                    isCompleted ? 'bg-primary' : 'bg-muted-foreground/30'
+                  )}
+                />
+              )}
             </li>
           );
         })}

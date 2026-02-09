@@ -11,6 +11,7 @@ import type {
   CreatorStatus,
   SortDirection,
 } from '@/modules/analytics/application/ports';
+import { suspendCreatorAction, reactivateCreatorAction } from './actions';
 
 export interface CreatorsPageClientProps {
   initialCreators: CreatorSummary[];
@@ -124,30 +125,30 @@ export function CreatorsPageClient({
     setReactivateDialogOpen(true);
   }, []);
 
-  /**
-   * Mock suspend action - in production, this would call a server action
-   */
   const handleSuspendAction = useCallback(
-    async (_creatorId: string, _reason: string): Promise<{ success: boolean; error?: string }> => {
-      // TODO: Call server action to suspend creator
-      // For now, just simulate success
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return { success: true };
+    async (creatorId: string, reason: string): Promise<{ success: boolean; error?: string }> => {
+      const result = await suspendCreatorAction(creatorId, reason);
+      if (result.success) {
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+      return result;
     },
-    []
+    [router]
   );
 
-  /**
-   * Mock reactivate action - in production, this would call a server action
-   */
   const handleReactivateAction = useCallback(
-    async (_creatorId: string, _reason: string): Promise<{ success: boolean; error?: string }> => {
-      // TODO: Call server action to reactivate creator
-      // For now, just simulate success
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return { success: true };
+    async (creatorId: string, reason: string): Promise<{ success: boolean; error?: string }> => {
+      const result = await reactivateCreatorAction(creatorId, reason);
+      if (result.success) {
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+      return result;
     },
-    []
+    [router]
   );
 
   return (

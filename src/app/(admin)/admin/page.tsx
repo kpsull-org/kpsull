@@ -1,13 +1,12 @@
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
 import { AdminStatsCards } from '@/components/admin';
 import { AdminPeriodSelector } from './admin-period-selector';
 import {
   GetAdminStatsUseCase,
   type GetAdminStatsOutput,
 } from '@/modules/analytics/application/use-cases';
-import { MockAdminAnalyticsRepository } from '@/modules/analytics/infrastructure/repositories';
+import { PrismaAdminAnalyticsRepository } from '@/modules/analytics/infrastructure/repositories';
+import { prisma } from '@/lib/prisma/client';
 import type { TimePeriodType } from '@/modules/analytics/domain/value-objects';
 
 export const metadata: Metadata = {
@@ -40,22 +39,12 @@ interface AdminDashboardPageProps {
 export default async function AdminDashboardPage({
   searchParams,
 }: AdminDashboardPageProps) {
-  // AC3: Page reserved for ADMIN only
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/login');
-  }
-
-  if (session.user.role !== 'ADMIN') {
-    redirect('/');
-  }
-
+  // Auth is handled by middleware (src/middleware.ts)
   const params = await searchParams;
   const period: TimePeriodType = params.period ?? 'LAST_30_DAYS';
 
-  // Initialize use case with repository
-  const adminRepository = new MockAdminAnalyticsRepository();
+  // Initialize use case with Prisma repository
+  const adminRepository = new PrismaAdminAnalyticsRepository(prisma);
   const getAdminStatsUseCase = new GetAdminStatsUseCase(adminRepository);
 
   // Execute use case

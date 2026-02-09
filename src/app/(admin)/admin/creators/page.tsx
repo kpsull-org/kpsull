@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
 import { ListCreatorsUseCase } from '@/modules/analytics/application/use-cases';
-import { MockCreatorRepository } from '@/modules/analytics/infrastructure/repositories';
+import { PrismaCreatorRepository } from '@/modules/analytics/infrastructure/repositories';
+import { prisma } from '@/lib/prisma/client';
 import { CreatorsPageClient } from './page-client';
 import type { CreatorSortField, CreatorStatus, SortDirection } from '@/modules/analytics/application/ports';
 
@@ -35,18 +34,7 @@ interface CreatorsPageProps {
  * - AC4: Pagination
  */
 export default async function CreatorsPage({ searchParams }: CreatorsPageProps) {
-  // Check authentication and authorization
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/login');
-  }
-
-  // Only ADMIN can access this page
-  if (session.user.role !== 'ADMIN') {
-    redirect('/');
-  }
-
+  // Auth is handled by middleware (src/middleware.ts)
   // Parse search params
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
@@ -55,8 +43,8 @@ export default async function CreatorsPage({ searchParams }: CreatorsPageProps) 
   const sortBy: CreatorSortField = params.sortBy ?? 'registeredAt';
   const sortDirection: SortDirection = params.sortDirection ?? 'desc';
 
-  // Fetch creators
-  const creatorRepository = new MockCreatorRepository();
+  // Fetch creators with Prisma repository
+  const creatorRepository = new PrismaCreatorRepository(prisma);
   const listCreatorsUseCase = new ListCreatorsUseCase(creatorRepository);
 
   const result = await listCreatorsUseCase.execute({

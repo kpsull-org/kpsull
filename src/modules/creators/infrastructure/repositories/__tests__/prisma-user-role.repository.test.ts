@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Role } from '@prisma/client';
+
+// Mock @prisma/client to avoid needing generated client
+vi.mock('@prisma/client', () => ({
+  Role: {
+    CLIENT: 'CLIENT',
+    CREATOR: 'CREATOR',
+    ADMIN: 'ADMIN',
+  },
+}));
 
 // Mock prisma client
 vi.mock('@/lib/prisma/client', () => ({
@@ -9,6 +17,8 @@ vi.mock('@/lib/prisma/client', () => ({
     },
   },
 }));
+
+import { Role } from '@prisma/client';
 
 import { prisma } from '@/lib/prisma/client';
 import { PrismaUserRoleRepository } from '../prisma-user-role.repository';

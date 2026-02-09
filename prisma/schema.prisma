@@ -63,6 +63,28 @@ enum SectionType {
   CUSTOM
 }
 
+enum FlagReason {
+  INAPPROPRIATE_CONTENT
+  COUNTERFEIT
+  PROHIBITED_ITEM
+  MISLEADING_DESCRIPTION
+  SPAM
+  OTHER
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+  DELETED
+}
+
+enum ModerationActionType {
+  APPROVE
+  HIDE
+  DELETE
+}
+
 // ============================================
 // USER & AUTH (Auth.js compatible)
 // ============================================
@@ -86,6 +108,17 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Moderation relations
+  flaggedContentCreated     FlaggedContent[]        @relation("FlaggedContentCreator")
+  flaggedContentFlagged     FlaggedContent[]        @relation("FlaggedContentFlagger")
+  flaggedContentModerated   FlaggedContent[]        @relation("FlaggedContentModerator")
+  moderationActions         ModerationActionRecord[] @relation("ModerationActionModerator")
+
+  // Suspension relations
+  suspensions               CreatorSuspension[]     @relation("CreatorSuspensions")
+  suspensionsAdministered   CreatorSuspension[]     @relation("SuspensionAdmin")
+  reactivationsAdministered CreatorSuspension[]     @relation("ReactivationAdmin")
 
   @@index([email])
   @@index([role])
@@ -499,4 +532,72 @@ model Dispute {
   @@index([creatorId])
   @@index([status])
   @@map("disputes")
+}
+
+// ============================================
+// CONTENT MODERATION
+// ============================================
+
+model FlaggedContent {
+  id                 String           @id @default(cuid())
+  contentId          String
+  contentType        String           // 'PRODUCT' | 'REVIEW' | 'PAGE'
+  contentTitle       String
+  contentDescription String?
+  contentImageUrl    String?
+  creatorId          String
+  creator            User             @relation("FlaggedContentCreator", fields: [creatorId], references: [id])
+  flaggedBy          String
+  flagger            User             @relation("FlaggedContentFlagger", fields: [flaggedBy], references: [id])
+  flagReason         FlagReason
+  flagDetails        String?
+  status             ModerationStatus @default(PENDING)
+  moderatorId        String?
+  moderator          User?            @relation("FlaggedContentModerator", fields: [moderatorId], references: [id])
+  moderatorNote      String?
+  flaggedAt          DateTime         @default(now())
+  moderatedAt        DateTime?
+
+  actions ModerationActionRecord[]
+
+  @@index([status])
+  @@index([creatorId])
+  @@index([contentType])
+  @@map("flagged_content")
+}
+
+model ModerationActionRecord {
+  id               String               @id @default(cuid())
+  flaggedContentId String
+  flaggedContent   FlaggedContent       @relation(fields: [flaggedContentId], references: [id], onDelete: Cascade)
+  action           ModerationActionType
+  moderatorId      String
+  moderator        User                 @relation("ModerationActionModerator", fields: [moderatorId], references: [id])
+  note             String?
+  createdAt        DateTime             @default(now())
+
+  @@index([flaggedContentId])
+  @@index([moderatorId])
+  @@map("moderation_actions")
+}
+
+// ============================================
+// CREATOR SUSPENSION (AUDIT TRAIL)
+// ============================================
+
+model CreatorSuspension {
+  id                 String    @id @default(cuid())
+  creatorId          String
+  creator            User      @relation("CreatorSuspensions", fields: [creatorId], references: [id])
+  suspendedBy        String
+  suspender          User      @relation("SuspensionAdmin", fields: [suspendedBy], references: [id])
+  reason             String
+  suspendedAt        DateTime  @default(now())
+  reactivatedAt      DateTime?
+  reactivatedBy      String?
+  reactivator        User?     @relation("ReactivationAdmin", fields: [reactivatedBy], references: [id])
+  reactivationReason String?
+
+  @@index([creatorId])
+  @@map("creator_suspensions")
 }

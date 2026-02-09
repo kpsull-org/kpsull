@@ -5,32 +5,38 @@ import {
 } from '../../application/ports/siret-verification.service.interface';
 
 /**
- * data.gouv.fr API response types
- * API: https://entreprise.data.gouv.fr/api/sirene/v3/etablissements/{siret}
+ * recherche-entreprises.api.gouv.fr response types
+ * API: https://recherche-entreprises.api.gouv.fr/search?q={siret}
  */
-interface DataGouvUniteLegale {
-  denomination?: string;
-  prenom_usuel?: string;
-  nom?: string;
-  categorie_juridique?: string;
-}
-
-interface DataGouvEtablissement {
+interface RechercheEntrepriseSiege {
   siret: string;
-  unite_legale: DataGouvUniteLegale;
-  geo_adresse?: string;
-  numero_voie?: string;
-  type_voie?: string;
-  libelle_voie?: string;
-  code_postal?: string;
-  libelle_commune?: string;
-  activite_principale?: string;
-  date_creation?: string;
-  etat_administratif?: string;
+  activite_principale: string;
+  activite_principale_registre_metier: string | null;
+  date_creation: string;
+  etat_administratif: string;
+  geo_adresse: string | null;
+  numero_voie: string | null;
+  type_voie: string | null;
+  libelle_voie: string | null;
+  code_postal: string | null;
+  libelle_commune: string | null;
 }
 
-interface DataGouvApiResponse {
-  etablissement: DataGouvEtablissement;
+interface RechercheEntrepriseResult {
+  siren: string;
+  nom_complet: string;
+  nom_raison_sociale: string | null;
+  nature_juridique: string;
+  siege: RechercheEntrepriseSiege;
+  activite_principale: string;
+  date_creation: string;
+  etat_administratif: string;
+  matching_etablissements: RechercheEntrepriseSiege[];
+}
+
+interface RechercheEntrepriseApiResponse {
+  results: RechercheEntrepriseResult[];
+  total_results: number;
 }
 
 /**
@@ -47,22 +53,24 @@ const NAF_LABELS: Record<string, string> = {
   '63.12Z': 'Portails Internet',
   '73.11Z': 'Activités des agences de publicité',
   '74.20Z': 'Activités photographiques',
-  '32.12Z': 'Fabrication d\'articles de joaillerie et bijouterie',
-  '14.19Z': 'Fabrication d\'autres vêtements et accessoires',
+  '32.12Z': "Fabrication d'articles de joaillerie et bijouterie",
+  '14.19Z': "Fabrication d'autres vêtements et accessoires",
   '18.12Z': 'Autre imprimerie (labeur)',
-  '58.19Z': 'Autres activités d\'édition',
+  '58.19Z': "Autres activités d'édition",
 };
 
 /**
- * data.gouv.fr Sirene API Service
+ * Recherche Entreprises API Service (recherche-entreprises.api.gouv.fr)
  *
  * Verifies SIRET numbers against the official French business registry.
- * This API is FREE and doesn't require authentication.
+ * This API is FREE, doesn't require authentication, and replaces the
+ * deprecated entreprise.data.gouv.fr/api/sirene/v3 endpoint.
  *
- * API documentation: https://entreprise.data.gouv.fr/api_doc/sirene
+ * API documentation: https://recherche-entreprises.api.gouv.fr
  */
 export class DataGouvSiretService implements ISiretVerificationService {
-  private readonly baseUrl = 'https://entreprise.data.gouv.fr/api/sirene/v3';
+  private readonly baseUrl =
+    'https://recherche-entreprises.api.gouv.fr/search';
   private readonly timeout = 10000; // 10 seconds
 
   async verifySiret(siret: string): Promise<Result<SiretVerificationResult>> {
@@ -76,7 +84,7 @@ export class DataGouvSiretService implements ISiretVerificationService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-      const response = await fetch(`${this.baseUrl}/etablissements/${siret}`, {
+      const response = await fetch(`${this.baseUrl}?q=${siret}`, {
         headers: {
           Accept: 'application/json',
         },
@@ -85,34 +93,45 @@ export class DataGouvSiretService implements ISiretVerificationService {
 
       clearTimeout(timeoutId);
 
-      if (response.status === 404) {
-        return Result.fail('SIRET non trouvé dans la base Sirene');
-      }
-
       if (response.status === 429) {
-        return Result.fail('Trop de requêtes. Veuillez réessayer dans quelques secondes.');
+        return Result.fail(
+          'Trop de requêtes. Veuillez réessayer dans quelques secondes.'
+        );
       }
 
       if (!response.ok) {
         return Result.fail(`Erreur API Sirene: ${response.status}`);
       }
 
-      const data = (await response.json()) as DataGouvApiResponse;
-      const etablissement = data.etablissement;
-      const uniteLegale = etablissement.unite_legale;
+      const data =
+        (await response.json()) as RechercheEntrepriseApiResponse;
+
+      if (!data.results || data.results.length === 0) {
+        return Result.fail('SIRET non trouvé dans la base Sirene');
+      }
+
+      // Find the matching establishment by SIRET
+      // Safe: we already checked data.results.length > 0 above
+      const entreprise = data.results[0]!;
+
+      // matching_etablissements often has incomplete data (no address fields)
+      // Use it only if it has address info, otherwise fall back to siege
+      const matchingEtab = entreprise.matching_etablissements?.find(
+        (e) => e.siret === siret
+      );
+      const etablissement =
+        matchingEtab?.libelle_voie || matchingEtab?.geo_adresse
+          ? matchingEtab
+          : entreprise.siege;
 
       // Check if establishment is active
       const isActive = etablissement.etat_administratif === 'A';
 
       if (!isActive) {
-        return Result.fail("Cet établissement n'est plus actif (fermé ou radié)");
+        return Result.fail(
+          "Cet établissement n'est plus actif (fermé ou radié)"
+        );
       }
-
-      // Build company name (denomination or individual name)
-      const companyName =
-        uniteLegale.denomination ||
-        `${uniteLegale.prenom_usuel ?? ''} ${uniteLegale.nom ?? ''}`.trim() ||
-        'Non renseigné';
 
       // Build address from individual fields
       const streetParts = [
@@ -121,20 +140,25 @@ export class DataGouvSiretService implements ISiretVerificationService {
         etablissement.libelle_voie,
       ].filter(Boolean);
 
-      const activityCode = etablissement.activite_principale?.replace('.', '') || undefined;
-      const activityLabel = activityCode ? NAF_LABELS[etablissement.activite_principale || ''] : undefined;
+      const activityCode = etablissement.activite_principale || undefined;
+      const activityLabel = activityCode
+        ? NAF_LABELS[activityCode]
+        : undefined;
 
       return Result.ok({
         isValid: true,
         isActive: true,
-        companyName,
-        legalForm: this.getLegalFormLabel(uniteLegale.categorie_juridique),
+        companyName: entreprise.nom_complet || 'Non renseigné',
+        legalForm: this.getLegalFormLabel(entreprise.nature_juridique),
         address: {
-          street: streetParts.join(' ') || etablissement.geo_adresse?.split(',')[0] || '',
+          street:
+            streetParts.join(' ') ||
+            etablissement.geo_adresse?.split(',')[0] ||
+            '',
           postalCode: etablissement.code_postal ?? '',
           city: etablissement.libelle_commune ?? '',
         },
-        activityCode: etablissement.activite_principale,
+        activityCode,
         activityLabel,
         creationDate: etablissement.date_creation
           ? new Date(etablissement.date_creation)
@@ -142,7 +166,9 @@ export class DataGouvSiretService implements ISiretVerificationService {
       });
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        return Result.fail('Le service est temporairement indisponible. Veuillez réessayer.');
+        return Result.fail(
+          'Le service est temporairement indisponible. Veuillez réessayer.'
+        );
       }
       console.error('SIRET verification error:', error);
       return Result.fail('Erreur lors de la vérification du SIRET');
