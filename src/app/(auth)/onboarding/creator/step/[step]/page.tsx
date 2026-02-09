@@ -85,6 +85,11 @@ export default async function StepPage({ params }: StepPageProps) {
     redirect('/dashboard');
   }
 
+  // Auto-skip Step 2 if SIRET already verified inline
+  if (stepNumber === 2 && onboarding.siretVerified) {
+    redirect('/onboarding/creator/step/3');
+  }
+
   // If trying to access a future step, redirect to current step
   if (stepNumber > currentStepNumber) {
     redirect(`/onboarding/creator/step/${currentStepNumber}`);

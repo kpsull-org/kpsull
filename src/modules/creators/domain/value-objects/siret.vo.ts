@@ -55,8 +55,9 @@ export class Siret extends ValueObject<SiretProps> {
   /**
    * Validates the Luhn checksum for a SIRET number
    *
-   * For SIRET, we double digits at even positions (2nd, 4th, 6th, etc. - 1-indexed)
-   * which translates to odd indexes (1, 3, 5, etc. - 0-indexed).
+   * Standard Luhn: double every second digit from the rightmost.
+   * For a 14-digit number, this means doubling digits at even
+   * 0-indexed positions (0, 2, 4, 6, 8, 10, 12) from the left.
    * If doubled digit > 9, subtract 9.
    * Sum all digits. Valid if sum % 10 === 0.
    */
@@ -66,8 +67,8 @@ export class Siret extends ValueObject<SiretProps> {
     for (let i = 0; i < 14; i++) {
       let digit = parseInt(siret.charAt(i), 10);
 
-      // Double digits at positions 2, 4, 6, ... (1-indexed) = indexes 1, 3, 5, ... (0-indexed)
-      if (i % 2 === 1) {
+      // Double digits at even 0-indexed positions (standard Luhn from right for 14 digits)
+      if (i % 2 === 0) {
         digit *= 2;
         if (digit > 9) {
           digit -= 9;

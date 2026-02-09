@@ -63,18 +63,72 @@ interface SiretVerificationResult extends ActionResult {
   message?: string;
 }
 
+/**
+ * Result of inline SIRET verification (called while user types)
+ */
+export interface InlineSiretResult {
+  status: 'recognized' | 'not-found' | 'inactive' | 'error';
+  companyInfo?: {
+    companyName: string;
+    legalForm?: string;
+    address?: { street: string; postalCode: string; city: string };
+    activityCode?: string;
+    activityLabel?: string;
+    creationDate?: string;
+  };
+  error?: string;
+}
+
 export interface ProfessionalInfoInput {
   brandName: string;
   siret: string;
   street: string;
   city: string;
   postalCode: string;
+  siretVerifiedInline?: boolean;
+}
+
+/**
+ * Verify SIRET inline (called while user types, debounced)
+ *
+ * Lightweight server action that calls data.gouv.fr API directly.
+ * No auth/onboarding required - purely informational verification.
+ */
+export async function verifySiretInline(siret: string): Promise<InlineSiretResult> {
+  const result = await siretService.verifySiret(siret);
+
+  if (result.isFailure) {
+    const error = result.error!;
+    // Distinguish between "not found" and other errors
+    if (error.includes('non trouvé')) {
+      return { status: 'not-found', error };
+    }
+    if (error.includes('plus actif')) {
+      return { status: 'inactive', error };
+    }
+    return { status: 'error', error };
+  }
+
+  const data = result.value;
+  return {
+    status: 'recognized',
+    companyInfo: {
+      companyName: data.companyName,
+      legalForm: data.legalForm,
+      address: data.address,
+      activityCode: data.activityCode,
+      activityLabel: data.activityLabel,
+      creationDate: data.creationDate?.toLocaleDateString('fr-FR'),
+    },
+  };
 }
 
 /**
  * Submit professional info (Step 1)
  *
  * Uses the SubmitProfessionalInfoUseCase for domain validation.
+ * If siretVerifiedInline is true, also marks SIRET as verified
+ * and skips directly to Stripe Connect step.
  */
 export async function submitProfessionalInfo(
   input: ProfessionalInfoInput
@@ -97,6 +151,17 @@ export async function submitProfessionalInfo(
 
   if (result.isFailure) {
     return { success: false, error: result.error! };
+  }
+
+  // If SIRET was verified inline, also mark as verified to skip Step 2
+  if (input.siretVerifiedInline) {
+    const onboarding = await creatorOnboardingRepository.findByUserId(
+      session.user.id
+    );
+    if (onboarding) {
+      onboarding.verifySiret();
+      await creatorOnboardingRepository.save(onboarding);
+    }
   }
 
   revalidatePath('/onboarding/creator');

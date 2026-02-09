@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
   kpsull_bdd:
     image: postgres:15
@@ -25,6 +23,24 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    container_name: kpsull_stripe_cli
+    restart: unless-stopped
+    env_file:
+      - ../.env.local
+    entrypoint: /bin/sh
+    command: -c "stripe listen --forward-to host.docker.internal:3000/api/webhooks/stripe --api-key $$STRIPE_SECRET_KEY"
+    networks:
+      - kpsull-network
+    depends_on:
+      kpsull_bdd:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: "5m"
+        max-file: "2"
 
 networks:
   kpsull-network:
