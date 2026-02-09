@@ -4,7 +4,7 @@ import { CreatorOnboardingRepository } from '../../ports/creator-onboarding.repo
 import { CreatorOnboarding } from '../../../domain/entities/creator-onboarding.entity';
 
 // Valid test data
-const VALID_SIRET = '80295478500028';
+const VALID_SIRET = '87869129400010';
 const VALID_INPUT: SubmitProfessionalInfoInput = {
   userId: 'user-123',
   brandName: 'Ma Marque',
@@ -59,7 +59,7 @@ describe('SubmitProfessionalInfo Use Case', () => {
     it('should store normalized SIRET', async () => {
       const result = await useCase.execute({
         ...VALID_INPUT,
-        siret: '802 954 785 00028', // With spaces
+        siret: '878 691 294 00010', // With spaces
       });
 
       expect(result.value.siret).toBe(VALID_SIRET);
