@@ -42,9 +42,9 @@ interface AuthCardProps {
  */
 export function AuthCard({ title, description, children, footer }: AuthCardProps) {
   return (
-    <Card className="w-full">
+    <Card className="w-full border border-border bg-card shadow-sm">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">{title}</CardTitle>
+        <CardTitle className="text-2xl font-semibold font-montserrat">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">{children}</CardContent>
@@ -54,7 +54,7 @@ export function AuthCard({ title, description, children, footer }: AuthCardProps
             {footer.text}{' '}
             <Link
               href={footer.linkHref}
-              className="text-primary underline-offset-4 hover:underline"
+              className="text-primary underline-offset-4 hover:underline font-medium"
             >
               {footer.linkText}
             </Link>

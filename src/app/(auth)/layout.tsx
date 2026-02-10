@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
+import { Logo } from '@/components/brand/logo';
 
 export const metadata: Metadata = {
   title: 'Authentification | Kpsull',
@@ -17,8 +19,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md px-4">{children}</div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
+      <Link href="/" className="mb-8 text-primary transition-colors hover:opacity-80">
+        <Logo size="lg" />
+      </Link>
+      <div className="w-full max-w-md">{children}</div>
     </div>
   );
 }

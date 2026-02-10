@@ -52,13 +52,13 @@ export function CheckoutStepper({ currentStep, user }: CheckoutStepperProps) {
                       isCurrent
                         ? 'border-primary bg-primary text-primary-foreground'
                         : isCompleted
-                        ? 'border-primary bg-primary text-primary-foreground'
+                        ? 'border-kpsull-green bg-kpsull-green text-white'
                         : 'border-muted-foreground/30'
                     }`}
                   >
                     {isCompleted ? <Check className="h-5 w-5" /> : step.icon}
                   </div>
-                  <span className="hidden md:inline font-medium">{step.label}</span>
+                  <span className="hidden md:inline font-medium font-sans">{step.label}</span>
                 </div>
 
                 {/* Connector line */}
@@ -78,7 +78,7 @@ export function CheckoutStepper({ currentStep, user }: CheckoutStepperProps) {
       {/* User info banner if authenticated */}
       {user && (
         <div className="bg-muted/50 rounded-lg p-4 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground font-sans">
             Connecte en tant que{' '}
             <span className="font-medium text-foreground">
               {user.name ?? user.email}
@@ -89,7 +89,7 @@ export function CheckoutStepper({ currentStep, user }: CheckoutStepperProps) {
 
       {/* Content area - will be filled by child routes */}
       <div className="max-w-2xl mx-auto">
-        <p className="text-center text-muted-foreground">
+        <p className="text-center text-muted-foreground font-sans">
           Cette etape sera implementee dans la Story 7-4 (Adresse de livraison)
         </p>
       </div>
