@@ -1,0 +1,45 @@
+# DEV ONLY - Ne PAS utiliser en production
+# Usage: docker compose up -d
+
+services:
+  db:
+    image: postgres:15
+    container_name: kpsull_bdd
+    restart: always
+    environment:
+      POSTGRES_DB: kpsull-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kpsull-db"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+    volumes:
+      - kpsull_postgres_data:/var/lib/postgresql/data
+    command: postgres -c listen_addresses='*'
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    container_name: kpsull_stripe_cli
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    entrypoint: /bin/sh
+    command: -c "stripe listen --forward-to host.docker.internal:3000/api/webhooks/stripe --api-key $$STRIPE_SECRET_KEY"
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  kpsull_postgres_data:
