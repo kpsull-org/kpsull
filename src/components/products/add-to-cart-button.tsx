@@ -19,9 +19,20 @@ interface AddToCartButtonProps {
   } | null;
   creatorSlug: string;
   disabled?: boolean;
+  className?: string;
+  buttonText?: string;
+  addedText?: string;
 }
 
-export function AddToCartButton({ product, variant, creatorSlug, disabled }: AddToCartButtonProps) {
+export function AddToCartButton({
+  product,
+  variant,
+  creatorSlug,
+  disabled,
+  className,
+  buttonText = "Ajouter au panier",
+  addedText = "Ajouté au panier"
+}: AddToCartButtonProps) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
@@ -77,18 +88,18 @@ export function AddToCartButton({ product, variant, creatorSlug, disabled }: Add
       <Button
         onClick={handleAddToCart}
         disabled={disabled || added}
-        className="w-full"
+        className={className || "w-full"}
         size="lg"
       >
         {added ? (
           <>
             <Check className="h-5 w-5 mr-2" />
-            Ajouté au panier
+            {addedText}
           </>
         ) : (
           <>
             <ShoppingCart className="h-5 w-5 mr-2" />
-            Ajouter au panier
+            {buttonText}
           </>
         )}
       </Button>

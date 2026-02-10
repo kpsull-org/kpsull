@@ -19,15 +19,17 @@ export function ContactSection({ title, content }: ContactSectionProps) {
   const { email, phone, address, socialLinks } = content;
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-2xl mx-auto text-center">
-        <h2 className="text-3xl font-bold mb-8">{title}</h2>
+    <section className="bg-[#D9D9D9] px-6 py-16 md:px-12 md:py-24 lg:px-20">
+      <div className="mx-auto max-w-2xl text-center">
+        <h2 className="mb-8 font-[family-name:var(--font-montserrat)] text-xl font-semibold uppercase md:text-2xl lg:text-[40px] lg:leading-[1.22]">
+          {title}
+        </h2>
         <div className="space-y-4">
           {email && (
             <p>
               <a
                 href={`mailto:${email}`}
-                className="text-primary hover:underline"
+                className="font-[family-name:var(--font-montserrat)] text-[#00A3FF] transition-opacity hover:opacity-70"
               >
                 {email}
               </a>
@@ -37,23 +39,25 @@ export function ContactSection({ title, content }: ContactSectionProps) {
             <p>
               <a
                 href={`tel:${phone}`}
-                className="text-primary hover:underline"
+                className="font-[family-name:var(--font-montserrat)] text-[#00A3FF] transition-opacity hover:opacity-70"
               >
                 {phone}
               </a>
             </p>
           )}
           {address && (
-            <p className="text-muted-foreground">{address}</p>
+            <p className="font-[family-name:var(--font-montserrat)] text-muted-foreground">
+              {address}
+            </p>
           )}
           {socialLinks && Object.keys(socialLinks).length > 0 && (
-            <div className="flex justify-center gap-4 pt-4">
+            <div className="flex justify-center gap-6 pt-4">
               {socialLinks.instagram && (
                 <a
                   href={socialLinks.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="font-[family-name:var(--font-archivo)] text-sm uppercase text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Instagram
                 </a>
@@ -63,7 +67,7 @@ export function ContactSection({ title, content }: ContactSectionProps) {
                   href={socialLinks.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="font-[family-name:var(--font-archivo)] text-sm uppercase text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Twitter
                 </a>
@@ -73,7 +77,7 @@ export function ContactSection({ title, content }: ContactSectionProps) {
                   href={socialLinks.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="font-[family-name:var(--font-archivo)] text-sm uppercase text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Facebook
                 </a>
@@ -83,7 +87,7 @@ export function ContactSection({ title, content }: ContactSectionProps) {
                   href={socialLinks.tiktok}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="font-[family-name:var(--font-archivo)] text-sm uppercase text-muted-foreground transition-colors hover:text-foreground"
                 >
                   TikTok
                 </a>

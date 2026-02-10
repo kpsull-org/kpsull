@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from "isomorphic-dompurify";
 
 interface CustomContent {
   html?: string;
@@ -22,9 +22,11 @@ export function CustomSection({ title, content }: CustomSectionProps) {
   const { html, markdown } = content;
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold mb-8 text-center">{title}</h2>
+    <section className="bg-[#D9D9D9] px-6 py-16 md:px-12 md:py-24 lg:px-20">
+      <div className="mx-auto max-w-4xl">
+        <h2 className="mb-8 text-center font-[family-name:var(--font-montserrat)] text-xl font-semibold uppercase md:text-2xl lg:text-[40px] lg:leading-[1.22]">
+          {title}
+        </h2>
         {html && (
           <div
             className="prose prose-lg max-w-none"
@@ -33,7 +35,9 @@ export function CustomSection({ title, content }: CustomSectionProps) {
         )}
         {markdown && !html && (
           <div className="prose prose-lg max-w-none">
-            <p className="whitespace-pre-wrap">{markdown}</p>
+            <p className="whitespace-pre-wrap font-[family-name:var(--font-montserrat)]">
+              {markdown}
+            </p>
           </div>
         )}
       </div>
