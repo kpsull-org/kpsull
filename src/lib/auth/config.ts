@@ -18,10 +18,10 @@ import { loginSchema } from '@/lib/schemas/auth.schema';
  *
  * @see https://authjs.dev/getting-started/installation?framework=Next.js
  */
-// Access token lifetime (15 minutes)
-const ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 minutes in seconds
-// Refresh token/session lifetime (7 days)
+// Session/JWT lifetime (7 days)
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
+// Soft refresh interval: reload user data from DB every 15 minutes
+const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in ms
 
 export const authConfig: NextAuthConfig = {
   providers: [
@@ -75,16 +75,13 @@ export const authConfig: NextAuthConfig = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: SESSION_MAX_AGE, // 7 days (refresh token lifetime)
-  },
-  jwt: {
-    maxAge: ACCESS_TOKEN_MAX_AGE, // 15 minutes (access token lifetime)
+    maxAge: SESSION_MAX_AGE, // 7 days
   },
   pages: {
     signIn: '/login',
     signOut: '/logout',
     error: '/auth/error',
-    newUser: '/account-type', // Redirect new users to account type selection
+    // newUser not needed — creators go through /devenir-createur voluntarily
   },
   callbacks: {
     /**
@@ -160,19 +157,37 @@ export const authConfig: NextAuthConfig = {
      * - Token is refreshed (only token is available)
      */
     async jwt({ token, user, trigger }) {
+      // Initial sign-in: populate token from user object
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.accountTypeChosen = user.accountTypeChosen;
         token.wantsToBeCreator = user.wantsToBeCreator;
-        // Set access token expiry time
-        token.accessTokenExpires = Date.now() + ACCESS_TOKEN_MAX_AGE * 1000;
+        token.refreshedAt = Date.now();
+        return token;
       }
 
-      // Refresh user data from DB on update trigger
-      if (trigger === 'update') {
-        // Token will be refreshed on next request
-        token.accessTokenExpires = Date.now() + ACCESS_TOKEN_MAX_AGE * 1000;
+      // Soft refresh: reload user data from DB periodically
+      const shouldRefresh =
+        trigger === 'update' ||
+        !token.refreshedAt ||
+        Date.now() - (token.refreshedAt as number) > REFRESH_INTERVAL;
+
+      if (shouldRefresh && token.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true, accountTypeChosen: true, wantsToBeCreator: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.accountTypeChosen = dbUser.accountTypeChosen;
+            token.wantsToBeCreator = dbUser.wantsToBeCreator;
+          }
+        } catch {
+          // DB unavailable: keep existing token data
+        }
+        token.refreshedAt = Date.now();
       }
 
       return token;
@@ -214,29 +229,10 @@ export const authConfig: NextAuthConfig = {
       const isOnProtectedRoute = nextUrl.pathname.startsWith('/dashboard') ||
         nextUrl.pathname.startsWith('/profile') ||
         nextUrl.pathname.startsWith('/admin');
-      const isAccountTypePage = nextUrl.pathname === '/account-type';
       const isAuthPage = nextUrl.pathname === '/login' || nextUrl.pathname === '/signup';
 
       // Redirect logged-in users away from auth pages
       if (isLoggedIn && isAuthPage) {
-        // Redirect based on role
-        const role = auth.user.role;
-        if (role === 'ADMIN') {
-          return Response.redirect(new URL('/dashboard/admin', nextUrl));
-        } else if (role === 'CREATOR') {
-          return Response.redirect(new URL('/dashboard/creator', nextUrl));
-        } else {
-          return Response.redirect(new URL('/', nextUrl));
-        }
-      }
-
-      // If logged in and hasn't chosen account type, redirect to account-type page
-      if (isLoggedIn && !auth.user.accountTypeChosen && !isAccountTypePage && !isAuthPage) {
-        return Response.redirect(new URL('/account-type', nextUrl));
-      }
-
-      // If logged in and has already chosen, redirect away from account-type page
-      if (isLoggedIn && auth.user.accountTypeChosen && isAccountTypePage) {
         // Redirect based on role
         const role = auth.user.role;
         if (role === 'ADMIN') {

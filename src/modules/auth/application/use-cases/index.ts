@@ -4,10 +4,6 @@ export {
   type GetUserByEmailInput,
 } from './get-user-by-email.use-case';
 export {
-  SetAccountTypeUseCase,
-  type SetAccountTypeInput,
-} from './set-account-type.use-case';
-export {
   UpdateProfileUseCase,
   type UpdateProfileInput,
 } from './update-profile.use-case';

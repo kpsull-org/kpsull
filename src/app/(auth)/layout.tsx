@@ -23,7 +23,7 @@ export default function AuthLayout({
       <Link href="/" className="mb-8 text-primary transition-colors hover:opacity-80">
         <Logo size="lg" />
       </Link>
-      <div className="w-full max-w-md">{children}</div>
+      <div className="w-full max-w-xl">{children}</div>
     </div>
   );
 }

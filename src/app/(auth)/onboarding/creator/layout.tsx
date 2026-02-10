@@ -24,7 +24,12 @@ interface CreatorOnboardingLayoutProps {
 export default async function CreatorOnboardingLayout({
   children,
 }: CreatorOnboardingLayoutProps) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // JWTSessionError: invalid/expired token — treat as unauthenticated
+  }
 
   // Redirect to login if not authenticated
   if (!session?.user) {
@@ -34,11 +39,6 @@ export default async function CreatorOnboardingLayout({
   // Redirect if already a creator or admin
   if (session.user.role === 'CREATOR' || session.user.role === 'ADMIN') {
     redirect('/dashboard');
-  }
-
-  // Redirect if user doesn't want to be a creator
-  if (!session.user.wantsToBeCreator && session.user.accountTypeChosen) {
-    redirect('/');
   }
 
   // Read actual onboarding step from DB

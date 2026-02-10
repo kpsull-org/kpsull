@@ -35,11 +35,12 @@ interface ProductDetailProps {
     variants: ProductVariant[];
   };
   creatorSlug: string;
+  isOwnProduct?: boolean;
 }
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
 
-export function ProductDetail({ product, creatorSlug }: ProductDetailProps) {
+export function ProductDetail({ product, creatorSlug, isOwnProduct = false }: ProductDetailProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const selectedVariantId = product.variants.length > 0 ? (product.variants[0]?.id ?? null) : null;
 
@@ -152,7 +153,8 @@ export function ProductDetail({ product, creatorSlug }: ProductDetailProps) {
                 priceOverride: selectedVariant.priceOverride,
               } : null}
               creatorSlug={creatorSlug}
-              disabled={!isAvailable}
+              disabled={!isAvailable || isOwnProduct}
+              isOwnProduct={isOwnProduct}
               className="w-full bg-secondary text-black rounded-full py-4 px-8 font-bold uppercase font-[family-name:var(--font-montserrat)] hover:opacity-90"
               buttonText="AJOUTER AU PANIER"
             />

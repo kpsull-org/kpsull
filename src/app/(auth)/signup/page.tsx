@@ -29,7 +29,7 @@ export default function SignupPage() {
         linkHref: '/login',
       }}
     >
-      <CredentialsForm mode="signup" callbackUrl="/account-type" />
+      <CredentialsForm mode="signup" callbackUrl="/" />
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -42,7 +42,7 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <GoogleSignInButton mode="signup" callbackUrl="/account-type" />
+      <GoogleSignInButton mode="signup" callbackUrl="/" />
 
       <p className="text-center text-sm text-muted-foreground">
         En vous inscrivant, vous acceptez nos{' '}

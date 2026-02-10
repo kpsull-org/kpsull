@@ -30,12 +30,11 @@ export default async function ProfilePage() {
     redirect('/login');
   }
 
-  // Show "Become Creator" card only for CLIENTs who haven't started onboarding
-  const showBecomeCreator =
-    session.user.role === 'CLIENT' && !session.user.wantsToBeCreator;
+  // Show "Become Creator" card for CLIENTs
+  const showBecomeCreator = session.user.role === 'CLIENT';
 
   return (
-    <div className="container max-w-2xl py-10">
+    <div className="mx-auto w-full max-w-2xl py-10 px-4">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Mon Profil</h1>
