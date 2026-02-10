@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, User } from "lucide-react";
+import { Menu, User, LogIn } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import {
@@ -18,7 +18,19 @@ const navItems = [
   { label: "SELECTION DU MOMENT", href: "/catalogue?promo=true" },
 ];
 
-export function Header() {
+interface HeaderProps {
+  user?: {
+    name?: string | null;
+    image?: string | null;
+  } | null;
+}
+
+export function Header({ user }: HeaderProps) {
+  const isAuthenticated = !!user;
+  const accountHref = isAuthenticated ? "/mon-compte" : "/login";
+  const accountLabel = isAuthenticated ? "MON COMPTE" : "SE CONNECTER";
+  const AccountIcon = isAuthenticated ? User : LogIn;
+
   return (
     <header className="relative z-50 mt-7 h-[70px] bg-white">
       {/* Top decorative double lines (Figma: y:4 and y:8, h:2) */}
@@ -58,12 +70,12 @@ export function Header() {
 
         {/* Account section (Figma: Montserrat 700, 17px) */}
         <Link
-          href="/login"
+          href={accountHref}
           className="flex items-center gap-2 transition-opacity hover:opacity-70"
         >
-          <User className="h-4 w-4" />
+          <AccountIcon className="h-4 w-4" />
           <span className="font-[family-name:var(--font-montserrat)] text-[17px] font-bold uppercase tracking-wide">
-            ACCOUNT
+            {accountLabel}
           </span>
         </Link>
       </div>
@@ -95,11 +107,11 @@ export function Header() {
               ))}
               <div className="my-4 h-px bg-gray-200" />
               <Link
-                href="/login"
+                href={accountHref}
                 className="flex items-center gap-2 font-[family-name:var(--font-montserrat)] font-bold text-lg hover:opacity-70 transition-opacity"
               >
-                <User className="h-5 w-5" />
-                <span>ACCOUNT</span>
+                <AccountIcon className="h-5 w-5" />
+                <span>{accountLabel}</span>
               </Link>
             </nav>
           </SheetContent>
@@ -111,8 +123,8 @@ export function Header() {
         </Link>
 
         {/* User icon right */}
-        <Link href="/login" className="flex items-center">
-          <User className="h-5 w-5" />
+        <Link href={accountHref} className="flex items-center">
+          <AccountIcon className="h-5 w-5" />
         </Link>
       </div>
 

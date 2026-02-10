@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma/client';
+import { auth } from '@/lib/auth';
 import { GetPublicProductUseCase } from '@/modules/products/application/use-cases/public/get-public-product.use-case';
 import { PrismaPublicProductRepository } from '@/modules/products/infrastructure/repositories/prisma-public-product.repository';
 import { ProductDetail } from '@/components/products/product-detail';
@@ -59,6 +60,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const product = result.value!;
 
+  // Check if the current user is the creator of this product
+  const session = await auth();
+  let isOwnProduct = false;
+
+  if (session?.user?.id) {
+    const creatorPage = await prisma.creatorPage.findUnique({
+      where: { slug },
+      select: { creatorId: true },
+    });
+    isOwnProduct = creatorPage?.creatorId === session.user.id;
+  }
+
   return (
     <ProductDetail
       product={{
@@ -71,6 +84,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         variants: product.variants,
       }}
       creatorSlug={slug}
+      isOwnProduct={isOwnProduct}
     />
   );
 }

@@ -25,7 +25,7 @@ export function BecomeCreatorCard() {
   const router = useRouter();
 
   function handleClick() {
-    router.push('/onboarding/creator');
+    router.push('/devenir-createur');
   }
 
   return (

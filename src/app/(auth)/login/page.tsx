@@ -28,7 +28,7 @@ export default function LoginPage() {
         linkHref: '/signup',
       }}
     >
-      <CredentialsForm mode="login" callbackUrl="/account-type" />
+      <CredentialsForm mode="login" callbackUrl="/" />
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -41,7 +41,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <GoogleSignInButton mode="signin" callbackUrl="/account-type" />
+      <GoogleSignInButton mode="signin" callbackUrl="/" />
     </AuthCard>
   );
 }

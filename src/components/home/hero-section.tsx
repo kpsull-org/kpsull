@@ -13,8 +13,6 @@ export function HeroSection() {
         priority
       />
 
-      {/* Dark green overlay only (Figma: rgba(2,20,8,0.76)) */}
-      <div className="absolute inset-0 bg-[rgba(2,20,8,0.76)]" />
 
       {/* Content: K logo + title at bottom-left */}
       <div className="relative flex h-full flex-col items-start justify-end px-6 pb-12 md:px-12 md:pb-16 lg:pb-20 lg:pl-[83px]">

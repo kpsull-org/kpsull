@@ -20,7 +20,7 @@ export function HeroTransition() {
       <div className="absolute inset-0 bg-[rgba(2,20,8,0.76)]" />
 
       {/* Content -- Figma: h:246px zone, text Archivo Bold 40px #EFD050 */}
-      <div className="relative mx-auto flex min-h-[100px] max-w-7xl items-center justify-between px-6 py-6 md:min-h-[120px] md:px-12 md:py-8 lg:min-h-[140px] lg:px-20 lg:py-10">
+      <div className="relative flex min-h-[100px] items-center justify-between px-6 py-6 md:min-h-[120px] md:px-12 md:py-8 lg:min-h-[140px] lg:pl-[83px] lg:pr-20 lg:py-10">
         {/* Subtitle text */}
         <p className="max-w-4xl font-[family-name:var(--font-archivo)] text-sm font-bold leading-snug text-[#EFD050] sm:text-base md:text-lg lg:text-xl xl:text-[22px] xl:leading-[1.4] 2xl:text-[26px]">
           Une plateforme reliant createurs de mode locaux et passionnes,

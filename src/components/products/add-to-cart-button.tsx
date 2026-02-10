@@ -19,6 +19,7 @@ interface AddToCartButtonProps {
   } | null;
   creatorSlug: string;
   disabled?: boolean;
+  isOwnProduct?: boolean;
   className?: string;
   buttonText?: string;
   addedText?: string;
@@ -29,6 +30,7 @@ export function AddToCartButton({
   variant,
   creatorSlug,
   disabled,
+  isOwnProduct = false,
   className,
   buttonText = "Ajouter au panier",
   addedText = "Ajouté au panier"
@@ -87,7 +89,7 @@ export function AddToCartButton({
       {/* Add to cart button */}
       <Button
         onClick={handleAddToCart}
-        disabled={disabled || added}
+        disabled={disabled || added || isOwnProduct}
         className={className || "w-full"}
         size="lg"
       >
@@ -99,10 +101,16 @@ export function AddToCartButton({
         ) : (
           <>
             <ShoppingCart className="h-5 w-5 mr-2" />
-            {buttonText}
+            {isOwnProduct ? 'Votre produit' : buttonText}
           </>
         )}
       </Button>
+
+      {isOwnProduct && (
+        <p className="text-sm text-muted-foreground text-center">
+          Vous ne pouvez pas acheter vos propres produits
+        </p>
+      )}
     </div>
   );
 }
