@@ -5,9 +5,9 @@ FROM base AS deps
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY package.json ./
 COPY prisma ./prisma/
-RUN npm install --legacy-peer-deps
+RUN npm install
 RUN npx prisma generate
 
 # Rebuild the source code only when needed
