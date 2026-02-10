@@ -25,7 +25,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends openssl wget && rm -rf /var/lib/apt/lists/*
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -46,4 +46,4 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD wget -qO- http://localhost:3000/ || exit 1
 
-CMD ["/bin/sh", "-c", "npx prisma migrate deploy && node server.js"]
+CMD ["/bin/sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
