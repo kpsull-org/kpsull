@@ -43,4 +43,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+  CMD wget -qO- http://localhost:3000/ || exit 1
+
 CMD ["/bin/sh", "-c", "npx prisma migrate deploy && node server.js"]
