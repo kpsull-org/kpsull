@@ -33,8 +33,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
 RUN npm install -g prisma
 
 USER nextjs
@@ -46,4 +48,4 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
   CMD wget -qO- http://localhost:3000/ || exit 1
 
-CMD ["/bin/sh", "-c", "prisma migrate deploy --schema=./prisma/schema.prisma && node server.js"]
+CMD ["/bin/sh", "-c", "prisma migrate deploy && node server.js"]
