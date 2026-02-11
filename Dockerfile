@@ -36,8 +36,13 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Install prisma CLI globally (schema.prisma has url=env("DATABASE_URL"), no config.ts needed)
+# Install prisma CLI globally for migrate deploy
 RUN npm install -g prisma@7
+
+# Create a minimal prisma config for Docker runtime (no heavy deps needed)
+# The global prisma install handles @prisma/config, effect, c12 internally.
+# This file has zero imports, so no local node_modules are required.
+RUN printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n    url: process.env.DATABASE_URL,\n  },\n};\n' > prisma.config.mjs
 
 USER nextjs
 
