@@ -33,14 +33,16 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
 
-# Install prisma CLI globally (local copy kept for 'prisma/config' module resolution)
+# Install prisma CLI globally for migrate deploy
 RUN npm install -g prisma@7
+
+# Create a minimal prisma config for Docker runtime (no heavy deps needed)
+# The global prisma install handles @prisma/config, effect, c12 internally.
+# This file has zero imports, so no local node_modules are required.
+RUN printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n    url: process.env.DATABASE_URL,\n  },\n};\n' > prisma.config.mjs
 
 USER nextjs
 
