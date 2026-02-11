@@ -48,35 +48,33 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \
   CMD wget -qO- http://localhost:3000/ || exit 1
 
-# Startup: diagnostics + migrate + server
+# Startup: diagnostics (non-blocking) + migrate + server
 CMD ["/bin/sh", "-c", "\
   echo '========== STARTUP DIAGNOSTICS ==========' && \
   echo \"DATABASE_URL set: $([ -n \"$DATABASE_URL\" ] && echo 'YES' || echo 'NO - MISSING!')\" && \
   echo \"DB Host: $(echo $DATABASE_URL | sed -n 's|.*@\\([^:]*\\):.*|\\1|p')\" && \
   echo \"DB Port: $(echo $DATABASE_URL | sed -n 's|.*:\\([0-9]*\\)/.*|\\1|p')\" && \
   echo \"DB Name: $(echo $DATABASE_URL | sed -n 's|.*/\\([^?]*\\).*|\\1|p')\" && \
-  echo '--- Testing DNS resolution ---' && \
-  DB_HOST=$(echo $DATABASE_URL | sed -n 's|.*@\\([^:]*\\):.*|\\1|p') && \
-  wget -q --spider --timeout=5 $DB_HOST:$(echo $DATABASE_URL | sed -n 's|.*:\\([0-9]*\\)/.*|\\1|p') 2>&1 && echo \"DNS + TCP: OK\" || echo \"DNS/TCP check: wget returned error (may be normal for non-HTTP)\" && \
-  echo '--- Testing DB connection with node ---' && \
+  echo '--- Testing TCP connection to DB (3s timeout) ---' && \
   node -e \" \
     const url = process.env.DATABASE_URL; \
     if (!url) { console.error('FATAL: DATABASE_URL is not set'); process.exit(1); } \
     const u = new URL(url); \
-    console.log('Connecting to:', u.hostname + ':' + u.port + u.pathname); \
+    console.log('Target:', u.hostname + ':' + (u.port || '5432') + u.pathname); \
     const net = require('net'); \
     const sock = new net.Socket(); \
-    sock.setTimeout(5000); \
-    sock.on('connect', () => { console.log('TCP connection: OK'); sock.destroy(); process.exit(0); }); \
-    sock.on('timeout', () => { console.error('TCP connection: TIMEOUT after 5s'); sock.destroy(); process.exit(1); }); \
-    sock.on('error', (e) => { console.error('TCP connection: FAILED -', e.message); process.exit(1); }); \
+    sock.setTimeout(3000); \
+    sock.on('connect', () => { console.log('TCP OK - DB is reachable'); sock.destroy(); process.exit(0); }); \
+    sock.on('timeout', () => { console.error('TCP TIMEOUT - DB not reachable after 3s'); sock.destroy(); process.exit(1); }); \
+    sock.on('error', (e) => { console.error('TCP FAILED:', e.message); process.exit(1); }); \
     sock.connect(parseInt(u.port) || 5432, u.hostname); \
   \" && \
   echo '========== RUNNING PRISMA MIGRATE ==========' && \
   prisma migrate deploy && \
   echo '========== STARTING SERVER ==========' && \
-  node server.js \
+  node server.js || \
+  echo 'STARTUP FAILED - check logs above for details' \
 "]
