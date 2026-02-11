@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   title: "KPSULL - L'antidote a l'uniforme",
   description:
     "Une plateforme reliant createurs de mode locaux et passionnes, offrant des pieces uniques et artisanales, accessibles a vous, chaque jour.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
