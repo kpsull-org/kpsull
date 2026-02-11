@@ -87,7 +87,7 @@ jobs:
           extra_args: --only-verified
 
   # ============================================================================
-  # Dependency Review
+  # Dependency Review (via Trivy)
   # ============================================================================
   dependency-review:
     name: Dependency Review
@@ -97,11 +97,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -110,31 +105,33 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: NPM Audit
+      - name: Trivy dependency review
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          vuln-type: 'library'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          trivyignores: '.trivyignore'
+
+      - name: Trivy dependency review (summary)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-deps.json'
+          vuln-type: 'library'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          trivyignores: '.trivyignore'
+
+      - name: Generate summary
         run: |
-          echo "## NPM Audit Results" >> $GITHUB_STEP_SUMMARY
-          npm audit --json | jq -r '
-            "| Severity | Count |",
-            "|----------|-------|",
-            "| Critical | \(.metadata.vulnerabilities.critical) |",
-            "| High | \(.metadata.vulnerabilities.high) |",
-            "| Moderate | \(.metadata.vulnerabilities.moderate) |",
-            "| Low | \(.metadata.vulnerabilities.low) |",
-            "| Info | \(.metadata.vulnerabilities.info) |",
-            "| **Total** | **\(.metadata.vulnerabilities.total)** |"
-          ' >> $GITHUB_STEP_SUMMARY || true
-
-      - name: Check for critical issues
-        run: |
-          CRITICAL=$(npm audit --json | jq '.metadata.vulnerabilities.critical')
-          HIGH=$(npm audit --json | jq '.metadata.vulnerabilities.high')
-
-          if [ "$CRITICAL" -gt 0 ]; then
-            echo "::warning::$CRITICAL critical vulnerabilities found"
-          fi
-
-          if [ "$HIGH" -gt 0 ]; then
-            echo "::warning::$HIGH high severity vulnerabilities found"
+          echo "## Dependency Review Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f trivy-deps.json ]; then
+            TOTAL=$(jq '[.Results[]?.Vulnerabilities // [] | length] | add // 0' trivy-deps.json)
+            echo "Total vulnerabilities found: **${TOTAL}**" >> $GITHUB_STEP_SUMMARY
           fi
         continue-on-error: true
 

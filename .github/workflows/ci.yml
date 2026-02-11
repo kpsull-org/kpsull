@@ -7,7 +7,6 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: '22'
   BUN_VERSION: 'latest'
 
 jobs:
@@ -128,7 +127,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
   # ============================================================================
-  # Security - Dependency Audit
+  # Security - Dependency Audit (via Trivy)
   # ============================================================================
   security-audit:
     name: Dependency Audit
@@ -138,11 +137,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js (for npm audit)
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -151,18 +145,17 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: NPM Audit (High & Critical only)
-        run: npm audit --audit-level=high || true
-        continue-on-error: true
-
-      - name: Check for known vulnerabilities
-        run: |
-          echo "Checking for critical vulnerabilities..."
-          npm audit --json | jq -e '.metadata.vulnerabilities.critical == 0' || {
-            echo "::error::Critical vulnerabilities found!"
-            exit 1
-          }
-        continue-on-error: true
+      - name: Trivy dependency audit
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'library'
+          severity: 'CRITICAL,HIGH'
+          trivyignores: '.trivyignore'
 
   # ============================================================================
   # Security - Secret Scanning
