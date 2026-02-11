@@ -73,7 +73,7 @@ CMD ["/bin/sh", "-c", "\
     sock.connect(parseInt(u.port) || 5432, u.hostname); \
   \" && \
   echo '========== RUNNING PRISMA MIGRATE ==========' && \
-  prisma migrate deploy && \
+  prisma migrate deploy --schema prisma/schema.prisma 2>&1 && \
   echo '========== STARTING SERVER ==========' && \
   node server.js || \
   echo 'STARTUP FAILED - check logs above for details' \
