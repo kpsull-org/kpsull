@@ -63,7 +63,7 @@ export function CartDropdown({ isAuthenticated }: CartDropdownProps) {
       </button>
 
       {/* Dropdown panel -- same grid style as profile */}
-      <div className="pointer-events-none absolute -left-[5px] right-0 top-full opacity-0 invisible group-hover/cart:pointer-events-auto group-hover/cart:opacity-100 group-hover/cart:visible transition-all duration-200">
+      <div className="pointer-events-none absolute -left-[5px] right-0 top-full opacity-0 group-hover/cart:pointer-events-auto group-hover/cart:opacity-100 transition-[opacity] duration-200">
         <div className="relative bg-white pb-[18px]">
           {/* Vertical grid lines */}
           <div className="absolute inset-y-0 left-[5px] flex gap-1">

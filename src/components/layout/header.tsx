@@ -31,7 +31,8 @@ export function Header({ user }: HeaderProps) {
   const isAuthenticated = !!user;
   const accountHref = isAuthenticated ? "/mon-compte" : "/login";
   const AccountIcon = isAuthenticated ? User : LogIn;
-  const hasShopAccess = user?.role === "CREATOR" || user?.role === "ADMIN";
+  const isAdmin = user?.role === "ADMIN";
+  const hasShopAccess = user?.role === "CREATOR" || isAdmin;
 
   return (
     <header className="relative z-50 mt-7 h-[70px] bg-white">
@@ -84,7 +85,7 @@ export function Header({ user }: HeaderProps) {
               </button>
 
               {/* Profile dropdown panel */}
-              <div className="pointer-events-none absolute -left-[5px] right-0 top-full opacity-0 invisible group-hover/profile:pointer-events-auto group-hover/profile:opacity-100 group-hover/profile:visible transition-all duration-200">
+              <div className="pointer-events-none absolute -left-[5px] right-0 top-full opacity-0 group-hover/profile:pointer-events-auto group-hover/profile:opacity-100 transition-[opacity] duration-200">
                 <div className="relative bg-white pb-[18px]">
                   {/* Vertical grid lines */}
                   <div className="absolute inset-y-0 left-[5px] flex gap-1">
@@ -113,11 +114,11 @@ export function Header({ user }: HeaderProps) {
                     </Link>
                     {hasShopAccess && (
                       <Link
-                        href="/dashboard"
+                        href={isAdmin ? "/admin" : "/dashboard"}
                         className="flex items-center gap-3 px-4 py-2.5 font-[family-name:var(--font-archivo)] text-[14px] font-medium uppercase tracking-wide text-black transition-colors hover:bg-black hover:text-white"
                       >
                         <Store className="h-4 w-4" />
-                        <span>Ma Boutique</span>
+                        <span>{isAdmin ? "Gerer Kpsull" : "Ma Boutique"}</span>
                       </Link>
                     )}
 
@@ -191,13 +192,13 @@ export function Header({ user }: HeaderProps) {
               ))}
               {hasShopAccess && (
                 <Link
-                  href="/dashboard"
+                  href={isAdmin ? "/admin" : "/dashboard"}
                   className={cn(
                     "font-[family-name:var(--font-archivo)] font-medium text-lg text-black uppercase hover:opacity-70 transition-opacity flex items-center gap-2"
                   )}
                 >
                   <Store className="h-5 w-5" />
-                  <span>MA BOUTIQUE</span>
+                  <span>{isAdmin ? "GERER KPSULL" : "MA BOUTIQUE"}</span>
                 </Link>
               )}
               <div className="my-4 h-px bg-gray-200" />
