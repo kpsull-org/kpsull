@@ -1,12 +1,15 @@
 /**
  * Next.js Middleware - Centralized route protection.
- * Uses Auth.js auth() wrapper for session access.
  *
- * Replaces per-page auth checks for admin and creator routes.
+ * Uses a separate edge-safe Auth.js instance that does NOT import Prisma/pg.
+ * The full auth with Prisma adapter is only used in server components/actions.
  */
 
-import { auth } from '@/lib/auth/auth';
+import NextAuth from 'next-auth';
+import { authConfigEdge } from '@/lib/auth/config.edge';
 import { NextResponse } from 'next/server';
+
+const { auth } = NextAuth(authConfigEdge);
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -56,5 +59,9 @@ export const config = {
     '/api/admin/:path*',
     '/creator/:path*',
     '/api/creator/:path*',
+    '/dashboard/:path*',
+    '/profile/:path*',
+    '/login',
+    '/signup',
   ],
 };
