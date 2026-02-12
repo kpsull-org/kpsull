@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ClientSummary {
@@ -98,6 +99,22 @@ export function ClientsPageClient({
     [updateSearchParams],
   );
 
+  const handleImpersonate = useCallback(
+    async (userId: string) => {
+      const response = await fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        router.push(data.redirectUrl);
+        router.refresh();
+      }
+    },
+    [router]
+  );
+
   const startItem = (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, total);
 
@@ -146,13 +163,16 @@ export function ClientsPageClient({
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
                 Inscrit le
               </th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {clients.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-4 py-12 text-center text-muted-foreground"
                 >
                   {searchQuery
@@ -186,6 +206,15 @@ export function ClientsPageClient({
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {dateFormatter.format(new Date(client.createdAt))}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => handleImpersonate(client.id)}
+                      className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                    >
+                      <LogIn className="mr-1 h-3 w-3" />
+                      Impersonifier
+                    </button>
                   </td>
                 </tr>
               ))

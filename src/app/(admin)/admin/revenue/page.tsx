@@ -6,7 +6,7 @@ import {
   type GetAdminStatsOutput,
 } from '@/modules/analytics/application/use-cases';
 import { PrismaAdminAnalyticsRepository } from '@/modules/analytics/infrastructure/repositories';
-import { RevenueChart, type MonthlyRevenue } from './revenue-chart';
+import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
 
 export const metadata: Metadata = {
   title: 'Revenus plateforme | Admin Kpsull',
@@ -124,10 +124,7 @@ export default async function AdminRevenuePage() {
           currency="EUR"
         />
 
-        <div className="rounded-lg border bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold">Revenus mensuels</h2>
-          <RevenueChart data={monthlyChartData} />
-        </div>
+        <RevenueChart data={monthlyChartData} year={new Date().getFullYear()} />
 
         <div className="rounded-lg border bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold">

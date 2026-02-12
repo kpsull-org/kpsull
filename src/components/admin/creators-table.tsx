@@ -13,6 +13,7 @@ import {
   Filter,
   Ban,
   CheckCircle,
+  LogIn,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,8 @@ export interface CreatorsTableProps {
   onSuspend?: (creator: CreatorSummary) => void;
   /** Callback when reactivate action is triggered */
   onReactivate?: (creator: CreatorSummary) => void;
+  /** Callback when impersonate action is triggered */
+  onImpersonate?: (creator: CreatorSummary) => void;
   /** Optional className for styling */
   className?: string;
 }
@@ -232,6 +235,7 @@ export function CreatorsTable({
   onPageChange,
   onSuspend,
   onReactivate,
+  onImpersonate,
   className,
 }: CreatorsTableProps) {
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -420,27 +424,37 @@ export function CreatorsTable({
                         {formatCurrency(creator.totalRevenue, currency)}
                       </td>
                       <td className="px-4 py-4 text-center">
-                        {creator.status === 'ACTIVE' ? (
+                        <div className="flex items-center justify-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onSuspend?.(creator)}
-                            className="text-destructive hover:text-destructive"
+                            onClick={() => onImpersonate?.(creator)}
                           >
-                            <Ban className="mr-1 h-3 w-3" />
-                            Suspendre
+                            <LogIn className="mr-1 h-3 w-3" />
+                            Impersonifier
                           </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onReactivate?.(creator)}
-                            className="text-green-600 hover:text-green-600"
-                          >
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Reactiver
-                          </Button>
-                        )}
+                          {creator.status === 'ACTIVE' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onSuspend?.(creator)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Ban className="mr-1 h-3 w-3" />
+                              Suspendre
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onReactivate?.(creator)}
+                              className="text-green-600 hover:text-green-600"
+                            >
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                              Reactiver
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
