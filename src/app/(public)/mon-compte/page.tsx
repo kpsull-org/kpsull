@@ -63,8 +63,8 @@ export default async function MonComptePage() {
     },
   ];
 
-  // Add subscription + dashboard for CREATOR/ADMIN only
-  if (user.role === 'CREATOR' || user.role === 'ADMIN') {
+  // Add subscription + dashboard for CREATOR only (not ADMIN)
+  if (user.role === 'CREATOR') {
     accountLinks.push(
       {
         href: '/subscription',
