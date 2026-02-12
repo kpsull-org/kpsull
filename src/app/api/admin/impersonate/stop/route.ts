@@ -6,6 +6,16 @@ import { cookies } from 'next/headers';
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 const IMPERSONATION_COOKIE = 'kpsull-admin-impersonating';
 
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error(
+      'Missing AUTH_SECRET or NEXTAUTH_SECRET environment variable'
+    );
+  }
+  return secret;
+}
+
 export async function POST() {
   const cookieStore = await cookies();
   const adminId = cookieStore.get(IMPERSONATION_COOKIE)?.value;
@@ -49,7 +59,7 @@ export async function POST() {
       wantsToBeCreator: adminUser.wantsToBeCreator,
       refreshedAt: Date.now(),
     },
-    secret: process.env.AUTH_SECRET!,
+    secret: getAuthSecret(),
     salt: sessionCookieName,
     maxAge: SESSION_MAX_AGE,
   });
