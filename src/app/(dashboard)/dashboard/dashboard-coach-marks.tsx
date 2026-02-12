@@ -9,21 +9,14 @@ const DASHBOARD_STEPS: CoachMarkStep[] = [
     targetSelector: 'stats',
     title: 'Vos statistiques',
     description:
-      'Retrouvez ici un apercu rapide de votre activite : commandes, chiffre d\'affaires, clients et retours.',
+      'Retrouvez ici un apercu rapide de votre activite : commandes, chiffre d\'affaires, clients et CA mensuel.',
     placement: 'bottom',
   },
   {
     targetSelector: 'quick-actions',
     title: 'Acces rapide',
     description:
-      'Naviguez facilement vers vos commandes, clients, retours et abonnement en un clic.',
-    placement: 'top',
-  },
-  {
-    targetSelector: 'subscription',
-    title: 'Votre abonnement',
-    description:
-      'Choisissez le plan qui correspond a vos besoins. Plus votre plan est eleve, plus vous pouvez ajouter de produits et reduire vos commissions.',
+      'Naviguez facilement vers vos commandes, produits, clients et abonnement en un clic.',
     placement: 'top',
   },
 ];

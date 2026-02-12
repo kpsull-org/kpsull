@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma/client';
 import { ListReturnsUseCase } from '@/modules/returns/application/use-cases/list-returns.use-case';
 import { ApproveReturnUseCase } from '@/modules/returns/application/use-cases/approve-return.use-case';
 import { RejectReturnUseCase } from '@/modules/returns/application/use-cases/reject-return.use-case';
+import { ReceiveReturnUseCase } from '@/modules/returns/application/use-cases/receive-return.use-case';
+import { RefundReturnUseCase } from '@/modules/returns/application/use-cases/refund-return.use-case';
 import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories/prisma-return.repository';
 import { Card, CardContent } from '@/components/ui/card';
 import { ReturnsPageClient } from './page-client';
@@ -109,7 +111,7 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
     return { success: true };
   }
 
-  async function receiveReturn(_returnId: string) {
+  async function receiveReturn(returnId: string) {
     'use server';
 
     const currentSession = await auth();
@@ -117,11 +119,22 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
       return { success: false, error: 'Non authentifie' };
     }
 
-    // TODO: Implement ReceiveReturnUseCase
+    const repository = new PrismaReturnRepository(prisma);
+    const useCase = new ReceiveReturnUseCase(repository);
+
+    const receiveResult = await useCase.execute({
+      returnId,
+      creatorId: currentSession.user.id,
+    });
+
+    if (receiveResult.isFailure) {
+      return { success: false, error: receiveResult.error };
+    }
+
     return { success: true };
   }
 
-  async function refundReturn(_returnId: string) {
+  async function refundReturn(returnId: string) {
     'use server';
 
     const currentSession = await auth();
@@ -129,7 +142,18 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
       return { success: false, error: 'Non authentifie' };
     }
 
-    // TODO: Implement RefundReturnUseCase
+    const repository = new PrismaReturnRepository(prisma);
+    const useCase = new RefundReturnUseCase(repository);
+
+    const refundResult = await useCase.execute({
+      returnId,
+      creatorId: currentSession.user.id,
+    });
+
+    if (refundResult.isFailure) {
+      return { success: false, error: refundResult.error };
+    }
+
     return { success: true };
   }
 

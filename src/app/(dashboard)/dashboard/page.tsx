@@ -10,9 +10,9 @@ import {
   CreditCard,
   DollarSign,
   ShoppingBag,
+  TrendingUp,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
 import { DashboardCoachMarks } from './dashboard-coach-marks';
@@ -83,19 +83,23 @@ async function getDashboardStats(creatorId: string) {
   ]);
 
   // Build monthly revenue from current-year orders
-  const monthlyRevenueCents: Record<number, number> = {};
+  const monthlyRevenueCentsMap: Record<number, number> = {};
   for (let m = 0; m < 12; m++) {
-    monthlyRevenueCents[m] = 0;
+    monthlyRevenueCentsMap[m] = 0;
   }
   for (const order of ordersForRevenue) {
     const monthIndex = order.createdAt.getMonth();
-    monthlyRevenueCents[monthIndex] = (monthlyRevenueCents[monthIndex] ?? 0) + order.totalAmount;
+    monthlyRevenueCentsMap[monthIndex] = (monthlyRevenueCentsMap[monthIndex] ?? 0) + order.totalAmount;
   }
 
   const revenueData: MonthlyRevenue[] = MONTH_LABELS.map((month, i) => ({
     month,
-    revenue: (monthlyRevenueCents[i] ?? 0) / 100, // convert cents to euros
+    revenue: (monthlyRevenueCentsMap[i] ?? 0) / 100, // convert cents to euros
   }));
+
+  // Current month revenue
+  const currentMonthIndex = new Date().getMonth();
+  const currentMonthRevenueCents = monthlyRevenueCentsMap[currentMonthIndex] ?? 0;
 
   return {
     totalOrders: orderAgg._count.id,
@@ -104,6 +108,7 @@ async function getDashboardStats(creatorId: string) {
     activeProducts: activeProductCount,
     pendingOrders: pendingOrderCount,
     revenueData,
+    currentMonthRevenueCents,
   };
 }
 
@@ -153,22 +158,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const stats = await getDashboardStats(session.user.id);
 
   return (
-    <div className="max-w-6xl space-y-8">
+    <div className="space-y-10">
       <DashboardCoachMarks showTour={showWelcomeTour} />
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Tableau de bord
+        <h1 className="text-3xl font-bold tracking-tight">
+          Bonjour {firstName}
         </h1>
-        <p className="text-muted-foreground">
-          Bonjour {firstName}, voici un apercu de votre activite.
+        <p className="mt-1 text-muted-foreground">
+          Voici un apercu de votre activite.
         </p>
       </div>
 
       {/* Stats Cards */}
       <section aria-label="Statistiques" data-coach-mark="stats">
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Commandes"
             value={String(stats.totalOrders)}
@@ -186,9 +191,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             icon={Users}
           />
           <StatCard
-            title="Produits actifs"
-            value={String(stats.activeProducts)}
-            icon={ShoppingBag}
+            title="CA ce mois-ci"
+            value={formatCentsAsEur(stats.currentMonthRevenueCents)}
+            icon={TrendingUp}
           />
         </div>
       </section>
@@ -200,10 +205,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       {/* Quick Actions */}
       <section aria-label="Acces rapide" data-coach-mark="quick-actions">
-        <h2 className="text-lg font-semibold tracking-tight mb-4">
+        <h2 className="text-lg font-semibold tracking-tight mb-5">
           Acces rapide
         </h2>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <QuickActionCard
             title="Commandes"
             description="Suivez et gerez vos commandes en cours"
@@ -230,27 +235,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             icon={CreditCard}
           />
         </div>
-      </section>
-
-      {/* Subscription Status */}
-      <section aria-label="Abonnement" data-coach-mark="subscription">
-        <Card className="border-2 border-dashed border-primary/20">
-          <CardHeader>
-            <CardTitle className="text-lg">Votre abonnement</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Consultez votre plan actuel, suivez votre utilisation et decouvrez
-              les fonctionnalites disponibles.
-            </p>
-            <Button asChild variant="default" className="shrink-0">
-              <Link href="/subscription">
-                Voir mon abonnement
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
       </section>
     </div>
   );
