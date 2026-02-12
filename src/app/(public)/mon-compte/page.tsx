@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SignOutButton } from '@/components/auth/sign-out-button';
-import { BecomeCreatorCard } from '@/app/(dashboard)/profile/become-creator-card';
+import { BecomeCreatorCard } from '@/app/(client)/profile/become-creator-card';
 
 export const metadata: Metadata = {
   title: 'Mon Compte | Kpsull',
@@ -73,7 +73,7 @@ export default async function MonComptePage() {
         description: 'Gerer mon plan et mes paiements',
       },
       {
-        href: '/dashboard/orders',
+        href: '/dashboard',
         icon: <LayoutDashboard className="h-5 w-5 text-primary" />,
         title: 'Tableau de bord createur',
         description: 'Gerer mes ventes, clients et retours',
@@ -102,6 +102,7 @@ export default async function MonComptePage() {
             <img
               src={user.image}
               alt={user.name ?? ''}
+              referrerPolicy="no-referrer"
               className="h-16 w-16 rounded-full object-cover border"
             />
           ) : (

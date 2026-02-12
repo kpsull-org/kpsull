@@ -44,9 +44,8 @@ export function OnboardingCompletionForm({
       const result = await activateCreatorAccount();
 
       if (result.success) {
-        // Redirect to dashboard
-        router.push('/dashboard');
-        router.refresh();
+        // Hard navigation to force full request cycle with fresh JWT
+        window.location.href = '/dashboard?welcome=true';
       } else {
         setError(result.error ?? 'Une erreur est survenue');
         setIsActivating(false);

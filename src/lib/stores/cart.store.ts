@@ -20,6 +20,7 @@ interface CartState {
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
   updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
   removeItem: (productId: string, variantId?: string) => void;
+  replaceItems: (items: CartItem[]) => void;
   getTotal: () => number;
   getItemCount: () => number;
   clear: () => void;
@@ -99,6 +100,10 @@ export const useCartStore = create<CartState>()(
       getItemCount: () => {
         const state = get();
         return state.items.reduce((count, item) => count + item.quantity, 0);
+      },
+
+      replaceItems: (items) => {
+        set({ items });
       },
 
       clear: () => {

@@ -9,7 +9,7 @@ import { VerifySiretUseCase } from '@/modules/creators/application/use-cases/ver
 import { CreateStripeAccountUseCase } from '@/modules/creators/application/use-cases/create-stripe-account.use-case';
 import { ActivateCreatorAccountUseCase } from '@/modules/creators/application/use-cases/activate-creator-account.use-case';
 import { DataGouvSiretService } from '@/modules/creators/infrastructure/services/data-gouv-siret.service';
-import { MockStripeConnectService } from '@/modules/creators/infrastructure/services/mock-stripe-connect.service';
+import { StripeConnectService } from '@/modules/creators/infrastructure/services/stripe-connect.service';
 import { PrismaUserRoleRepository } from '@/modules/creators/infrastructure/repositories/prisma-user-role.repository';
 
 const creatorOnboardingRepository = new PrismaCreatorOnboardingRepository();
@@ -24,7 +24,7 @@ const verifySiretUseCase = new VerifySiretUseCase(
   siretService
 );
 
-const stripeService = new MockStripeConnectService();
+const stripeService = new StripeConnectService();
 const createStripeAccountUseCase = new CreateStripeAccountUseCase(
   creatorOnboardingRepository,
   stripeService

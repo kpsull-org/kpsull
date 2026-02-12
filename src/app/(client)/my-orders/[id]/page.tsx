@@ -22,18 +22,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-/**
- * Client Order Detail Page
- *
- * Story 12-2: Suivi commande en cours
- *
- * Client-facing order detail page with tracking and action capabilities.
- *
- * Acceptance Criteria:
- * - AC1: Page detail commande client avec timeline
- * - AC2: Statut de livraison avec tracking
- * - AC3: Boutons actions: Signaler probleme, Demander retour (si livre)
- */
 export default async function ClientOrderDetailPage({ params }: PageProps) {
   const session = await auth();
 
@@ -56,7 +44,6 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
 
   const order = result.value!;
 
-  // Build order data for the component
   const orderData: OrderTrackingData = {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -79,11 +66,8 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
     createdAt: order.createdAt,
   };
 
-  // TODO: Fetch tracking data from AfterShip when available
-  // For now, we pass null and use the basic tracking info from the order
   const trackingData: ShipmentTrackingData | null = null;
 
-  // Server actions for disputes and returns
   async function handleReportIssue(
     orderId: string,
     type: DisputeTypeValue,
@@ -103,13 +87,15 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="container py-8">
-      <OrderTracking
-        order={orderData}
-        tracking={trackingData}
-        onReportIssue={handleReportIssue}
-        onRequestReturn={handleRequestReturn}
-      />
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+      <div className="space-y-6">
+        <OrderTracking
+          order={orderData}
+          tracking={trackingData}
+          onReportIssue={handleReportIssue}
+          onRequestReturn={handleRequestReturn}
+        />
+      </div>
     </div>
   );
 }

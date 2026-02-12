@@ -27,6 +27,11 @@ export default async function CreatorOnboardingPage() {
 
   const onboarding = result.value;
 
+  // If onboarding steps are completed, go to completion/activation page
+  if (onboarding.stepNumber > 3) {
+    redirect('/onboarding/creator/complete');
+  }
+
   // Redirect to the current step
   redirect(`/onboarding/creator/step/${onboarding.stepNumber}`);
 }

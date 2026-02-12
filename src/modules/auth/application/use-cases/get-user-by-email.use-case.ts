@@ -58,6 +58,11 @@ export class GetUserByEmailUseCase
       emailVerified: user.emailVerified,
       accountTypeChosen: user.accountTypeChosen,
       wantsToBeCreator: user.wantsToBeCreator,
+      phone: user.phone,
+      address: user.address,
+      city: user.city,
+      postalCode: user.postalCode,
+      country: user.country,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

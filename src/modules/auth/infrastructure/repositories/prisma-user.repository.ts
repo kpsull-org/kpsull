@@ -63,6 +63,11 @@ export class PrismaUserRepository implements UserRepository {
         image: data.image,
         role: data.role,
         emailVerified: data.emailVerified,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        postalCode: data.postalCode,
+        country: data.country,
         updatedAt: data.updatedAt,
       },
     });

@@ -33,8 +33,9 @@ export function UpgradeContent({ currentPlan }: UpgradeContentProps) {
       }
 
       if (result.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = result.url;
+        window.open(result.url, '_blank');
+        setIsLoading(false);
+        setLoadingPlan(undefined);
       }
     } catch {
       setError('Une erreur est survenue. Veuillez réessayer.');

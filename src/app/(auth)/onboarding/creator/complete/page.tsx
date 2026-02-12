@@ -33,8 +33,8 @@ export default async function CompletePage() {
     }
   }
 
-  // If already fully completed, redirect to dashboard
-  if (onboarding.isFullyCompleted) {
+  // If already activated as creator, redirect to dashboard
+  if (session.user.role === 'CREATOR' || session.user.role === 'ADMIN') {
     redirect('/dashboard');
   }
 

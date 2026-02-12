@@ -1,0 +1,26 @@
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { CartSyncOnLogin } from "@/components/layout/cart-sync-on-login";
+import { auth } from "@/lib/auth";
+
+export default async function ClientLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // JWTSessionError: invalid/expired token — treat as unauthenticated
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header user={session?.user ?? null} />
+      <main className="flex-1 min-h-screen">{children}</main>
+      <Footer />
+      <CartSyncOnLogin isAuthenticated={!!session?.user} />
+    </div>
+  );
+}

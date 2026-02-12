@@ -3,17 +3,13 @@
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma/client';
 import { PrismaOrderRepository } from '@/modules/orders/infrastructure/repositories/prisma-order.repository';
-import { MockReturnRepository } from '@/modules/returns/infrastructure/repositories/mock-return.repository';
+import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories/prisma-return.repository';
 import type { DisputeTypeValue } from '@/modules/disputes/domain';
 import type { ReturnReasonValue } from '@/modules/returns/domain';
 import type { ReturnRequest } from '@/modules/returns/application/ports/return.repository.interface';
 
 /**
  * Server action to create a dispute for an order
- *
- * Story 9-3: Signalement litige
- *
- * Note: Uses order status update until full Dispute persistence is implemented.
  */
 export async function createDispute(
   orderId: string,
@@ -42,14 +38,11 @@ export async function createDispute(
       return { success: false, error: 'Seules les commandes livrees peuvent faire objet de litige' };
     }
 
-    // Update order status to DISPUTE_OPENED
-    // Note: Full dispute entity creation will be added when Prisma schema is extended
     await prisma.order.update({
       where: { id: orderId },
       data: { status: 'DISPUTE_OPENED' },
     });
 
-    // Log the dispute details for tracking (temporary until full persistence)
     console.log('Dispute created:', {
       orderId,
       customerId: session.user.id,
@@ -68,10 +61,6 @@ export async function createDispute(
 
 /**
  * Server action to request a return for an order
- *
- * Story 9-4: Initiation retour
- *
- * Uses MockReturnRepository until Prisma schema is extended.
  */
 export async function requestReturn(
   orderId: string,
@@ -100,7 +89,6 @@ export async function requestReturn(
       return { success: false, error: 'Seules les commandes livrees peuvent faire objet de retour' };
     }
 
-    // Check 14-day return window
     if (!order.deliveredAt) {
       return { success: false, error: 'Date de livraison inconnue' };
     }
@@ -113,15 +101,13 @@ export async function requestReturn(
       return { success: false, error: 'Le delai de retour de 14 jours est depasse' };
     }
 
-    // Check if return already exists for this order
-    const returnRepository = new MockReturnRepository();
+    const returnRepository = new PrismaReturnRepository(prisma);
     const existingReturn = await returnRepository.findByOrderId(orderId);
 
     if (existingReturn) {
       return { success: false, error: 'Une demande de retour existe deja pour cette commande' };
     }
 
-    // Create return request using mock repository
     const now = new Date();
     const returnRequest: ReturnRequest = {
       id: `return-${Date.now()}`,

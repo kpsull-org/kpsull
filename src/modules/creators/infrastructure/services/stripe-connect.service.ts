@@ -52,7 +52,8 @@ export class StripeConnectService implements IStripeConnectService {
       });
     } catch (error) {
       console.error('Stripe Connect account creation error:', error);
-      return Result.fail('Erreur lors de la création du compte Stripe');
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      return Result.fail(`Erreur Stripe: ${message}`);
     }
   }
 
@@ -68,7 +69,8 @@ export class StripeConnectService implements IStripeConnectService {
       return Result.ok(accountLink.url);
     } catch (error) {
       console.error('Stripe account link creation error:', error);
-      return Result.fail('Erreur lors de la génération du lien Stripe');
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      return Result.fail(`Erreur Stripe: ${message}`);
     }
   }
 
@@ -90,7 +92,8 @@ export class StripeConnectService implements IStripeConnectService {
       });
     } catch (error) {
       console.error('Stripe account status check error:', error);
-      return Result.fail('Erreur lors de la vérification du compte Stripe');
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      return Result.fail(`Erreur Stripe: ${message}`);
     }
   }
 }

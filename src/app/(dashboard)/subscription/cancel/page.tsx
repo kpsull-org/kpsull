@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function CancelPage() {
   return (
-    <div className="container max-w-2xl py-16">
+    <div className="mx-auto max-w-2xl py-8">
       <Card className="text-center">
         <CardHeader className="pb-2">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">

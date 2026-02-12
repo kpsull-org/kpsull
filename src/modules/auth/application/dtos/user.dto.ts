@@ -14,6 +14,11 @@ export interface UserDTO {
   emailVerified: Date | null;
   accountTypeChosen: boolean;
   wantsToBeCreator: boolean;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  postalCode: string | null;
+  country: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,4 +40,9 @@ export interface CreateUserDTO {
 export interface UpdateUserProfileDTO {
   name?: string | null;
   image?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
 }

@@ -58,14 +58,18 @@ export class CreateStripeAccountUseCase
         onboarding.stripeAccountId
       );
 
-      if (linkResult.isFailure) {
-        return Result.fail(linkResult.error!);
+      if (linkResult.isSuccess) {
+        return Result.ok({
+          stripeAccountId: onboarding.stripeAccountId,
+          onboardingUrl: linkResult.value!,
+        });
       }
 
-      return Result.ok({
-        stripeAccountId: onboarding.stripeAccountId,
-        onboardingUrl: linkResult.value!,
-      });
+      // Account link failed (e.g. mock/invalid account ID) — fall through to create a new account
+      console.warn(
+        `Failed to create account link for ${onboarding.stripeAccountId}, creating new account:`,
+        linkResult.error
+      );
     }
 
     // 4. Create new Stripe Connect account

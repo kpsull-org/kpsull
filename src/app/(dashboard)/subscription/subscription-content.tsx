@@ -1,20 +1,29 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { UsageProgress } from '@/components/subscription/usage-progress';
 import { FeaturesList } from '@/components/subscription/features-list';
 import { PlanBadge } from '@/components/subscription/plan-badge';
+import { PricingTable } from '@/components/subscription/pricing-table';
 import { GetSubscriptionOutput } from '@/modules/subscriptions/application/use-cases/get-subscription.use-case';
+import { PlanType } from '@/modules/subscriptions/domain/value-objects/plan.vo';
+import { BillingInterval } from '@/modules/subscriptions/domain/plan-features';
+import { createCheckoutSession } from './upgrade/actions';
 import { Sparkles, Calendar, AlertTriangle, Crown } from 'lucide-react';
-import { formatPrice } from '@/modules/subscriptions/domain/plan-features';
 
 interface SubscriptionContentProps {
   subscription: GetSubscriptionOutput;
 }
 
 export function SubscriptionContent({ subscription }: SubscriptionContentProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<PlanType | undefined>();
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
   const {
     plan,
     billingInterval,
@@ -36,12 +45,10 @@ export function SubscriptionContent({ subscription }: SubscriptionContentProps) 
   const showUpgradeWarning = !isAtelier && isNearProductLimit;
   const showLimitReached = !isAtelier && !canAddProduct;
 
-  // Get upgrade target plan
-  const upgradePlan = isEssentiel ? 'STUDIO' : isStudio ? 'ATELIER' : null;
   const upgradePlanLabel = isEssentiel ? 'Studio' : isStudio ? 'Atelier' : '';
 
   return (
-    <div className="container max-w-4xl py-8">
+    <div className="w-full">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -167,43 +174,65 @@ export function SubscriptionContent({ subscription }: SubscriptionContentProps) 
           </Card>
         </div>
 
-        {/* Upgrade CTA (for ESSENTIEL/STUDIO users) */}
-        {canUpgrade && upgradePlan && (
-          <Card className="border-2 border-dashed border-primary/30 bg-primary/5">
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <Sparkles className="h-10 w-10 text-primary mb-4" />
-              <h3 className="text-lg font-semibold">Passez au plan {upgradePlanLabel}</h3>
-              <p className="text-sm text-muted-foreground mt-2 max-w-md">
-                {isEssentiel ? (
-                  <>
-                    Passez a 20 produits, accedez aux analytics avances, a l&apos;export de rapports
-                    et reduisez votre commission a 4%.
-                  </>
-                ) : (
-                  <>
-                    Produits illimites, commission reduite a 3%, support prioritaire, domaine
-                    personnalise et 14 jours d&apos;essai gratuit.
-                  </>
-                )}
+        {/* Plans disponibles avec pricing table integre */}
+        {canUpgrade && (
+          <>
+            <Separator />
+
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold tracking-tight flex items-center justify-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Plans disponibles
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Comparez les plans et choisissez celui qui vous convient
+                </p>
+              </div>
+
+              {checkoutError && (
+                <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-center text-destructive">
+                  {checkoutError}
+                </div>
+              )}
+
+              <PricingTable
+                currentPlan={plan}
+                onSelectPlan={async (selectedPlan: PlanType, interval: BillingInterval) => {
+                  setIsLoading(true);
+                  setLoadingPlan(selectedPlan);
+                  setCheckoutError(null);
+
+                  try {
+                    const result = await createCheckoutSession(selectedPlan, interval);
+
+                    if (result.error) {
+                      setCheckoutError(result.error);
+                      setIsLoading(false);
+                      setLoadingPlan(undefined);
+                      return;
+                    }
+
+                    if (result.url) {
+                      window.open(result.url, '_blank');
+                      setIsLoading(false);
+                      setLoadingPlan(undefined);
+                    }
+                  } catch {
+                    setCheckoutError('Une erreur est survenue. Veuillez reessayer.');
+                    setIsLoading(false);
+                    setLoadingPlan(undefined);
+                  }
+                }}
+                isLoading={isLoading}
+                loadingPlan={loadingPlan}
+              />
+
+              <p className="text-center text-xs text-muted-foreground">
+                Le paiement s&apos;ouvrira dans un nouvel onglet. Vous pouvez annuler a tout moment.
               </p>
-              <Button asChild className="mt-6" size="lg">
-                <Link href="/subscription/upgrade">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Passer a {upgradePlanLabel} -{' '}
-                  {formatPrice(
-                    upgradePlan === 'STUDIO'
-                      ? billingInterval === 'year'
-                        ? 79000
-                        : 7900
-                      : billingInterval === 'year'
-                        ? 95000
-                        : 9500
-                  )}
-                  /{billingInterval === 'year' ? 'an' : 'mois'}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </>
         )}
 
         {/* ATELIER user info */}

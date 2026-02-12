@@ -80,9 +80,9 @@ export default async function StepPage({ params }: StepPageProps) {
   // Check if user is on the correct step
   const currentStepNumber = onboarding.currentStep.stepNumber;
 
-  // If completed, redirect to dashboard
+  // If all steps completed, redirect to completion/activation page
   if (onboarding.isFullyCompleted) {
-    redirect('/dashboard');
+    redirect('/onboarding/creator/complete');
   }
 
   // Auto-skip Step 2 if SIRET already verified inline

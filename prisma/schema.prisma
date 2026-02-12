@@ -102,6 +102,13 @@ model User {
   accountTypeChosen Boolean @default(false)
   wantsToBeCreator  Boolean @default(false)
 
+  // Profile info (optional, required at checkout)
+  phone      String?
+  address    String?
+  city       String?
+  postalCode String?
+  country    String?
+
   // OAuth (Auth.js)
   accounts Account[]
   sessions Session[]
@@ -193,6 +200,9 @@ model CreatorOnboarding {
 
   // Stripe
   stripeAccountId String?
+
+  // Dashboard tour
+  dashboardTourCompleted Boolean @default(false)
 
   startedAt   DateTime  @default(now())
   completedAt DateTime?
@@ -600,4 +610,19 @@ model CreatorSuspension {
 
   @@index([creatorId])
   @@map("creator_suspensions")
+}
+
+// ============================================
+// SHOPPING CART
+// ============================================
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  items     Json     @default("[]")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("carts")
 }
