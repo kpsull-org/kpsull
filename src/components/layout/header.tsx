@@ -140,27 +140,27 @@ export function Header({ user }: HeaderProps) {
             </div>
           </div>
         ) : (
-          <>
+          <div className="relative -mr-12 ml-8 flex h-full items-center pr-12 lg:-mr-[90px] lg:pr-[90px]">
             {/* Double vertical separator lines */}
-            <div className="mx-8 flex h-full items-center gap-1">
+            <div className="flex h-full items-center gap-1 pr-8">
               <div className="h-full w-px bg-black" />
               <div className="h-full w-px bg-black" />
             </div>
+
+            {/* Cart icon + dropdown (non-authenticated) */}
+            <CartDropdown isAuthenticated={false} />
+
+            {/* Login link - to the right of cart */}
             <Link
               href="/login"
-              className="flex items-center gap-2 transition-opacity hover:opacity-70"
+              className="ml-6 flex items-center gap-2 transition-opacity hover:opacity-70"
             >
               <LogIn className="h-4 w-4" />
               <span className="font-[family-name:var(--font-montserrat)] text-[17px] font-bold uppercase tracking-wide">
                 SE CONNECTER
               </span>
             </Link>
-
-            {/* Cart icon + dropdown (non-authenticated) */}
-            <div className="ml-6">
-              <CartDropdown isAuthenticated={false} />
-            </div>
-          </>
+          </div>
         )}
       </div>
 
