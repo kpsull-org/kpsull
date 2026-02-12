@@ -345,25 +345,10 @@ export function CoachMarks({
             <X className="h-4 w-4" />
           </button>
 
-          <div className="mb-3 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
-              {currentStep + 1}
-            </span>
+          <div className="mb-3">
             <span className="text-xs font-medium text-muted-foreground">
-              {stepLabel}
+              Etape {stepLabel}
             </span>
-            <div className="ml-auto flex gap-1">
-              {steps.map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'h-1.5 w-1.5 rounded-full transition-colors duration-200',
-                    i === currentStep ? 'bg-primary' : 'bg-border',
-                    i < currentStep && 'bg-primary/40',
-                  )}
-                />
-              ))}
-            </div>
           </div>
 
           <h3 className="text-base font-bold text-foreground">{step.title}</h3>
