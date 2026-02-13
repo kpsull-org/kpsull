@@ -48,7 +48,7 @@ export function CartDropdown({ isAuthenticated }: CartDropdownProps) {
     <div className="group/cart flex h-full items-center">
       {/* Cart icon with badge + label */}
       <button
-        className="flex items-center gap-2 transition-opacity hover:opacity-70"
+        className="relative flex items-center gap-2 transition-opacity hover:opacity-70 before:pointer-events-auto before:absolute before:-inset-x-2 before:top-full before:h-10 before:content-['']"
         aria-label="Panier"
       >
         <span className="relative">
