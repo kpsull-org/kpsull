@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Package, Store, Users, DollarSign, ArrowRight } from 'lucide-react';

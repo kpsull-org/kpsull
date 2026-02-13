@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma/client';
 import { ListAdminOrdersUseCase } from '@/modules/analytics/application/use-cases';

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma/client';
 import { AdminStatsCards } from '@/components/admin';
