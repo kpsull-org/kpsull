@@ -146,6 +146,11 @@ describe('GetUserByEmailUseCase', () => {
         emailVerified,
         accountTypeChosen: true,
         wantsToBeCreator: true,
+        phone: null,
+        address: null,
+        city: null,
+        postalCode: null,
+        country: null,
         createdAt,
         updatedAt,
       });

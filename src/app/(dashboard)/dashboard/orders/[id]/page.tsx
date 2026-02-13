@@ -83,7 +83,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const timelineEvents = buildTimelineEvents(order);
 
   return (
-    <div className="container max-w-4xl py-6 space-y-6">
+    <div className="max-w-4xl space-y-6">
       <OrderHeaderWithActions
         order={{
           id: order.id,

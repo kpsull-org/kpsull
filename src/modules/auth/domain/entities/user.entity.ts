@@ -14,6 +14,11 @@ export interface CreateUserProps {
   image?: string | null;
   role?: RoleType;
   emailVerified?: Date | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
 }
 
 /**
@@ -28,6 +33,11 @@ export interface ReconstituteUserProps {
   emailVerified?: Date | null;
   accountTypeChosen?: boolean;
   wantsToBeCreator?: boolean;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +48,11 @@ export interface ReconstituteUserProps {
 export interface UpdateProfileProps {
   name?: string | null;
   image?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
 }
 
 /**
@@ -51,6 +66,11 @@ interface UserProps {
   emailVerified: Date | null;
   accountTypeChosen: boolean;
   wantsToBeCreator: boolean;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  postalCode: string | null;
+  country: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -114,6 +134,11 @@ export class User extends AggregateRoot<UserProps> {
         emailVerified: props.emailVerified ?? null,
         accountTypeChosen: false,
         wantsToBeCreator: false,
+        phone: props.phone ?? null,
+        address: props.address ?? null,
+        city: props.city ?? null,
+        postalCode: props.postalCode ?? null,
+        country: props.country ?? null,
         createdAt: now,
         updatedAt: now,
       },
@@ -163,6 +188,11 @@ export class User extends AggregateRoot<UserProps> {
         emailVerified: props.emailVerified ?? null,
         accountTypeChosen: props.accountTypeChosen ?? false,
         wantsToBeCreator: props.wantsToBeCreator ?? false,
+        phone: props.phone ?? null,
+        address: props.address ?? null,
+        city: props.city ?? null,
+        postalCode: props.postalCode ?? null,
+        country: props.country ?? null,
         createdAt: props.createdAt,
         updatedAt: props.updatedAt,
       },
@@ -193,6 +223,41 @@ export class User extends AggregateRoot<UserProps> {
    */
   get image(): string | null {
     return this.props.image;
+  }
+
+  /**
+   * The user's phone number
+   */
+  get phone(): string | null {
+    return this.props.phone;
+  }
+
+  /**
+   * The user's address
+   */
+  get address(): string | null {
+    return this.props.address;
+  }
+
+  /**
+   * The user's city
+   */
+  get city(): string | null {
+    return this.props.city;
+  }
+
+  /**
+   * The user's postal code
+   */
+  get postalCode(): string | null {
+    return this.props.postalCode;
+  }
+
+  /**
+   * The user's country
+   */
+  get country(): string | null {
+    return this.props.country;
   }
 
   /**
@@ -243,6 +308,26 @@ export class User extends AggregateRoot<UserProps> {
 
     if (props.image !== undefined) {
       this.props.image = props.image;
+    }
+
+    if (props.phone !== undefined) {
+      this.props.phone = props.phone;
+    }
+
+    if (props.address !== undefined) {
+      this.props.address = props.address;
+    }
+
+    if (props.city !== undefined) {
+      this.props.city = props.city;
+    }
+
+    if (props.postalCode !== undefined) {
+      this.props.postalCode = props.postalCode;
+    }
+
+    if (props.country !== undefined) {
+      this.props.country = props.country;
     }
 
     this.props.updatedAt = new Date();

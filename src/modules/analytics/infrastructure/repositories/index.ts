@@ -4,3 +4,6 @@ export { MockCreatorRepository } from './mock-creator.repository';
 export { PrismaAdminAnalyticsRepository } from './prisma-admin-analytics.repository';
 export { PrismaCreatorRepository } from './prisma-creator.repository';
 export { PrismaCustomerRepository } from './prisma-customer.repository';
+export { PrismaAdminClientRepository } from './prisma-admin-client.repository';
+export { PrismaAdminOrderRepository } from './prisma-admin-order.repository';
+export { PrismaCreatorOverviewRepository } from './prisma-creator-overview.repository';

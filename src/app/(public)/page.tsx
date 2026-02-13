@@ -4,6 +4,7 @@ import {
   CategorySlider,
   FeaturedOffers,
   TopCreators,
+  BecomeCreatorCTA,
   FAQSection,
 } from "@/components/home";
 
@@ -15,6 +16,7 @@ export default function HomePage() {
       <CategorySlider />
       <FeaturedOffers />
       <TopCreators />
+      <BecomeCreatorCTA />
       <FAQSection />
     </>
   );

@@ -11,7 +11,7 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react';
-import { createStripeAccount, checkStripeStatus } from './actions';
+import { createStripeAccount, checkStripeStatus, activateCreatorAccount } from './actions';
 
 interface StripeConnectFormProps {
   stripeAccountId: string | null;
@@ -34,7 +34,14 @@ export function StripeConnectForm({
   const refresh = searchParams.get('refresh');
 
   useEffect(() => {
-    if (success === 'true' && stripeAccountId && !isOnboarded) {
+    if (isOnboarded) {
+      // Already onboarded — auto-activate and redirect
+      activateCreatorAccount().then((result) => {
+        if (result.success) {
+          window.location.href = '/dashboard?welcome=true';
+        }
+      });
+    } else if (success === 'true' && stripeAccountId) {
       // User returned from Stripe onboarding, check status
       handleCheckStatus();
     } else if (refresh === 'true' && stripeAccountId) {
@@ -52,7 +59,14 @@ export function StripeConnectForm({
 
       if (result.success && result.isOnboarded) {
         setStatus('success');
-        router.refresh();
+        // Auto-activate creator account and redirect to dashboard
+        const activation = await activateCreatorAccount();
+        if (activation.success) {
+          window.location.href = '/dashboard?welcome=true';
+        } else {
+          setError(activation.error ?? 'Erreur lors de l\'activation');
+          setStatus('error');
+        }
       } else if (result.success && !result.isOnboarded) {
         setError('Votre configuration Stripe n\'est pas encore terminée. Cliquez pour reprendre.');
         setStatus('idle');
@@ -74,8 +88,8 @@ export function StripeConnectForm({
       const result = await createStripeAccount();
 
       if (result.success && result.onboardingUrl) {
-        // Redirect to Stripe onboarding
-        window.location.href = result.onboardingUrl;
+        window.open(result.onboardingUrl, '_blank');
+        setStatus('idle');
       } else {
         setError(result.error ?? 'Erreur lors de la création du compte');
         setStatus('error');
@@ -86,12 +100,7 @@ export function StripeConnectForm({
     }
   }
 
-  function handleGoToComplete() {
-    router.push('/onboarding/creator/complete');
-    router.refresh();
-  }
-
-  // Success state
+  // Success state — auto-activating and redirecting
   if (status === 'success' || isOnboarded) {
     return (
       <div className="space-y-6">
@@ -100,40 +109,16 @@ export function StripeConnectForm({
             <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
             <div>
               <h3 className="font-medium text-green-800 dark:text-green-300">
-                Compte Stripe connecté !
+                Compte Stripe connecte !
               </h3>
               <p className="mt-1 text-sm text-green-700 dark:text-green-400">
-                Votre compte Stripe est configuré et prêt à recevoir des
-                paiements. Vous pouvez maintenant accéder à votre tableau de bord créateur.
+                Votre compte est configure. Redirection vers votre tableau de bord...
               </p>
-              {stripeAccountId && (
-                <p className="mt-2 text-xs text-green-600 dark:text-green-500">
-                  ID du compte : {stripeAccountId}
-                </p>
-              )}
             </div>
           </div>
         </div>
-
-        <div className="rounded-lg bg-muted/50 p-4">
-          <h4 className="text-sm font-medium">Félicitations !</h4>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Vous avez terminé toutes les étapes d&apos;inscription créateur.
-            Passez à l&apos;étape finale pour activer votre compte.
-          </p>
-        </div>
-
-        <div className="flex justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push('/onboarding/creator/step/2')}
-          >
-            Retour
-          </Button>
-          <Button onClick={handleGoToComplete}>
-            Finaliser l&apos;inscription
-          </Button>
+        <div className="flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -194,7 +179,7 @@ export function StripeConnectForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push('/onboarding/creator/step/2')}
+          onClick={() => router.push('/onboarding/creator/step/1')}
           disabled={status === 'creating' || status === 'checking'}
         >
           Retour

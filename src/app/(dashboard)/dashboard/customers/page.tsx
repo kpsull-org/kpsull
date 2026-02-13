@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma/client';
 import { ListCustomersUseCase } from '@/modules/analytics/application/use-cases/list-customers.use-case';
-import { MockCustomerRepository } from '@/modules/analytics/infrastructure/repositories/mock-customer.repository';
+import { PrismaCustomerRepository } from '@/modules/analytics/infrastructure/repositories/prisma-customer.repository';
 import { CustomersPageClient } from './page-client';
 import type { CustomerSortField, SortDirection } from '@/modules/analytics/application/ports';
 
@@ -51,8 +52,8 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const sortBy: CustomerSortField = params.sortBy ?? 'lastOrderDate';
   const sortDirection: SortDirection = params.sortDirection ?? 'desc';
 
-  // Fetch customers
-  const customerRepository = new MockCustomerRepository();
+  // Fetch customers from real database
+  const customerRepository = new PrismaCustomerRepository(prisma);
   const listCustomersUseCase = new ListCustomersUseCase(customerRepository);
 
   const result = await listCustomersUseCase.execute({
@@ -66,10 +67,8 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
 
   if (result.isFailure) {
     return (
-      <div className="container max-w-6xl py-6">
-        <div className="text-center text-muted-foreground py-12">
-          Une erreur est survenue lors du chargement des clients.
-        </div>
+      <div className="text-center text-muted-foreground py-12">
+        Une erreur est survenue lors du chargement des clients.
       </div>
     );
   }
@@ -77,7 +76,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const { customers, total, totalPages } = result.value;
 
   return (
-    <div className="container max-w-6xl py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">

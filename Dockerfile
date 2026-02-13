@@ -85,6 +85,8 @@ CMD ["/bin/sh", "-c", "\
   \" && \
   echo '========== RUNNING PRISMA MIGRATE ==========' && \
   bunx prisma migrate deploy --schema prisma/schema.prisma 2>&1 && \
+  echo '========== RUNNING SEED ==========' && \
+  (bun run prisma/seed.ts 2>&1 || echo 'SEED WARNING: seed failed but continuing startup...') && \
   echo '========== STARTING SERVER ==========' && \
   bun server.js || \
   echo 'STARTUP FAILED - check logs above for details' \

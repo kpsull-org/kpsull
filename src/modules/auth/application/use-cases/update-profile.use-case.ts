@@ -11,6 +11,11 @@ export interface UpdateProfileInput {
   userId: string;
   name?: string | null;
   image?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
 }
 
 /**
@@ -48,6 +53,11 @@ export class UpdateProfileUseCase implements UseCase<UpdateProfileInput, UserDTO
     const updateResult = user.updateProfile({
       name: input.name,
       image: input.image,
+      phone: input.phone,
+      address: input.address,
+      city: input.city,
+      postalCode: input.postalCode,
+      country: input.country,
     });
 
     if (updateResult.isFailure) {
@@ -71,6 +81,11 @@ export class UpdateProfileUseCase implements UseCase<UpdateProfileInput, UserDTO
       emailVerified: user.emailVerified,
       accountTypeChosen: user.accountTypeChosen,
       wantsToBeCreator: user.wantsToBeCreator,
+      phone: user.phone,
+      address: user.address,
+      city: user.city,
+      postalCode: user.postalCode,
+      country: user.country,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

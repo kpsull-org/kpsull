@@ -125,6 +125,22 @@ export function CreatorsPageClient({
     setReactivateDialogOpen(true);
   }, []);
 
+  const handleImpersonate = useCallback(
+    async (creator: CreatorSummary) => {
+      const response = await fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: creator.id }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        router.push(data.redirectUrl);
+        router.refresh();
+      }
+    },
+    [router]
+  );
+
   const handleSuspendAction = useCallback(
     async (creatorId: string, reason: string): Promise<{ success: boolean; error?: string }> => {
       const result = await suspendCreatorAction(creatorId, reason);
@@ -170,6 +186,7 @@ export function CreatorsPageClient({
         onPageChange={handlePageChange}
         onSuspend={handleSuspend}
         onReactivate={handleReactivate}
+        onImpersonate={handleImpersonate}
       />
 
       {/* Suspend Creator Dialog */}

@@ -93,6 +93,11 @@ export class CreateUserUseCase implements UseCase<CreateUserInput, UserDTO> {
       emailVerified: user.emailVerified,
       accountTypeChosen: user.accountTypeChosen,
       wantsToBeCreator: user.wantsToBeCreator,
+      phone: user.phone,
+      address: user.address,
+      city: user.city,
+      postalCode: user.postalCode,
+      country: user.country,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

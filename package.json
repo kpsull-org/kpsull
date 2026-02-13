@@ -25,7 +25,9 @@
     "db:local:studio": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma studio",
     "db:local:seed": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma db seed",
     "dev:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next dev --webpack",
-    "build:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next build --webpack"
+    "build:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next build --webpack",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -50,6 +52,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "recharts": "^3.7.0",
     "stripe": "^20.2.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6",
@@ -58,6 +61,7 @@
   "devDependencies": {
     "@eslint/js": "^9.34.0",
     "@next/eslint-plugin-next": "^16.1.6",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^22.15.3",

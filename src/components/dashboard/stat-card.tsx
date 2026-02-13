@@ -1,5 +1,3 @@
-'use client';
-
 import type { LucideIcon } from 'lucide-react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +14,8 @@ export interface StatCardProps {
   percentageChange?: number;
   /** Label for the comparison period (e.g., "vs mois dernier") */
   comparisonLabel?: string;
+  /** Badge count for pending items needing attention */
+  badge?: number;
   /** Optional className for styling */
   className?: string;
 }
@@ -66,6 +66,7 @@ export function StatCard({
   icon: Icon,
   percentageChange,
   comparisonLabel = 'vs periode precedente',
+  badge,
   className,
 }: StatCardProps) {
   const hasComparison = percentageChange !== undefined;
@@ -77,7 +78,14 @@ export function StatCard({
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <div className="relative">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+          {badge !== undefined && badge > 0 && (
+            <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+              {badge > 99 ? '99+' : badge}
+            </span>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent>

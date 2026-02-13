@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, User, Mail, Camera, Upload, X } from 'lucide-react';
+import { Loader2, User, Mail, Camera, X, Phone, MapPin } from 'lucide-react';
 import { updateProfile } from './actions';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -19,6 +19,11 @@ interface ProfileFormProps {
     name: string;
     email: string;
     image: string | null;
+    phone: string | null;
+    address: string | null;
+    city: string | null;
+    postalCode: string | null;
+    country: string | null;
   };
 }
 
@@ -27,11 +32,16 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(user.name);
   const [image, setImage] = useState(user.image ?? '');
+  const [phone, setPhone] = useState(user.phone ?? '');
+  const [address, setAddress] = useState(user.address ?? '');
+  const [city, setCity] = useState(user.city ?? '');
+  const [postalCode, setPostalCode] = useState(user.postalCode ?? '');
+  const [country, setCountry] = useState(user.country ?? '');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -157,6 +167,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
       const result = await updateProfile({
         name: name || null,
         image: imageUrl || null,
+        phone: phone || null,
+        address: address || null,
+        city: city || null,
+        postalCode: postalCode || null,
+        country: country || null,
       });
 
       if (!result.success && result.error) {
@@ -195,48 +210,72 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Avatar drag & drop section */}
+          {/* Avatar section */}
           <div className="space-y-3">
-            <Label>
+            <Label className="mb-2 block">
               <Camera className="mr-2 inline-block h-4 w-4" />
               Photo de profil
             </Label>
 
-            <div className="flex items-start gap-6">
-              {/* Current avatar */}
-              <Avatar className="h-20 w-20 shrink-0">
-                <AvatarImage src={displayImage} alt={name || 'Avatar'} />
-                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-              </Avatar>
+            <div
+              className="flex items-center gap-4"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {/* Avatar with overlay button */}
+              <div className="relative shrink-0 group">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage
+                    src={displayImage}
+                    alt={name || 'Avatar'}
+                    referrerPolicy="no-referrer"
+                  />
+                  <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                </Avatar>
+                <button
+                  type="button"
+                  onClick={() => !isBusy && fileInputRef.current?.click()}
+                  disabled={isBusy}
+                  className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors group-hover:bg-black/40"
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </button>
+              </div>
 
-              {/* Drop zone */}
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => !isBusy && fileInputRef.current?.click()}
-                className={`flex flex-1 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
-                  isDragOver
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50'
-                } ${isBusy ? 'pointer-events-none opacity-50' : ''}`}
-              >
-                {isUploading ? (
-                  <Loader2 className="mb-2 h-8 w-8 animate-spin text-primary" />
+              {/* Info + actions */}
+              <div className="flex-1 min-w-0">
+                {selectedFile ? (
+                  <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
+                    <Camera className="h-4 w-4 text-primary shrink-0" />
+                    <span className="flex-1 truncate text-sm">{selectedFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={clearSelectedFile}
+                      className="rounded-full p-0.5 hover:bg-primary/20 shrink-0"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 ) : (
-                  <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => !isBusy && fileInputRef.current?.click()}
+                      disabled={isBusy}
+                      className="text-sm font-medium text-primary hover:underline underline-offset-2 disabled:opacity-50"
+                    >
+                      {isUploading ? 'Upload en cours...' : 'Changer la photo'}
+                    </button>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      JPG, PNG, WebP, GIF - 5 MB max
+                    </p>
+                  </div>
                 )}
-                <p className="text-sm font-medium">
-                  {isUploading
-                    ? 'Upload en cours...'
-                    : 'Glissez-deposez votre photo ici'}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  ou cliquez pour parcourir
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  JPG, PNG, WebP, GIF - 5 MB max
-                </p>
               </div>
 
               <input
@@ -247,26 +286,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 className="hidden"
               />
             </div>
-
-            {/* Selected file indicator */}
-            {selectedFile && (
-              <div className="flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm">
-                <Camera className="h-4 w-4 text-primary" />
-                <span className="flex-1 truncate">{selectedFile.name}</span>
-                <button
-                  type="button"
-                  onClick={clearSelectedFile}
-                  className="rounded-full p-0.5 hover:bg-primary/20"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Name field */}
           <div className="space-y-2">
-            <Label htmlFor="name">
+            <Label htmlFor="name" className="mb-2 block">
               <User className="mr-2 inline-block h-4 w-4" />
               Nom complet
             </Label>
@@ -282,7 +306,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
           {/* Email field (read-only) */}
           <div className="space-y-2">
-            <Label htmlFor="email">
+            <Label htmlFor="email" className="mb-2 block">
               <Mail className="mr-2 inline-block h-4 w-4" />
               Adresse email
             </Label>
@@ -296,6 +320,65 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <p className="text-xs text-muted-foreground">
               L&apos;email ne peut pas etre modifie pour le moment
             </p>
+          </div>
+
+          {/* Phone field */}
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="mb-2 block">
+              <Phone className="mr-2 inline-block h-4 w-4" />
+              Telephone
+            </Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="06 12 34 56 78"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={isBusy}
+            />
+            <p className="text-xs text-muted-foreground">
+              Format 06 12 34 56 78 ou +33 6 12 34 56 78
+            </p>
+          </div>
+
+          {/* Address section */}
+          <div className="space-y-4">
+            <Label className="mb-2 block">
+              <MapPin className="mr-2 inline-block h-4 w-4" />
+              Adresse
+            </Label>
+            <div className="space-y-3">
+              <Input
+                id="address"
+                placeholder="Numero et nom de rue"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                disabled={isBusy}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  id="postalCode"
+                  placeholder="Code postal"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  disabled={isBusy}
+                />
+                <Input
+                  id="city"
+                  placeholder="Ville"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  disabled={isBusy}
+                />
+              </div>
+              <Input
+                id="country"
+                placeholder="Pays"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                disabled={isBusy}
+              />
+            </div>
           </div>
 
           {/* Error message */}

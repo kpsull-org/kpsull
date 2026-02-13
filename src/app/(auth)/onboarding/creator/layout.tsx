@@ -49,21 +49,17 @@ export default async function CreatorOnboardingLayout({
   const visualStep = toVisualStep(backendStep);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Devenir Créateur</CardTitle>
-            <CardDescription>
-              Complétez les étapes suivantes pour activer votre compte créateur
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <OnboardingStepper currentStep={visualStep} />
-            {children}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <Card className="w-full">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Devenir Créateur</CardTitle>
+        <CardDescription>
+          Complétez les étapes suivantes pour activer votre compte créateur
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-8">
+        <OnboardingStepper currentStep={visualStep} />
+        {children}
+      </CardContent>
+    </Card>
   );
 }

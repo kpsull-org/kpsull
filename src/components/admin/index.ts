@@ -24,3 +24,5 @@ export {
   type FlaggedContentListProps,
   type ModerationHistoryProps,
 } from './flagged-content-list';
+export { AdminSidebar, type AdminSidebarProps } from './admin-sidebar';
+export { ImpersonationBanner } from './impersonation-banner';

@@ -1,10 +1,13 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma/client';
 import { ListReturnsUseCase } from '@/modules/returns/application/use-cases/list-returns.use-case';
 import { ApproveReturnUseCase } from '@/modules/returns/application/use-cases/approve-return.use-case';
 import { RejectReturnUseCase } from '@/modules/returns/application/use-cases/reject-return.use-case';
-import { MockReturnRepository } from '@/modules/returns/infrastructure/repositories/mock-return.repository';
+import { ReceiveReturnUseCase } from '@/modules/returns/application/use-cases/receive-return.use-case';
+import { RefundReturnUseCase } from '@/modules/returns/application/use-cases/refund-return.use-case';
+import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories/prisma-return.repository';
 import { Card, CardContent } from '@/components/ui/card';
 import { ReturnsPageClient } from './page-client';
 import type { ReturnStatusValue } from '@/modules/returns/domain/value-objects/return-status.vo';
@@ -18,20 +21,6 @@ interface ReturnsPageProps {
   searchParams: Promise<{ status?: string }>;
 }
 
-/**
- * Returns Dashboard Page
- *
- * Story 9-5: Validation retour remboursement
- *
- * Page for creators to view and manage return requests.
- * Enhanced with table view and status filtering.
- *
- * Acceptance Criteria:
- * - AC1: Page createur pour voir les demandes de retour
- * - AC2: Actions: Approuver ou Rejeter avec motif
- * - AC3: Mise a jour statut retour
- * - AC4: Affichage dans dashboard createur
- */
 export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
   const session = await auth();
   const params = await searchParams;
@@ -40,14 +29,13 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
     redirect('/login');
   }
 
-  // Only creators and admins can access this page
   if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
     redirect('/profile');
   }
 
   const statusFilter = params.status as ReturnStatusValue | undefined;
 
-  const returnRepository = new MockReturnRepository();
+  const returnRepository = new PrismaReturnRepository(prisma);
   const listReturnsUseCase = new ListReturnsUseCase(returnRepository);
 
   const result = await listReturnsUseCase.execute({
@@ -57,19 +45,16 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
 
   if (result.isFailure) {
     return (
-      <div className="container max-w-6xl py-6">
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            Une erreur est survenue lors du chargement des demandes de retour.
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">
+          Une erreur est survenue lors du chargement des demandes de retour.
+        </CardContent>
+      </Card>
     );
   }
 
   const { returns, total } = result.value;
 
-  // Count by status for filter badges
   const statusCounts = {
     REQUESTED: returns.filter((r) => r.status === 'REQUESTED').length,
     APPROVED: returns.filter((r) => r.status === 'APPROVED').length,
@@ -79,7 +64,6 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
     REJECTED: returns.filter((r) => r.status === 'REJECTED').length,
   };
 
-  // Server actions
   async function approveReturn(returnId: string) {
     'use server';
 
@@ -88,7 +72,7 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
       return { success: false, error: 'Non authentifie' };
     }
 
-    const repository = new MockReturnRepository();
+    const repository = new PrismaReturnRepository(prisma);
     const useCase = new ApproveReturnUseCase(repository);
 
     const approveResult = await useCase.execute({
@@ -111,7 +95,7 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
       return { success: false, error: 'Non authentifie' };
     }
 
-    const repository = new MockReturnRepository();
+    const repository = new PrismaReturnRepository(prisma);
     const useCase = new RejectReturnUseCase(repository);
 
     const rejectResult = await useCase.execute({
@@ -127,7 +111,7 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
     return { success: true };
   }
 
-  async function receiveReturn(_returnId: string) {
+  async function receiveReturn(returnId: string) {
     'use server';
 
     const currentSession = await auth();
@@ -135,12 +119,22 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
       return { success: false, error: 'Non authentifie' };
     }
 
-    // TODO: Implement ReceiveReturnUseCase
-    // For now, return success (mock)
+    const repository = new PrismaReturnRepository(prisma);
+    const useCase = new ReceiveReturnUseCase(repository);
+
+    const receiveResult = await useCase.execute({
+      returnId,
+      creatorId: currentSession.user.id,
+    });
+
+    if (receiveResult.isFailure) {
+      return { success: false, error: receiveResult.error };
+    }
+
     return { success: true };
   }
 
-  async function refundReturn(_returnId: string) {
+  async function refundReturn(returnId: string) {
     'use server';
 
     const currentSession = await auth();
@@ -148,18 +142,25 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
       return { success: false, error: 'Non authentifie' };
     }
 
-    // TODO: Implement RefundReturnUseCase
-    // For now, return success (mock)
+    const repository = new PrismaReturnRepository(prisma);
+    const useCase = new RefundReturnUseCase(repository);
+
+    const refundResult = await useCase.execute({
+      returnId,
+      creatorId: currentSession.user.id,
+    });
+
+    if (refundResult.isFailure) {
+      return { success: false, error: refundResult.error };
+    }
+
     return { success: true };
   }
 
-  // Transform returns for the client component
-  // Note: refundAmount is set to 0 as placeholder - in production,
-  // this would come from the order total or a dedicated field
   const transformedReturns = returns.map((r) => ({
     ...r,
     createdAt: new Date(r.createdAt),
-    refundAmount: 0, // TODO: Get actual refund amount from order
+    refundAmount: 0,
   }));
 
   return (

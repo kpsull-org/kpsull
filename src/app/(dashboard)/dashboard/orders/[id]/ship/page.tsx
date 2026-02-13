@@ -93,7 +93,7 @@ export default async function ShipOrderPage({ params }: PageProps) {
   }
 
   return (
-    <div className="container max-w-2xl py-6">
+    <div className="max-w-2xl">
       {/* Back link */}
       <Button variant="ghost" asChild className="mb-6">
         <Link href={`/dashboard/orders/${id}`}>

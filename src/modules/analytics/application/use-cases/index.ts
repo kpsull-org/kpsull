@@ -27,3 +27,33 @@ export {
   type ListCreatorsInput,
   type ListCreatorsOutput,
 } from './list-creators.use-case';
+
+export {
+  GetAdminMonthlyRevenueUseCase,
+  type GetAdminMonthlyRevenueInput,
+  type GetAdminMonthlyRevenueOutput,
+} from './get-admin-monthly-revenue.use-case';
+
+export {
+  GetAdminRevenueByCreatorUseCase,
+  type GetAdminRevenueByCreatorInput,
+  type GetAdminRevenueByCreatorOutput,
+} from './get-admin-revenue-by-creator.use-case';
+
+export {
+  ListAdminClientsUseCase,
+  type ListAdminClientsInput,
+  type ListAdminClientsOutput,
+} from './list-admin-clients.use-case';
+
+export {
+  ListAdminOrdersUseCase,
+  type ListAdminOrdersInput,
+  type ListAdminOrdersOutput,
+} from './list-admin-orders.use-case';
+
+export {
+  GetCreatorOverviewUseCase,
+  type GetCreatorOverviewInput,
+  type GetCreatorOverviewOutput,
+} from './get-creator-overview.use-case';

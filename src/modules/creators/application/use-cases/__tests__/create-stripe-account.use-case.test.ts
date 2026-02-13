@@ -195,7 +195,7 @@ describe('CreateStripeAccountUseCase', () => {
     expect(result.error).toBe('Stripe error');
   });
 
-  it('should fail if account link creation fails for existing account', async () => {
+  it('should fail if account link creation fails and new account creation also fails', async () => {
     const onboardingWithStripe = createOnboardingAtStep3({
       stripeAccountId: 'acct_existing123',
     });
@@ -206,6 +206,9 @@ describe('CreateStripeAccountUseCase', () => {
     vi.mocked(mockStripeService.createAccountLink).mockResolvedValue(
       Result.fail('Link creation failed')
     );
+    vi.mocked(mockStripeService.createConnectAccount).mockResolvedValue(
+      Result.fail('Account creation failed')
+    );
 
     const result = await useCase.execute({
       userId: 'user-123',
@@ -213,7 +216,7 @@ describe('CreateStripeAccountUseCase', () => {
     });
 
     expect(result.isFailure).toBe(true);
-    expect(result.error).toBe('Link creation failed');
+    expect(result.error).toBe('Account creation failed');
   });
 
   it('should use default brand name if not set', async () => {

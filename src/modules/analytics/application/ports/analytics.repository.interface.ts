@@ -160,11 +160,40 @@ export interface AdminPlatformStats {
  *
  * Provides methods to retrieve platform-wide analytics for admin dashboards.
  */
+/**
+ * Monthly revenue data point
+ */
+export interface MonthlyRevenueDataPoint {
+  month: number;
+  revenue: number;
+}
+
+/**
+ * Revenue breakdown by creator
+ */
+export interface CreatorRevenueBreakdown {
+  creatorId: string;
+  creatorName: string;
+  creatorEmail: string;
+  orderCount: number;
+  totalRevenue: number;
+}
+
 export interface AdminAnalyticsRepository {
   /**
    * Get platform-wide statistics for admin dashboard
    */
   getPlatformStats(period: TimePeriod): Promise<AdminPlatformStats>;
+
+  /**
+   * Get monthly revenue for a given year
+   */
+  getMonthlyRevenue(year: number): Promise<MonthlyRevenueDataPoint[]>;
+
+  /**
+   * Get revenue breakdown by creator
+   */
+  getRevenueByCreator(limit: number): Promise<CreatorRevenueBreakdown[]>;
 }
 
 /**
@@ -247,4 +276,79 @@ export interface CreatorRepository {
    * Reactivate a suspended creator
    */
   reactivateCreator(creatorId: string): Promise<void>;
+}
+
+/**
+ * Admin client summary for listing
+ */
+export interface AdminClientSummary {
+  id: string;
+  name: string;
+  email: string;
+  city: string | null;
+  orderCount: number;
+  createdAt: Date;
+}
+
+export interface ListAdminClientsParams {
+  search?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface ListAdminClientsResult {
+  clients: AdminClientSummary[];
+  total: number;
+}
+
+export interface AdminClientRepository {
+  listClients(params: ListAdminClientsParams): Promise<ListAdminClientsResult>;
+}
+
+/**
+ * Admin order summary for listing
+ */
+export interface AdminOrderSummary {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  creatorName: string;
+  creatorEmail: string;
+  status: string;
+  totalAmount: number;
+  itemCount: number;
+  createdAt: Date;
+}
+
+export interface ListAdminOrdersParams {
+  search?: string;
+  statusFilter?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface ListAdminOrdersResult {
+  orders: AdminOrderSummary[];
+  total: number;
+}
+
+export interface AdminOrderRepository {
+  listOrders(params: ListAdminOrdersParams): Promise<ListAdminOrdersResult>;
+}
+
+/**
+ * Creator overview statistics for the main dashboard
+ */
+export interface CreatorOverviewStats {
+  totalOrders: number;
+  totalRevenueCents: number;
+  totalCustomers: number;
+  activeProducts: number;
+  pendingOrders: number;
+  monthlyRevenue: { month: number; revenueCents: number }[];
+}
+
+export interface CreatorOverviewRepository {
+  getOverview(creatorId: string, year: number): Promise<CreatorOverviewStats>;
 }

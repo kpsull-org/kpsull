@@ -10,3 +10,4 @@ export {
 export { SalesChart, type SalesChartProps } from './sales-chart';
 export { ExportButton, type ExportButtonProps } from './export-button';
 export { CustomersTable, type CustomersTableProps } from './customers-table';
+export { RevenueChart, type MonthlyRevenue } from './revenue-chart';

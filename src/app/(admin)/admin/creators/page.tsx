@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import { ListCreatorsUseCase } from '@/modules/analytics/application/use-cases';
 import { PrismaCreatorRepository } from '@/modules/analytics/infrastructure/repositories';
