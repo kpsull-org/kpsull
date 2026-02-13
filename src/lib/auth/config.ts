@@ -24,6 +24,7 @@ export const authConfig: NextAuthConfig = {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: 'credentials',
@@ -81,47 +82,32 @@ export const authConfig: NextAuthConfig = {
       }
 
       if (account?.provider === 'google' && profile?.email) {
-        const email = profile.email.toLowerCase();
+        try {
+          const email = profile.email.toLowerCase();
 
-        const existingUser = await prisma.user.findUnique({
-          where: { email },
-          include: { accounts: true },
-        });
+          // Update existing user's profile picture if missing
+          const existingUser = await prisma.user.findUnique({
+            where: { email },
+          });
 
-        if (existingUser) {
-          const googleLinked = existingUser.accounts.some(
-            (a) => a.provider === 'google'
-          );
-
-          if (!googleLinked) {
-            await prisma.account.create({
+          if (existingUser && !existingUser.image && profile.picture) {
+            await prisma.user.update({
+              where: { id: existingUser.id },
               data: {
-                userId: existingUser.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
+                image: profile.picture as string,
+                emailVerified: existingUser.emailVerified ?? new Date(),
               },
             });
-
-            if (!existingUser.image && profile.picture) {
-              await prisma.user.update({
-                where: { id: existingUser.id },
-                data: {
-                  image: profile.picture as string,
-                  emailVerified: new Date(),
-                },
-              });
-            }
           }
-        }
 
-        return true;
+          // New users: PrismaAdapter auto-creates them
+          // (allowDangerousEmailAccountLinking handles account linking)
+          return true;
+        } catch (error) {
+          console.error('[auth] Google sign-in error:', error);
+          Sentry.captureException(error);
+          return false;
+        }
       }
 
       // Block unknown providers
@@ -131,10 +117,26 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
-        token.accountTypeChosen = user.accountTypeChosen;
-        token.wantsToBeCreator = user.wantsToBeCreator;
-        token.emailVerified = user.emailVerified ? new Date(user.emailVerified).toISOString() : null;
+        // For OAuth users, PrismaAdapter doesn't return custom fields (role, etc.)
+        // Always do a DB lookup to get the full user data
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id as string },
+            select: { role: true, accountTypeChosen: true, wantsToBeCreator: true, emailVerified: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.accountTypeChosen = dbUser.accountTypeChosen;
+            token.wantsToBeCreator = dbUser.wantsToBeCreator;
+            token.emailVerified = dbUser.emailVerified ? dbUser.emailVerified.toISOString() : null;
+          }
+        } catch {
+          // Fallback to user object (credentials provider includes these)
+          token.role = user.role ?? 'CLIENT';
+          token.accountTypeChosen = user.accountTypeChosen ?? false;
+          token.wantsToBeCreator = user.wantsToBeCreator ?? false;
+          token.emailVerified = user.emailVerified ? new Date(user.emailVerified).toISOString() : null;
+        }
         token.refreshedAt = Date.now();
         return token;
       }
