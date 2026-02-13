@@ -181,7 +181,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       expect(subscription.productLimit).toBe(10);
     });
@@ -191,7 +191,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       expect(subscription.productLimit).toBe(20);
     });
@@ -201,7 +201,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ATELIER',
-      }).value!;
+      }).value;
 
       expect(subscription.productLimit).toBe(-1);
     });
@@ -211,7 +211,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       expect(subscription.pinnedProductsLimit).toBe(3);
     });
@@ -221,7 +221,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       expect(subscription.pinnedProductsLimit).toBe(5);
     });
@@ -244,7 +244,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canAddProduct).toBe(true);
     });
@@ -265,7 +265,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canAddProduct).toBe(false);
     });
@@ -286,7 +286,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: 'sub_stripe123',
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canAddProduct).toBe(true);
     });
@@ -309,7 +309,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canPinProduct).toBe(true);
     });
@@ -330,7 +330,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canPinProduct).toBe(false);
     });
@@ -353,7 +353,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.isNearProductLimit).toBe(true);
     });
@@ -374,7 +374,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.isNearProductLimit).toBe(false);
     });
@@ -386,7 +386,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('STUDIO', {
         subscriptionId: 'sub_stripe123',
@@ -405,7 +405,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('ATELIER', {
         subscriptionId: 'sub_stripe123',
@@ -423,7 +423,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('ATELIER', {
         subscriptionId: 'sub_stripe123',
@@ -440,7 +440,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('ESSENTIEL', {
         subscriptionId: 'sub_stripe123',
@@ -457,7 +457,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('STUDIO', {
         subscriptionId: 'sub_stripe123',
@@ -476,7 +476,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ATELIER',
-      }).value!;
+      }).value;
 
       const result = subscription.changePlan('STUDIO', {
         subscriptionId: 'sub_stripe123',
@@ -493,7 +493,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.changePlan('STUDIO');
 
@@ -509,7 +509,7 @@ describe('Subscription Entity', () => {
         creatorId: 'creator-123',
         plan: 'STUDIO',
         stripeSubscriptionId: 'sub_stripe123',
-      }).value!;
+      }).value;
 
       const result = subscription.cancelSubscription();
 
@@ -525,7 +525,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ATELIER',
-      }).value!;
+      }).value;
 
       const result = subscription.startTrial();
 
@@ -542,7 +542,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       const result = subscription.startTrial();
 
@@ -556,7 +556,7 @@ describe('Subscription Entity', () => {
         creatorId: 'creator-123',
         plan: 'ATELIER',
         withTrial: true,
-      }).value!;
+      }).value;
 
       subscription.endTrial();
 
@@ -582,7 +582,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: 'sub_stripe123',
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       // Current date is 2026-01-28, trial ends 2026-02-03
       expect(subscription.isInTrialPeriod).toBe(true);
@@ -595,7 +595,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const gracePeriodStart = new Date();
       const result = subscription.markAsPastDue(gracePeriodStart);
@@ -610,7 +610,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       subscription.cancelSubscription();
       const result = subscription.markAsPastDue(new Date());
@@ -626,7 +626,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       subscription.markAsPastDue(new Date());
 
@@ -648,7 +648,7 @@ describe('Subscription Entity', () => {
         creatorId: 'creator-123',
         plan: 'STUDIO',
         billingInterval: 'year',
-      }).value!;
+      }).value;
 
       subscription.changeBillingInterval('month', 'price_studio_month');
 

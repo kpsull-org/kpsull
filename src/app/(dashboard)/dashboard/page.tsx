@@ -89,7 +89,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     );
   }
 
-  const stats = result.value!;
+  const stats = result.value;
 
   // Map monthly revenue to chart format
   const revenueData: MonthlyRevenue[] = MONTH_LABELS.map((month, i) => {

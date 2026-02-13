@@ -34,7 +34,7 @@ describe('AddSectionUseCase', () => {
       creatorId: 'creator-123',
       slug: 'my-shop',
       title: 'Ma Boutique',
-    }).value!;
+    }).value;
   };
 
   beforeEach(() => {
@@ -72,10 +72,10 @@ describe('AddSectionUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.type).toBe('HERO');
-      expect(result.value!.title).toBe('Hero Section');
-      expect(result.value!.position).toBe(0);
-      expect(result.value!.isVisible).toBe(true);
+      expect(result.value.type).toBe('HERO');
+      expect(result.value.title).toBe('Hero Section');
+      expect(result.value.position).toBe(0);
+      expect(result.value.isVisible).toBe(true);
       expect(mockRepo.save).toHaveBeenCalledOnce();
     });
 
@@ -97,7 +97,7 @@ describe('AddSectionUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.content).toEqual({
+      expect(result.value.content).toEqual({
         heading: 'Welcome',
         subheading: 'To my shop',
       });
@@ -123,7 +123,7 @@ describe('AddSectionUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.position).toBe(1);
+      expect(result.value.position).toBe(1);
     });
 
     it('should fail when page not found', async () => {
@@ -226,12 +226,12 @@ describe('UpdateSectionUseCase', () => {
       creatorId: 'creator-123',
       slug: 'my-shop',
       title: 'Ma Boutique',
-    }).value!;
+    }).value;
     const section = page.addSection({
       type: SectionType.hero(),
       title: 'Original Title',
       content: { heading: 'Original' },
-    }).value!;
+    }).value;
     return { page, section };
   };
 
@@ -270,7 +270,7 @@ describe('UpdateSectionUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.title).toBe('New Title');
+      expect(result.value.title).toBe('New Title');
       expect(mockRepo.save).toHaveBeenCalledOnce();
     });
 
@@ -291,7 +291,7 @@ describe('UpdateSectionUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.content).toEqual({
+      expect(result.value.content).toEqual({
         heading: 'New Heading',
         subheading: 'New Sub',
       });
@@ -314,7 +314,7 @@ describe('UpdateSectionUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.isVisible).toBe(false);
+      expect(result.value.isVisible).toBe(false);
     });
 
     it('should fail when page not found', async () => {
@@ -399,11 +399,11 @@ describe('RemoveSectionUseCase', () => {
       creatorId: 'creator-123',
       slug: 'my-shop',
       title: 'Ma Boutique',
-    }).value!;
+    }).value;
     const section = page.addSection({
       type: SectionType.hero(),
       title: 'Hero Section',
-    }).value!;
+    }).value;
     return { page, section };
   };
 
@@ -523,10 +523,10 @@ describe('ReorderSectionsUseCase', () => {
       creatorId: 'creator-123',
       slug: 'my-shop',
       title: 'Ma Boutique',
-    }).value!;
-    const hero = page.addSection({ type: SectionType.hero(), title: 'Hero' }).value!;
-    const about = page.addSection({ type: SectionType.about(), title: 'About' }).value!;
-    const contact = page.addSection({ type: SectionType.contact(), title: 'Contact' }).value!;
+    }).value;
+    const hero = page.addSection({ type: SectionType.hero(), title: 'Hero' }).value;
+    const about = page.addSection({ type: SectionType.about(), title: 'About' }).value;
+    const contact = page.addSection({ type: SectionType.contact(), title: 'Contact' }).value;
     return { page, hero, about, contact };
   };
 
@@ -564,9 +564,9 @@ describe('ReorderSectionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sectionIds[0]).toBe(contact.idString);
-      expect(result.value!.sectionIds[1]).toBe(hero.idString);
-      expect(result.value!.sectionIds[2]).toBe(about.idString);
+      expect(result.value.sectionIds[0]).toBe(contact.idString);
+      expect(result.value.sectionIds[1]).toBe(hero.idString);
+      expect(result.value.sectionIds[2]).toBe(about.idString);
       expect(mockRepo.save).toHaveBeenCalledOnce();
     });
 

@@ -47,7 +47,7 @@ export class AddSectionUseCase implements UseCase<AddSectionInput, AddSectionOut
 
     // Add section to page
     const sectionResult = page.addSection({
-      type: typeResult.value!,
+      type: typeResult.value,
       title: input.title,
       content: input.content,
       position: input.position,
@@ -57,7 +57,7 @@ export class AddSectionUseCase implements UseCase<AddSectionInput, AddSectionOut
       return Result.fail(sectionResult.error!);
     }
 
-    const section = sectionResult.value!;
+    const section = sectionResult.value;
 
     // Persist changes
     await this.pageRepository.save(page);

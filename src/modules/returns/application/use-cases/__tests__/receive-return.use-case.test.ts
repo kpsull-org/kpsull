@@ -47,8 +47,8 @@ describe('ReceiveReturnUseCase', () => {
     const result = await useCase.execute({ returnId: 'return-1', creatorId: 'creator-123' });
 
     expect(result.isSuccess).toBe(true);
-    expect(result.value!.status).toBe('RECEIVED');
-    expect(result.value!.receivedAt).toBeInstanceOf(Date);
+    expect(result.value.status).toBe('RECEIVED');
+    expect(result.value.receivedAt).toBeInstanceOf(Date);
   });
 
   it('should persist the received return', async () => {

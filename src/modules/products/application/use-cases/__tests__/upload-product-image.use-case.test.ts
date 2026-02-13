@@ -62,9 +62,9 @@ describe('UploadProductImageUseCase', () => {
     const productResult = Product.create({
       creatorId: 'creator-123',
       name: 'Test Product',
-      price: priceResult.value!,
+      price: priceResult.value,
     });
-    mockProduct = productResult.value!;
+    mockProduct = productResult.value;
 
     // Create mocks
     mockImageUploadService = {
@@ -122,9 +122,9 @@ describe('UploadProductImageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.url).toBe('https://cdn.example.com/uploads/product-image.jpg');
-      expect(result.value!.alt).toBe('Product front view');
-      expect(result.value!.position).toBe(0); // First image should be position 0
+      expect(result.value.url).toBe('https://cdn.example.com/uploads/product-image.jpg');
+      expect(result.value.alt).toBe('Product front view');
+      expect(result.value.position).toBe(0); // First image should be position 0
       expect(mockImageUploadService.upload).toHaveBeenCalledWith(file, 'product-image.jpg');
       expect(mockProductImageRepository.save).toHaveBeenCalled();
     });
@@ -151,7 +151,7 @@ describe('UploadProductImageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.url).toBe('https://cdn.example.com/uploads/product-image.png');
+      expect(result.value.url).toBe('https://cdn.example.com/uploads/product-image.png');
     });
 
     it('should set position based on existing images count', async () => {
@@ -176,7 +176,7 @@ describe('UploadProductImageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.position).toBe(2); // Third position
+      expect(result.value.position).toBe(2); // Third position
     });
 
     it('should fail when product is not found', async () => {
@@ -275,7 +275,7 @@ describe('UploadProductImageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.alt).toBe('');
+      expect(result.value.alt).toBe('');
     });
 
     describe('MIME type validation', () => {

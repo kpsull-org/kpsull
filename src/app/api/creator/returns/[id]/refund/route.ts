@@ -1,47 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma/client';
 import { stripe } from '@/lib/stripe/client';
+import { requireCreatorAuth, type RouteIdParams } from '@/lib/api/require-auth';
 import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories';
 import { RefundReturnUseCase } from '@/modules/returns/application/use-cases';
 
 const returnRepository = new PrismaReturnRepository(prisma);
 
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
-
-/**
- * POST /api/creator/returns/[id]/refund
- *
- * Process a refund for a received return.
- * This will trigger the Stripe refund and mark the return as refunded.
- */
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(_request: NextRequest, { params }: RouteIdParams) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-    }
-
-    // Check if user is a creator
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
-
-    if (!user || user.role !== 'CREATOR') {
-      return NextResponse.json({ error: 'Acces reserve aux createurs' }, { status: 403 });
-    }
+    const authResult = await requireCreatorAuth();
+    if (!authResult.success) return authResult.response;
 
     const { id } = await params;
 
-    // Get return request first to get order details
     const returnRequest = await returnRepository.findById(id);
     if (!returnRequest) {
       return NextResponse.json({ error: 'Demande de retour non trouvee' }, { status: 404 });
     }
 
-    // Get order for payment intent
     const order = await prisma.order.findUnique({
       where: { id: returnRequest.orderId },
     });
@@ -57,7 +34,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Process Stripe refund
     let stripeRefund;
     try {
       stripeRefund = await stripe.refunds.create({
@@ -77,16 +53,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Update return status
     const useCase = new RefundReturnUseCase(returnRepository);
     const result = await useCase.execute({
       returnId: id,
-      creatorId: session.user.id,
+      creatorId: authResult.user.id,
     });
 
     if (result.isFailure) {
-      // Stripe refund succeeded but our DB update failed
-      // This should be handled with a reconciliation process
       console.error('Return status update failed after Stripe refund:', result.error);
       return NextResponse.json(
         { error: 'Remboursement Stripe effectue mais mise a jour du statut echouee' },
@@ -94,7 +67,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Update order status and store refund ID
     await prisma.order.update({
       where: { id: order.id },
       data: {

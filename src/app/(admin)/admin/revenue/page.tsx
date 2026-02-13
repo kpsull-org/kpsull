@@ -45,12 +45,12 @@ export default async function AdminRevenuePage() {
 
   const monthlyChartData: MonthlyRevenue[] = monthlyResult.isSuccess
     ? MONTH_LABELS.map((month, i) => {
-        const point = monthlyResult.value!.revenueByMonth.find((p) => p.month === i);
+        const point = monthlyResult.value.revenueByMonth.find((p) => p.month === i);
         return { month, revenue: (point?.revenue ?? 0) / 100 };
       })
     : [];
 
-  const creatorRows = creatorsResult.isSuccess ? creatorsResult.value!.creators : [];
+  const creatorRows = creatorsResult.isSuccess ? creatorsResult.value.creators : [];
 
   if (statsResult.isFailure) {
     return (
@@ -64,7 +64,7 @@ export default async function AdminRevenuePage() {
     );
   }
 
-  const stats: GetAdminStatsOutput = statsResult.value!;
+  const stats: GetAdminStatsOutput = statsResult.value;
 
   return (
     <div className="container py-10">

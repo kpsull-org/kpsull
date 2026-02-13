@@ -315,5 +315,5 @@ function createTestPayment(amount = 2999): Payment {
     amount,
     currency: 'EUR',
     paymentMethod: PaymentMethod.card(),
-  }).value!;
+  }).value;
 }

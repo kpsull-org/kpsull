@@ -61,7 +61,7 @@ export class UpdateProductUseCase implements UseCase<UpdateProductInput, UpdateP
       if (moneyResult.isFailure) {
         return Result.fail(moneyResult.error!);
       }
-      product.updatePrice(moneyResult.value!);
+      product.updatePrice(moneyResult.value);
     }
 
     if (input.projectId !== undefined) {

@@ -80,7 +80,7 @@ export default async function AdminDashboardPage({
   ]);
 
   const revenueData = revenueResult.isSuccess
-    ? toMonthlyRevenue(revenueResult.value!.revenueByMonth)
+    ? toMonthlyRevenue(revenueResult.value.revenueByMonth)
     : MONTH_LABELS.map((month) => ({ month, revenue: 0 }));
 
   // Handle error case
@@ -96,7 +96,7 @@ export default async function AdminDashboardPage({
     );
   }
 
-  const stats: GetAdminStatsOutput = result.value!;
+  const stats: GetAdminStatsOutput = result.value;
 
   return (
     <div className="container py-10">

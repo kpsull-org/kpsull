@@ -42,7 +42,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
     );
   }
 
-  const { clients, total, totalPages } = result.value!;
+  const { clients, total, totalPages } = result.value;
 
   const serializedClients = clients.map((client) => ({
     id: client.id,

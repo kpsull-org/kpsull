@@ -57,7 +57,7 @@ export class CreateVariantUseCase implements UseCase<CreateVariantInput, CreateV
       if (moneyResult.isFailure) {
         return Result.fail(moneyResult.error!);
       }
-      priceOverride = moneyResult.value!;
+      priceOverride = moneyResult.value;
     }
 
     // Create the variant entity
@@ -73,7 +73,7 @@ export class CreateVariantUseCase implements UseCase<CreateVariantInput, CreateV
       return Result.fail(variantResult.error!);
     }
 
-    const variant = variantResult.value!;
+    const variant = variantResult.value;
 
     // Persist the variant
     await this.variantRepository.save(variant);

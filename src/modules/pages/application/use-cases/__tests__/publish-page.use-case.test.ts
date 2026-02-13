@@ -29,7 +29,7 @@ describe('PublishPageUseCase', () => {
       creatorId: 'creator-123',
       slug: 'my-shop',
       title: 'Ma Boutique',
-    }).value!;
+    }).value;
 
     if (isPublished) {
       page.publish();
@@ -71,8 +71,8 @@ describe('PublishPageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status).toBe('PUBLISHED');
-      expect(result.value!.publishedAt).toBeDefined();
+      expect(result.value.status).toBe('PUBLISHED');
+      expect(result.value.publishedAt).toBeDefined();
       expect(mockRepo.save).toHaveBeenCalledOnce();
     });
 
@@ -152,7 +152,7 @@ describe('UnpublishPageUseCase', () => {
       creatorId: 'creator-123',
       slug: 'my-shop',
       title: 'Ma Boutique',
-    }).value!;
+    }).value;
 
     if (isPublished) {
       page.publish();
@@ -194,7 +194,7 @@ describe('UnpublishPageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status).toBe('DRAFT');
+      expect(result.value.status).toBe('DRAFT');
       expect(mockRepo.save).toHaveBeenCalledOnce();
     });
 

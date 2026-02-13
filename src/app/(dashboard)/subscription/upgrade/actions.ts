@@ -50,5 +50,5 @@ export async function createCheckoutSession(
     return { error: result.error };
   }
 
-  return { url: result.value!.url };
+  return { url: result.value.url };
 }

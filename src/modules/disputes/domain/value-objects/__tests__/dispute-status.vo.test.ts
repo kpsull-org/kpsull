@@ -50,7 +50,7 @@ describe('DisputeStatus Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.value).toBe('UNDER_REVIEW');
+      expect(result.value.value).toBe('UNDER_REVIEW');
     });
 
     it('should fail for invalid status', () => {

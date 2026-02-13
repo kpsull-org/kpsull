@@ -88,6 +88,6 @@ export class PrismaVariantRepository implements VariantRepository {
       throw new Error(`Failed to reconstitute ProductVariant ${prismaVariant.id}: ${result.error}`);
     }
 
-    return result.value!;
+    return result.value;
   }
 }

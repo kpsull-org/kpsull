@@ -76,6 +76,6 @@ export class PrismaProjectRepository implements ProjectRepository {
       updatedAt: prismaProject.updatedAt,
     });
 
-    return result.isSuccess ? result.value! : null;
+    return result.isSuccess ? result.value : null;
   }
 }

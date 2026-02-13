@@ -37,7 +37,7 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
       throw new Error(`Failed to create demo subscription: ${demoResult.error}`);
     }
 
-    const demoSubscription = demoResult.value!;
+    const demoSubscription = demoResult.value;
 
     this.subscriptions.set(demoSubscription.userId, demoSubscription);
   }
@@ -131,7 +131,7 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
       throw new Error(`Failed to create subscription for user ${userId}: ${result.error}`);
     }
 
-    const subscription = result.value!;
+    const subscription = result.value;
 
     this.subscriptions.set(userId, subscription);
     return subscription;

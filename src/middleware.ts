@@ -11,43 +11,45 @@ import { NextResponse } from 'next/server';
 
 const { auth } = NextAuth(authConfigEdge);
 
+type AuthRequest = Parameters<Parameters<typeof auth>[0]>[0];
+
+function unauthorizedResponse(req: AuthRequest, isApi: boolean) {
+  return isApi
+    ? NextResponse.json({ error: 'Non authentifie' }, { status: 401 })
+    : NextResponse.redirect(new URL('/login', req.url));
+}
+
+function forbiddenResponse(req: AuthRequest, isApi: boolean, message: string) {
+  return isApi
+    ? NextResponse.json({ error: message }, { status: 403 })
+    : NextResponse.redirect(new URL('/', req.url));
+}
+
+function checkRouteAccess(
+  req: AuthRequest,
+  isApi: boolean,
+  allowedRoles: string[],
+  errorMessage: string
+) {
+  if (!req.auth?.user) {
+    return unauthorizedResponse(req, isApi);
+  }
+  if (!allowedRoles.includes(req.auth.user.role)) {
+    return forbiddenResponse(req, isApi, errorMessage);
+  }
+  return null;
+}
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isApiRoute = pathname.startsWith('/api/');
+  const isApi = pathname.startsWith('/api/');
 
-  // Admin routes protection: /admin/* and /api/admin/*
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    if (!req.auth?.user) {
-      return isApiRoute
-        ? NextResponse.json({ error: 'Non authentifie' }, { status: 401 })
-        : NextResponse.redirect(new URL('/login', req.url));
-    }
-    if (req.auth.user.role !== 'ADMIN') {
-      return isApiRoute
-        ? NextResponse.json(
-            { error: 'Acces reserve aux administrateurs' },
-            { status: 403 }
-          )
-        : NextResponse.redirect(new URL('/', req.url));
-    }
+    return checkRouteAccess(req, isApi, ['ADMIN'], 'Acces reserve aux administrateurs') ?? NextResponse.next();
   }
 
-  // Creator routes protection: /creator/* and /api/creator/*
   if (pathname.startsWith('/creator') || pathname.startsWith('/api/creator')) {
-    if (!req.auth?.user) {
-      return isApiRoute
-        ? NextResponse.json({ error: 'Non authentifie' }, { status: 401 })
-        : NextResponse.redirect(new URL('/login', req.url));
-    }
-    const allowedRoles = ['CREATOR', 'ADMIN'];
-    if (!allowedRoles.includes(req.auth.user.role)) {
-      return isApiRoute
-        ? NextResponse.json(
-            { error: 'Acces reserve aux createurs' },
-            { status: 403 }
-          )
-        : NextResponse.redirect(new URL('/', req.url));
-    }
+    return checkRouteAccess(req, isApi, ['CREATOR', 'ADMIN'], 'Acces reserve aux createurs') ?? NextResponse.next();
   }
 
   return NextResponse.next();

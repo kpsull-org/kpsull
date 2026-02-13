@@ -15,9 +15,9 @@ describe('Project Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.creatorId).toBe('creator-123');
-      expect(result.value!.name).toBe('Ma Collection Été');
-      expect(result.value!.productCount).toBe(0);
+      expect(result.value.creatorId).toBe('creator-123');
+      expect(result.value.name).toBe('Ma Collection Été');
+      expect(result.value.productCount).toBe(0);
     });
 
     it('should create a project with all optional fields', () => {
@@ -34,8 +34,8 @@ describe('Project Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.description).toBe('Description de ma collection');
-      expect(result.value!.coverImage).toBe('https://example.com/image.jpg');
+      expect(result.value.description).toBe('Description de ma collection');
+      expect(result.value.coverImage).toBe('https://example.com/image.jpg');
     });
 
     it('should fail when name is empty', () => {
@@ -118,10 +118,10 @@ describe('Project Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.idString).toBe('project-123');
-      expect(result.value!.productCount).toBe(5);
-      expect(result.value!.createdAt).toEqual(new Date('2024-01-01'));
-      expect(result.value!.updatedAt).toEqual(new Date('2024-01-15'));
+      expect(result.value.idString).toBe('project-123');
+      expect(result.value.productCount).toBe(5);
+      expect(result.value.createdAt).toEqual(new Date('2024-01-01'));
+      expect(result.value.updatedAt).toEqual(new Date('2024-01-15'));
     });
   });
 
@@ -131,7 +131,7 @@ describe('Project Entity', () => {
       const project = Project.create({
         creatorId: 'creator-123',
         name: 'Ancien Nom',
-      }).value!;
+      }).value;
 
       // Act
       const result = project.updateName('Nouveau Nom');
@@ -146,7 +146,7 @@ describe('Project Entity', () => {
       const project = Project.create({
         creatorId: 'creator-123',
         name: 'Ancien Nom',
-      }).value!;
+      }).value;
 
       // Act
       const result = project.updateName('');
@@ -161,7 +161,7 @@ describe('Project Entity', () => {
       const project = Project.create({
         creatorId: 'creator-123',
         name: 'Ancien Nom',
-      }).value!;
+      }).value;
 
       // Act
       const result = project.updateName('a'.repeat(101));
@@ -178,7 +178,7 @@ describe('Project Entity', () => {
       const project = Project.create({
         creatorId: 'creator-123',
         name: 'Ma Collection',
-      }).value!;
+      }).value;
 
       // Act
       project.updateDescription('Nouvelle description');
@@ -193,7 +193,7 @@ describe('Project Entity', () => {
         creatorId: 'creator-123',
         name: 'Ma Collection',
         description: 'Description initiale',
-      }).value!;
+      }).value;
 
       // Act
       project.updateDescription('');
@@ -209,7 +209,7 @@ describe('Project Entity', () => {
       const project = Project.create({
         creatorId: 'creator-123',
         name: 'Ma Collection',
-      }).value!;
+      }).value;
 
       // Act
       project.updateCoverImage('https://example.com/new-image.jpg');
@@ -225,7 +225,7 @@ describe('Project Entity', () => {
       const project = Project.create({
         creatorId: 'creator-123',
         name: 'Ma Collection',
-      }).value!;
+      }).value;
 
       // Act
       project.incrementProductCount();
@@ -245,7 +245,7 @@ describe('Project Entity', () => {
         productCount: 5,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).value!;
+      }).value;
 
       // Act
       project.decrementProductCount();
@@ -263,7 +263,7 @@ describe('Project Entity', () => {
         productCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).value!;
+      }).value;
 
       // Act
       project.decrementProductCount();

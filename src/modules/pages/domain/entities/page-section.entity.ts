@@ -170,7 +170,7 @@ export class PageSection extends Entity<PageSectionProps> {
       new PageSection(
         {
           pageId: props.pageId,
-          type: typeResult.value!,
+          type: typeResult.value,
           title: props.title,
           content: props.content,
           position: props.position,

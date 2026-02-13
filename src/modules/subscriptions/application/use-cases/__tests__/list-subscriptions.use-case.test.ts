@@ -113,8 +113,8 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(3);
-      expect(result.value!.total).toBe(3);
+      expect(result.value.subscriptions).toHaveLength(3);
+      expect(result.value.total).toBe(3);
     });
 
     it('should filter by plan ESSENTIEL', async () => {
@@ -123,7 +123,7 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(1);
+      expect(result.value.subscriptions).toHaveLength(1);
       expect(result.value?.subscriptions[0]?.plan).toBe('ESSENTIEL');
     });
 
@@ -133,7 +133,7 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(1);
+      expect(result.value.subscriptions).toHaveLength(1);
       expect(result.value?.subscriptions[0]?.plan).toBe('STUDIO');
     });
 
@@ -143,7 +143,7 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(1);
+      expect(result.value.subscriptions).toHaveLength(1);
       expect(result.value?.subscriptions[0]?.plan).toBe('ATELIER');
     });
 
@@ -153,7 +153,7 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(1);
+      expect(result.value.subscriptions).toHaveLength(1);
       expect(result.value?.subscriptions[0]?.status).toBe('PAST_DUE');
     });
 
@@ -163,7 +163,7 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(2);
+      expect(result.value.subscriptions).toHaveLength(2);
     });
 
     it('should filter by both plan and status', async () => {
@@ -172,7 +172,7 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(1);
+      expect(result.value.subscriptions).toHaveLength(1);
       expect(result.value?.subscriptions[0]?.plan).toBe('STUDIO');
       expect(result.value?.subscriptions[0]?.status).toBe('ACTIVE');
     });
@@ -183,8 +183,8 @@ describe('ListSubscriptionsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.subscriptions).toHaveLength(0);
-      expect(result.value!.total).toBe(0);
+      expect(result.value.subscriptions).toHaveLength(0);
+      expect(result.value.total).toBe(0);
     });
   });
 });

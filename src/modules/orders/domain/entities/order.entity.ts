@@ -285,7 +285,7 @@ export class Order extends Entity<OrderProps> {
           customerEmail: props.customerEmail,
           items: props.items,
           shippingAddress: props.shippingAddress,
-          status: statusResult.value!,
+          status: statusResult.value,
           totalAmount: props.totalAmount,
           stripePaymentIntentId: props.stripePaymentIntentId,
           stripeRefundId: props.stripeRefundId,

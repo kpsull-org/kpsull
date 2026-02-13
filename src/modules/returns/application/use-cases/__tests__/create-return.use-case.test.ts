@@ -41,9 +41,9 @@ describe('CreateReturnUseCase', () => {
     const result = await useCase.execute(createValidInput());
 
     expect(result.isSuccess).toBe(true);
-    expect(result.value!.orderId).toBe('order-1');
-    expect(result.value!.status).toBe('REQUESTED');
-    expect(result.value!.id).toMatch(/^ret_/);
+    expect(result.value.orderId).toBe('order-1');
+    expect(result.value.status).toBe('REQUESTED');
+    expect(result.value.id).toMatch(/^ret_/);
   });
 
   it('should persist the return via repository', async () => {

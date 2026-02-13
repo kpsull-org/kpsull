@@ -48,7 +48,7 @@ describe('ProductStatus Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.isDraft).toBe(true);
+      expect(result.value.isDraft).toBe(true);
     });
 
     it('should create PUBLISHED from string', () => {
@@ -57,7 +57,7 @@ describe('ProductStatus Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.isPublished).toBe(true);
+      expect(result.value.isPublished).toBe(true);
     });
 
     it('should create ARCHIVED from string', () => {
@@ -66,7 +66,7 @@ describe('ProductStatus Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.isArchived).toBe(true);
+      expect(result.value.isArchived).toBe(true);
     });
 
     it('should fail for invalid status', () => {

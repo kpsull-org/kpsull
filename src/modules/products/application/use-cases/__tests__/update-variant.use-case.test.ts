@@ -36,7 +36,7 @@ describe('UpdateVariantUseCase', () => {
       stock: 10,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-15'),
-    }).value!;
+    }).value;
 
     mockVariantRepo.findById.mockResolvedValue(existingVariant);
     mockVariantRepo.findBySku.mockResolvedValue(null);
@@ -58,7 +58,7 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.name).toBe('Taille L');
+      expect(result.value.name).toBe('Taille L');
       expect(mockVariantRepo.save).toHaveBeenCalledTimes(1);
     });
 
@@ -74,8 +74,8 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.stock).toBe(25);
-      expect(result.value!.isAvailable).toBe(true);
+      expect(result.value.stock).toBe(25);
+      expect(result.value.isAvailable).toBe(true);
     });
 
     it('should update variant SKU successfully', async () => {
@@ -90,7 +90,7 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sku).toBe('SKU-NEW-001');
+      expect(result.value.sku).toBe('SKU-NEW-001');
     });
 
     it('should update variant price override successfully', async () => {
@@ -105,7 +105,7 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.priceOverride).toBe(49.99);
+      expect(result.value.priceOverride).toBe(49.99);
     });
 
     it('should remove price override when set to null', async () => {
@@ -120,7 +120,7 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.priceOverride).toBeUndefined();
+      expect(result.value.priceOverride).toBeUndefined();
     });
 
     it('should update multiple fields at once', async () => {
@@ -137,9 +137,9 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.name).toBe('Taille XL');
-      expect(result.value!.stock).toBe(30);
-      expect(result.value!.sku).toBe('SKU-XL-001');
+      expect(result.value.name).toBe('Taille XL');
+      expect(result.value.stock).toBe(30);
+      expect(result.value.sku).toBe('SKU-XL-001');
     });
 
     it('should fail when variant does not exist', async () => {
@@ -200,7 +200,7 @@ describe('UpdateVariantUseCase', () => {
         stock: 5,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).value!;
+      }).value;
 
       mockVariantRepo.findBySku.mockResolvedValue(anotherVariant);
 
@@ -246,8 +246,8 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.stock).toBe(0);
-      expect(result.value!.isAvailable).toBe(false);
+      expect(result.value.stock).toBe(0);
+      expect(result.value.isAvailable).toBe(false);
     });
 
     it('should remove SKU when set to empty string', async () => {
@@ -262,7 +262,7 @@ describe('UpdateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sku).toBeUndefined();
+      expect(result.value.sku).toBeUndefined();
     });
   });
 });

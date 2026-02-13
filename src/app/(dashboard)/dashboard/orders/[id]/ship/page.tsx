@@ -57,7 +57,7 @@ export default async function ShipOrderPage({ params }: PageProps) {
     notFound();
   }
 
-  const order = result.value!;
+  const order = result.value;
 
   // Only PAID orders can be shipped
   if (order.status !== 'PAID') {

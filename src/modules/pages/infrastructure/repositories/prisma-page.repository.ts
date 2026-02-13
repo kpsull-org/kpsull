@@ -240,7 +240,7 @@ export class PrismaPageRepository implements PageRepository {
       throw new Error(`Failed to reconstitute CreatorPage: ${result.error}`);
     }
 
-    return result.value!;
+    return result.value;
   }
 
   private sectionToDomain(prismaSection: PrismaSectionData): PageSection {
@@ -260,6 +260,6 @@ export class PrismaPageRepository implements PageRepository {
       throw new Error(`Failed to reconstitute PageSection: ${result.error}`);
     }
 
-    return result.value!;
+    return result.value;
   }
 }

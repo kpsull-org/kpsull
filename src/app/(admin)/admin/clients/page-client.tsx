@@ -1,9 +1,10 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 import { LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTableSearch } from '@/hooks/use-table-search';
 
 interface ClientSummary {
   id: string;
@@ -38,66 +39,12 @@ export function ClientsPageClient({
   searchQuery,
 }: ClientsPageClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const [searchValue, setSearchValue] = useState(searchQuery);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setSearchValue(searchQuery);
-  }, [searchQuery]);
-
-  const updateSearchParams = useCallback(
-    (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value === undefined || value === '') {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      });
-
-      startTransition(() => {
-        router.push(`?${params.toString()}`);
-      });
-    },
-    [router, searchParams],
-  );
-
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearchValue(value);
-
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-
-      debounceRef.current = setTimeout(() => {
-        updateSearchParams({
-          search: value || undefined,
-          page: '1',
-        });
-      }, 300);
-    },
-    [updateSearchParams],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      updateSearchParams({ page: newPage.toString() });
-    },
-    [updateSearchParams],
-  );
+  const {
+    isPending,
+    searchInput,
+    handleSearchChange,
+    handlePageChange,
+  } = useTableSearch({ searchQuery });
 
   const handleImpersonate = useCallback(
     async (userId: string) => {
@@ -125,7 +72,7 @@ export function ClientsPageClient({
         <input
           type="text"
           placeholder="Rechercher par nom ou email..."
-          value={searchValue}
+          value={searchInput}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />

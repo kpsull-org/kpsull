@@ -51,7 +51,7 @@ export class CreatePageUseCase implements UseCase<CreatePageInput, CreatePageOut
       return Result.fail(pageResult.error!);
     }
 
-    const page = pageResult.value!;
+    const page = pageResult.value;
 
     // Persist the page
     await this.pageRepository.save(page);

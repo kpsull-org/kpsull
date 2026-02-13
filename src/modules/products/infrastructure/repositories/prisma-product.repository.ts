@@ -179,7 +179,7 @@ export class PrismaProductRepository implements ProductRepository, ProductListRe
       throw new Error(`Failed to reconstitute Product ${prismaProduct.id}: ${result.error}`);
     }
 
-    return result.value!;
+    return result.value;
   }
 
   private toDomainVariant(prismaVariant: PrismaVariant): ProductVariant {
@@ -199,6 +199,6 @@ export class PrismaProductRepository implements ProductRepository, ProductListRe
       throw new Error(`Failed to reconstitute ProductVariant ${prismaVariant.id}: ${result.error}`);
     }
 
-    return result.value!;
+    return result.value;
   }
 }

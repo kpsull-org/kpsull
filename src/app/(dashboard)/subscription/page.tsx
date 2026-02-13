@@ -26,5 +26,5 @@ export default async function SubscriptionPage() {
     );
   }
 
-  return <SubscriptionContent subscription={result.value!} />;
+  return <SubscriptionContent subscription={result.value} />;
 }

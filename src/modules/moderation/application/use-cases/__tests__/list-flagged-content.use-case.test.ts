@@ -45,8 +45,8 @@ describe('ListFlaggedContentUseCase', () => {
     const result = await useCase.execute({});
 
     expect(result.isSuccess).toBe(true);
-    expect(result.value!.items).toHaveLength(2);
-    expect(result.value!.total).toBe(2);
+    expect(result.value.items).toHaveLength(2);
+    expect(result.value.total).toBe(2);
   });
 
   it('should pass status filter to repository', async () => {
@@ -92,8 +92,8 @@ describe('ListFlaggedContentUseCase', () => {
     const result = await useCase.execute({});
 
     expect(result.isSuccess).toBe(true);
-    expect(result.value!.items).toHaveLength(0);
-    expect(result.value!.total).toBe(0);
+    expect(result.value.items).toHaveLength(0);
+    expect(result.value.total).toBe(0);
   });
 
   it('should return pagination metadata', async () => {
@@ -108,8 +108,8 @@ describe('ListFlaggedContentUseCase', () => {
 
     const result = await useCase.execute({ page: 3, pageSize: 10 });
 
-    expect(result.value!.page).toBe(3);
-    expect(result.value!.pageSize).toBe(10);
-    expect(result.value!.totalPages).toBe(5);
+    expect(result.value.page).toBe(3);
+    expect(result.value.pageSize).toBe(10);
+    expect(result.value.totalPages).toBe(5);
   });
 });

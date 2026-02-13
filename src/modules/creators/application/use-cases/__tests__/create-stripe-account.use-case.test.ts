@@ -33,7 +33,7 @@ describe('CreateStripeAccountUseCase', () => {
       startedAt: baseDate,
       completedAt: null,
       updatedAt: baseDate,
-    }).value!;
+    }).value;
   }
 
   function createOnboardingAtStep2(): CreatorOnboarding {
@@ -51,7 +51,7 @@ describe('CreateStripeAccountUseCase', () => {
       startedAt: baseDate,
       completedAt: null,
       updatedAt: baseDate,
-    }).value!;
+    }).value;
   }
 
   beforeEach(() => {
@@ -235,7 +235,7 @@ describe('CreateStripeAccountUseCase', () => {
       startedAt: baseDate,
       completedAt: null,
       updatedAt: baseDate,
-    }).value!;
+    }).value;
 
     vi.mocked(mockRepository.findByUserId).mockResolvedValue(onboardingNoBrand);
     vi.mocked(mockStripeService.createConnectAccount).mockResolvedValue(

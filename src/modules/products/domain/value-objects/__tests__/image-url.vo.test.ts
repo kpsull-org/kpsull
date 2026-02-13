@@ -8,29 +8,29 @@ describe('ImageUrl Value Object', () => {
         const result = ImageUrl.create('https://example.com/image.jpg', 'product');
 
         expect(result.isSuccess).toBe(true);
-        expect(result.value!.url).toBe('https://example.com/image.jpg');
-        expect(result.value!.type).toBe('product');
+        expect(result.value.url).toBe('https://example.com/image.jpg');
+        expect(result.value.type).toBe('product');
       });
 
       it('should create ImageUrl with relative URL starting with /uploads/', () => {
         const result = ImageUrl.create('/uploads/products/123/image.jpg', 'product');
 
         expect(result.isSuccess).toBe(true);
-        expect(result.value!.url).toBe('/uploads/products/123/image.jpg');
+        expect(result.value.url).toBe('/uploads/products/123/image.jpg');
       });
 
       it('should create ImageUrl for variant type', () => {
         const result = ImageUrl.create('https://cdn.example.com/variant.png', 'variant');
 
         expect(result.isSuccess).toBe(true);
-        expect(result.value!.type).toBe('variant');
+        expect(result.value.type).toBe('variant');
       });
 
       it('should create ImageUrl for project type', () => {
         const result = ImageUrl.create('/uploads/projects/cover.webp', 'project');
 
         expect(result.isSuccess).toBe(true);
-        expect(result.value!.type).toBe('project');
+        expect(result.value.type).toBe('project');
       });
     });
 
@@ -75,13 +75,13 @@ describe('ImageUrl Value Object', () => {
     it('should return true for https URLs', () => {
       const result = ImageUrl.create('https://cdn.example.com/image.jpg', 'product');
 
-      expect(result.value!.isExternal).toBe(true);
+      expect(result.value.isExternal).toBe(true);
     });
 
     it('should return false for relative URLs', () => {
       const result = ImageUrl.create('/uploads/products/image.jpg', 'product');
 
-      expect(result.value!.isExternal).toBe(false);
+      expect(result.value.isExternal).toBe(false);
     });
   });
 
@@ -89,34 +89,34 @@ describe('ImageUrl Value Object', () => {
     it('should return false for https URLs', () => {
       const result = ImageUrl.create('https://cdn.example.com/image.jpg', 'product');
 
-      expect(result.value!.isLocal).toBe(false);
+      expect(result.value.isLocal).toBe(false);
     });
 
     it('should return true for relative URLs', () => {
       const result = ImageUrl.create('/uploads/products/image.jpg', 'product');
 
-      expect(result.value!.isLocal).toBe(true);
+      expect(result.value.isLocal).toBe(true);
     });
   });
 
   describe('equality', () => {
     it('should be equal when url and type match', () => {
-      const url1 = ImageUrl.create('https://example.com/img.jpg', 'product').value!;
-      const url2 = ImageUrl.create('https://example.com/img.jpg', 'product').value!;
+      const url1 = ImageUrl.create('https://example.com/img.jpg', 'product').value;
+      const url2 = ImageUrl.create('https://example.com/img.jpg', 'product').value;
 
       expect(url1.equals(url2)).toBe(true);
     });
 
     it('should not be equal when url differs', () => {
-      const url1 = ImageUrl.create('https://example.com/img1.jpg', 'product').value!;
-      const url2 = ImageUrl.create('https://example.com/img2.jpg', 'product').value!;
+      const url1 = ImageUrl.create('https://example.com/img1.jpg', 'product').value;
+      const url2 = ImageUrl.create('https://example.com/img2.jpg', 'product').value;
 
       expect(url1.equals(url2)).toBe(false);
     });
 
     it('should not be equal when type differs', () => {
-      const url1 = ImageUrl.create('https://example.com/img.jpg', 'product').value!;
-      const url2 = ImageUrl.create('https://example.com/img.jpg', 'variant').value!;
+      const url1 = ImageUrl.create('https://example.com/img.jpg', 'product').value;
+      const url2 = ImageUrl.create('https://example.com/img.jpg', 'variant').value;
 
       expect(url1.equals(url2)).toBe(false);
     });

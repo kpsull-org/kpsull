@@ -53,7 +53,7 @@ describe('ListVariantsUseCase', () => {
       publishedAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
-    }).value!;
+    }).value;
 
     mockProductRepo.findById.mockResolvedValue(validProduct);
     mockVariantRepo.findByProductId.mockResolvedValue([]);
@@ -75,7 +75,7 @@ describe('ListVariantsUseCase', () => {
           stock: 5,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }).value!,
+        }).value,
         ProductVariant.reconstitute({
           id: 'variant-2',
           productId: 'product-123',
@@ -83,7 +83,7 @@ describe('ListVariantsUseCase', () => {
           stock: 10,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }).value!,
+        }).value,
       ];
 
       mockVariantRepo.findByProductId.mockResolvedValue(testVariants);
@@ -116,8 +116,8 @@ describe('ListVariantsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.variants).toHaveLength(0);
-      expect(result.value!.total).toBe(0);
+      expect(result.value.variants).toHaveLength(0);
+      expect(result.value.total).toBe(0);
     });
 
     it('should fail when product does not exist', async () => {
@@ -148,7 +148,7 @@ describe('ListVariantsUseCase', () => {
         stock: 15,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-15'),
-      }).value!;
+      }).value;
 
       mockVariantRepo.findByProductId.mockResolvedValue([variant]);
 
@@ -185,7 +185,7 @@ describe('ListVariantsUseCase', () => {
           stock: 5,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }).value!,
+        }).value,
         ProductVariant.reconstitute({
           id: 'variant-2',
           productId: 'product-123',
@@ -193,7 +193,7 @@ describe('ListVariantsUseCase', () => {
           stock: 10,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }).value!,
+        }).value,
         ProductVariant.reconstitute({
           id: 'variant-3',
           productId: 'product-123',
@@ -201,7 +201,7 @@ describe('ListVariantsUseCase', () => {
           stock: 8,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }).value!,
+        }).value,
       ];
 
       mockVariantRepo.findByProductId.mockResolvedValue(variants);
@@ -215,7 +215,7 @@ describe('ListVariantsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.total).toBe(3);
+      expect(result.value.total).toBe(3);
     });
 
     it('should return variants without price override as undefined', async () => {
@@ -227,7 +227,7 @@ describe('ListVariantsUseCase', () => {
         stock: 5,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).value!;
+      }).value;
 
       mockVariantRepo.findByProductId.mockResolvedValue([variant]);
 
@@ -253,7 +253,7 @@ describe('ListVariantsUseCase', () => {
         stock: 5,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).value!;
+      }).value;
 
       mockVariantRepo.findByProductId.mockResolvedValue([variant]);
 
@@ -280,7 +280,7 @@ describe('ListVariantsUseCase', () => {
           stock: 10,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }).value!,
+        }).value,
         ProductVariant.reconstitute({
           id: 'variant-2',
           productId: 'product-123',
@@ -288,7 +288,7 @@ describe('ListVariantsUseCase', () => {
           stock: 0,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }).value!,
+        }).value,
       ];
 
       mockVariantRepo.findByProductId.mockResolvedValue(variants);

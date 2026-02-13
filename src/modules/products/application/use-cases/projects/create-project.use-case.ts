@@ -40,7 +40,7 @@ export class CreateProjectUseCase implements UseCase<CreateProjectInput, CreateP
       return Result.fail(projectResult.error!);
     }
 
-    const project = projectResult.value!;
+    const project = projectResult.value;
 
     // Persist the project
     await this.projectRepository.save(project);

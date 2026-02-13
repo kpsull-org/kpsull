@@ -29,7 +29,7 @@ describe('GetPublicPageUseCase', () => {
       slug: 'my-shop',
       title: 'Ma Boutique',
       description: 'Une description de ma boutique',
-    }).value!;
+    }).value;
 
     // Add sections
     page.addSection({
@@ -83,11 +83,11 @@ describe('GetPublicPageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.slug).toBe('my-shop');
-      expect(result.value!.title).toBe('Ma Boutique');
-      expect(result.value!.description).toBe('Une description de ma boutique');
-      expect(result.value!.sections).toHaveLength(2);
-      expect(result.value!.publishedAt).toBeDefined();
+      expect(result.value.slug).toBe('my-shop');
+      expect(result.value.title).toBe('Ma Boutique');
+      expect(result.value.description).toBe('Une description de ma boutique');
+      expect(result.value.sections).toHaveLength(2);
+      expect(result.value.publishedAt).toBeDefined();
       expect(mockRepo.findPublishedBySlug).toHaveBeenCalledWith('my-shop');
     });
 
@@ -106,7 +106,7 @@ describe('GetPublicPageUseCase', () => {
       // Assert
       expect(result.isSuccess).toBe(true);
       // Verify that creatorId is not exposed
-      expect('creatorId' in result.value!).toBe(false);
+      expect('creatorId' in result.value).toBe(false);
     });
 
     it('should return only visible sections', async () => {
@@ -128,8 +128,8 @@ describe('GetPublicPageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sections).toHaveLength(1);
-      expect(result.value!.sections[0]!.title).toBe('Welcome');
+      expect(result.value.sections).toHaveLength(1);
+      expect(result.value.sections[0]!.title).toBe('Welcome');
     });
 
     it('should fail when page not found', async () => {
@@ -190,8 +190,8 @@ describe('GetPublicPageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sections[0]!.position).toBe(0);
-      expect(result.value!.sections[1]!.position).toBe(1);
+      expect(result.value.sections[0]!.position).toBe(0);
+      expect(result.value.sections[1]!.position).toBe(1);
     });
 
     it('should include section content in response', async () => {
@@ -208,7 +208,7 @@ describe('GetPublicPageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sections[0]!.content).toEqual({
+      expect(result.value.sections[0]!.content).toEqual({
         heading: 'Bienvenue',
         subheading: 'Dans ma boutique',
       });

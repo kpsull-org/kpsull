@@ -51,7 +51,7 @@ describe('DisputeType Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.value).toBe('DAMAGED');
+      expect(result.value.value).toBe('DAMAGED');
     });
 
     it('should fail for invalid type', () => {

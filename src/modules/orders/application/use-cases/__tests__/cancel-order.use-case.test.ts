@@ -31,7 +31,7 @@ describe('CancelOrderUseCase', () => {
         productName: 'Produit A',
         price: 2999,
         quantity: 1,
-      }).value!,
+      }).value,
     ];
 
     return Order.create({
@@ -46,7 +46,7 @@ describe('CancelOrderUseCase', () => {
         postalCode: '75001',
         country: 'France',
       },
-    }).value!;
+    }).value;
   };
 
   const createPaidOrder = () => {
@@ -76,8 +76,8 @@ describe('CancelOrderUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status).toBe('CANCELED');
-      expect(result.value!.cancellationReason).toBe('Client a demande annulation');
+      expect(result.value.status).toBe('CANCELED');
+      expect(result.value.cancellationReason).toBe('Client a demande annulation');
     });
 
     it('should cancel a paid order', async () => {
@@ -94,7 +94,7 @@ describe('CancelOrderUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status).toBe('CANCELED');
+      expect(result.value.status).toBe('CANCELED');
     });
 
     it('should persist the cancelled order', async () => {
@@ -207,7 +207,7 @@ describe('CancelOrderUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.cancellationReason).toBe('Raison avec espaces');
+      expect(result.value.cancellationReason).toBe('Raison avec espaces');
     });
   });
 });

@@ -31,7 +31,7 @@ describe('ListOrdersUseCase', () => {
         productName: 'Produit Test',
         price: 2999,
         quantity: 1,
-      }).value!,
+      }).value,
     ];
 
     return Order.create({
@@ -46,7 +46,7 @@ describe('ListOrdersUseCase', () => {
         postalCode: '75001',
         country: 'France',
       },
-    }).value!;
+    }).value;
   };
 
   describe('execute', () => {
@@ -64,9 +64,9 @@ describe('ListOrdersUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.orders).toHaveLength(2);
-      expect(result.value!.total).toBe(10);
-      expect(result.value!.pages).toBe(1);
+      expect(result.value.orders).toHaveLength(2);
+      expect(result.value.total).toBe(10);
+      expect(result.value.pages).toBe(1);
     });
 
     it('should filter orders by status', async () => {
@@ -140,7 +140,7 @@ describe('ListOrdersUseCase', () => {
       });
 
       // Assert
-      expect(result.value!.pages).toBe(3);
+      expect(result.value.pages).toBe(3);
     });
 
     it('should fail without creatorId', async () => {
@@ -169,7 +169,7 @@ describe('ListOrdersUseCase', () => {
       });
 
       // Assert
-      const dto = result.value!.orders[0]!;
+      const dto = result.value.orders[0]!;
       expect(dto.id).toBe(order.idString);
       expect(dto.orderNumber).toBe(order.orderNumber);
       expect(dto.customerName).toBe('Jean Dupont');

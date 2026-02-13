@@ -199,7 +199,7 @@ export class CreatorPage extends Entity<CreatorPageProps> {
       return Result.fail(sectionResult.error!);
     }
 
-    const section = sectionResult.value!;
+    const section = sectionResult.value;
 
     // Shift positions of sections that come after
     for (const existingSection of this.props.sections) {
@@ -350,7 +350,7 @@ export class CreatorPage extends Entity<CreatorPageProps> {
       if (sectionResult.isFailure) {
         return Result.fail(sectionResult.error!);
       }
-      sections.push(sectionResult.value!);
+      sections.push(sectionResult.value);
     }
 
     return Result.ok(
@@ -361,7 +361,7 @@ export class CreatorPage extends Entity<CreatorPageProps> {
           title: props.title,
           description: props.description,
           templateId: props.templateId,
-          status: statusResult.value!,
+          status: statusResult.value,
           sections,
           publishedAt: props.publishedAt,
           createdAt: props.createdAt,

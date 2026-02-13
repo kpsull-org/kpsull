@@ -130,7 +130,7 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
       updatedAt: prismaProduct.updatedAt,
     });
 
-    return result.isSuccess ? result.value! : null;
+    return result.isSuccess ? result.value : null;
   }
 
   private toDomainImage(prismaImage: Prisma.ProductImageGetPayload<object>): ProductImage | null {
@@ -144,7 +144,7 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
       createdAt: prismaImage.createdAt,
     });
 
-    return result.isSuccess ? result.value! : null;
+    return result.isSuccess ? result.value : null;
   }
 
   private toDomainVariant(
@@ -162,6 +162,6 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
       updatedAt: prismaVariant.updatedAt,
     });
 
-    return result.isSuccess ? result.value! : null;
+    return result.isSuccess ? result.value : null;
   }
 }

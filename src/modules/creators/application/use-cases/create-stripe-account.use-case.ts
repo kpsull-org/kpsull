@@ -61,7 +61,7 @@ export class CreateStripeAccountUseCase
       if (linkResult.isSuccess) {
         return Result.ok({
           stripeAccountId: onboarding.stripeAccountId,
-          onboardingUrl: linkResult.value!,
+          onboardingUrl: linkResult.value,
         });
       }
 
@@ -83,12 +83,12 @@ export class CreateStripeAccountUseCase
     }
 
     // 5. Save Stripe account ID to onboarding
-    onboarding.setStripeAccountId(createResult.value!.accountId);
+    onboarding.setStripeAccountId(createResult.value.accountId);
     await this.repository.save(onboarding);
 
     return Result.ok({
-      stripeAccountId: createResult.value!.accountId,
-      onboardingUrl: createResult.value!.onboardingUrl,
+      stripeAccountId: createResult.value.accountId,
+      onboardingUrl: createResult.value.onboardingUrl,
     });
   }
 }

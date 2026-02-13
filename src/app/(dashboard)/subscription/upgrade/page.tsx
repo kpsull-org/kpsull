@@ -27,7 +27,7 @@ export default async function UpgradePage() {
     redirect('/dashboard');
   }
 
-  const subscription = subscriptionResult.value!;
+  const subscription = subscriptionResult.value;
 
   return (
     <div className="max-w-5xl">

@@ -124,7 +124,8 @@ export const authConfig: NextAuthConfig = {
         return true;
       }
 
-      return true;
+      // Block unknown providers
+      return false;
     },
 
     async jwt({ token, user, trigger }) {

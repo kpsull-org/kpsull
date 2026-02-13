@@ -31,7 +31,7 @@ describe('ShipOrderUseCase', () => {
         productName: 'Produit A',
         price: 2999,
         quantity: 1,
-      }).value!,
+      }).value,
     ];
 
     const order = Order.create({
@@ -46,7 +46,7 @@ describe('ShipOrderUseCase', () => {
         postalCode: '75001',
         country: 'France',
       },
-    }).value!;
+    }).value;
 
     order.markAsPaid('pi_stripe_123');
     return order;
@@ -68,9 +68,9 @@ describe('ShipOrderUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status).toBe('SHIPPED');
-      expect(result.value!.trackingNumber).toBe('TRACK123456');
-      expect(result.value!.carrier).toBe('Colissimo');
+      expect(result.value.status).toBe('SHIPPED');
+      expect(result.value.trackingNumber).toBe('TRACK123456');
+      expect(result.value.carrier).toBe('Colissimo');
     });
 
     it('should persist the updated order', async () => {
@@ -169,7 +169,7 @@ describe('ShipOrderUseCase', () => {
           productName: 'Produit A',
           price: 2999,
           quantity: 1,
-        }).value!,
+        }).value,
       ];
 
       const order = Order.create({
@@ -184,7 +184,7 @@ describe('ShipOrderUseCase', () => {
           postalCode: '75001',
           country: 'France',
         },
-      }).value!;
+      }).value;
 
       mockRepository.findById.mockResolvedValue(order);
 

@@ -49,10 +49,10 @@ describe('ShipBackReturnUseCase', () => {
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(result.value!.status).toBe('SHIPPED_BACK');
-    expect(result.value!.trackingNumber).toBe('TRACK-123');
-    expect(result.value!.carrier).toBe('Colissimo');
-    expect(result.value!.shippedAt).toBeInstanceOf(Date);
+    expect(result.value.status).toBe('SHIPPED_BACK');
+    expect(result.value.trackingNumber).toBe('TRACK-123');
+    expect(result.value.carrier).toBe('Colissimo');
+    expect(result.value.shippedAt).toBeInstanceOf(Date);
   });
 
   it('should persist the shipped return', async () => {

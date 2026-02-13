@@ -17,10 +17,10 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.productId).toBe('product-123');
-      expect(result.value!.name).toBe('Taille M');
-      expect(result.value!.stock).toBe(10);
-      expect(result.value!.isAvailable).toBe(true);
+      expect(result.value.productId).toBe('product-123');
+      expect(result.value.name).toBe('Taille M');
+      expect(result.value.stock).toBe(10);
+      expect(result.value.isAvailable).toBe(true);
     });
 
     it('should create a variant with optional sku', () => {
@@ -37,7 +37,7 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sku).toBe('SKU-RED-001');
+      expect(result.value.sku).toBe('SKU-RED-001');
     });
 
     it('should create a variant with optional priceOverride', () => {
@@ -55,8 +55,8 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.priceOverride).toBeDefined();
-      expect(result.value!.priceOverride!.amount).toBe(1999);
+      expect(result.value.priceOverride).toBeDefined();
+      expect(result.value.priceOverride!.amount).toBe(1999);
     });
 
     it('should create a variant with zero stock', () => {
@@ -72,8 +72,8 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.stock).toBe(0);
-      expect(result.value!.isAvailable).toBe(false);
+      expect(result.value.stock).toBe(0);
+      expect(result.value.isAvailable).toBe(false);
     });
 
     it('should fail when productId is empty', () => {
@@ -169,7 +169,7 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.name).toBe('Taille M');
+      expect(result.value.name).toBe('Taille M');
     });
 
     it('should set timestamps on creation', () => {
@@ -185,8 +185,8 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.createdAt).toBeDefined();
-      expect(result.value!.updatedAt).toBeDefined();
+      expect(result.value.createdAt).toBeDefined();
+      expect(result.value.updatedAt).toBeDefined();
     });
   });
 
@@ -210,11 +210,11 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.idString).toBe('variant-123');
-      expect(result.value!.name).toBe('Taille L');
-      expect(result.value!.sku).toBe('SKU-L-001');
-      expect(result.value!.priceOverride!.amount).toBe(2999);
-      expect(result.value!.stock).toBe(15);
+      expect(result.value.idString).toBe('variant-123');
+      expect(result.value.name).toBe('Taille L');
+      expect(result.value.sku).toBe('SKU-L-001');
+      expect(result.value.priceOverride!.amount).toBe(2999);
+      expect(result.value.stock).toBe(15);
     });
 
     it('should reconstitute a variant without priceOverride', () => {
@@ -233,7 +233,7 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.priceOverride).toBeUndefined();
+      expect(result.value.priceOverride).toBeUndefined();
     });
   });
 
@@ -244,7 +244,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.updateStock(20);
@@ -261,7 +261,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.updateStock(0);
@@ -278,7 +278,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.updateStock(-5);
@@ -294,7 +294,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
       const originalUpdatedAt = variant.updatedAt;
 
       // Wait a bit to ensure time difference
@@ -314,7 +314,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
       const newPrice = Money.fromCents(2999, 'EUR');
 
       // Act
@@ -333,7 +333,7 @@ describe('ProductVariant Entity', () => {
         name: 'Version Premium',
         stock: 3,
         priceOverride,
-      }).value!;
+      }).value;
 
       // Act
       variant.updatePrice(undefined);
@@ -348,7 +348,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
       const originalUpdatedAt = variant.updatedAt;
       const newPrice = Money.fromCents(2999, 'EUR');
 
@@ -367,7 +367,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.disable();
@@ -384,7 +384,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 0,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.disable();
@@ -401,7 +401,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
       const originalUpdatedAt = variant.updatedAt;
 
       // Act
@@ -419,7 +419,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.updateName('Taille L');
@@ -435,7 +435,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.updateName('');
@@ -451,7 +451,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.updateName('a'.repeat(101));
@@ -467,7 +467,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       const result = variant.updateName('  Taille L  ');
@@ -485,7 +485,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       variant.updateSku('SKU-NEW-001');
@@ -501,7 +501,7 @@ describe('ProductVariant Entity', () => {
         name: 'Taille M',
         sku: 'SKU-OLD-001',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Act
       variant.updateSku(undefined);
@@ -518,7 +518,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 1,
-      }).value!;
+      }).value;
 
       // Assert
       expect(variant.isAvailable).toBe(true);
@@ -530,7 +530,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 0,
-      }).value!;
+      }).value;
 
       // Assert
       expect(variant.isAvailable).toBe(false);
@@ -544,7 +544,7 @@ describe('ProductVariant Entity', () => {
         name: 'Version Premium',
         stock: 3,
         priceOverride,
-      }).value!;
+      }).value;
 
       // Assert
       expect(variant.hasPriceOverride).toBe(true);
@@ -556,7 +556,7 @@ describe('ProductVariant Entity', () => {
         productId: 'product-123',
         name: 'Taille M',
         stock: 10,
-      }).value!;
+      }).value;
 
       // Assert
       expect(variant.hasPriceOverride).toBe(false);

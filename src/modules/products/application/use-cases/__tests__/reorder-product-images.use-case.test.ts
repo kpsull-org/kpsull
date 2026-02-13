@@ -27,7 +27,7 @@ describe('ReorderProductImagesUseCase', () => {
       alt: 'Test image',
       position: overrides.position ?? 0,
       createdAt: new Date(),
-    }).value!;
+    }).value;
   };
 
   beforeEach(() => {

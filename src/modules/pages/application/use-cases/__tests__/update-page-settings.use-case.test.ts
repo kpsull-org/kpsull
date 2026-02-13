@@ -28,7 +28,7 @@ describe('UpdatePageSettingsUseCase', () => {
       slug: 'my-shop',
       title: 'Ma Boutique',
       description: 'Description originale',
-    }).value!;
+    }).value;
   };
 
   beforeEach(() => {
@@ -65,7 +65,7 @@ describe('UpdatePageSettingsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.title).toBe('Nouveau Titre');
+      expect(result.value.title).toBe('Nouveau Titre');
       expect(mockRepo.save).toHaveBeenCalledOnce();
     });
 
@@ -85,7 +85,7 @@ describe('UpdatePageSettingsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.description).toBe('Nouvelle description');
+      expect(result.value.description).toBe('Nouvelle description');
     });
 
     it('should update slug successfully', async () => {
@@ -104,7 +104,7 @@ describe('UpdatePageSettingsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.slug).toBe('new-slug');
+      expect(result.value.slug).toBe('new-slug');
     });
 
     it('should fail when page not found', async () => {
@@ -221,9 +221,9 @@ describe('UpdatePageSettingsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.title).toBe('Nouveau Titre');
-      expect(result.value!.description).toBe('Nouvelle description');
-      expect(result.value!.slug).toBe('new-slug');
+      expect(result.value.title).toBe('Nouveau Titre');
+      expect(result.value.description).toBe('Nouvelle description');
+      expect(result.value.slug).toBe('new-slug');
     });
 
     it('should exclude current page when checking slug uniqueness', async () => {

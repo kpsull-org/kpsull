@@ -18,12 +18,12 @@ describe('Dispute Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.orderId).toBe('order-123');
-      expect(result.value!.customerId).toBe('customer-456');
-      expect(result.value!.type.isDamaged).toBe(true);
-      expect(result.value!.description).toBe('Le produit est arrive avec le carton ecrase');
-      expect(result.value!.status.isOpen).toBe(true);
-      expect(result.value!.createdAt).toBeDefined();
+      expect(result.value.orderId).toBe('order-123');
+      expect(result.value.customerId).toBe('customer-456');
+      expect(result.value.type.isDamaged).toBe(true);
+      expect(result.value.description).toBe('Le produit est arrive avec le carton ecrase');
+      expect(result.value.status.isOpen).toBe(true);
+      expect(result.value.createdAt).toBeDefined();
     });
 
     it('should fail when orderId is missing', () => {
@@ -91,7 +91,7 @@ describe('Dispute Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.description).toBe('Description valide avec espaces');
+      expect(result.value.description).toBe('Description valide avec espaces');
     });
   });
 
@@ -234,9 +234,9 @@ describe('Dispute Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.idString).toBe('dispute-123');
-      expect(result.value!.type.isDamaged).toBe(true);
-      expect(result.value!.status.isUnderReview).toBe(true);
+      expect(result.value.idString).toBe('dispute-123');
+      expect(result.value.type.isDamaged).toBe(true);
+      expect(result.value.status.isUnderReview).toBe(true);
     });
 
     it('should fail with invalid type', () => {
@@ -291,5 +291,5 @@ function createTestDispute(): Dispute {
     customerId: 'customer-456',
     type: DisputeType.damaged(),
     description: 'Le produit est arrive endommage',
-  }).value!;
+  }).value;
 }

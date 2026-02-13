@@ -61,7 +61,7 @@ export async function createCollection(data: {
 
   revalidatePath('/dashboard/collections');
 
-  return { success: true, id: result.value!.id };
+  return { success: true, id: result.value.id };
 }
 
 export async function updateCollection(
@@ -99,7 +99,7 @@ export async function updateCollection(
   revalidatePath('/dashboard/collections');
   revalidatePath(`/dashboard/collections/${collectionId}`);
 
-  return { success: true, id: result.value!.id };
+  return { success: true, id: result.value.id };
 }
 
 export async function deleteCollection(collectionId: string): Promise<ActionResult> {

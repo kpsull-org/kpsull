@@ -51,8 +51,8 @@ describe('ApproveReturnUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status).toBe('APPROVED');
-      expect(result.value!.approvedAt).toBeInstanceOf(Date);
+      expect(result.value.status).toBe('APPROVED');
+      expect(result.value.approvedAt).toBeInstanceOf(Date);
     });
 
     it('should persist the approved return', async () => {
