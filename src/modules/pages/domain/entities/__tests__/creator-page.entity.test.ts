@@ -140,6 +140,44 @@ describe('CreatorPage Entity', () => {
       expect(result.value.sections).toHaveLength(1);
       expect(result.value.sections[0]!.type.isHero).toBe(true);
     });
+
+    it('should fail with invalid status', () => {
+      const result = CreatorPage.reconstitute({
+        id: 'page-123',
+        ...VALID_PAGE_PROPS,
+        status: 'INVALID_STATUS' as any,
+        sections: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('invalide');
+    });
+
+    it('should fail with invalid section type', () => {
+      const result = CreatorPage.reconstitute({
+        id: 'page-123',
+        ...VALID_PAGE_PROPS,
+        status: 'DRAFT',
+        sections: [
+          {
+            id: 'section-1',
+            pageId: 'page-123',
+            type: 'INVALID_TYPE' as never,
+            title: 'Bad Section',
+            content: {},
+            position: 0,
+            isVisible: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('invalide');
+    });
   });
 
   describe('publish', () => {
@@ -214,6 +252,13 @@ describe('CreatorPage Entity', () => {
       const page = createPageValue();
       const result = page.updateSettings({ slug: 'invalid_slug!' });
       expect(result.isFailure).toBe(true);
+    });
+
+    it('should fail when slug exceeds 50 characters', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ slug: 'a'.repeat(51) });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('50');
     });
   });
 

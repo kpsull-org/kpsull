@@ -147,6 +147,13 @@ describe('CheckLimitUseCase', () => {
 
       expect(result.isFailure).toBe(true);
     });
+
+    it('should fail when creatorId is empty', async () => {
+      const result = await useCase.checkPinnedProductsLimit('');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Creator ID');
+    });
   });
 
   describe('checkBothLimits', () => {
@@ -168,6 +175,13 @@ describe('CheckLimitUseCase', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value.hasBlockingLimit).toBe(true);
       expect(result.value.hasWarning).toBe(true);
+    });
+
+    it('should fail when creatorId is empty', async () => {
+      const result = await useCase.checkBothLimits('');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Creator ID');
     });
 
     it('should return no blocking for ATELIER plan', async () => {
@@ -196,6 +210,11 @@ describe('CheckLimitUseCase', () => {
 
     it('should return null for ATELIER plan', () => {
       const recommendation = useCase.getUpgradeRecommendation('ATELIER');
+      expect(recommendation).toBeNull();
+    });
+
+    it('should return null for unknown plan', () => {
+      const recommendation = useCase.getUpgradeRecommendation('UNKNOWN' as any);
       expect(recommendation).toBeNull();
     });
   });

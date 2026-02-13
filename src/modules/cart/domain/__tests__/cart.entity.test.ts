@@ -327,4 +327,50 @@ describe('Cart Entity', () => {
       expect(cart1.items.find((i) => i.productId === 'product-1')?.quantity).toBe(2);
     });
   });
+
+  describe('updateQuantity - item not found', () => {
+    it('should fail when updating quantity for non-existent item', () => {
+      const cart = Cart.create({ userId: 'user-123' }).value;
+
+      const result = cart.updateQuantity('non-existent', 5);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('non trouvé');
+    });
+  });
+
+  describe('assignToUser', () => {
+    it('should assign cart to a user', () => {
+      const cart = Cart.create({}).value;
+
+      cart.assignToUser('user-456');
+
+      expect(cart.userId).toBe('user-456');
+    });
+  });
+
+  describe('reconstitute', () => {
+    it('should reconstitute cart from persistence', () => {
+      const item = CartItem.create({
+        productId: 'product-1',
+        name: 'Produit A',
+        price: 2999,
+        creatorSlug: 'creator-slug',
+      }).value;
+
+      const now = new Date('2026-01-15T10:00:00Z');
+      const result = Cart.reconstitute({
+        id: 'cart-42',
+        userId: 'user-123',
+        items: [item],
+        updatedAt: now,
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.idString).toBe('cart-42');
+      expect(result.value.userId).toBe('user-123');
+      expect(result.value.items).toHaveLength(1);
+      expect(result.value.updatedAt).toEqual(now);
+    });
+  });
 });

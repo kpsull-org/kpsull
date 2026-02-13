@@ -136,5 +136,12 @@ describe('CheckLimitForActionUseCase', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('non trouve');
     });
+
+    it('should fail when action is missing', async () => {
+      const result = await useCase.execute({ creatorId: 'creator-1', action: '' as any });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Action');
+    });
   });
 });

@@ -233,6 +233,43 @@ describe('TrackingStatus Value Object', () => {
         expect(TrackingStatus.inTransit().order).toBe(TrackingStatusOrder['IN_TRANSIT']);
         expect(TrackingStatus.outForDelivery().order).toBe(TrackingStatusOrder['OUT_FOR_DELIVERY']);
         expect(TrackingStatus.delivered().order).toBe(TrackingStatusOrder['DELIVERED']);
+        expect(TrackingStatus.failedAttempt().order).toBe(TrackingStatusOrder['FAILED_ATTEMPT']);
+        expect(TrackingStatus.exception().order).toBe(TrackingStatusOrder['EXCEPTION']);
+        expect(TrackingStatus.expired().order).toBe(TrackingStatusOrder['EXPIRED']);
+      });
+    });
+
+    describe('boolean getters return false for non-matching statuses', () => {
+      it('isPending should return false for IN_TRANSIT', () => {
+        expect(TrackingStatus.inTransit().isPending).toBe(false);
+      });
+
+      it('isInfoReceived should return false for PENDING', () => {
+        expect(TrackingStatus.pending().isInfoReceived).toBe(false);
+      });
+
+      it('isInTransit should return false for DELIVERED', () => {
+        expect(TrackingStatus.delivered().isInTransit).toBe(false);
+      });
+
+      it('isOutForDelivery should return false for IN_TRANSIT', () => {
+        expect(TrackingStatus.inTransit().isOutForDelivery).toBe(false);
+      });
+
+      it('isDelivered should return false for IN_TRANSIT', () => {
+        expect(TrackingStatus.inTransit().isDelivered).toBe(false);
+      });
+
+      it('isFailedAttempt should return false for DELIVERED', () => {
+        expect(TrackingStatus.delivered().isFailedAttempt).toBe(false);
+      });
+
+      it('isException should return false for IN_TRANSIT', () => {
+        expect(TrackingStatus.inTransit().isException).toBe(false);
+      });
+
+      it('isExpired should return false for PENDING', () => {
+        expect(TrackingStatus.pending().isExpired).toBe(false);
       });
     });
   });

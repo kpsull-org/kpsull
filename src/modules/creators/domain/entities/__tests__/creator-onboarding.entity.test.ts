@@ -273,4 +273,60 @@ describe('CreatorOnboarding Entity', () => {
       expect(onboarding.isFullyCompleted).toBe(true);
     });
   });
+
+  describe('reconstitute - invalid step', () => {
+    it('should fail with invalid onboarding step', () => {
+      const result = CreatorOnboarding.reconstitute({
+        id: 'onboard-1',
+        userId: 'user-123',
+        currentStep: 'INVALID_STEP' as any,
+        professionalInfoCompleted: false,
+        siretVerified: false,
+        stripeOnboarded: false,
+        brandName: null,
+        siret: null,
+        professionalAddress: null,
+        stripeAccountId: null,
+        startedAt: new Date(),
+        completedAt: null,
+        updatedAt: new Date(),
+      });
+
+      expect(result.isFailure).toBe(true);
+    });
+  });
+
+  describe('getters', () => {
+    it('should return updatedAt', () => {
+      const onboarding = CreatorOnboarding.create(validProps).value;
+
+      expect(onboarding.updatedAt).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('setStripeAccountId', () => {
+    it('should fail when SIRET is not verified', () => {
+      const onboarding = CreatorOnboarding.create(validProps).value;
+
+      const result = onboarding.setStripeAccountId('acct_123');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('SIRET');
+    });
+
+    it('should fail when account ID is empty', () => {
+      const onboarding = CreatorOnboarding.create(validProps).value;
+      onboarding.completeProfessionalInfo({
+        brandName: 'My Brand',
+        siret: '12345678901234',
+        professionalAddress: '123 Main St',
+      });
+      onboarding.verifySiret();
+
+      const result = onboarding.setStripeAccountId('');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Stripe account ID');
+    });
+  });
 });

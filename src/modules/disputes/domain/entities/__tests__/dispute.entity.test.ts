@@ -214,6 +214,51 @@ describe('Dispute Entity', () => {
     });
   });
 
+  describe('close - status validation', () => {
+    it('should fail when closing an already resolved dispute', () => {
+      const dispute = createTestDispute();
+      dispute.resolve('Deja resolu');
+
+      const result = dispute.close('Raison');
+
+      expect(result.isFailure).toBe(true);
+    });
+  });
+
+  describe('create - missing type and description', () => {
+    it('should fail when type is missing', () => {
+      const result = Dispute.create({
+        orderId: 'order-123',
+        customerId: 'customer-456',
+        type: undefined as any,
+        description: 'Description suffisamment longue',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('type');
+    });
+
+    it('should fail when description is empty', () => {
+      const result = Dispute.create({
+        orderId: 'order-123',
+        customerId: 'customer-456',
+        type: DisputeType.damaged(),
+        description: '',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('description');
+    });
+  });
+
+  describe('getters', () => {
+    it('should return updatedAt', () => {
+      const dispute = createTestDispute();
+
+      expect(dispute.updatedAt).toBeInstanceOf(Date);
+    });
+  });
+
   describe('reconstitute', () => {
     it('should reconstitute a dispute from persistence', () => {
       // Arrange
