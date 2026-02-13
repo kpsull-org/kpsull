@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthCard } from '@/components/auth/auth-card';
 import { OtpInput } from '@/components/auth/otp-input';
@@ -10,7 +10,7 @@ import { Loader2, Mail } from 'lucide-react';
 
 const RESEND_COOLDOWN = 60;
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') ?? '';
@@ -152,5 +152,22 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </AuthCard>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <AuthCard
+        title="Vérification email"
+        description="Chargement..."
+      >
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </AuthCard>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
