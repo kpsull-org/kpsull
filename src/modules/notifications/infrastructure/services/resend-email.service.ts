@@ -17,7 +17,7 @@ export class ResendEmailService implements IEmailService {
     }
     this.resend = new Resend(apiKey);
     this.fromAddress =
-      process.env.RESEND_FROM_ADDRESS || 'Kpsull <noreply@kpsull.eliottbouquerel.fr>';
+      process.env.RESEND_FROM_ADDRESS || 'Kpsull <kpsul.tech@gmail.com>';
   }
 
   async send(input: SendEmailInput): Promise<Result<SendEmailResult>> {
