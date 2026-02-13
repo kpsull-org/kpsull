@@ -31,7 +31,7 @@ function parseAddress(address: string | null): {
     const cityPart = parts[1] ?? ''; // "75001 Paris"
 
     // Extract postal code and city from "75001 Paris"
-    const cityMatch = cityPart.match(/^(\d{5})\s+(.+)$/);
+    const cityMatch = cityPart.match(/^(\d{5})\s(.+)$/);
     if (cityMatch) {
       return {
         street,

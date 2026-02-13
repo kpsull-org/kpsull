@@ -40,12 +40,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl wget &&
 RUN groupadd --system --gid 1001 appgroup
 RUN useradd --system --uid 1001 --gid appgroup --no-create-home appuser
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=appuser:appgroup /app/.next/standalone ./
-COPY --from=builder --chown=appuser:appgroup /app/.next/static ./.next/static
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chmod=555 /app/public ./public
+COPY --from=builder --chown=appuser:appgroup --chmod=555 /app/.next/standalone ./
+COPY --from=builder --chown=appuser:appgroup --chmod=555 /app/.next/static ./.next/static
+COPY --from=builder --chmod=555 /app/prisma ./prisma
+COPY --from=builder --chmod=555 /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chmod=555 /app/node_modules/@prisma ./node_modules/@prisma
 
 # Install prisma CLI for migrate deploy
 RUN bun add -g prisma@7

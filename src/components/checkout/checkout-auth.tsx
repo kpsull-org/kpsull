@@ -41,7 +41,7 @@ export function CheckoutAuth() {
   const [errors, setErrors] = useState<Partial<GuestInfo>>({});
 
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,63}$/;
     return emailRegex.test(email);
   };
 

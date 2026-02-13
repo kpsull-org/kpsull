@@ -22,7 +22,7 @@ interface EmailProps {
  * ```
  */
 export class Email extends ValueObject<EmailProps> {
-  private static readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private static readonly EMAIL_REGEX = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,63}$/;
 
   private constructor(props: EmailProps) {
     super(props);

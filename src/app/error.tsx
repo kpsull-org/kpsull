@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/nextjs';
 import { ErrorDisplay } from '@/components/error';
 import type { ErrorContext } from '@/components/error';
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
 }: {

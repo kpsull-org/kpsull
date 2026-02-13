@@ -313,7 +313,15 @@ export function CoachMarks({
       <div
         className="fixed inset-0 z-[9999]"
         onClick={handleSkip}
-        aria-hidden="true"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSkip();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="Fermer le guide"
       />
 
       <div

@@ -398,7 +398,9 @@ export class MockAfterShipService implements AfterShipServiceInterface {
    * Simulates network delay for realistic testing
    */
   private async simulateDelay(): Promise<void> {
-    const delay = Math.random() * 200 + 100; // 100-300ms
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const delay = (array[0]! % 200) + 100; // 100-300ms
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
