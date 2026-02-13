@@ -150,7 +150,6 @@ export function ImageManager({ productId, images }: ImageManagerProps) {
                   draggedIndex === index ? 'opacity-50' : ''
                 }`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={image.url}
                   alt={image.alt}
