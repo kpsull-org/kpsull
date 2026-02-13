@@ -79,31 +79,9 @@ jobs:
           fail_ci_if_error: false
 
   # ============================================================================
-  # SonarCloud Analysis
+  # SonarCloud: Using Automatic Analysis (configured in SonarCloud dashboard)
+  # No CI job needed - SonarCloud bot analyzes PRs automatically
   # ============================================================================
-  sonarcloud:
-    name: SonarCloud Analysis
-    runs-on: ubuntu-latest
-    needs: [test]
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage/
-        continue-on-error: true
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # ============================================================================
   # Security - Trivy Vulnerability Scanner
@@ -246,7 +224,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_ORG: kpsull
-          SENTRY_PROJECT: kpsull-web
+          SENTRY_PROJECT: kpsull
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
   # ============================================================================
@@ -255,7 +233,7 @@ jobs:
   ci-success:
     name: CI Success
     runs-on: ubuntu-latest
-    needs: [lint, test, sonarcloud, security-trivy, security-audit, security-secrets, build]
+    needs: [lint, test, security-trivy, security-audit, security-secrets, build]
     if: always()
 
     steps:
