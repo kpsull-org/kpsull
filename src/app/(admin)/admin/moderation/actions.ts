@@ -31,7 +31,7 @@ export async function listFlaggedContentAction(params: {
   }
 
   // Serialize dates for client transport
-  const data = result.value!;
+  const data = result.value;
   return {
     success: true as const,
     data: {
@@ -85,7 +85,7 @@ export async function listModerationActionsAction(params: {
   }
 
   // Serialize dates for client transport
-  const data = result.value!;
+  const data = result.value;
   return {
     success: true as const,
     data: {

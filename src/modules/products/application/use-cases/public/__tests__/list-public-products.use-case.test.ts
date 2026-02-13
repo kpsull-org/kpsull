@@ -17,14 +17,14 @@ describe('ListPublicProductsUseCase', () => {
   };
 
   const createMockProduct = (id: string, name: string, priceAmount: number) => {
-    const price = Money.create(priceAmount).value!;
+    const price = Money.create(priceAmount).value;
     const product = Product.create({
       creatorId: 'creator-123',
       projectId: 'project-1',
       name,
       description: `Description de ${name}`,
       price,
-    }).value!;
+    }).value;
 
     // Force the product to be published
     product.publish();
@@ -36,13 +36,13 @@ describe('ListPublicProductsUseCase', () => {
   };
 
   const createMockImage = (productId: string) => {
-    const imageUrl = ImageUrl.create('https://example.com/image.jpg', 'product').value!;
+    const imageUrl = ImageUrl.create('https://example.com/image.jpg', 'product').value;
     return ProductImage.create({
       productId,
       url: imageUrl,
       alt: 'Image produit',
       position: 0,
-    }).value!;
+    }).value;
   };
 
   beforeEach(() => {
@@ -78,9 +78,9 @@ describe('ListPublicProductsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.products).toHaveLength(2);
-      expect(result.value!.total).toBe(2);
-      expect(result.value!.pages).toBe(1);
+      expect(result.value.products).toHaveLength(2);
+      expect(result.value.total).toBe(2);
+      expect(result.value.pages).toBe(1);
       expect(mockRepo.findPublishedByCreatorSlugWithPagination).toHaveBeenCalledWith(
         'my-shop',
         expect.objectContaining({
@@ -111,7 +111,7 @@ describe('ListPublicProductsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect('creatorId' in result.value!.products[0]!).toBe(false);
+      expect('creatorId' in result.value.products[0]!).toBe(false);
     });
 
     it('should include main image URL for each product', async () => {
@@ -138,8 +138,8 @@ describe('ListPublicProductsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.products[0]!.mainImageUrl).toBe('https://example.com/image.jpg');
-      expect(result.value!.products[1]!.mainImageUrl).toBeUndefined();
+      expect(result.value.products[0]!.mainImageUrl).toBe('https://example.com/image.jpg');
+      expect(result.value.products[1]!.mainImageUrl).toBeUndefined();
     });
 
     it('should calculate pagination correctly', async () => {
@@ -165,9 +165,9 @@ describe('ListPublicProductsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.products).toHaveLength(2);
-      expect(result.value!.total).toBe(5);
-      expect(result.value!.pages).toBe(3);
+      expect(result.value.products).toHaveLength(2);
+      expect(result.value.total).toBe(5);
+      expect(result.value.pages).toBe(3);
     });
 
     it('should filter by projectId when provided', async () => {
@@ -259,9 +259,9 @@ describe('ListPublicProductsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.products).toHaveLength(0);
-      expect(result.value!.total).toBe(0);
-      expect(result.value!.pages).toBe(0);
+      expect(result.value.products).toHaveLength(0);
+      expect(result.value.total).toBe(0);
+      expect(result.value.pages).toBe(0);
     });
 
     it('should include display price from Money value object', async () => {
@@ -285,8 +285,8 @@ describe('ListPublicProductsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.products[0]!.price).toBe(29.99);
-      expect(result.value!.products[0]!.priceCurrency).toBe('EUR');
+      expect(result.value.products[0]!.price).toBe(29.99);
+      expect(result.value.products[0]!.priceCurrency).toBe('EUR');
     });
   });
 });

@@ -31,7 +31,7 @@ describe('ListCustomerOrdersUseCase', () => {
         productName: 'Produit Test',
         price: 2999,
         quantity: 2,
-      }).value!,
+      }).value,
     ];
 
     return Order.create({
@@ -46,7 +46,7 @@ describe('ListCustomerOrdersUseCase', () => {
         postalCode: '75001',
         country: 'France',
       },
-    }).value!;
+    }).value;
   };
 
   it('should list orders for a customer with pagination', async () => {
@@ -60,9 +60,9 @@ describe('ListCustomerOrdersUseCase', () => {
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(result.value!.orders).toHaveLength(2);
-    expect(result.value!.total).toBe(10);
-    expect(result.value!.pages).toBe(1);
+    expect(result.value.orders).toHaveLength(2);
+    expect(result.value.total).toBe(10);
+    expect(result.value.pages).toBe(1);
   });
 
   it('should calculate correct pagination offset', async () => {
@@ -89,7 +89,7 @@ describe('ListCustomerOrdersUseCase', () => {
       limit: 10,
     });
 
-    expect(result.value!.pages).toBe(3);
+    expect(result.value.pages).toBe(3);
   });
 
   it('should map orders to customer order items', async () => {
@@ -102,7 +102,7 @@ describe('ListCustomerOrdersUseCase', () => {
       limit: 10,
     });
 
-    const item = result.value!.orders[0]!;
+    const item = result.value.orders[0]!;
     expect(item.id).toBe(order.idString);
     expect(item.orderNumber).toBe(order.orderNumber);
     expect(item.status).toBe('PENDING');

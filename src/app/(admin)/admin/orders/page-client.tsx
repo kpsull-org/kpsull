@@ -1,8 +1,14 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
+import {
+  ORDER_STATUSES,
+  formatAmount,
+  formatDate,
+  getStatusBadgeClass,
+  getStatusLabel,
+} from '@/lib/utils/order-status';
+import { useTableSearch } from '@/hooks/use-table-search';
 
 interface OrderSummary {
   id: string;
@@ -27,64 +33,6 @@ interface OrdersPageClientProps {
   statusFilter: string | undefined;
 }
 
-const ORDER_STATUSES = [
-  { value: '', label: 'Tous les statuts' },
-  { value: 'PENDING', label: 'En attente' },
-  { value: 'PAID', label: 'Payee' },
-  { value: 'SHIPPED', label: 'Expediee' },
-  { value: 'DELIVERED', label: 'Livree' },
-  { value: 'COMPLETED', label: 'Terminee' },
-  { value: 'CANCELED', label: 'Annulee' },
-  { value: 'DISPUTE_OPENED', label: 'Litige ouvert' },
-] as const;
-
-const STATUS_BADGE_CLASSES: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  PAID: 'bg-blue-100 text-blue-800',
-  SHIPPED: 'bg-purple-100 text-purple-800',
-  DELIVERED: 'bg-green-100 text-green-800',
-  COMPLETED: 'bg-green-200 text-green-900',
-  CANCELED: 'bg-red-100 text-red-800',
-  DISPUTE_OPENED: 'bg-orange-100 text-orange-800',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'En attente',
-  PAID: 'Payee',
-  SHIPPED: 'Expediee',
-  DELIVERED: 'Livree',
-  VALIDATION_PENDING: 'Validation en attente',
-  COMPLETED: 'Terminee',
-  DISPUTE_OPENED: 'Litige ouvert',
-  RETURN_SHIPPED: 'Retour expedie',
-  RETURN_RECEIVED: 'Retour recu',
-  REFUNDED: 'Remboursee',
-  CANCELED: 'Annulee',
-};
-
-const amountFormatter = new Intl.NumberFormat('fr-FR', {
-  style: 'currency',
-  currency: 'EUR',
-});
-
-const dateFormatter = new Intl.DateTimeFormat('fr-FR');
-
-function formatAmount(cents: number): string {
-  return amountFormatter.format(cents / 100);
-}
-
-function formatDate(isoDate: string): string {
-  return dateFormatter.format(new Date(isoDate));
-}
-
-function getStatusBadgeClass(status: string): string {
-  return STATUS_BADGE_CLASSES[status] ?? 'bg-gray-100 text-gray-800';
-}
-
-function getStatusLabel(status: string): string {
-  return STATUS_LABELS[status] ?? status;
-}
-
 export function OrdersPageClient({
   orders,
   total,
@@ -94,79 +42,13 @@ export function OrdersPageClient({
   searchQuery,
   statusFilter,
 }: OrdersPageClientProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const [searchInput, setSearchInput] = useState(searchQuery);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
-
-  const updateSearchParams = useCallback(
-    (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value === undefined || value === '') {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      });
-
-      startTransition(() => {
-        router.push(`?${params.toString()}`);
-      });
-    },
-    [router, searchParams]
-  );
-
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearchInput(value);
-
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-
-      debounceTimerRef.current = setTimeout(() => {
-        updateSearchParams({
-          search: value || undefined,
-          page: '1',
-        });
-      }, 300);
-    },
-    [updateSearchParams]
-  );
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleStatusChange = useCallback(
-    (status: string) => {
-      updateSearchParams({
-        status: status || undefined,
-        page: '1',
-      });
-    },
-    [updateSearchParams]
-  );
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      updateSearchParams({
-        page: newPage.toString(),
-      });
-    },
-    [updateSearchParams]
-  );
+  const {
+    isPending,
+    searchInput,
+    handleSearchChange,
+    handleStatusChange,
+    handlePageChange,
+  } = useTableSearch({ searchQuery });
 
   const startItem = (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, total);

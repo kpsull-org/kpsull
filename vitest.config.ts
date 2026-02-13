@@ -9,12 +9,14 @@ export default defineConfig({
     exclude: ["node_modules", ".next"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "html", "json"],
+      reporter: ["text", "html", "json", "lcov"],
       exclude: [
         "node_modules",
         "src/**/*.d.ts",
         "src/**/*.test.ts",
         "src/**/*.spec.ts",
+        "src/**/index.ts",
+        "src/**/__tests__/helpers/**",
         ".next",
       ],
     },

@@ -13,8 +13,8 @@ import type { ReturnRequest } from '@/modules/returns/application/ports/return.r
  */
 export async function createDispute(
   orderId: string,
-  type: DisputeTypeValue,
-  description: string
+  _type: DisputeTypeValue,
+  _description: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await auth();
@@ -41,15 +41,6 @@ export async function createDispute(
     await prisma.order.update({
       where: { id: orderId },
       data: { status: 'DISPUTE_OPENED' },
-    });
-
-    console.log('Dispute created:', {
-      orderId,
-      customerId: session.user.id,
-      creatorId: order.creatorId,
-      type,
-      description,
-      status: 'OPEN',
     });
 
     return { success: true };

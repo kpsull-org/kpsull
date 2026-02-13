@@ -51,10 +51,10 @@ describe('CreatePageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.slug).toBe('my-shop');
-      expect(result.value!.title).toBe('Ma Boutique');
-      expect(result.value!.description).toBe('Description de ma boutique');
-      expect(result.value!.status).toBe('DRAFT');
+      expect(result.value.slug).toBe('my-shop');
+      expect(result.value.title).toBe('Ma Boutique');
+      expect(result.value.description).toBe('Description de ma boutique');
+      expect(result.value.status).toBe('DRAFT');
       expect(mockRepo.save).toHaveBeenCalledOnce();
     });
 
@@ -72,7 +72,7 @@ describe('CreatePageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.templateId).toBe('template-1');
+      expect(result.value.templateId).toBe('template-1');
     });
 
     it('should fail when slug already exists', async () => {
@@ -154,8 +154,8 @@ describe('CreatePageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.id).toBeDefined();
-      expect(result.value!.id.length).toBeGreaterThan(0);
+      expect(result.value.id).toBeDefined();
+      expect(result.value.id.length).toBeGreaterThan(0);
     });
 
     it('should normalize slug to lowercase', async () => {
@@ -171,7 +171,7 @@ describe('CreatePageUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.slug).toBe('my-shop');
+      expect(result.value.slug).toBe('my-shop');
     });
 
     it('should save the correct page to repository', async () => {

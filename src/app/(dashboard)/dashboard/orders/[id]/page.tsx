@@ -77,7 +77,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const order = result.value!;
+  const order = result.value;
 
   // Build timeline events
   const timelineEvents = buildTimelineEvents(order);

@@ -196,7 +196,7 @@ export class PrismaOrderRepository implements OrderRepository {
         throw new Error(`Failed to reconstitute OrderItem ${item.id}: ${itemResult.error}`);
       }
 
-      items.push(itemResult.value!);
+      items.push(itemResult.value);
     }
 
     const orderResult = Order.reconstitute({
@@ -230,6 +230,6 @@ export class PrismaOrderRepository implements OrderRepository {
       throw new Error(`Failed to reconstitute order: ${orderResult.error}`);
     }
 
-    return orderResult.value!;
+    return orderResult.value;
   }
 }

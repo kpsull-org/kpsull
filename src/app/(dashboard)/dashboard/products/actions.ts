@@ -110,7 +110,7 @@ export async function createProduct(data: {
 
   revalidatePath('/dashboard/products');
 
-  return { success: true, id: result.value!.id };
+  return { success: true, id: result.value.id };
 }
 
 export async function updateProduct(
@@ -234,7 +234,7 @@ export async function createVariant(data: {
 
   revalidatePath(`/dashboard/products/${data.productId}`);
 
-  return { success: true, id: result.value!.id };
+  return { success: true, id: result.value.id };
 }
 
 export async function updateVariant(
@@ -324,7 +324,7 @@ export async function uploadProductImage(
 
   revalidatePath(`/dashboard/products/${productId}`);
 
-  return { success: true, id: result.value!.id };
+  return { success: true, id: result.value.id };
 }
 
 export async function deleteProductImage(

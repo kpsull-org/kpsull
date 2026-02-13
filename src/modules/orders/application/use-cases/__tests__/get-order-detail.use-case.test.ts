@@ -32,13 +32,13 @@ describe('GetOrderDetailUseCase', () => {
         price: 2999,
         quantity: 2,
         variantInfo: 'Taille M',
-      }).value!,
+      }).value,
       OrderItem.create({
         productId: 'product-2',
         productName: 'Produit B',
         price: 1999,
         quantity: 1,
-      }).value!,
+      }).value,
     ];
 
     return Order.create({
@@ -53,7 +53,7 @@ describe('GetOrderDetailUseCase', () => {
         postalCode: '75001',
         country: 'France',
       },
-    }).value!;
+    }).value;
   };
 
   describe('execute', () => {
@@ -70,8 +70,8 @@ describe('GetOrderDetailUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.id).toBe(order.idString);
-      expect(result.value!.orderNumber).toBe(order.orderNumber);
+      expect(result.value.id).toBe(order.idString);
+      expect(result.value.orderNumber).toBe(order.orderNumber);
     });
 
     it('should return order items with details', async () => {
@@ -86,11 +86,11 @@ describe('GetOrderDetailUseCase', () => {
       });
 
       // Assert
-      expect(result.value!.items).toHaveLength(2);
-      expect(result.value!.items[0]!.productName).toBe('Produit A');
-      expect(result.value!.items[0]!.price).toBe(2999);
-      expect(result.value!.items[0]!.quantity).toBe(2);
-      expect(result.value!.items[0]!.subtotal).toBe(5998);
+      expect(result.value.items).toHaveLength(2);
+      expect(result.value.items[0]!.productName).toBe('Produit A');
+      expect(result.value.items[0]!.price).toBe(2999);
+      expect(result.value.items[0]!.quantity).toBe(2);
+      expect(result.value.items[0]!.subtotal).toBe(5998);
     });
 
     it('should return shipping address', async () => {
@@ -105,8 +105,8 @@ describe('GetOrderDetailUseCase', () => {
       });
 
       // Assert
-      expect(result.value!.shippingAddress.city).toBe('Paris');
-      expect(result.value!.shippingAddress.postalCode).toBe('75001');
+      expect(result.value.shippingAddress.city).toBe('Paris');
+      expect(result.value.shippingAddress.postalCode).toBe('75001');
     });
 
     it('should fail if order not found', async () => {

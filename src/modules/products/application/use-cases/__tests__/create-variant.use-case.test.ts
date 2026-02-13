@@ -53,7 +53,7 @@ describe('CreateVariantUseCase', () => {
       publishedAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
-    }).value!;
+    }).value;
 
     mockProductRepo.findById.mockResolvedValue(validProduct);
     mockVariantRepo.findBySku.mockResolvedValue(null);
@@ -79,9 +79,9 @@ describe('CreateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.name).toBe('Taille M');
-      expect(result.value!.stock).toBe(10);
-      expect(result.value!.productId).toBe('product-123');
+      expect(result.value.name).toBe('Taille M');
+      expect(result.value.stock).toBe(10);
+      expect(result.value.productId).toBe('product-123');
       expect(mockVariantRepo.save).toHaveBeenCalledTimes(1);
     });
 
@@ -99,7 +99,7 @@ describe('CreateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.sku).toBe('SKU-RED-001');
+      expect(result.value.sku).toBe('SKU-RED-001');
     });
 
     it('should create a variant with optional price override', async () => {
@@ -116,7 +116,7 @@ describe('CreateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.priceOverride).toBe(39.99);
+      expect(result.value.priceOverride).toBe(39.99);
     });
 
     it('should fail when product does not exist', async () => {
@@ -177,7 +177,7 @@ describe('CreateVariantUseCase', () => {
         name: 'Autre Variante',
         sku: 'SKU-EXISTING',
         stock: 5,
-      }).value!;
+      }).value;
 
       mockVariantRepo.findBySku.mockResolvedValue(existingVariant);
 
@@ -225,8 +225,8 @@ describe('CreateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.id).toBeDefined();
-      expect(result.value!.id.length).toBeGreaterThan(0);
+      expect(result.value.id).toBeDefined();
+      expect(result.value.id.length).toBeGreaterThan(0);
     });
 
     it('should create variant with zero stock', async () => {
@@ -242,8 +242,8 @@ describe('CreateVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.stock).toBe(0);
-      expect(result.value!.isAvailable).toBe(false);
+      expect(result.value.stock).toBe(0);
+      expect(result.value.isAvailable).toBe(false);
     });
   });
 });

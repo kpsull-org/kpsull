@@ -33,54 +33,23 @@ export class UpdateVariantUseCase implements UseCase<UpdateVariantInput, UpdateV
   constructor(private readonly variantRepository: VariantRepository) {}
 
   async execute(input: UpdateVariantInput): Promise<Result<UpdateVariantOutput>> {
-    // Find the existing variant
     const variant = await this.variantRepository.findById(input.id);
     if (!variant) {
       return Result.fail('La variante n\'existe pas');
     }
 
-    // Update name if provided
-    if (input.name !== undefined) {
-      const updateNameResult = variant.updateName(input.name);
-      if (updateNameResult.isFailure) {
-        return Result.fail(updateNameResult.error!);
-      }
-    }
+    const nameResult = this.updateName(variant, input);
+    if (nameResult?.isFailure) return nameResult;
 
-    // Update stock if provided
-    if (input.stock !== undefined) {
-      const updateStockResult = variant.updateStock(input.stock);
-      if (updateStockResult.isFailure) {
-        return Result.fail(updateStockResult.error!);
-      }
-    }
+    const stockResult = this.updateStock(variant, input);
+    if (stockResult?.isFailure) return stockResult;
 
-    // Update SKU if provided
-    if (input.removeSku) {
-      variant.updateSku(undefined);
-    } else if (input.sku !== undefined) {
-      // Check SKU uniqueness if different from current
-      if (input.sku !== variant.sku) {
-        const existingVariant = await this.variantRepository.findBySku(input.sku);
-        if (existingVariant && existingVariant.idString !== variant.idString) {
-          return Result.fail('Ce SKU est déjà utilisé par une autre variante');
-        }
-      }
-      variant.updateSku(input.sku);
-    }
+    const skuResult = await this.updateSku(variant, input);
+    if (skuResult?.isFailure) return skuResult;
 
-    // Update price override if provided
-    if (input.removePriceOverride) {
-      variant.updatePrice(undefined);
-    } else if (input.priceOverride !== undefined) {
-      const moneyResult = Money.create(input.priceOverride);
-      if (moneyResult.isFailure) {
-        return Result.fail(moneyResult.error!);
-      }
-      variant.updatePrice(moneyResult.value!);
-    }
+    const priceResult = this.updatePrice(variant, input);
+    if (priceResult?.isFailure) return priceResult;
 
-    // Persist the changes
     await this.variantRepository.save(variant);
 
     return Result.ok({
@@ -92,5 +61,45 @@ export class UpdateVariantUseCase implements UseCase<UpdateVariantInput, UpdateV
       stock: variant.stock,
       isAvailable: variant.isAvailable,
     });
+  }
+
+  private updateName(variant: Awaited<ReturnType<VariantRepository['findById']>> & object, input: UpdateVariantInput): Result<UpdateVariantOutput> | null {
+    if (input.name === undefined) return null;
+    const result = variant.updateName(input.name);
+    return result.isFailure ? Result.fail(result.error!) : null;
+  }
+
+  private updateStock(variant: Awaited<ReturnType<VariantRepository['findById']>> & object, input: UpdateVariantInput): Result<UpdateVariantOutput> | null {
+    if (input.stock === undefined) return null;
+    const result = variant.updateStock(input.stock);
+    return result.isFailure ? Result.fail(result.error!) : null;
+  }
+
+  private async updateSku(variant: Awaited<ReturnType<VariantRepository['findById']>> & object, input: UpdateVariantInput): Promise<Result<UpdateVariantOutput> | null> {
+    if (input.removeSku) {
+      variant.updateSku(undefined);
+      return null;
+    }
+    if (input.sku === undefined) return null;
+    if (input.sku !== variant.sku) {
+      const existing = await this.variantRepository.findBySku(input.sku);
+      if (existing && existing.idString !== variant.idString) {
+        return Result.fail('Ce SKU est déjà utilisé par une autre variante');
+      }
+    }
+    variant.updateSku(input.sku);
+    return null;
+  }
+
+  private updatePrice(variant: Awaited<ReturnType<VariantRepository['findById']>> & object, input: UpdateVariantInput): Result<UpdateVariantOutput> | null {
+    if (input.removePriceOverride) {
+      variant.updatePrice(undefined);
+      return null;
+    }
+    if (input.priceOverride === undefined) return null;
+    const moneyResult = Money.create(input.priceOverride);
+    if (moneyResult.isFailure) return Result.fail(moneyResult.error!);
+    variant.updatePrice(moneyResult.value);
+    return null;
   }
 }

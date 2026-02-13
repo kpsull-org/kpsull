@@ -18,12 +18,12 @@ describe('Dispute Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.orderId).toBe('order-123');
-      expect(result.value!.customerId).toBe('customer-456');
-      expect(result.value!.type.isDamaged).toBe(true);
-      expect(result.value!.description).toBe('Le produit est arrive avec le carton ecrase');
-      expect(result.value!.status.isOpen).toBe(true);
-      expect(result.value!.createdAt).toBeDefined();
+      expect(result.value.orderId).toBe('order-123');
+      expect(result.value.customerId).toBe('customer-456');
+      expect(result.value.type.isDamaged).toBe(true);
+      expect(result.value.description).toBe('Le produit est arrive avec le carton ecrase');
+      expect(result.value.status.isOpen).toBe(true);
+      expect(result.value.createdAt).toBeDefined();
     });
 
     it('should fail when orderId is missing', () => {
@@ -91,7 +91,7 @@ describe('Dispute Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.description).toBe('Description valide avec espaces');
+      expect(result.value.description).toBe('Description valide avec espaces');
     });
   });
 
@@ -214,6 +214,51 @@ describe('Dispute Entity', () => {
     });
   });
 
+  describe('close - status validation', () => {
+    it('should fail when closing an already resolved dispute', () => {
+      const dispute = createTestDispute();
+      dispute.resolve('Deja resolu');
+
+      const result = dispute.close('Raison');
+
+      expect(result.isFailure).toBe(true);
+    });
+  });
+
+  describe('create - missing type and description', () => {
+    it('should fail when type is missing', () => {
+      const result = Dispute.create({
+        orderId: 'order-123',
+        customerId: 'customer-456',
+        type: undefined as any,
+        description: 'Description suffisamment longue',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('type');
+    });
+
+    it('should fail when description is empty', () => {
+      const result = Dispute.create({
+        orderId: 'order-123',
+        customerId: 'customer-456',
+        type: DisputeType.damaged(),
+        description: '',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('description');
+    });
+  });
+
+  describe('getters', () => {
+    it('should return updatedAt', () => {
+      const dispute = createTestDispute();
+
+      expect(dispute.updatedAt).toBeInstanceOf(Date);
+    });
+  });
+
   describe('reconstitute', () => {
     it('should reconstitute a dispute from persistence', () => {
       // Arrange
@@ -234,9 +279,9 @@ describe('Dispute Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.idString).toBe('dispute-123');
-      expect(result.value!.type.isDamaged).toBe(true);
-      expect(result.value!.status.isUnderReview).toBe(true);
+      expect(result.value.idString).toBe('dispute-123');
+      expect(result.value.type.isDamaged).toBe(true);
+      expect(result.value.status.isUnderReview).toBe(true);
     });
 
     it('should fail with invalid type', () => {
@@ -291,5 +336,5 @@ function createTestDispute(): Dispute {
     customerId: 'customer-456',
     type: DisputeType.damaged(),
     description: 'Le produit est arrive endommage',
-  }).value!;
+  }).value;
 }

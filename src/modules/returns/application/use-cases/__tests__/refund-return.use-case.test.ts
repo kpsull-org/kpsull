@@ -48,8 +48,8 @@ describe('RefundReturnUseCase', () => {
     const result = await useCase.execute({ returnId: 'return-1', creatorId: 'creator-123' });
 
     expect(result.isSuccess).toBe(true);
-    expect(result.value!.status).toBe('REFUNDED');
-    expect(result.value!.refundedAt).toBeInstanceOf(Date);
+    expect(result.value.status).toBe('REFUNDED');
+    expect(result.value.refundedAt).toBeInstanceOf(Date);
   });
 
   it('should persist the refunded return', async () => {

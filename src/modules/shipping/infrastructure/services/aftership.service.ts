@@ -398,7 +398,9 @@ export class MockAfterShipService implements AfterShipServiceInterface {
    * Simulates network delay for realistic testing
    */
   private async simulateDelay(): Promise<void> {
-    const delay = Math.random() * 200 + 100; // 100-300ms
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const delay = (array[0]! % 200) + 100; // 100-300ms
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
@@ -408,11 +410,5 @@ export class MockAfterShipService implements AfterShipServiceInterface {
  * In production, this would check for API keys and return the real service
  */
 export function createAfterShipService(): AfterShipServiceInterface {
-  // TODO: In production, check for AFTERSHIP_API_KEY and return real service
-  // const apiKey = process.env.AFTERSHIP_API_KEY;
-  // if (apiKey) {
-  //   return new RealAfterShipService(apiKey);
-  // }
-
   return new MockAfterShipService();
 }

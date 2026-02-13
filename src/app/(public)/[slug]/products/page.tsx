@@ -66,7 +66,7 @@ export default async function ProductsCatalogPage({ params, searchParams }: Page
     notFound();
   }
 
-  const { products, total, pages } = result.value!;
+  const { products, total, pages } = result.value;
 
   return (
     <div className="container py-8">

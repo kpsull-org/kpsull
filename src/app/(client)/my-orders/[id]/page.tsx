@@ -42,7 +42,7 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const order = result.value!;
+  const order = result.value;
 
   const orderData: OrderTrackingData = {
     id: order.id,

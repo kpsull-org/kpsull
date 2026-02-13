@@ -1,8 +1,9 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/utils/order-status';
+import { useTableSearch } from '@/hooks/use-table-search';
 
 interface CollectionListItem {
   id: string;
@@ -21,12 +22,6 @@ interface CollectionsPageClientProps {
   searchQuery: string;
 }
 
-const dateFormatter = new Intl.DateTimeFormat('fr-FR');
-
-function formatDate(isoDate: string): string {
-  return dateFormatter.format(new Date(isoDate));
-}
-
 export function CollectionsPageClient({
   collections,
   total,
@@ -36,68 +31,12 @@ export function CollectionsPageClient({
   searchQuery,
 }: CollectionsPageClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const [searchInput, setSearchInput] = useState(searchQuery);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
-
-  const updateSearchParams = useCallback(
-    (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value === undefined || value === '') {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      });
-
-      startTransition(() => {
-        router.push(`?${params.toString()}`);
-      });
-    },
-    [router, searchParams]
-  );
-
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearchInput(value);
-
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-
-      debounceTimerRef.current = setTimeout(() => {
-        updateSearchParams({
-          search: value || undefined,
-          page: '1',
-        });
-      }, 300);
-    },
-    [updateSearchParams]
-  );
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      updateSearchParams({
-        page: newPage.toString(),
-      });
-    },
-    [updateSearchParams]
-  );
+  const {
+    isPending,
+    searchInput,
+    handleSearchChange,
+    handlePageChange,
+  } = useTableSearch({ searchQuery });
 
   const startItem = (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, total);

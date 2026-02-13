@@ -34,7 +34,7 @@ describe('DeleteVariantUseCase', () => {
       stock: 10,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-15'),
-    }).value!;
+    }).value;
 
     mockVariantRepo.findById.mockResolvedValue(existingVariant);
     mockVariantRepo.delete.mockResolvedValue(undefined);
@@ -85,9 +85,9 @@ describe('DeleteVariantUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.id).toBe('variant-123');
-      expect(result.value!.name).toBe('Taille M');
-      expect(result.value!.productId).toBe('product-123');
+      expect(result.value.id).toBe('variant-123');
+      expect(result.value.name).toBe('Taille M');
+      expect(result.value.productId).toBe('product-123');
     });
 
     it('should call repository delete method', async () => {

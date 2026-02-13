@@ -242,8 +242,8 @@ export async function createStripeAccount(): Promise<CreateStripeAccountResult> 
 
   return {
     success: true,
-    stripeAccountId: result.value!.stripeAccountId,
-    onboardingUrl: result.value!.onboardingUrl,
+    stripeAccountId: result.value.stripeAccountId,
+    onboardingUrl: result.value.onboardingUrl,
   };
 }
 
@@ -281,7 +281,7 @@ export async function checkStripeStatus(): Promise<ActionResult & { isOnboarded?
     return { success: false, error: statusResult.error! };
   }
 
-  const status = statusResult.value!;
+  const status = statusResult.value;
 
   if (status.isFullyOnboarded && !onboarding.stripeOnboarded) {
     // Complete the onboarding

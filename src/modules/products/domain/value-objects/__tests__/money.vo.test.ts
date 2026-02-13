@@ -9,9 +9,9 @@ describe('Money Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.amount).toBe(1999); // Stored in cents
-      expect(result.value!.currency).toBe('EUR');
-      expect(result.value!.displayAmount).toBe(19.99);
+      expect(result.value.amount).toBe(1999); // Stored in cents
+      expect(result.value.currency).toBe('EUR');
+      expect(result.value.displayAmount).toBe(19.99);
     });
 
     it('should create Money with custom currency', () => {
@@ -20,7 +20,7 @@ describe('Money Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.currency).toBe('USD');
+      expect(result.value.currency).toBe('USD');
     });
 
     it('should fail when amount is negative', () => {
@@ -56,7 +56,7 @@ describe('Money Value Object', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.amount).toBe(2000);
+      expect(result.value.amount).toBe(2000);
     });
   });
 
@@ -74,7 +74,7 @@ describe('Money Value Object', () => {
   describe('formatted', () => {
     it('should format as French EUR', () => {
       // Arrange
-      const money = Money.create(1234.56).value!;
+      const money = Money.create(1234.56).value;
 
       // Act
       const formatted = money.formatted;
@@ -88,21 +88,21 @@ describe('Money Value Object', () => {
   describe('add', () => {
     it('should add two Money values with same currency', () => {
       // Arrange
-      const money1 = Money.create(10).value!;
-      const money2 = Money.create(5.50).value!;
+      const money1 = Money.create(10).value;
+      const money2 = Money.create(5.50).value;
 
       // Act
       const result = money1.add(money2);
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.displayAmount).toBe(15.50);
+      expect(result.value.displayAmount).toBe(15.50);
     });
 
     it('should fail to add Money with different currencies', () => {
       // Arrange
-      const money1 = Money.create(10, 'EUR').value!;
-      const money2 = Money.create(10, 'USD').value!;
+      const money1 = Money.create(10, 'EUR').value;
+      const money2 = Money.create(10, 'USD').value;
 
       // Act
       const result = money1.add(money2);
@@ -116,8 +116,8 @@ describe('Money Value Object', () => {
   describe('equality', () => {
     it('should be equal when amount and currency match', () => {
       // Arrange
-      const money1 = Money.create(19.99).value!;
-      const money2 = Money.create(19.99).value!;
+      const money1 = Money.create(19.99).value;
+      const money2 = Money.create(19.99).value;
 
       // Assert
       expect(money1.equals(money2)).toBe(true);
@@ -125,8 +125,8 @@ describe('Money Value Object', () => {
 
     it('should not be equal when amounts differ', () => {
       // Arrange
-      const money1 = Money.create(19.99).value!;
-      const money2 = Money.create(20.00).value!;
+      const money1 = Money.create(19.99).value;
+      const money2 = Money.create(20.00).value;
 
       // Assert
       expect(money1.equals(money2)).toBe(false);
@@ -134,8 +134,8 @@ describe('Money Value Object', () => {
 
     it('should not be equal when currencies differ', () => {
       // Arrange
-      const money1 = Money.create(19.99, 'EUR').value!;
-      const money2 = Money.create(19.99, 'USD').value!;
+      const money1 = Money.create(19.99, 'EUR').value;
+      const money2 = Money.create(19.99, 'USD').value;
 
       // Assert
       expect(money1.equals(money2)).toBe(false);

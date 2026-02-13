@@ -212,7 +212,7 @@ export class Order extends Entity<OrderProps> {
    */
   private static generateOrderNumber(): string {
     const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const random = crypto.randomUUID().replaceAll('-', '').substring(0, 4).toUpperCase();
     return `ORD-${timestamp}-${random}`;
   }
 
@@ -285,7 +285,7 @@ export class Order extends Entity<OrderProps> {
           customerEmail: props.customerEmail,
           items: props.items,
           shippingAddress: props.shippingAddress,
-          status: statusResult.value!,
+          status: statusResult.value,
           totalAmount: props.totalAmount,
           stripePaymentIntentId: props.stripePaymentIntentId,
           stripeRefundId: props.stripeRefundId,

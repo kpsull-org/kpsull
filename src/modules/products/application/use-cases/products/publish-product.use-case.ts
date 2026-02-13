@@ -61,7 +61,7 @@ export class PublishProductUseCase implements UseCase<PublishProductInput, Publi
       return Result.fail(limitCheck.error!);
     }
 
-    const limitResult = limitCheck.value!;
+    const limitResult = limitCheck.value;
 
     if (limitResult.status === 'BLOCKED') {
       return Result.fail(limitResult.message!);

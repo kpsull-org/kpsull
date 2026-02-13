@@ -34,40 +34,40 @@ describe('Plan Value Object', () => {
 
   describe('isEssentiel', () => {
     it('should return true for ESSENTIEL plan', () => {
-      const plan = Plan.create('ESSENTIEL').value!;
+      const plan = Plan.create('ESSENTIEL').value;
 
       expect(plan.isEssentiel).toBe(true);
     });
 
     it('should return false for other plans', () => {
-      expect(Plan.create('STUDIO').value!.isEssentiel).toBe(false);
-      expect(Plan.create('ATELIER').value!.isEssentiel).toBe(false);
+      expect(Plan.create('STUDIO').value.isEssentiel).toBe(false);
+      expect(Plan.create('ATELIER').value.isEssentiel).toBe(false);
     });
   });
 
   describe('isStudio', () => {
     it('should return true for STUDIO plan', () => {
-      const plan = Plan.create('STUDIO').value!;
+      const plan = Plan.create('STUDIO').value;
 
       expect(plan.isStudio).toBe(true);
     });
 
     it('should return false for other plans', () => {
-      expect(Plan.create('ESSENTIEL').value!.isStudio).toBe(false);
-      expect(Plan.create('ATELIER').value!.isStudio).toBe(false);
+      expect(Plan.create('ESSENTIEL').value.isStudio).toBe(false);
+      expect(Plan.create('ATELIER').value.isStudio).toBe(false);
     });
   });
 
   describe('isAtelier', () => {
     it('should return true for ATELIER plan', () => {
-      const plan = Plan.create('ATELIER').value!;
+      const plan = Plan.create('ATELIER').value;
 
       expect(plan.isAtelier).toBe(true);
     });
 
     it('should return false for other plans', () => {
-      expect(Plan.create('ESSENTIEL').value!.isAtelier).toBe(false);
-      expect(Plan.create('STUDIO').value!.isAtelier).toBe(false);
+      expect(Plan.create('ESSENTIEL').value.isAtelier).toBe(false);
+      expect(Plan.create('STUDIO').value.isAtelier).toBe(false);
     });
   });
 
@@ -96,15 +96,15 @@ describe('Plan Value Object', () => {
 
   describe('equality', () => {
     it('should be equal to another Plan with same value', () => {
-      const plan1 = Plan.create('ESSENTIEL').value!;
-      const plan2 = Plan.create('ESSENTIEL').value!;
+      const plan1 = Plan.create('ESSENTIEL').value;
+      const plan2 = Plan.create('ESSENTIEL').value;
 
       expect(plan1.equals(plan2)).toBe(true);
     });
 
     it('should not be equal to another Plan with different value', () => {
-      const plan1 = Plan.create('ESSENTIEL').value!;
-      const plan2 = Plan.create('STUDIO').value!;
+      const plan1 = Plan.create('ESSENTIEL').value;
+      const plan2 = Plan.create('STUDIO').value;
 
       expect(plan1.equals(plan2)).toBe(false);
     });

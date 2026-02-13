@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
 import { loginSchema, registerSchema } from '@/lib/schemas/auth.schema';
 
 interface CredentialsFormProps {
@@ -98,6 +99,8 @@ export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProp
         if (signInResult?.error) {
           setError('Compte cree mais erreur de connexion. Veuillez vous connecter.');
           router.push('/login');
+        } else if (data.requiresVerification) {
+          router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
         } else {
           router.push(callbackUrl);
           router.refresh();
@@ -220,6 +223,14 @@ export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProp
           <p className="text-xs text-muted-foreground">
             8 caracteres min., 1 majuscule, 1 minuscule, 1 chiffre
           </p>
+        )}
+        {mode === 'login' && (
+          <Link
+            href="/forgot-password"
+            className="text-xs text-primary hover:underline"
+          >
+            Mot de passe oublié ?
+          </Link>
         )}
       </div>
 

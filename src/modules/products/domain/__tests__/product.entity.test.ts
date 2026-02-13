@@ -6,7 +6,7 @@ describe('Product Entity', () => {
   describe('create', () => {
     it('should create a valid product with required fields', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const props = {
         creatorId: 'creator-123',
         name: 'Mon Produit',
@@ -18,16 +18,16 @@ describe('Product Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.creatorId).toBe('creator-123');
-      expect(result.value!.name).toBe('Mon Produit');
-      expect(result.value!.price.displayAmount).toBe(29.99);
-      expect(result.value!.isDraft).toBe(true);
-      expect(result.value!.isPublished).toBe(false);
+      expect(result.value.creatorId).toBe('creator-123');
+      expect(result.value.name).toBe('Mon Produit');
+      expect(result.value.price.displayAmount).toBe(29.99);
+      expect(result.value.isDraft).toBe(true);
+      expect(result.value.isPublished).toBe(false);
     });
 
     it('should create a product with optional fields', () => {
       // Arrange
-      const price = Money.create(49.99).value!;
+      const price = Money.create(49.99).value;
       const props = {
         creatorId: 'creator-123',
         name: 'Mon Produit',
@@ -41,13 +41,13 @@ describe('Product Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.description).toBe('Description du produit');
-      expect(result.value!.projectId).toBe('project-123');
+      expect(result.value.description).toBe('Description du produit');
+      expect(result.value.projectId).toBe('project-123');
     });
 
     it('should fail when name is empty', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const props = {
         creatorId: 'creator-123',
         name: '',
@@ -64,7 +64,7 @@ describe('Product Entity', () => {
 
     it('should fail when name is only whitespace', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const props = {
         creatorId: 'creator-123',
         name: '   ',
@@ -81,7 +81,7 @@ describe('Product Entity', () => {
 
     it('should fail when name exceeds 200 characters', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const props = {
         creatorId: 'creator-123',
         name: 'a'.repeat(201),
@@ -98,7 +98,7 @@ describe('Product Entity', () => {
 
     it('should fail when creatorId is empty', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const props = {
         creatorId: '',
         name: 'Mon Produit',
@@ -136,21 +136,21 @@ describe('Product Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.idString).toBe('product-123');
-      expect(result.value!.isPublished).toBe(true);
-      expect(result.value!.publishedAt).toEqual(new Date('2024-01-15'));
+      expect(result.value.idString).toBe('product-123');
+      expect(result.value.isPublished).toBe(true);
+      expect(result.value.publishedAt).toEqual(new Date('2024-01-15'));
     });
   });
 
   describe('publish', () => {
     it('should publish a draft product', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Mon Produit',
         price,
-      }).value!;
+      }).value;
 
       // Act
       const result = product.publish();
@@ -173,7 +173,7 @@ describe('Product Entity', () => {
         publishedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).value!;
+      }).value;
 
       // Act
       const result = product.publish();
@@ -197,7 +197,7 @@ describe('Product Entity', () => {
         publishedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).value!;
+      }).value;
 
       // Act
       const result = product.unpublish();
@@ -209,12 +209,12 @@ describe('Product Entity', () => {
 
     it('should fail to unpublish a draft product', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Mon Produit',
         price,
-      }).value!;
+      }).value;
 
       // Act
       const result = product.unpublish();
@@ -228,12 +228,12 @@ describe('Product Entity', () => {
   describe('updateName', () => {
     it('should update the name successfully', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Ancien Nom',
         price,
-      }).value!;
+      }).value;
 
       // Act
       const result = product.updateName('Nouveau Nom');
@@ -245,12 +245,12 @@ describe('Product Entity', () => {
 
     it('should fail with empty name', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Mon Produit',
         price,
-      }).value!;
+      }).value;
 
       // Act
       const result = product.updateName('');
@@ -263,12 +263,12 @@ describe('Product Entity', () => {
   describe('updateDescription', () => {
     it('should update the description', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Mon Produit',
         price,
-      }).value!;
+      }).value;
 
       // Act
       product.updateDescription('Nouvelle description');
@@ -281,14 +281,14 @@ describe('Product Entity', () => {
   describe('updatePrice', () => {
     it('should update the price', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Mon Produit',
         price,
-      }).value!;
+      }).value;
 
-      const newPrice = Money.create(39.99).value!;
+      const newPrice = Money.create(39.99).value;
 
       // Act
       product.updatePrice(newPrice);
@@ -301,12 +301,12 @@ describe('Product Entity', () => {
   describe('assignToProject', () => {
     it('should assign product to a project', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Mon Produit',
         price,
-      }).value!;
+      }).value;
 
       // Act
       product.assignToProject('project-123');
@@ -317,13 +317,13 @@ describe('Product Entity', () => {
 
     it('should remove product from project when null', () => {
       // Arrange
-      const price = Money.create(29.99).value!;
+      const price = Money.create(29.99).value;
       const product = Product.create({
         creatorId: 'creator-123',
         name: 'Mon Produit',
         projectId: 'project-123',
         price,
-      }).value!;
+      }).value;
 
       // Act
       product.assignToProject(undefined);

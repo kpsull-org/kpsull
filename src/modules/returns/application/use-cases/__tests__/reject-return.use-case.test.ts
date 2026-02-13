@@ -51,9 +51,9 @@ describe('RejectReturnUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status).toBe('REJECTED');
-      expect(result.value!.rejectionReason).toBe('Delai de retour depasse');
-      expect(result.value!.rejectedAt).toBeInstanceOf(Date);
+      expect(result.value.status).toBe('REJECTED');
+      expect(result.value.rejectionReason).toBe('Delai de retour depasse');
+      expect(result.value.rejectedAt).toBeInstanceOf(Date);
     });
 
     it('should persist the rejected return', async () => {
@@ -185,7 +185,7 @@ describe('RejectReturnUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.rejectionReason).toBe('Raison avec espaces');
+      expect(result.value.rejectionReason).toBe('Raison avec espaces');
     });
   });
 });

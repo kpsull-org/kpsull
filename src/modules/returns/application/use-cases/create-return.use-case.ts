@@ -114,9 +114,9 @@ export class CreateReturnUseCase implements UseCase<CreateReturnInput, CreateRet
   }
 
   private generateId(): string {
-    // Simple CUID-like ID generation
+    // Cryptographically secure ID generation
     const timestamp = Date.now().toString(36);
-    const randomPart = Math.random().toString(36).substring(2, 10);
+    const randomPart = crypto.randomUUID().replaceAll('-', '').substring(0, 8);
     return `ret_${timestamp}${randomPart}`;
   }
 }

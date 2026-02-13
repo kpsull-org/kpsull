@@ -79,7 +79,7 @@ describe('SectionType Value Object', () => {
       const result = SectionType.fromString(value);
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value![property as keyof SectionType]).toBe(true);
+      expect(result.value[property as keyof SectionType]).toBe(true);
     });
 
     it('should fail for invalid type', () => {

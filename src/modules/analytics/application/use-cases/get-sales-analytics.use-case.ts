@@ -49,7 +49,7 @@ export class GetSalesAnalyticsUseCase
       return Result.fail(`Type de periode invalide: ${periodType}`);
     }
 
-    const period = periodResult.value!;
+    const period = periodResult.value;
 
     try {
       const analytics: SalesAnalytics =

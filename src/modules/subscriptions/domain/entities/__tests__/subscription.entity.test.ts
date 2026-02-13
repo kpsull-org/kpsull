@@ -181,7 +181,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       expect(subscription.productLimit).toBe(10);
     });
@@ -191,7 +191,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       expect(subscription.productLimit).toBe(20);
     });
@@ -201,7 +201,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ATELIER',
-      }).value!;
+      }).value;
 
       expect(subscription.productLimit).toBe(-1);
     });
@@ -211,7 +211,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       expect(subscription.pinnedProductsLimit).toBe(3);
     });
@@ -221,7 +221,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       expect(subscription.pinnedProductsLimit).toBe(5);
     });
@@ -244,7 +244,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canAddProduct).toBe(true);
     });
@@ -265,7 +265,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canAddProduct).toBe(false);
     });
@@ -286,7 +286,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: 'sub_stripe123',
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canAddProduct).toBe(true);
     });
@@ -309,7 +309,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canPinProduct).toBe(true);
     });
@@ -330,7 +330,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.canPinProduct).toBe(false);
     });
@@ -353,7 +353,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.isNearProductLimit).toBe(true);
     });
@@ -374,7 +374,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: null,
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       expect(subscription.isNearProductLimit).toBe(false);
     });
@@ -386,7 +386,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('STUDIO', {
         subscriptionId: 'sub_stripe123',
@@ -405,7 +405,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('ATELIER', {
         subscriptionId: 'sub_stripe123',
@@ -423,7 +423,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('ATELIER', {
         subscriptionId: 'sub_stripe123',
@@ -440,7 +440,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('ESSENTIEL', {
         subscriptionId: 'sub_stripe123',
@@ -457,7 +457,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.upgrade('STUDIO', {
         subscriptionId: 'sub_stripe123',
@@ -476,7 +476,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ATELIER',
-      }).value!;
+      }).value;
 
       const result = subscription.changePlan('STUDIO', {
         subscriptionId: 'sub_stripe123',
@@ -493,7 +493,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const result = subscription.changePlan('STUDIO');
 
@@ -509,7 +509,7 @@ describe('Subscription Entity', () => {
         creatorId: 'creator-123',
         plan: 'STUDIO',
         stripeSubscriptionId: 'sub_stripe123',
-      }).value!;
+      }).value;
 
       const result = subscription.cancelSubscription();
 
@@ -525,7 +525,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ATELIER',
-      }).value!;
+      }).value;
 
       const result = subscription.startTrial();
 
@@ -542,7 +542,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'ESSENTIEL',
-      }).value!;
+      }).value;
 
       const result = subscription.startTrial();
 
@@ -556,7 +556,7 @@ describe('Subscription Entity', () => {
         creatorId: 'creator-123',
         plan: 'ATELIER',
         withTrial: true,
-      }).value!;
+      }).value;
 
       subscription.endTrial();
 
@@ -582,7 +582,7 @@ describe('Subscription Entity', () => {
         stripeSubscriptionId: 'sub_stripe123',
         createdAt: baseDate,
         updatedAt: baseDate,
-      }).value!;
+      }).value;
 
       // Current date is 2026-01-28, trial ends 2026-02-03
       expect(subscription.isInTrialPeriod).toBe(true);
@@ -595,7 +595,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       const gracePeriodStart = new Date();
       const result = subscription.markAsPastDue(gracePeriodStart);
@@ -610,7 +610,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       subscription.cancelSubscription();
       const result = subscription.markAsPastDue(new Date());
@@ -626,7 +626,7 @@ describe('Subscription Entity', () => {
         userId: 'user-123',
         creatorId: 'creator-123',
         plan: 'STUDIO',
-      }).value!;
+      }).value;
 
       subscription.markAsPastDue(new Date());
 
@@ -648,12 +648,328 @@ describe('Subscription Entity', () => {
         creatorId: 'creator-123',
         plan: 'STUDIO',
         billingInterval: 'year',
-      }).value!;
+      }).value;
 
       subscription.changeBillingInterval('month', 'price_studio_month');
 
       expect(subscription.billingInterval).toBe('month');
       expect(subscription.stripePriceId).toBe('price_studio_month');
+    });
+  });
+
+  describe('incrementProductsUsed', () => {
+    it('should increment products used', () => {
+      const subscription = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+      }).value;
+
+      const result = subscription.incrementProductsUsed();
+
+      expect(result.isSuccess).toBe(true);
+      expect(subscription.productsUsed).toBe(1);
+    });
+
+    it('should fail when at product limit', () => {
+      const subscription = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 10,
+        pinnedProductsUsed: 0,
+        commissionRate: 0.05,
+        stripeSubscriptionId: null,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      }).value;
+
+      const result = subscription.incrementProductsUsed();
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Limite de produits');
+    });
+  });
+
+  describe('decrementProductsUsed', () => {
+    it('should decrement products used', () => {
+      const subscription = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 5,
+        pinnedProductsUsed: 0,
+        commissionRate: 0.05,
+        stripeSubscriptionId: null,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      }).value;
+
+      subscription.decrementProductsUsed();
+
+      expect(subscription.productsUsed).toBe(4);
+    });
+
+    it('should not decrement below zero', () => {
+      const subscription = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+      }).value;
+
+      subscription.decrementProductsUsed();
+
+      expect(subscription.productsUsed).toBe(0);
+    });
+  });
+
+  describe('incrementPinnedProductsUsed', () => {
+    it('should increment pinned products used', () => {
+      const subscription = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+      }).value;
+
+      const result = subscription.incrementPinnedProductsUsed();
+
+      expect(result.isSuccess).toBe(true);
+      expect(subscription.pinnedProductsUsed).toBe(1);
+    });
+
+    it('should fail when at pinned product limit', () => {
+      const subscription = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 0,
+        pinnedProductsUsed: 3,
+        commissionRate: 0.05,
+        stripeSubscriptionId: null,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      }).value;
+
+      const result = subscription.incrementPinnedProductsUsed();
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('produits mis en avant');
+    });
+  });
+
+  describe('decrementPinnedProductsUsed', () => {
+    it('should decrement pinned products used', () => {
+      const subscription = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 0,
+        pinnedProductsUsed: 2,
+        commissionRate: 0.05,
+        stripeSubscriptionId: null,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      }).value;
+
+      subscription.decrementPinnedProductsUsed();
+
+      expect(subscription.pinnedProductsUsed).toBe(1);
+    });
+
+    it('should not decrement below zero', () => {
+      const subscription = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+      }).value;
+
+      subscription.decrementPinnedProductsUsed();
+
+      expect(subscription.pinnedProductsUsed).toBe(0);
+    });
+  });
+
+  describe('isInTrialPeriod - edge cases', () => {
+    it('should return false when trial has expired', () => {
+      const subscription = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ATELIER',
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 0,
+        pinnedProductsUsed: 0,
+        commissionRate: 0.03,
+        trialStart: new Date('2026-01-01T10:00:00Z'),
+        trialEnd: new Date('2026-01-15T10:00:00Z'),
+        isTrialing: true,
+        stripeSubscriptionId: null,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      }).value;
+
+      expect(subscription.isInTrialPeriod).toBe(false);
+    });
+
+    it('should return false when not trialing', () => {
+      const subscription = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+      }).value;
+
+      expect(subscription.isInTrialPeriod).toBe(false);
+    });
+  });
+
+  describe('changePlan - without stripeData', () => {
+    it('should change plan without stripe data', () => {
+      const subscription = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+      }).value;
+
+      const result = subscription.changePlan('STUDIO');
+
+      expect(result.isSuccess).toBe(true);
+      expect(subscription.plan.isStudio).toBe(true);
+      expect(subscription.stripeSubscriptionId).toBeNull();
+    });
+  });
+
+  describe('create - invalid plan', () => {
+    it('should fail with invalid plan type', () => {
+      const result = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'INVALID' as any,
+      });
+
+      expect(result.isFailure).toBe(true);
+    });
+  });
+
+  describe('reconstitute - invalid plan', () => {
+    it('should fail with invalid plan type', () => {
+      const result = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'INVALID' as any,
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 0,
+        pinnedProductsUsed: 0,
+        commissionRate: 0.05,
+        stripeSubscriptionId: null,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      });
+
+      expect(result.isFailure).toBe(true);
+    });
+  });
+
+  describe('isAtProductLimit', () => {
+    it('should return true when at exact product limit', () => {
+      const subscription = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 10,
+        pinnedProductsUsed: 0,
+        commissionRate: 0.05,
+        stripeSubscriptionId: null,
+        createdAt: baseDate,
+        updatedAt: baseDate,
+      }).value;
+
+      expect(subscription.isAtProductLimit).toBe(true);
+    });
+  });
+
+  describe('createdAt and updatedAt getters', () => {
+    it('should return createdAt and updatedAt', () => {
+      const subscription = Subscription.reconstitute({
+        id: 'sub-123',
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+        status: 'ACTIVE',
+        billingInterval: 'year',
+        currentPeriodStart: baseDate,
+        currentPeriodEnd: new Date('2027-01-28T10:00:00Z'),
+        productsUsed: 0,
+        pinnedProductsUsed: 0,
+        commissionRate: 0.05,
+        stripeSubscriptionId: null,
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        updatedAt: new Date('2026-01-15T00:00:00Z'),
+      }).value;
+
+      expect(subscription.createdAt).toEqual(new Date('2026-01-01T00:00:00Z'));
+      expect(subscription.updatedAt).toEqual(new Date('2026-01-15T00:00:00Z'));
+    });
+  });
+
+  describe('changePlan - invalid plan', () => {
+    it('should fail with invalid plan type', () => {
+      const subscription = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'ESSENTIEL',
+      }).value;
+
+      const result = subscription.changePlan('INVALID' as any);
+
+      expect(result.isFailure).toBe(true);
+    });
+  });
+
+  describe('create - with stripeData', () => {
+    it('should create with stripe customer and subscription ids', () => {
+      const result = Subscription.create({
+        userId: 'user-123',
+        creatorId: 'creator-123',
+        plan: 'STUDIO',
+        stripeSubscriptionId: 'sub_test',
+        stripeCustomerId: 'cus_test',
+        stripePriceId: 'price_test',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.stripeSubscriptionId).toBe('sub_test');
+      expect(result.value.stripeCustomerId).toBe('cus_test');
+      expect(result.value.stripePriceId).toBe('price_test');
     });
   });
 });

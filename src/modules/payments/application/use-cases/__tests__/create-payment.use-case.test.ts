@@ -123,7 +123,7 @@ describe('CreatePayment Use Case', () => {
         amount: 2999,
         currency: 'EUR',
         paymentMethod: PaymentMethod.card(),
-      }).value!;
+      }).value;
 
       mockRepository.findByOrderId.mockResolvedValue(existingPayment);
 

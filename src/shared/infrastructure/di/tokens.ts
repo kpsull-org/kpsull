@@ -39,4 +39,6 @@ export const TOKENS = {
   DomainEventDispatcher: Symbol('DomainEventDispatcher'),
   UnitOfWork: Symbol('UnitOfWork'),
   PaymentProcessor: Symbol('PaymentProcessor'),
+  EmailService: Symbol('EmailService'),
+  NotificationPreferenceRepository: Symbol('NotificationPreferenceRepository'),
 } as const;

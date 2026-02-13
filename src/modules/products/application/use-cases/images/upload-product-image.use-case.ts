@@ -59,7 +59,7 @@ export class UploadProductImageUseCase
       return Result.fail(uploadResult.error!);
     }
 
-    const uploadedUrl = uploadResult.value!;
+    const uploadedUrl = uploadResult.value;
 
     // Create ImageUrl value object
     const imageUrlResult = ImageUrl.create(uploadedUrl, 'product');
@@ -72,7 +72,7 @@ export class UploadProductImageUseCase
     // Create ProductImage entity
     const productImageResult = ProductImage.create({
       productId: input.productId,
-      url: imageUrlResult.value!,
+      url: imageUrlResult.value,
       alt: input.alt ?? '',
       position: imageCount, // Next available position
     });
@@ -83,7 +83,7 @@ export class UploadProductImageUseCase
       return Result.fail(productImageResult.error!);
     }
 
-    const productImage = productImageResult.value!;
+    const productImage = productImageResult.value;
 
     // Save to repository
     await this.productImageRepository.save(productImage);

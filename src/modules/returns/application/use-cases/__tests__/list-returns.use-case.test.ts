@@ -69,9 +69,9 @@ describe('ListReturnsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.returns).toHaveLength(2);
-      expect(result.value!.total).toBe(2);
-      expect(result.value!.page).toBe(1);
+      expect(result.value.returns).toHaveLength(2);
+      expect(result.value.total).toBe(2);
+      expect(result.value.page).toBe(1);
     });
 
     it('should filter by status', async () => {
@@ -117,8 +117,8 @@ describe('ListReturnsUseCase', () => {
         {},
         { skip: 10, take: 10 }
       );
-      expect(result.value!.page).toBe(2);
-      expect(result.value!.totalPages).toBe(3);
+      expect(result.value.page).toBe(2);
+      expect(result.value.totalPages).toBe(3);
     });
 
     it('should calculate total pages correctly', async () => {
@@ -135,7 +135,7 @@ describe('ListReturnsUseCase', () => {
       });
 
       // Assert
-      expect(result.value!.totalPages).toBe(2);
+      expect(result.value.totalPages).toBe(2);
     });
 
     it('should fail without creatorId', async () => {
@@ -183,7 +183,7 @@ describe('ListReturnsUseCase', () => {
       });
 
       // Assert
-      expect(result.value!.page).toBe(1);
+      expect(result.value.page).toBe(1);
     });
 
     it('should enforce maximum limit of 50', async () => {
@@ -221,7 +221,7 @@ describe('ListReturnsUseCase', () => {
       });
 
       // Assert
-      const firstReturn = result.value!.returns[0];
+      const firstReturn = result.value.returns[0];
       expect(firstReturn).toMatchObject({
         id: 'return-1',
         orderId: 'order-1',

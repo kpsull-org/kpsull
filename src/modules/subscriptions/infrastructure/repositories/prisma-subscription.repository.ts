@@ -154,6 +154,6 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
       throw new Error(`Failed to reconstitute Subscription ${record.id}: ${result.error}`);
     }
 
-    return result.value!;
+    return result.value;
   }
 }

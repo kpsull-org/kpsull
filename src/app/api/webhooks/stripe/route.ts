@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import * as Sentry from '@sentry/nextjs';
 import { stripe } from '@/lib/stripe/client';
 import { PrismaCreatorOnboardingRepository } from '@/modules/creators/infrastructure/repositories/prisma-creator-onboarding.repository';
 
@@ -26,16 +27,25 @@ export async function POST(request: Request) {
     );
   }
 
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: 'Webhook secret not configured' },
+      { status: 500 }
+    );
+  }
+
   let event: Stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      webhookSecret
     );
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
+    Sentry.captureException(err);
     return NextResponse.json(
       { error: 'Webhook signature verification failed' },
       { status: 400 }
@@ -50,8 +60,7 @@ export async function POST(request: Request) {
       break;
     }
     default:
-      // Ignore unhandled event types
-      console.log(`Unhandled event type: ${event.type}`);
+      break;
   }
 
   return NextResponse.json({ received: true }, { status: 200 });
@@ -71,11 +80,8 @@ async function handleAccountUpdated(account: Stripe.Account): Promise<void> {
     account.details_submitted;
 
   if (!isFullyOnboarded) {
-    console.log(`Account ${account.id} not fully onboarded yet`);
     return;
   }
-
-  console.log(`Account ${account.id} is fully onboarded, updating creator...`);
 
   try {
     // Find onboarding by Stripe account ID
@@ -84,7 +90,6 @@ async function handleAccountUpdated(account: Stripe.Account): Promise<void> {
     );
 
     if (!onboarding) {
-      console.log(`No onboarding found for Stripe account ${account.id}`);
       return;
     }
 
@@ -101,8 +106,8 @@ async function handleAccountUpdated(account: Stripe.Account): Promise<void> {
     // Save the updated onboarding
     await creatorOnboardingRepository.save(onboarding);
 
-    console.log(`Creator onboarding completed for user ${onboarding.userId}`);
   } catch (error) {
     console.error('Error handling account.updated:', error);
+    Sentry.captureException(error);
   }
 }

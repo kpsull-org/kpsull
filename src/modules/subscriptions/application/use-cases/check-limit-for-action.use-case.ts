@@ -77,41 +77,22 @@ export class CheckLimitForActionUseCase
     const canPerformAction = current < limit;
 
     if (!canPerformAction) {
-      const actionLabel =
-        input.action === 'publish_product'
-          ? 'publier un nouveau produit'
-          : 'mettre en avant un nouveau produit';
-
-      const typeLabel = input.action === 'publish_product' ? 'produits' : 'produits mis en avant';
-
-      const planName = subscription.plan.value.toLowerCase();
-      const upgradeSuggestion =
-        planName === 'essentiel'
-          ? 'Passez a Studio ou Atelier'
-          : planName === 'studio'
-            ? 'Passez a Atelier'
-            : '';
-
       return Result.ok({
         allowed: false,
         status: LimitStatus.BLOCKED,
         current,
         limit,
-        message: `Impossible de ${actionLabel}. Limite de ${limit} ${typeLabel} atteinte. ${upgradeSuggestion}`.trim(),
+        message: this.buildBlockedMessage(input.action, limit, subscription.plan.value),
       });
     }
 
-    // Check if this will be the last allowed action (warning)
     if (current === limit - 1) {
-      const typeLabel = input.action === 'publish_product' ? 'produit' : 'mise en avant';
-      const planName = subscription.plan.value;
-
       return Result.ok({
         allowed: true,
         status: LimitStatus.WARNING,
         current,
         limit,
-        message: `Attention : c'est votre dernier ${typeLabel} disponible avec le plan ${planName}.`,
+        message: this.buildWarningMessage(input.action, subscription.plan.value),
       });
     }
 
@@ -121,5 +102,26 @@ export class CheckLimitForActionUseCase
       current,
       limit,
     });
+  }
+
+  private static readonly ACTION_LABELS: Record<string, { action: string; type: string; typeSingular: string }> = {
+    publish_product: { action: 'publier un nouveau produit', type: 'produits', typeSingular: 'produit' },
+    pin_product: { action: 'mettre en avant un nouveau produit', type: 'produits mis en avant', typeSingular: 'mise en avant' },
+  };
+
+  private static readonly UPGRADE_MAP: Record<string, string> = {
+    essentiel: 'Passez a Studio ou Atelier',
+    studio: 'Passez a Atelier',
+  };
+
+  private buildBlockedMessage(action: string, limit: number, planValue: string): string {
+    const labels = CheckLimitForActionUseCase.ACTION_LABELS[action]!;
+    const upgrade = CheckLimitForActionUseCase.UPGRADE_MAP[planValue.toLowerCase()] ?? '';
+    return `Impossible de ${labels.action}. Limite de ${limit} ${labels.type} atteinte. ${upgrade}`.trim();
+  }
+
+  private buildWarningMessage(action: string, planValue: string): string {
+    const labels = CheckLimitForActionUseCase.ACTION_LABELS[action]!;
+    return `Attention : c'est votre dernier ${labels.typeSingular} disponible avec le plan ${planValue}.`;
   }
 }

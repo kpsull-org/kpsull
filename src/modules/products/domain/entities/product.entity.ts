@@ -213,7 +213,7 @@ export class Product extends Entity<ProductProps> {
           name: props.name,
           description: props.description,
           price,
-          status: statusResult.value!,
+          status: statusResult.value,
           publishedAt: props.publishedAt,
           createdAt: props.createdAt,
           updatedAt: props.updatedAt,

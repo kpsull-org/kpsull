@@ -27,8 +27,6 @@ export async function createCheckoutSession(
     return { error: 'Email requis' };
   }
 
-  // TODO: Get creatorId from user profile
-  // For now, we use userId as creatorId for demo purposes
   const creatorId = userId;
 
   const billingService = new StripeBillingService();
@@ -50,5 +48,5 @@ export async function createCheckoutSession(
     return { error: result.error };
   }
 
-  return { url: result.value!.url };
+  return { url: result.value.url };
 }

@@ -7,7 +7,6 @@ describe('NotificationType Value Object', () => {
       const type = NotificationType.orderReceived();
 
       expect(type.value).toBe('ORDER_RECEIVED');
-      expect(type.isOrderReceived).toBe(true);
       expect(type.isOrderRelated).toBe(true);
     });
 
@@ -15,7 +14,6 @@ describe('NotificationType Value Object', () => {
       const type = NotificationType.orderPaid();
 
       expect(type.value).toBe('ORDER_PAID');
-      expect(type.isOrderPaid).toBe(true);
       expect(type.isOrderRelated).toBe(true);
     });
 
@@ -23,7 +21,6 @@ describe('NotificationType Value Object', () => {
       const type = NotificationType.orderShipped();
 
       expect(type.value).toBe('ORDER_SHIPPED');
-      expect(type.isOrderShipped).toBe(true);
       expect(type.isOrderRelated).toBe(true);
     });
 
@@ -31,7 +28,6 @@ describe('NotificationType Value Object', () => {
       const type = NotificationType.reviewReceived();
 
       expect(type.value).toBe('REVIEW_RECEIVED');
-      expect(type.isReviewReceived).toBe(true);
       expect(type.isOrderRelated).toBe(false);
     });
 
@@ -39,7 +35,6 @@ describe('NotificationType Value Object', () => {
       const type = NotificationType.subscriptionRenewed();
 
       expect(type.value).toBe('SUBSCRIPTION_RENEWED');
-      expect(type.isSubscriptionRenewed).toBe(true);
       expect(type.isSubscriptionRelated).toBe(true);
     });
 
@@ -47,7 +42,6 @@ describe('NotificationType Value Object', () => {
       const type = NotificationType.subscriptionExpiring();
 
       expect(type.value).toBe('SUBSCRIPTION_EXPIRING');
-      expect(type.isSubscriptionExpiring).toBe(true);
       expect(type.isSubscriptionRelated).toBe(true);
     });
 
@@ -55,8 +49,16 @@ describe('NotificationType Value Object', () => {
       const type = NotificationType.paymentFailed();
 
       expect(type.value).toBe('PAYMENT_FAILED');
-      expect(type.isPaymentFailed).toBe(true);
-      expect(type.isSubscriptionRelated).toBe(false);
+      expect(type.isSubscriptionRelated).toBe(true);
+    });
+
+    it('should create new notification types', () => {
+      expect(NotificationType.welcome().value).toBe('WELCOME');
+      expect(NotificationType.orderConfirmed().value).toBe('ORDER_CONFIRMED');
+      expect(NotificationType.orderDelivered().value).toBe('ORDER_DELIVERED');
+      expect(NotificationType.orderCancelled().value).toBe('ORDER_CANCELLED');
+      expect(NotificationType.accountSuspended().value).toBe('ACCOUNT_SUSPENDED');
+      expect(NotificationType.accountReactivated().value).toBe('ACCOUNT_REACTIVATED');
     });
   });
 
@@ -69,6 +71,12 @@ describe('NotificationType Value Object', () => {
       'SUBSCRIPTION_RENEWED',
       'SUBSCRIPTION_EXPIRING',
       'PAYMENT_FAILED',
+      'WELCOME',
+      'ORDER_CONFIRMED',
+      'ORDER_DELIVERED',
+      'ORDER_CANCELLED',
+      'ACCOUNT_SUSPENDED',
+      'ACCOUNT_REACTIVATED',
     ] as NotificationTypeValue[])('should create notification type from valid string: %s', (typeValue) => {
       const result = NotificationType.fromString(typeValue);
 
@@ -91,11 +99,27 @@ describe('NotificationType Value Object', () => {
     });
   });
 
+  describe('isMandatory', () => {
+    it('should return true for mandatory types', () => {
+      expect(NotificationType.welcome().isMandatory).toBe(true);
+      expect(NotificationType.orderConfirmed().isMandatory).toBe(true);
+      expect(NotificationType.accountSuspended().isMandatory).toBe(true);
+    });
+
+    it('should return false for optional types', () => {
+      expect(NotificationType.reviewReceived().isMandatory).toBe(false);
+      expect(NotificationType.subscriptionExpiring().isMandatory).toBe(false);
+    });
+  });
+
   describe('isOrderRelated', () => {
     it('should return true for order-related types', () => {
       expect(NotificationType.orderReceived().isOrderRelated).toBe(true);
       expect(NotificationType.orderPaid().isOrderRelated).toBe(true);
       expect(NotificationType.orderShipped().isOrderRelated).toBe(true);
+      expect(NotificationType.orderConfirmed().isOrderRelated).toBe(true);
+      expect(NotificationType.orderDelivered().isOrderRelated).toBe(true);
+      expect(NotificationType.orderCancelled().isOrderRelated).toBe(true);
     });
 
     it('should return false for non-order types', () => {
@@ -111,10 +135,13 @@ describe('NotificationType Value Object', () => {
       expect(NotificationType.subscriptionExpiring().isSubscriptionRelated).toBe(true);
     });
 
+    it('should return true for payment failed (subscription-related)', () => {
+      expect(NotificationType.paymentFailed().isSubscriptionRelated).toBe(true);
+    });
+
     it('should return false for non-subscription types', () => {
       expect(NotificationType.orderReceived().isSubscriptionRelated).toBe(false);
       expect(NotificationType.reviewReceived().isSubscriptionRelated).toBe(false);
-      expect(NotificationType.paymentFailed().isSubscriptionRelated).toBe(false);
     });
   });
 

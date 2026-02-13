@@ -4,7 +4,7 @@ import { ImageUrl } from '../../value-objects/image-url.vo';
 
 describe('ProductImage Entity', () => {
   const createValidImageUrl = () =>
-    ImageUrl.create('https://cdn.example.com/image.jpg', 'product').value!;
+    ImageUrl.create('https://cdn.example.com/image.jpg', 'product').value;
 
   describe('create', () => {
     it('should create a ProductImage successfully', () => {
@@ -17,11 +17,11 @@ describe('ProductImage Entity', () => {
       });
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.productId).toBe('product-123');
-      expect(result.value!.url.url).toBe('https://cdn.example.com/image.jpg');
-      expect(result.value!.alt).toBe('Product main image');
-      expect(result.value!.position).toBe(0);
-      expect(result.value!.createdAt).toBeInstanceOf(Date);
+      expect(result.value.productId).toBe('product-123');
+      expect(result.value.url.url).toBe('https://cdn.example.com/image.jpg');
+      expect(result.value.alt).toBe('Product main image');
+      expect(result.value.position).toBe(0);
+      expect(result.value.createdAt).toBeInstanceOf(Date);
     });
 
     it('should create ProductImage with empty alt text', () => {
@@ -34,7 +34,7 @@ describe('ProductImage Entity', () => {
       });
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.alt).toBe('');
+      expect(result.value.alt).toBe('');
     });
 
     it('should create ProductImage with default position 0 for main image', () => {
@@ -47,7 +47,7 @@ describe('ProductImage Entity', () => {
       });
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.isMainImage).toBe(true);
+      expect(result.value.isMainImage).toBe(true);
     });
 
     it('should fail when productId is empty', () => {
@@ -85,7 +85,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Main',
         position: 0,
-      }).value!;
+      }).value;
 
       expect(image.isMainImage).toBe(true);
     });
@@ -97,7 +97,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Secondary',
         position: 1,
-      }).value!;
+      }).value;
 
       expect(image.isMainImage).toBe(false);
     });
@@ -111,7 +111,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Image',
         position: 0,
-      }).value!;
+      }).value;
 
       const result = image.updatePosition(2);
 
@@ -126,7 +126,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Image',
         position: 0,
-      }).value!;
+      }).value;
 
       const result = image.updatePosition(-1);
 
@@ -143,7 +143,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Old description',
         position: 0,
-      }).value!;
+      }).value;
 
       image.updateAlt('New description');
 
@@ -157,7 +157,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Some description',
         position: 0,
-      }).value!;
+      }).value;
 
       image.updateAlt('');
 
@@ -171,7 +171,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Initial',
         position: 0,
-      }).value!;
+      }).value;
 
       image.updateAlt('  Trimmed description  ');
 
@@ -192,12 +192,12 @@ describe('ProductImage Entity', () => {
       });
 
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.idString).toBe('image-123');
-      expect(result.value!.productId).toBe('product-456');
-      expect(result.value!.url.url).toBe('https://cdn.example.com/stored.jpg');
-      expect(result.value!.alt).toBe('Stored image');
-      expect(result.value!.position).toBe(2);
-      expect(result.value!.createdAt).toEqual(new Date('2024-01-01'));
+      expect(result.value.idString).toBe('image-123');
+      expect(result.value.productId).toBe('product-456');
+      expect(result.value.url.url).toBe('https://cdn.example.com/stored.jpg');
+      expect(result.value.alt).toBe('Stored image');
+      expect(result.value.position).toBe(2);
+      expect(result.value.createdAt).toEqual(new Date('2024-01-01'));
     });
   });
 
@@ -209,7 +209,7 @@ describe('ProductImage Entity', () => {
         url: imageUrl,
         alt: 'Image 1',
         position: 0,
-      }).value!;
+      }).value;
 
       const image2 = ProductImage.reconstitute({
         id: image1.idString,
@@ -219,7 +219,7 @@ describe('ProductImage Entity', () => {
         alt: 'Different alt',
         position: 5,
         createdAt: new Date(),
-      }).value!;
+      }).value;
 
       expect(image1.equals(image2)).toBe(true);
     });

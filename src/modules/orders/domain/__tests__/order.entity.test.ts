@@ -12,7 +12,7 @@ describe('Order Entity', () => {
           productName: 'Produit A',
           price: 2999,
           quantity: 2,
-        }).value!,
+        }).value,
       ];
 
       // Act
@@ -32,9 +32,9 @@ describe('Order Entity', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.status.isPending).toBe(true);
-      expect(result.value!.orderNumber).toBeDefined();
-      expect(result.value!.totalAmount).toBe(5998); // 29.99 * 2
+      expect(result.value.status.isPending).toBe(true);
+      expect(result.value.orderNumber).toBeDefined();
+      expect(result.value.totalAmount).toBe(5998); // 29.99 * 2
     });
 
     it('should generate unique order number', () => {
@@ -45,7 +45,7 @@ describe('Order Entity', () => {
           productName: 'Produit A',
           price: 2999,
           quantity: 1,
-        }).value!,
+        }).value,
       ];
 
       // Act
@@ -61,7 +61,7 @@ describe('Order Entity', () => {
           postalCode: '75001',
           country: 'France',
         },
-      }).value!;
+      }).value;
 
       const order2 = Order.create({
         creatorId: 'creator-123',
@@ -75,7 +75,7 @@ describe('Order Entity', () => {
           postalCode: '75001',
           country: 'France',
         },
-      }).value!;
+      }).value;
 
       // Assert
       expect(order1.orderNumber).not.toBe(order2.orderNumber);
@@ -267,7 +267,7 @@ function createTestOrder(): Order {
       productName: 'Produit A',
       price: 2999,
       quantity: 1,
-    }).value!,
+    }).value,
   ];
 
   return Order.create({
@@ -282,5 +282,5 @@ function createTestOrder(): Order {
       postalCode: '75001',
       country: 'France',
     },
-  }).value!;
+  }).value;
 }

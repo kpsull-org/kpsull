@@ -193,9 +193,9 @@ export class Dispute extends Entity<DisputeProps> {
         {
           orderId: props.orderId,
           customerId: props.customerId,
-          type: typeResult.value!,
+          type: typeResult.value,
           description: props.description,
-          status: statusResult.value!,
+          status: statusResult.value,
           resolution: props.resolution,
           resolvedAt: props.resolvedAt,
           createdAt: props.createdAt,

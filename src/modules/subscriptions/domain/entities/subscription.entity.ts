@@ -219,7 +219,7 @@ export class Subscription extends Entity<SubscriptionProps> {
 
     const planConfig = getPlanConfig(newPlan);
 
-    this.props.plan = planResult.value!;
+    this.props.plan = planResult.value;
     this.props.commissionRate = planConfig.commissionRate;
     this.props.updatedAt = new Date();
 
@@ -379,7 +379,7 @@ export class Subscription extends Entity<SubscriptionProps> {
       new Subscription({
         userId: props.userId.trim(),
         creatorId: props.creatorId.trim(),
-        plan: planResult.value!,
+        plan: planResult.value,
         status: 'ACTIVE',
         billingInterval,
         currentPeriodStart: now,
@@ -411,7 +411,7 @@ export class Subscription extends Entity<SubscriptionProps> {
         {
           userId: props.userId,
           creatorId: props.creatorId,
-          plan: planResult.value!,
+          plan: planResult.value,
           status: props.status,
           billingInterval: props.billingInterval,
           currentPeriodStart: props.currentPeriodStart,

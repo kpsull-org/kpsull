@@ -45,7 +45,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     );
   }
 
-  const { orders, total, totalPages } = result.value!;
+  const { orders, total, totalPages } = result.value;
 
   const serializedOrders = orders.map((o) => ({
     id: o.id,

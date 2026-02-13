@@ -30,7 +30,7 @@ describe('ActivateCreatorAccountUseCase', () => {
       startedAt: baseDate,
       completedAt: baseDate,
       updatedAt: baseDate,
-    }).value!;
+    }).value;
   }
 
   function createIncompleteOnboarding(
@@ -53,7 +53,7 @@ describe('ActivateCreatorAccountUseCase', () => {
       startedAt: baseDate,
       completedAt: null,
       updatedAt: baseDate,
-    }).value!;
+    }).value;
   }
 
   beforeEach(() => {

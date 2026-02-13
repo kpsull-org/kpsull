@@ -72,14 +72,14 @@ export class CreatePaymentUseCase
       creatorId: input.creatorId,
       amount: input.amount,
       currency: input.currency || 'EUR',
-      paymentMethod: paymentMethodResult.value!,
+      paymentMethod: paymentMethodResult.value,
     });
 
     if (paymentResult.isFailure) {
       return Result.fail(paymentResult.error!);
     }
 
-    const payment = paymentResult.value!;
+    const payment = paymentResult.value;
 
     // Save payment
     await this.paymentRepository.save(payment);

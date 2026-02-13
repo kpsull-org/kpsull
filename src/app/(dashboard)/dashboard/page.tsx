@@ -89,7 +89,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     );
   }
 
-  const stats = result.value!;
+  const stats = result.value;
 
   // Map monthly revenue to chart format
   const revenueData: MonthlyRevenue[] = MONTH_LABELS.map((month, i) => {
@@ -122,7 +122,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             title="Commandes"
             value={String(stats.totalOrders)}
             icon={Package}
-            badge={stats.pendingOrders}
           />
           <StatCard
             title="Chiffre d'affaires"
@@ -158,7 +157,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             description="Suivez et gerez vos commandes en cours"
             href="/dashboard/orders"
             icon={Package}
-            badge={stats.pendingOrders}
           />
           <QuickActionCard
             title="Produits"

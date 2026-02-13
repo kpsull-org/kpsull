@@ -1,8 +1,9 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { formatAmount, formatDate } from '@/lib/utils/order-status';
+import { useTableSearch } from '@/hooks/use-table-search';
 
 interface ProductListItem {
   id: string;
@@ -42,21 +43,6 @@ const STATUS_LABELS: Record<string, string> = {
   ARCHIVED: 'Archive',
 };
 
-const amountFormatter = new Intl.NumberFormat('fr-FR', {
-  style: 'currency',
-  currency: 'EUR',
-});
-
-const dateFormatter = new Intl.DateTimeFormat('fr-FR');
-
-function formatPrice(cents: number): string {
-  return amountFormatter.format(cents / 100);
-}
-
-function formatDate(isoDate: string): string {
-  return dateFormatter.format(new Date(isoDate));
-}
-
 function getStatusBadgeClass(status: string): string {
   return STATUS_BADGE_CLASSES[status] ?? 'bg-gray-100 text-gray-800';
 }
@@ -75,78 +61,13 @@ export function ProductsPageClient({
   statusFilter,
 }: ProductsPageClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const [searchInput, setSearchInput] = useState(searchQuery);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
-
-  const updateSearchParams = useCallback(
-    (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value === undefined || value === '') {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      });
-
-      startTransition(() => {
-        router.push(`?${params.toString()}`);
-      });
-    },
-    [router, searchParams]
-  );
-
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearchInput(value);
-
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-
-      debounceTimerRef.current = setTimeout(() => {
-        updateSearchParams({
-          search: value || undefined,
-          page: '1',
-        });
-      }, 300);
-    },
-    [updateSearchParams]
-  );
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleStatusChange = useCallback(
-    (status: string) => {
-      updateSearchParams({
-        status: status || undefined,
-        page: '1',
-      });
-    },
-    [updateSearchParams]
-  );
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      updateSearchParams({
-        page: newPage.toString(),
-      });
-    },
-    [updateSearchParams]
-  );
+  const {
+    isPending,
+    searchInput,
+    handleSearchChange,
+    handleStatusChange,
+    handlePageChange,
+  } = useTableSearch({ searchQuery });
 
   const startItem = (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, total);
@@ -234,7 +155,7 @@ export function ProductsPageClient({
                       <div className="font-medium">{product.name}</div>
                     </td>
                     <td className="px-4 py-3 text-right font-medium">
-                      {formatPrice(product.price)}
+                      {formatAmount(product.price)}
                     </td>
                     <td className="px-4 py-3">
                       <span

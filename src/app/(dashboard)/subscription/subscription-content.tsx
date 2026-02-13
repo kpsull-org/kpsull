@@ -45,7 +45,8 @@ export function SubscriptionContent({ subscription }: SubscriptionContentProps) 
   const showUpgradeWarning = !isAtelier && isNearProductLimit;
   const showLimitReached = !isAtelier && !canAddProduct;
 
-  const upgradePlanLabel = isEssentiel ? 'Studio' : isStudio ? 'Atelier' : '';
+  const UPGRADE_PLAN_MAP: Record<string, string> = { ESSENTIEL: 'Studio', STUDIO: 'Atelier' };
+  const upgradePlanLabel = UPGRADE_PLAN_MAP[plan] ?? '';
 
   return (
     <div className="w-full">

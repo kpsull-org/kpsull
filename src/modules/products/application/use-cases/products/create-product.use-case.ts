@@ -46,14 +46,14 @@ export class CreateProductUseCase implements UseCase<CreateProductInput, CreateP
       name: input.name,
       description: input.description,
       projectId: input.projectId,
-      price: moneyResult.value!,
+      price: moneyResult.value,
     });
 
     if (productResult.isFailure) {
       return Result.fail(productResult.error!);
     }
 
-    const product = productResult.value!;
+    const product = productResult.value;
 
     // Persist the product
     await this.productRepository.save(product);

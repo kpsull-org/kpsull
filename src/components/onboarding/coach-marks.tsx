@@ -310,10 +310,11 @@ export function CoachMarks({
     <>
       <SpotlightOverlay targetRect={targetRect} />
 
-      <div
-        className="fixed inset-0 z-[9999]"
+      <button
+        type="button"
+        className="fixed inset-0 z-[9999] cursor-default bg-transparent border-none p-0"
         onClick={handleSkip}
-        aria-hidden="true"
+        aria-label="Fermer le guide"
       />
 
       <div

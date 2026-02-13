@@ -12,6 +12,7 @@ declare module 'next-auth' {
       role: Role;
       accountTypeChosen: boolean;
       wantsToBeCreator: boolean;
+      emailVerified: Date | null;
     } & DefaultSession['user'];
   }
 
@@ -22,6 +23,7 @@ declare module 'next-auth' {
     role: Role;
     accountTypeChosen: boolean;
     wantsToBeCreator: boolean;
+    emailVerified: Date | null;
   }
 }
 
@@ -34,6 +36,7 @@ declare module 'next-auth/jwt' {
     role?: Role;
     accountTypeChosen?: boolean;
     wantsToBeCreator?: boolean;
+    emailVerified?: string | null;
     accessTokenExpires?: number;
   }
 }

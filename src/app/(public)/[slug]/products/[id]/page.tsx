@@ -58,7 +58,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const product = result.value!;
+  const product = result.value;
 
   // Check if the current user is the creator of this product
   const session = await auth();

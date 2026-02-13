@@ -50,7 +50,7 @@ export default async function MyOrdersPage({ searchParams }: PageProps) {
     );
   }
 
-  const { orders, total, pages } = result.value!;
+  const { orders, total, pages } = result.value;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">

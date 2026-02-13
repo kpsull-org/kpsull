@@ -23,7 +23,7 @@ describe('ListProductsByProjectUseCase', () => {
       creatorId: 'creator-123',
       name,
       description: `Description de ${name}`,
-    }).value!;
+    }).value;
 
     // Mock the idString
     Object.defineProperty(project, 'idString', { value: id });
@@ -32,14 +32,14 @@ describe('ListProductsByProjectUseCase', () => {
   };
 
   const createMockProduct = (id: string, name: string, priceAmount: number, projectId: string) => {
-    const price = Money.create(priceAmount).value!;
+    const price = Money.create(priceAmount).value;
     const product = Product.create({
       creatorId: 'creator-123',
       projectId,
       name,
       description: `Description de ${name}`,
       price,
-    }).value!;
+    }).value;
 
     // Force the product to be published
     product.publish();
@@ -51,13 +51,13 @@ describe('ListProductsByProjectUseCase', () => {
   };
 
   const createMockImage = (productId: string) => {
-    const imageUrl = ImageUrl.create('https://example.com/image.jpg', 'product').value!;
+    const imageUrl = ImageUrl.create('https://example.com/image.jpg', 'product').value;
     return ProductImage.create({
       productId,
       url: imageUrl,
       alt: 'Image produit',
       position: 0,
-    }).value!;
+    }).value;
   };
 
   beforeEach(() => {
@@ -95,10 +95,10 @@ describe('ListProductsByProjectUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.project.id).toBe('project-1');
-      expect(result.value!.project.name).toBe('Ma Collection');
-      expect(result.value!.products).toHaveLength(2);
-      expect(result.value!.total).toBe(2);
+      expect(result.value.project.id).toBe('project-1');
+      expect(result.value.project.name).toBe('Ma Collection');
+      expect(result.value.products).toHaveLength(2);
+      expect(result.value.total).toBe(2);
     });
 
     it('should not expose creatorId in project or products', async () => {
@@ -124,8 +124,8 @@ describe('ListProductsByProjectUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect('creatorId' in result.value!.project).toBe(false);
-      expect('creatorId' in result.value!.products[0]!).toBe(false);
+      expect('creatorId' in result.value.project).toBe(false);
+      expect('creatorId' in result.value.products[0]!).toBe(false);
     });
 
     it('should fail when project not found', async () => {
@@ -186,7 +186,7 @@ describe('ListProductsByProjectUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.products[0]!.mainImageUrl).toBe('https://example.com/image.jpg');
+      expect(result.value.products[0]!.mainImageUrl).toBe('https://example.com/image.jpg');
     });
 
     it('should calculate pagination correctly', async () => {
@@ -214,9 +214,9 @@ describe('ListProductsByProjectUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.products).toHaveLength(2);
-      expect(result.value!.total).toBe(5);
-      expect(result.value!.pages).toBe(3);
+      expect(result.value.products).toHaveLength(2);
+      expect(result.value.total).toBe(5);
+      expect(result.value.pages).toBe(3);
     });
 
     it('should return empty product list when project has no products', async () => {
@@ -241,10 +241,10 @@ describe('ListProductsByProjectUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.project.id).toBe('project-1');
-      expect(result.value!.products).toHaveLength(0);
-      expect(result.value!.total).toBe(0);
-      expect(result.value!.pages).toBe(0);
+      expect(result.value.project.id).toBe('project-1');
+      expect(result.value.products).toHaveLength(0);
+      expect(result.value.total).toBe(0);
+      expect(result.value.pages).toBe(0);
     });
 
     it('should include project cover image when available', async () => {
@@ -271,7 +271,7 @@ describe('ListProductsByProjectUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value!.project.coverImage).toBe('https://example.com/cover.jpg');
+      expect(result.value.project.coverImage).toBe('https://example.com/cover.jpg');
     });
   });
 });

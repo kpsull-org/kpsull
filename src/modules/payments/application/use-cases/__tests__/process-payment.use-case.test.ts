@@ -32,7 +32,7 @@ describe('ProcessPayment Use Case', () => {
       amount: 2999,
       currency: 'EUR',
       paymentMethod: PaymentMethod.card(),
-    }).value!;
+    }).value;
 
     if (status === 'PROCESSING') {
       payment.markAsProcessing('pi_test_123');

@@ -37,7 +37,7 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
       throw new Error(`Failed to create demo subscription: ${demoResult.error}`);
     }
 
-    const demoSubscription = demoResult.value!;
+    const demoSubscription = demoResult.value;
 
     this.subscriptions.set(demoSubscription.userId, demoSubscription);
   }
@@ -117,8 +117,8 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
       billingInterval,
       currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
-      productsUsed: plan === 'ESSENTIEL' ? 2 : plan === 'STUDIO' ? 8 : 25,
-      pinnedProductsUsed: plan === 'ESSENTIEL' ? 1 : plan === 'STUDIO' ? 2 : 5,
+      productsUsed: { ESSENTIEL: 2, STUDIO: 8, ATELIER: 25 }[plan] ?? 25,
+      pinnedProductsUsed: { ESSENTIEL: 1, STUDIO: 2, ATELIER: 5 }[plan] ?? 5,
       commissionRate: planConfig.commissionRate,
       stripeSubscriptionId: `sub_stripe_${userId}`,
       stripeCustomerId: `cus_stripe_${userId}`,
@@ -131,7 +131,7 @@ export class MockSubscriptionRepository implements SubscriptionRepository {
       throw new Error(`Failed to create subscription for user ${userId}: ${result.error}`);
     }
 
-    const subscription = result.value!;
+    const subscription = result.value;
 
     this.subscriptions.set(userId, subscription);
     return subscription;

@@ -1,18 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import * as Sentry from '@sentry/nextjs';
 import {
   AlertTriangle,
   Copy,
   Check,
   ArrowLeft,
-  Bug,
   Home,
   RefreshCw,
-  Loader2,
-  ExternalLink,
 } from 'lucide-react';
 import {
   Card,
@@ -23,16 +21,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { sanitizeErrorDetails } from '@/lib/utils/error-sanitizer';
 
 export interface ErrorContext {
   errorType: string;
@@ -56,23 +44,20 @@ export interface ErrorDisplayProps {
 }
 
 function buildClipboardText(context: ErrorContext): string {
-  const sanitized = sanitizeErrorDetails(
-    [
-      `Type: ${context.errorType}`,
-      `Message: ${context.message}`,
-      context.url ? `URL: ${context.url}` : null,
-      `Date: ${context.timestamp}`,
-      context.provider ? `Provider: ${context.provider}` : null,
-      context.digest ? `Digest: ${context.digest}` : null,
-      context.userAgent ? `User Agent: ${context.userAgent}` : null,
-      context.technicalDetails
-        ? `\n--- Details techniques ---\n${context.technicalDetails}`
-        : null,
-    ]
-      .filter(Boolean)
-      .join('\n')
-  );
-  return sanitized;
+  return [
+    `Type: ${context.errorType}`,
+    `Message: ${context.message}`,
+    context.url ? `URL: ${context.url}` : null,
+    `Date: ${context.timestamp}`,
+    context.provider ? `Provider: ${context.provider}` : null,
+    context.digest ? `Digest: ${context.digest}` : null,
+    context.userAgent ? `User Agent: ${context.userAgent}` : null,
+    context.technicalDetails
+      ? `\n--- Details techniques ---\n${context.technicalDetails}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 export function ErrorDisplay({
@@ -86,12 +71,19 @@ export function ErrorDisplay({
 }: ErrorDisplayProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
-  const [reportStatus, setReportStatus] = useState<
-    'idle' | 'loading' | 'success' | 'error'
-  >('idle');
-  const [issueUrl, setIssueUrl] = useState<string | null>(null);
-  const [reportError, setReportError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Sentry.captureException(new Error(context.message), {
+      extra: {
+        errorType: context.errorType,
+        url: context.url,
+        timestamp: context.timestamp,
+        provider: context.provider,
+        digest: context.digest,
+        technicalDetails: context.technicalDetails,
+      },
+    });
+  }, [context]);
 
   async function handleCopy() {
     const text = buildClipboardText(context);
@@ -99,37 +91,6 @@ export function ErrorDisplay({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
-
-  async function handleReport() {
-    setReportStatus('loading');
-    setReportError(null);
-
-    try {
-      const response = await fetch('/api/error/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(context),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setReportStatus('error');
-        setReportError(data.error || 'Erreur lors de la creation du ticket');
-        return;
-      }
-
-      setReportStatus('success');
-      setIssueUrl(data.issueUrl);
-    } catch {
-      setReportStatus('error');
-      setReportError('Impossible de contacter le serveur');
-    }
-  }
-
-  const sanitizedDetails = context.technicalDetails
-    ? sanitizeErrorDetails(context.technicalDetails)
-    : null;
 
   return (
     <Card className="w-full border border-border bg-card shadow-sm">
@@ -152,13 +113,13 @@ export function ErrorDisplay({
           </AlertDescription>
         </Alert>
 
-        {sanitizedDetails && (
+        {context.technicalDetails && (
           <details className="group">
             <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
               Details techniques
             </summary>
             <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto max-h-48 whitespace-pre-wrap break-words">
-              {sanitizedDetails}
+              {context.technicalDetails}
             </pre>
           </details>
         )}
@@ -199,100 +160,6 @@ export function ErrorDisplay({
               </Link>
             </Button>
           )}
-        </div>
-
-        <div className="flex justify-center pt-2">
-          <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-destructive/30 text-destructive hover:bg-destructive/5"
-              >
-                <Bug className="h-4 w-4" />
-                Signaler un bug
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Signaler ce bug</DialogTitle>
-                <DialogDescription>
-                  Un ticket sera cree automatiquement sur GitHub avec les
-                  informations de cette erreur (donnees sensibles masquees).
-                </DialogDescription>
-              </DialogHeader>
-
-              {reportStatus === 'success' && issueUrl ? (
-                <div className="space-y-3">
-                  <Alert variant="success">
-                    <Check className="h-4 w-4" />
-                    <AlertDescription>
-                      Ticket cree avec succes !
-                    </AlertDescription>
-                  </Alert>
-                  <a
-                    href={issueUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Voir le ticket sur GitHub
-                  </a>
-                </div>
-              ) : (
-                <>
-                  <div className="rounded-lg bg-muted p-3 text-xs space-y-1">
-                    <p>
-                      <span className="font-medium">Type :</span>{' '}
-                      {context.errorType}
-                    </p>
-                    <p>
-                      <span className="font-medium">Message :</span>{' '}
-                      {context.message}
-                    </p>
-                    {context.url && (
-                      <p>
-                        <span className="font-medium">URL :</span>{' '}
-                        {context.url}
-                      </p>
-                    )}
-                    <p>
-                      <span className="font-medium">Date :</span>{' '}
-                      {context.timestamp}
-                    </p>
-                  </div>
-
-                  {reportStatus === 'error' && reportError && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>{reportError}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setReportDialogOpen(false)}
-                    >
-                      Annuler
-                    </Button>
-                    <Button
-                      onClick={handleReport}
-                      disabled={reportStatus === 'loading'}
-                    >
-                      {reportStatus === 'loading' ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Bug className="h-4 w-4" />
-                      )}
-                      Confirmer
-                    </Button>
-                  </DialogFooter>
-                </>
-              )}
-            </DialogContent>
-          </Dialog>
         </div>
       </CardContent>
     </Card>

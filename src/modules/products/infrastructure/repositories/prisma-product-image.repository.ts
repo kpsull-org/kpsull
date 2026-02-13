@@ -95,6 +95,6 @@ export class PrismaProductImageRepository implements ProductImageRepository {
       throw new Error(`Failed to reconstitute ProductImage ${prismaImage.id}: ${result.error}`);
     }
 
-    return result.value!;
+    return result.value;
   }
 }
