@@ -122,7 +122,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             title="Commandes"
             value={String(stats.totalOrders)}
             icon={Package}
-            badge={stats.pendingOrders}
           />
           <StatCard
             title="Chiffre d'affaires"
@@ -158,7 +157,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             description="Suivez et gerez vos commandes en cours"
             href="/dashboard/orders"
             icon={Package}
-            badge={stats.pendingOrders}
           />
           <QuickActionCard
             title="Produits"

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma/client';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 
 export default async function DashboardLayout({
@@ -18,7 +19,14 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
+  const pendingOrders = await prisma.order.count({
+    where: { creatorId: session.user.id, status: 'PENDING' },
+  });
+
   const badges: Record<string, number> = {};
+  if (pendingOrders > 0) {
+    badges['/dashboard/orders'] = pendingOrders;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50/50">

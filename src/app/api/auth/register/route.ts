@@ -8,6 +8,7 @@ import { PrismaVerificationTokenRepository } from '@/modules/auth/infrastructure
 import { configureContainer, getContainer } from '@/shared/infrastructure/di/registry';
 import { TOKENS } from '@/shared/infrastructure/di/tokens';
 import type { IEmailService } from '@/modules/notifications/application/ports/email.service.interface';
+import { checkRateLimit } from '@/lib/utils/rate-limiter';
 
 /**
  * POST /api/auth/register
@@ -31,6 +32,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, email, password } = validation.data;
+
+    // Rate limiting
+    const { allowed } = checkRateLimit(`register:${email}`, 5, 60 * 1000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Trop de tentatives. Réessayez plus tard.' },
+        { status: 429 }
+      );
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
