@@ -119,7 +119,11 @@ export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProp
         });
 
         if (result?.error) {
-          setError('Email ou mot de passe incorrect');
+          if (result.error === 'CredentialsSignin') {
+            setError('Email ou mot de passe incorrect');
+          } else {
+            setError('Service temporairement indisponible. Veuillez reessayer dans quelques instants.');
+          }
           setIsLoading(false);
           return;
         }

@@ -38,9 +38,15 @@ export const authConfig: NextAuthConfig = {
 
         const { email, password } = validation.data;
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
+        let user;
+        try {
+          user = await prisma.user.findUnique({
+            where: { email },
+          });
+        } catch (error) {
+          console.error('[auth] Database unavailable during login:', error);
+          throw new Error('DatabaseUnavailable');
+        }
 
         if (!user || !user.hashedPassword) {
           return null;
