@@ -16,6 +16,13 @@ import { PrismaCustomerRepository } from '@/modules/analytics/infrastructure/rep
 // Moderation repository (Prisma implementation)
 import { PrismaModerationRepository } from '@/modules/moderation/infrastructure/repositories/prisma-moderation.repository';
 
+// Email service
+import { ResendEmailService } from '@/modules/notifications/infrastructure/services/resend-email.service';
+import { ConsoleEmailService } from '@/modules/notifications/infrastructure/services/console-email.service';
+
+// Notification preferences repository
+import { PrismaNotificationPreferenceRepository } from '@/modules/notifications/infrastructure/repositories/prisma-notification-preference.repository';
+
 // Use Cases - Analytics
 import { GetAdminStatsUseCase } from '@/modules/analytics/application/use-cases/get-admin-stats.use-case';
 import { ListCreatorsUseCase } from '@/modules/analytics/application/use-cases/list-creators.use-case';
@@ -62,6 +69,20 @@ export function configureContainer(): Container {
   container.register(
     TOKENS.ListCustomersUseCase,
     () => new ListCustomersUseCase(container.get(TOKENS.CustomerRepository))
+  );
+
+  // Email Service
+  container.register(TOKENS.EmailService, () => {
+    if (process.env.NODE_ENV === 'production' && process.env.RESEND_API_KEY) {
+      return new ResendEmailService();
+    }
+    return new ConsoleEmailService();
+  });
+
+  // Notification Preferences Repository
+  container.register(
+    TOKENS.NotificationPreferenceRepository,
+    () => new PrismaNotificationPreferenceRepository(prisma)
   );
 
   return container;

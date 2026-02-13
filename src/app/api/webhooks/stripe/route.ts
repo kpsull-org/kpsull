@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import * as Sentry from '@sentry/nextjs';
 import { stripe } from '@/lib/stripe/client';
 import { PrismaCreatorOnboardingRepository } from '@/modules/creators/infrastructure/repositories/prisma-creator-onboarding.repository';
 
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
+    Sentry.captureException(err);
     return NextResponse.json(
       { error: 'Webhook signature verification failed' },
       { status: 400 }
@@ -104,5 +106,6 @@ async function handleAccountUpdated(account: Stripe.Account): Promise<void> {
     console.log(`Creator onboarding completed for user ${onboarding.userId}`);
   } catch (error) {
     console.error('Error handling account.updated:', error);
+    Sentry.captureException(error);
   }
 }

@@ -1,4 +1,5 @@
 import { stripe } from '@/lib/stripe/client';
+import * as Sentry from '@sentry/nextjs';
 import { Result } from '@/shared/domain';
 import {
   IStripeBillingService,
@@ -120,6 +121,7 @@ export class StripeBillingService implements IStripeBillingService {
       });
     } catch (error) {
       console.error('Stripe Checkout error:', error);
+      Sentry.captureException(error);
       return Result.fail('Erreur lors de la creation de la session de paiement');
     }
   }
@@ -158,6 +160,7 @@ export class StripeBillingService implements IStripeBillingService {
       });
     } catch (error) {
       console.error('Get Checkout Session error:', error);
+      Sentry.captureException(error);
       return Result.fail('Erreur lors de la recuperation de la session');
     }
   }
@@ -168,6 +171,7 @@ export class StripeBillingService implements IStripeBillingService {
       return Result.ok();
     } catch (error) {
       console.error('Cancel subscription error:', error);
+      Sentry.captureException(error);
       return Result.fail("Erreur lors de l'annulation de l'abonnement");
     }
   }
@@ -214,6 +218,7 @@ export class StripeBillingService implements IStripeBillingService {
       });
     } catch (error) {
       console.error('Update subscription error:', error);
+      Sentry.captureException(error);
       return Result.fail("Erreur lors de la mise a jour de l'abonnement");
     }
   }
@@ -254,6 +259,7 @@ export class StripeBillingService implements IStripeBillingService {
       });
     } catch (error) {
       console.error('Get subscription error:', error);
+      Sentry.captureException(error);
       return Result.fail("Erreur lors de la recuperation de l'abonnement");
     }
   }

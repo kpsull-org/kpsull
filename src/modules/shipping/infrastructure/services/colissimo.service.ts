@@ -1,4 +1,5 @@
 import { Result } from '@/shared/domain';
+import * as Sentry from '@sentry/nextjs';
 import {
   AfterShipServiceInterface,
   TrackingInfoDTO,
@@ -151,6 +152,7 @@ export class ColissimoTrackingService implements AfterShipServiceInterface {
         return Result.fail('Service Colissimo temporairement indisponible');
       }
       console.error('Colissimo tracking error:', error);
+      Sentry.captureException(error);
       return Result.fail('Erreur lors de la récupération du suivi');
     }
   }

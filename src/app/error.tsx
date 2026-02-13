@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { ErrorDisplay } from '@/components/error';
 import type { ErrorContext } from '@/components/error';
 
@@ -10,6 +12,10 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   const context: ErrorContext = {
     errorType: error.name || 'RuntimeError',
     message: error.message || 'Une erreur inattendue est survenue',

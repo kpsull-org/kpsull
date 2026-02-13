@@ -127,6 +127,9 @@ model User {
   suspensionsAdministered   CreatorSuspension[]     @relation("SuspensionAdmin")
   reactivationsAdministered CreatorSuspension[]     @relation("ReactivationAdmin")
 
+  // Notification preferences
+  notificationPreferences NotificationPreference[]
+
   @@index([email])
   @@index([role])
   @@map("users")
@@ -625,4 +628,25 @@ model Cart {
 
   @@index([userId])
   @@map("carts")
+}
+
+// ============================================
+// NOTIFICATION PREFERENCES
+// ============================================
+
+model NotificationPreference {
+  id     String  @id @default(cuid())
+  userId String
+  type   String  // NotificationTypeValue
+  email  Boolean @default(true)
+  inApp  Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@map("notification_preferences")
 }

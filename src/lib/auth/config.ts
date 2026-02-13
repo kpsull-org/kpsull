@@ -2,6 +2,7 @@ import type { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@/lib/prisma/client';
 import { loginSchema } from '@/lib/schemas/auth.schema';
 import { authConfigEdge } from './config.edge';
@@ -45,6 +46,7 @@ export const authConfig: NextAuthConfig = {
           });
         } catch (error) {
           console.error('[auth] Database unavailable during login:', error);
+          Sentry.captureException(error);
           throw new Error('DatabaseUnavailable');
         }
 
@@ -65,6 +67,7 @@ export const authConfig: NextAuthConfig = {
           role: user.role,
           accountTypeChosen: user.accountTypeChosen,
           wantsToBeCreator: user.wantsToBeCreator,
+          emailVerified: user.emailVerified,
         };
       },
     }),
@@ -130,6 +133,7 @@ export const authConfig: NextAuthConfig = {
         token.role = user.role;
         token.accountTypeChosen = user.accountTypeChosen;
         token.wantsToBeCreator = user.wantsToBeCreator;
+        token.emailVerified = user.emailVerified ? new Date(user.emailVerified).toISOString() : null;
         token.refreshedAt = Date.now();
         return token;
       }
@@ -143,12 +147,13 @@ export const authConfig: NextAuthConfig = {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { role: true, accountTypeChosen: true, wantsToBeCreator: true },
+            select: { role: true, accountTypeChosen: true, wantsToBeCreator: true, emailVerified: true },
           });
           if (dbUser) {
             token.role = dbUser.role;
             token.accountTypeChosen = dbUser.accountTypeChosen;
             token.wantsToBeCreator = dbUser.wantsToBeCreator;
+            token.emailVerified = dbUser.emailVerified ? dbUser.emailVerified.toISOString() : null;
           }
         } catch {
           // DB unavailable: keep existing token data
@@ -165,6 +170,7 @@ export const authConfig: NextAuthConfig = {
         session.user.role = token.role as 'CLIENT' | 'CREATOR' | 'ADMIN';
         session.user.accountTypeChosen = token.accountTypeChosen as boolean;
         session.user.wantsToBeCreator = token.wantsToBeCreator as boolean;
+        session.user.emailVerified = token.emailVerified ? new Date(token.emailVerified) : null;
       }
       return session;
     },

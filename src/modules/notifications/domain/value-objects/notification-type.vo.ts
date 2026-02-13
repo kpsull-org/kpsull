@@ -1,43 +1,56 @@
 import { ValueObject, Result } from '@/shared/domain';
 
 export type NotificationTypeValue =
+  // Client emails
+  | 'WELCOME'
+  | 'VERIFICATION_CODE'
+  | 'PASSWORD_RESET'
+  | 'ORDER_CONFIRMED'
+  | 'ORDER_SHIPPED'
+  | 'ORDER_DELIVERED'
+  | 'ORDER_CANCELLED'
+  | 'REFUND_PROCESSED'
+  | 'RETURN_APPROVED'
+  | 'RETURN_REJECTED'
+  | 'DISPUTE_UPDATE'
+  // Creator emails
+  | 'CREATOR_WELCOME'
+  | 'CREATOR_ACTIVATED'
   | 'ORDER_RECEIVED'
   | 'ORDER_PAID'
-  | 'ORDER_SHIPPED'
+  | 'RETURN_REQUEST_RECEIVED'
+  | 'DISPUTE_OPENED'
   | 'REVIEW_RECEIVED'
   | 'SUBSCRIPTION_RENEWED'
   | 'SUBSCRIPTION_EXPIRING'
-  | 'PAYMENT_FAILED';
+  | 'PAYMENT_FAILED'
+  | 'ACCOUNT_SUSPENDED'
+  | 'ACCOUNT_REACTIVATED';
 
 interface NotificationTypeProps {
   value: NotificationTypeValue;
 }
 
-/**
- * NotificationType Value Object
- *
- * Represents the type of a notification in the system.
- */
 export class NotificationType extends ValueObject<NotificationTypeProps> {
   private static readonly VALID_TYPES: NotificationTypeValue[] = [
-    'ORDER_RECEIVED',
-    'ORDER_PAID',
-    'ORDER_SHIPPED',
-    'REVIEW_RECEIVED',
-    'SUBSCRIPTION_RENEWED',
-    'SUBSCRIPTION_EXPIRING',
-    'PAYMENT_FAILED',
+    'WELCOME', 'VERIFICATION_CODE', 'PASSWORD_RESET',
+    'ORDER_CONFIRMED', 'ORDER_SHIPPED', 'ORDER_DELIVERED', 'ORDER_CANCELLED',
+    'REFUND_PROCESSED', 'RETURN_APPROVED', 'RETURN_REJECTED', 'DISPUTE_UPDATE',
+    'CREATOR_WELCOME', 'CREATOR_ACTIVATED',
+    'ORDER_RECEIVED', 'ORDER_PAID',
+    'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED', 'REVIEW_RECEIVED',
+    'SUBSCRIPTION_RENEWED', 'SUBSCRIPTION_EXPIRING', 'PAYMENT_FAILED',
+    'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED',
   ];
 
-  private static readonly ORDER_TYPES: NotificationTypeValue[] = [
-    'ORDER_RECEIVED',
-    'ORDER_PAID',
-    'ORDER_SHIPPED',
-  ];
-
-  private static readonly SUBSCRIPTION_TYPES: NotificationTypeValue[] = [
-    'SUBSCRIPTION_RENEWED',
-    'SUBSCRIPTION_EXPIRING',
+  private static readonly MANDATORY_TYPES: NotificationTypeValue[] = [
+    'WELCOME', 'VERIFICATION_CODE', 'PASSWORD_RESET',
+    'ORDER_CONFIRMED', 'ORDER_SHIPPED', 'ORDER_CANCELLED', 'REFUND_PROCESSED',
+    'CREATOR_WELCOME', 'CREATOR_ACTIVATED',
+    'ORDER_RECEIVED', 'ORDER_PAID',
+    'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED',
+    'SUBSCRIPTION_RENEWED', 'PAYMENT_FAILED',
+    'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED',
   ];
 
   private constructor(props: NotificationTypeProps) {
@@ -48,75 +61,37 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
     return this.props.value;
   }
 
-  get isOrderReceived(): boolean {
-    return this.value === 'ORDER_RECEIVED';
-  }
-
-  get isOrderPaid(): boolean {
-    return this.value === 'ORDER_PAID';
-  }
-
-  get isOrderShipped(): boolean {
-    return this.value === 'ORDER_SHIPPED';
-  }
-
-  get isReviewReceived(): boolean {
-    return this.value === 'REVIEW_RECEIVED';
-  }
-
-  get isSubscriptionRenewed(): boolean {
-    return this.value === 'SUBSCRIPTION_RENEWED';
-  }
-
-  get isSubscriptionExpiring(): boolean {
-    return this.value === 'SUBSCRIPTION_EXPIRING';
-  }
-
-  get isPaymentFailed(): boolean {
-    return this.value === 'PAYMENT_FAILED';
+  get isMandatory(): boolean {
+    return NotificationType.MANDATORY_TYPES.includes(this.value);
   }
 
   get isOrderRelated(): boolean {
-    return NotificationType.ORDER_TYPES.includes(this.value);
+    return ['ORDER_CONFIRMED', 'ORDER_SHIPPED', 'ORDER_DELIVERED', 'ORDER_CANCELLED', 'ORDER_RECEIVED', 'ORDER_PAID'].includes(this.value);
   }
 
   get isSubscriptionRelated(): boolean {
-    return NotificationType.SUBSCRIPTION_TYPES.includes(this.value);
+    return ['SUBSCRIPTION_RENEWED', 'SUBSCRIPTION_EXPIRING', 'PAYMENT_FAILED'].includes(this.value);
   }
 
-  static orderReceived(): NotificationType {
-    return new NotificationType({ value: 'ORDER_RECEIVED' });
-  }
-
-  static orderPaid(): NotificationType {
-    return new NotificationType({ value: 'ORDER_PAID' });
-  }
-
-  static orderShipped(): NotificationType {
-    return new NotificationType({ value: 'ORDER_SHIPPED' });
-  }
-
-  static reviewReceived(): NotificationType {
-    return new NotificationType({ value: 'REVIEW_RECEIVED' });
-  }
-
-  static subscriptionRenewed(): NotificationType {
-    return new NotificationType({ value: 'SUBSCRIPTION_RENEWED' });
-  }
-
-  static subscriptionExpiring(): NotificationType {
-    return new NotificationType({ value: 'SUBSCRIPTION_EXPIRING' });
-  }
-
-  static paymentFailed(): NotificationType {
-    return new NotificationType({ value: 'PAYMENT_FAILED' });
-  }
+  // Static factories
+  static welcome(): NotificationType { return new NotificationType({ value: 'WELCOME' }); }
+  static orderConfirmed(): NotificationType { return new NotificationType({ value: 'ORDER_CONFIRMED' }); }
+  static orderShipped(): NotificationType { return new NotificationType({ value: 'ORDER_SHIPPED' }); }
+  static orderDelivered(): NotificationType { return new NotificationType({ value: 'ORDER_DELIVERED' }); }
+  static orderCancelled(): NotificationType { return new NotificationType({ value: 'ORDER_CANCELLED' }); }
+  static orderReceived(): NotificationType { return new NotificationType({ value: 'ORDER_RECEIVED' }); }
+  static orderPaid(): NotificationType { return new NotificationType({ value: 'ORDER_PAID' }); }
+  static reviewReceived(): NotificationType { return new NotificationType({ value: 'REVIEW_RECEIVED' }); }
+  static subscriptionRenewed(): NotificationType { return new NotificationType({ value: 'SUBSCRIPTION_RENEWED' }); }
+  static subscriptionExpiring(): NotificationType { return new NotificationType({ value: 'SUBSCRIPTION_EXPIRING' }); }
+  static paymentFailed(): NotificationType { return new NotificationType({ value: 'PAYMENT_FAILED' }); }
+  static accountSuspended(): NotificationType { return new NotificationType({ value: 'ACCOUNT_SUSPENDED' }); }
+  static accountReactivated(): NotificationType { return new NotificationType({ value: 'ACCOUNT_REACTIVATED' }); }
 
   static fromString(value: string): Result<NotificationType> {
     if (!NotificationType.VALID_TYPES.includes(value as NotificationTypeValue)) {
       return Result.fail(`Type de notification invalide: ${value}`);
     }
-
     return Result.ok(new NotificationType({ value: value as NotificationTypeValue }));
   }
 }

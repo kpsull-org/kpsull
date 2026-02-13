@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import '@/app/globals.css';
 
 export default function GlobalError({
@@ -9,6 +10,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  Sentry.captureException(error);
+
   const errorText = [
     `${error.name}: ${error.message}`,
     error.digest ? `Digest: ${error.digest}` : null,
