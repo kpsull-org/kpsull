@@ -62,9 +62,9 @@ export function CartDropdown({ isAuthenticated }: CartDropdownProps) {
         <span className="font-[family-name:var(--font-archivo)] text-[18px] font-medium uppercase tracking-wide">Panier</span>
       </button>
 
-      {/* Dropdown panel -- same grid style as profile, pt-3 = hover bridge */}
-      <div className="pointer-events-none absolute -left-[5px] right-0 top-full pt-3 opacity-0 group-hover/cart:pointer-events-auto group-hover/cart:opacity-100 transition-[opacity] duration-200">
-        <div className="relative bg-white pb-[18px]">
+      {/* Dropdown panel -- flush with header bottom, hover bridge via ::before on button */}
+      <div className="pointer-events-none absolute -left-[5px] right-0 top-full opacity-0 group-hover/cart:pointer-events-auto group-hover/cart:opacity-100 transition-[opacity] duration-200">
+        <div className="relative -mt-[5px] bg-white pt-[5px] pb-[18px]">
           {/* Vertical grid lines */}
           <div className="absolute inset-y-0 left-[5px] flex gap-1">
             <div className="w-px bg-black" />
