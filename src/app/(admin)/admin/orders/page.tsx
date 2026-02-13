@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma/client';
+import { ListAdminOrdersUseCase } from '@/modules/analytics/application/use-cases';
+import { PrismaAdminOrderRepository } from '@/modules/analytics/infrastructure/repositories';
 import { OrdersPageClient } from './page-client';
 
 export const metadata: Metadata = {
@@ -24,62 +25,38 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const search = params.search ?? '';
   const statusFilter = params.status;
 
-  const where: Prisma.OrderWhereInput = {};
+  const orderRepository = new PrismaAdminOrderRepository(prisma);
+  const listOrdersUseCase = new ListAdminOrdersUseCase(orderRepository);
 
-  if (statusFilter) {
-    where.status = statusFilter as Prisma.EnumOrderStatusFilter;
-  }
-
-  if (search) {
-    where.OR = [
-      { orderNumber: { contains: search, mode: 'insensitive' } },
-      { customerName: { contains: search, mode: 'insensitive' } },
-      { customerEmail: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-
-  const [orders, total] = await Promise.all([
-    prisma.order.findMany({
-      where,
-      include: {
-        items: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.order.count({ where }),
-  ]);
-
-  // Fetch creator info separately since Order has no User relation
-  const creatorIds = [...new Set(orders.map((o) => o.creatorId))];
-  const creators =
-    creatorIds.length > 0
-      ? await prisma.user.findMany({
-          where: { id: { in: creatorIds } },
-          select: { id: true, name: true, email: true },
-        })
-      : [];
-
-  const creatorsMap = new Map(creators.map((c) => [c.id, c]));
-
-  const serializedOrders = orders.map((o) => {
-    const creator = creatorsMap.get(o.creatorId);
-    return {
-      id: o.id,
-      orderNumber: o.orderNumber,
-      customerName: o.customerName,
-      customerEmail: o.customerEmail,
-      creatorName: creator?.name ?? 'Inconnu',
-      creatorEmail: creator?.email ?? '',
-      status: o.status,
-      totalAmount: o.totalAmount,
-      itemCount: o.items.length,
-      createdAt: o.createdAt.toISOString(),
-    };
+  const result = await listOrdersUseCase.execute({
+    search: search || undefined,
+    statusFilter,
+    page,
+    pageSize: PAGE_SIZE,
   });
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  if (result.isFailure) {
+    return (
+      <div className="container max-w-7xl py-6">
+        <p className="text-destructive">Erreur: {result.error}</p>
+      </div>
+    );
+  }
+
+  const { orders, total, totalPages } = result.value!;
+
+  const serializedOrders = orders.map((o) => ({
+    id: o.id,
+    orderNumber: o.orderNumber,
+    customerName: o.customerName,
+    customerEmail: o.customerEmail,
+    creatorName: o.creatorName,
+    creatorEmail: o.creatorEmail,
+    status: o.status,
+    totalAmount: o.totalAmount,
+    itemCount: o.itemCount,
+    createdAt: o.createdAt.toISOString(),
+  }));
 
   return (
     <div className="container max-w-7xl py-6 space-y-6">

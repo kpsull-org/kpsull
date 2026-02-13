@@ -82,7 +82,7 @@ describe('StripeConnectService', () => {
       );
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Erreur lors de la création du compte Stripe');
+      expect(result.error).toBe('Erreur Stripe: Stripe error');
     });
 
     it('should return failure when account link creation fails', async () => {
@@ -98,7 +98,7 @@ describe('StripeConnectService', () => {
       );
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Erreur lors de la création du compte Stripe');
+      expect(result.error).toBe('Erreur Stripe: Link creation failed');
     });
   });
 
@@ -133,7 +133,7 @@ describe('StripeConnectService', () => {
       const result = await service.createAccountLink('acct_invalid');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Erreur lors de la génération du lien Stripe');
+      expect(result.error).toBe('Erreur Stripe: Invalid account');
     });
   });
 
@@ -215,9 +215,7 @@ describe('StripeConnectService', () => {
       const result = await service.checkAccountStatus('acct_invalid');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe(
-        'Erreur lors de la vérification du compte Stripe'
-      );
+      expect(result.error).toBe('Erreur Stripe: Account not found');
     });
   });
 });

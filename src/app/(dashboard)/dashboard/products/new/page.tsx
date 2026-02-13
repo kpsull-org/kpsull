@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma/client';
 import { ProductForm } from '@/components/products/product-form';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { ListProjectsUseCase } from '@/modules/products/application/use-cases/projects/list-projects.use-case';
+import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
 
 export const metadata: Metadata = {
   title: 'Nouveau produit | Kpsull',
@@ -22,11 +24,9 @@ export default async function NewProductPage() {
     redirect('/mon-compte');
   }
 
-  const collections = await prisma.project.findMany({
-    where: { creatorId: session.user.id },
-    select: { id: true, name: true },
-    orderBy: { name: 'asc' },
-  });
+  const projectRepo = new PrismaProjectRepository(prisma);
+  const result = await new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id });
+  const collections = (result.value?.projects ?? []).map((p) => ({ id: p.id, name: p.name }));
 
   return (
     <div className="space-y-6">

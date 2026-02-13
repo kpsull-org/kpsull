@@ -6,8 +6,10 @@ import { prisma } from '@/lib/prisma/client';
 import { ShoppingBag, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Prisma, ProductStatus } from '@prisma/client';
+import { ProductStatus } from '@prisma/client';
 import { ProductsPageClient } from './page-client';
+import { ListProductsUseCase } from '@/modules/products/application/use-cases/products/list-products.use-case';
+import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
 
 export const metadata: Metadata = {
   title: 'Produits | Kpsull',
@@ -34,13 +36,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   }
 
   if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-    if (dbUser?.role !== 'CREATOR' && dbUser?.role !== 'ADMIN') {
-      redirect('/mon-compte');
-    }
+    redirect('/mon-compte');
   }
 
   const params = await searchParams;
@@ -53,31 +49,20 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   const hasFilters = search !== '' || statusFilter !== undefined;
 
-  // Build where clause
-  const where: Prisma.ProductWhereInput = { creatorId: session.user.id };
+  const productRepo = new PrismaProductRepository(prisma);
+  const listProductsUseCase = new ListProductsUseCase(productRepo);
 
-  if (statusValue) {
-    where.status = statusValue;
-  }
+  const result = await listProductsUseCase.execute({
+    creatorId: session.user.id,
+    status: statusValue,
+    search: search || undefined,
+    page,
+    limit: PAGE_SIZE,
+  });
 
-  if (search) {
-    where.name = { contains: search, mode: 'insensitive' };
-  }
-
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: {
-        _count: { select: { variants: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.product.count({ where }),
-  ]);
-
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const products = result.value?.products ?? [];
+  const total = result.value?.total ?? 0;
+  const totalPages = result.value?.pages ?? 1;
 
   // Show empty state only when there are no products AND no filters applied
   if (products.length === 0 && !hasFilters) {
@@ -125,7 +110,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     name: product.name,
     price: product.price,
     status: product.status,
-    variantCount: product._count.variants,
+    variantCount: 0,
     createdAt: product.createdAt.toISOString(),
   }));
 

@@ -6,6 +6,7 @@ import { AdminPeriodSelector } from './admin-period-selector';
 import {
   GetAdminStatsUseCase,
   type GetAdminStatsOutput,
+  GetAdminMonthlyRevenueUseCase,
 } from '@/modules/analytics/application/use-cases';
 import { PrismaAdminAnalyticsRepository } from '@/modules/analytics/infrastructure/repositories';
 import { prisma } from '@/lib/prisma/client';
@@ -30,41 +31,12 @@ const MONTH_LABELS = [
   'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec',
 ] as const;
 
-/** Order statuses that represent a confirmed payment */
-const PAID_STATUSES = ['PAID', 'SHIPPED', 'DELIVERED', 'COMPLETED'] as const;
-
-/**
- * Fetch the monthly revenue breakdown for the current year across all creators.
- * Returns an array of 12 entries (one per month) with revenue in euros.
- */
-async function getAdminMonthlyRevenue(): Promise<MonthlyRevenue[]> {
-  const currentYear = new Date().getFullYear();
-  const yearStart = new Date(currentYear, 0, 1);
-  const yearEnd = new Date(currentYear + 1, 0, 1);
-
-  const orders = await prisma.order.findMany({
-    where: {
-      createdAt: { gte: yearStart, lt: yearEnd },
-      status: { in: [...PAID_STATUSES] },
-    },
-    select: { createdAt: true, totalAmount: true },
+/** Map month index (0–11) from the use case to a MonthlyRevenue chart entry */
+function toMonthlyRevenue(dataPoints: { month: number; revenue: number }[]): MonthlyRevenue[] {
+  return MONTH_LABELS.map((month, i) => {
+    const point = dataPoints.find((p) => p.month === i);
+    return { month, revenue: (point?.revenue ?? 0) / 100 };
   });
-
-  // Build monthly revenue map
-  const monthlyRevenueCents: Record<number, number> = {};
-  for (let m = 0; m < 12; m++) {
-    monthlyRevenueCents[m] = 0;
-  }
-  for (const order of orders) {
-    const monthIndex = order.createdAt.getMonth();
-    monthlyRevenueCents[monthIndex] =
-      (monthlyRevenueCents[monthIndex] ?? 0) + order.totalAmount;
-  }
-
-  return MONTH_LABELS.map((month, i) => ({
-    month,
-    revenue: (monthlyRevenueCents[i] ?? 0) / 100, // cents to euros
-  }));
 }
 
 /**
@@ -92,15 +64,22 @@ export default async function AdminDashboardPage({
   const params = await searchParams;
   const period: TimePeriodType = params.period ?? 'LAST_30_DAYS';
 
-  // Initialize use case with Prisma repository
+  const currentYear = new Date().getFullYear();
+
+  // Initialize use cases with Prisma repository
   const adminRepository = new PrismaAdminAnalyticsRepository(prisma);
   const getAdminStatsUseCase = new GetAdminStatsUseCase(adminRepository);
+  const getMonthlyRevenueUseCase = new GetAdminMonthlyRevenueUseCase(adminRepository);
 
-  // Run stats use case and revenue query in parallel
-  const [result, revenueData] = await Promise.all([
+  // Run stats and revenue use cases in parallel
+  const [result, revenueResult] = await Promise.all([
     getAdminStatsUseCase.execute({ period }),
-    getAdminMonthlyRevenue(),
+    getMonthlyRevenueUseCase.execute({ year: currentYear }),
   ]);
+
+  const revenueData = revenueResult.isSuccess
+    ? toMonthlyRevenue(revenueResult.value!.revenueByMonth)
+    : MONTH_LABELS.map((month) => ({ month, revenue: 0 }));
 
   // Handle error case
   if (result.isFailure) {
@@ -116,7 +95,6 @@ export default async function AdminDashboardPage({
   }
 
   const stats: GetAdminStatsOutput = result.value!;
-  const currentYear = new Date().getFullYear();
 
   return (
     <div className="container py-10">

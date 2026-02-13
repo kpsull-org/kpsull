@@ -79,9 +79,8 @@ export function Header({ user }: HeaderProps) {
 
             {/* Profile icon + dropdown */}
             <div className="group/profile ml-6 flex h-full items-center">
-              <button className="flex items-center gap-2 transition-opacity hover:opacity-70" aria-label="Mon compte">
+              <button className="flex items-center transition-opacity hover:opacity-70" aria-label="Mon compte">
                 <AccountIcon className="h-5 w-5" />
-                <span className="font-[family-name:var(--font-archivo)] text-[18px] font-medium uppercase tracking-wide">Compte</span>
               </button>
 
               {/* Profile dropdown panel */}

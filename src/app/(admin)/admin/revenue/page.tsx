@@ -4,6 +4,8 @@ import { AdminStatsCards } from '@/components/admin';
 import {
   GetAdminStatsUseCase,
   type GetAdminStatsOutput,
+  GetAdminMonthlyRevenueUseCase,
+  GetAdminRevenueByCreatorUseCase,
 } from '@/modules/analytics/application/use-cases';
 import { PrismaAdminAnalyticsRepository } from '@/modules/analytics/infrastructure/repositories';
 import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
@@ -13,7 +15,10 @@ export const metadata: Metadata = {
   description: 'Analyse des revenus de la plateforme Kpsull',
 };
 
-const PAID_STATUSES = ['PAID', 'SHIPPED', 'DELIVERED', 'COMPLETED'] as const;
+const MONTH_LABELS = [
+  'Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin',
+  'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec',
+] as const;
 
 function formatCurrency(amountInCents: number): string {
   return new Intl.NumberFormat('fr-FR', {
@@ -22,67 +27,28 @@ function formatCurrency(amountInCents: number): string {
   }).format(amountInCents / 100);
 }
 
-function groupOrdersByMonth(
-  orders: { totalAmount: number; createdAt: Date }[]
-): MonthlyRevenue[] {
-  const months = new Map<string, number>();
-
-  for (const order of orders) {
-    const date = new Date(order.createdAt);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    months.set(key, (months.get(key) ?? 0) + order.totalAmount);
-  }
-
-  return Array.from(months.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, total]) => {
-      const [year = '2026', month = '01'] = key.split('-');
-      const date = new Date(parseInt(year), parseInt(month) - 1);
-      return {
-        month: date.toLocaleDateString('fr-FR', {
-          month: 'short',
-          year: 'numeric',
-        }),
-        revenue: total / 100,
-      };
-    });
-}
-
 export default async function AdminRevenuePage() {
+  const currentYear = new Date().getFullYear();
   const adminRepository = new PrismaAdminAnalyticsRepository(prisma);
+
   const statsUseCase = new GetAdminStatsUseCase(adminRepository);
-  const statsResult = await statsUseCase.execute({ period: 'LAST_30_DAYS' });
+  const monthlyRevenueUseCase = new GetAdminMonthlyRevenueUseCase(adminRepository);
+  const revenueByCreatorUseCase = new GetAdminRevenueByCreatorUseCase(adminRepository);
 
-  const revenueByCreator = await prisma.order.groupBy({
-    by: ['creatorId'],
-    where: { status: { in: [...PAID_STATUSES] } },
-    _sum: { totalAmount: true },
-    _count: true,
-    orderBy: { _sum: { totalAmount: 'desc' } },
-    take: 10,
-  });
+  const [statsResult, monthlyResult, creatorsResult] = await Promise.all([
+    statsUseCase.execute({ period: 'LAST_30_DAYS' }),
+    monthlyRevenueUseCase.execute({ year: currentYear }),
+    revenueByCreatorUseCase.execute({ limit: 10 }),
+  ]);
 
-  const creatorIds = revenueByCreator.map((r) => r.creatorId);
-  const creators = await prisma.user.findMany({
-    where: { id: { in: creatorIds } },
-    select: { id: true, name: true, email: true },
-  });
+  const monthlyChartData: MonthlyRevenue[] = monthlyResult.isSuccess
+    ? MONTH_LABELS.map((month, i) => {
+        const point = monthlyResult.value!.revenueByMonth.find((p) => p.month === i);
+        return { month, revenue: (point?.revenue ?? 0) / 100 };
+      })
+    : [];
 
-  const creatorsById = new Map(creators.map((c) => [c.id, c]));
-
-  const twelveMonthsAgo = new Date();
-  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
-
-  const recentOrders = await prisma.order.findMany({
-    where: {
-      createdAt: { gte: twelveMonthsAgo },
-      status: { in: [...PAID_STATUSES] },
-    },
-    select: { totalAmount: true, createdAt: true },
-    orderBy: { createdAt: 'asc' },
-  });
-
-  const monthlyChartData = groupOrdersByMonth(recentOrders);
+  const creatorRows = creatorsResult.isSuccess ? creatorsResult.value!.creators : [];
 
   if (statsResult.isFailure) {
     return (
@@ -124,13 +90,13 @@ export default async function AdminRevenuePage() {
           currency="EUR"
         />
 
-        <RevenueChart data={monthlyChartData} year={new Date().getFullYear()} />
+        <RevenueChart data={monthlyChartData} year={currentYear} />
 
         <div className="rounded-lg border bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold">
             Top createurs par CA
           </h2>
-          {revenueByCreator.length === 0 ? (
+          {creatorRows.length === 0 ? (
             <p className="text-muted-foreground">
               Aucune donnee de createur disponible.
             </p>
@@ -148,35 +114,32 @@ export default async function AdminRevenuePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {revenueByCreator.map((row, index) => {
-                    const creator = creatorsById.get(row.creatorId);
-                    return (
-                      <tr
-                        key={row.creatorId}
-                        className="border-b last:border-0"
-                      >
-                        <td className="py-3 pr-4 tabular-nums">
-                          {index + 1}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <div>
-                            <p className="font-medium">
-                              {creator?.name ?? 'Inconnu'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {creator?.email ?? '-'}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4 text-right tabular-nums">
-                          {row._count}
-                        </td>
-                        <td className="py-3 text-right font-medium tabular-nums">
-                          {formatCurrency(row._sum.totalAmount ?? 0)}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {creatorRows.map((row, index) => (
+                    <tr
+                      key={row.creatorId}
+                      className="border-b last:border-0"
+                    >
+                      <td className="py-3 pr-4 tabular-nums">
+                        {index + 1}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div>
+                          <p className="font-medium">
+                            {row.creatorName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {row.creatorEmail || '-'}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 text-right tabular-nums">
+                        {row.orderCount}
+                      </td>
+                      <td className="py-3 text-right font-medium tabular-nums">
+                        {formatCurrency(row.totalRevenue)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

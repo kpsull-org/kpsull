@@ -1,5 +1,6 @@
 import { Prisma, PrismaClient, ProductStatus as PrismaProductStatus } from '@prisma/client';
 import { ProductRepository } from '../../application/ports/product.repository.interface';
+import type { ProductListRepository } from '../../application/use-cases/products/list-products.use-case';
 import { Product } from '../../domain/entities/product.entity';
 import { ProductVariant } from '../../domain/entities/product-variant.entity';
 import { ProductStatusValue } from '../../domain/value-objects/product-status.vo';
@@ -7,7 +8,7 @@ import { ProductStatusValue } from '../../domain/value-objects/product-status.vo
 type PrismaProduct = Prisma.ProductGetPayload<object>;
 type PrismaVariant = Prisma.ProductVariantGetPayload<object>;
 
-export class PrismaProductRepository implements ProductRepository {
+export class PrismaProductRepository implements ProductRepository, ProductListRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findById(id: string): Promise<Product | null> {
@@ -45,6 +46,46 @@ export class PrismaProductRepository implements ProductRepository {
     });
 
     return prismaProducts.map((p) => this.toDomainProduct(p));
+  }
+
+  async findByCreatorIdWithPagination(
+    creatorId: string,
+    options: {
+      status?: string;
+      projectId?: string;
+      search?: string;
+      skip: number;
+      take: number;
+    }
+  ): Promise<{ products: Product[]; total: number }> {
+    const where: Prisma.ProductWhereInput = { creatorId };
+
+    if (options.status) {
+      where.status = options.status as PrismaProductStatus;
+    }
+
+    if (options.projectId) {
+      where.projectId = options.projectId;
+    }
+
+    if (options.search) {
+      where.name = { contains: options.search, mode: 'insensitive' };
+    }
+
+    const [prismaProducts, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: options.skip,
+        take: options.take,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return {
+      products: prismaProducts.map((p) => this.toDomainProduct(p)),
+      total,
+    };
   }
 
   async save(product: Product): Promise<void> {

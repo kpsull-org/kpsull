@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma/client';
+import { ListAdminClientsUseCase } from '@/modules/analytics/application/use-cases';
+import { PrismaAdminClientRepository } from '@/modules/analytics/infrastructure/repositories';
 import { ClientsPageClient } from './page-client';
 
 export const metadata: Metadata = {
@@ -22,55 +23,31 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   const page = Math.max(1, parseInt(params.page ?? '1', 10));
   const search = params.search?.trim() ?? '';
 
-  const where: Prisma.UserWhereInput = { role: 'CLIENT' };
+  const clientRepository = new PrismaAdminClientRepository(prisma);
+  const listClientsUseCase = new ListAdminClientsUseCase(clientRepository);
 
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ];
+  const result = await listClientsUseCase.execute({
+    search: search || undefined,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
+  if (result.isFailure) {
+    return (
+      <div className="container max-w-7xl py-6">
+        <p className="text-destructive">Erreur: {result.error}</p>
+      </div>
+    );
   }
 
-  const [clients, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        city: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.user.count({ where }),
-  ]);
-
-  // Count orders per client in a single query
-  const clientIds = clients.map((c) => c.id);
-  const orderCounts =
-    clientIds.length > 0
-      ? await prisma.order.groupBy({
-          by: ['customerId'],
-          where: { customerId: { in: clientIds } },
-          _count: { id: true },
-        })
-      : [];
-
-  const orderCountMap = new Map(
-    orderCounts.map((oc) => [oc.customerId, oc._count.id]),
-  );
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const { clients, total, totalPages } = result.value!;
 
   const serializedClients = clients.map((client) => ({
     id: client.id,
     name: client.name,
     email: client.email,
     city: client.city,
-    orderCount: orderCountMap.get(client.id) ?? 0,
+    orderCount: client.orderCount,
     createdAt: client.createdAt.toISOString(),
   }));
 

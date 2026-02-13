@@ -181,7 +181,7 @@ function ArrowSvg({
 
 export function CoachMarks({
   steps,
-  tourId,
+  tourId: _tourId,
   isActive,
   onComplete,
   onStepChange,

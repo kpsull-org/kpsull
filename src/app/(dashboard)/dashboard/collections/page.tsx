@@ -6,8 +6,9 @@ import { prisma } from '@/lib/prisma/client';
 import { FolderOpen, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Prisma } from '@prisma/client';
 import { CollectionsPageClient } from './page-client';
+import { ListProjectsUseCase } from '@/modules/products/application/use-cases/projects/list-projects.use-case';
+import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
 
 export const metadata: Metadata = {
   title: 'Collections | Kpsull',
@@ -31,44 +32,32 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
   }
 
   if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-    if (dbUser?.role !== 'CREATOR' && dbUser?.role !== 'ADMIN') {
-      redirect('/mon-compte');
-    }
+    redirect('/mon-compte');
   }
 
   const params = await searchParams;
   const page = parseInt(params.page ?? '1', 10);
   const search = params.search ?? '';
-
   const hasFilters = search !== '';
 
-  const where: Prisma.ProjectWhereInput = { creatorId: session.user.id };
+  const projectRepo = new PrismaProjectRepository(prisma);
+  const result = await new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id });
 
+  let allCollections = result.value?.projects ?? [];
+
+  // Apply search filter (ListProjectsUseCase doesn't support search natively)
   if (search) {
-    where.name = { contains: search, mode: 'insensitive' };
+    allCollections = allCollections.filter((c) =>
+      c.name.toLowerCase().includes(search.toLowerCase())
+    );
   }
 
-  const [collections, total] = await Promise.all([
-    prisma.project.findMany({
-      where,
-      include: {
-        _count: { select: { products: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.project.count({ where }),
-  ]);
-
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const total = allCollections.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paginatedCollections = allCollections.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Show empty state only when there are no collections AND no filters applied
-  if (collections.length === 0 && !hasFilters) {
+  if (paginatedCollections.length === 0 && !hasFilters) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -108,11 +97,11 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
     );
   }
 
-  const serializedCollections = collections.map((c) => ({
+  const serializedCollections = paginatedCollections.map((c) => ({
     id: c.id,
     name: c.name,
-    description: c.description,
-    productCount: c._count.products,
+    description: c.description ?? null,
+    productCount: c.productCount,
     createdAt: c.createdAt.toISOString(),
   }));
 

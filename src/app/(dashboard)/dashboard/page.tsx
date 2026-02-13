@@ -15,6 +15,8 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
+import { GetCreatorOverviewUseCase } from '@/modules/analytics/application/use-cases';
+import { PrismaCreatorOverviewRepository } from '@/modules/analytics/infrastructure/repositories';
 import { DashboardCoachMarks } from './dashboard-coach-marks';
 
 export const metadata: Metadata = {
@@ -28,89 +30,6 @@ interface DashboardPageProps {
 
 /** French short month labels indexed 0..11 */
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-
-/**
- * Fetch dashboard statistics for a creator from the database.
- *
- * Returns order count, revenue sum (cents), distinct customer count,
- * active product count, pending orders, and monthly revenue breakdown.
- */
-async function getDashboardStats(creatorId: string) {
-  const currentYear = new Date().getFullYear();
-  const yearStart = new Date(currentYear, 0, 1);
-  const yearEnd = new Date(currentYear + 1, 0, 1);
-
-  // Run independent queries in parallel for performance
-  const [
-    orderAgg,
-    distinctCustomers,
-    activeProductCount,
-    pendingOrderCount,
-    ordersForRevenue,
-  ] = await Promise.all([
-    // Total orders + total revenue for this creator
-    prisma.order.aggregate({
-      where: { creatorId },
-      _count: { id: true },
-      _sum: { totalAmount: true },
-    }),
-
-    // Distinct customers (unique customerId values)
-    prisma.order.findMany({
-      where: { creatorId },
-      select: { customerId: true },
-      distinct: ['customerId'],
-    }),
-
-    // Active (published) products
-    prisma.product.count({
-      where: { creatorId, status: 'PUBLISHED' },
-    }),
-
-    // Pending orders (not yet shipped/delivered/completed)
-    prisma.order.count({
-      where: { creatorId, status: 'PENDING' },
-    }),
-
-    // Orders in current year for monthly revenue chart
-    prisma.order.findMany({
-      where: {
-        creatorId,
-        createdAt: { gte: yearStart, lt: yearEnd },
-      },
-      select: { totalAmount: true, createdAt: true },
-    }),
-  ]);
-
-  // Build monthly revenue from current-year orders
-  const monthlyRevenueCentsMap: Record<number, number> = {};
-  for (let m = 0; m < 12; m++) {
-    monthlyRevenueCentsMap[m] = 0;
-  }
-  for (const order of ordersForRevenue) {
-    const monthIndex = order.createdAt.getMonth();
-    monthlyRevenueCentsMap[monthIndex] = (monthlyRevenueCentsMap[monthIndex] ?? 0) + order.totalAmount;
-  }
-
-  const revenueData: MonthlyRevenue[] = MONTH_LABELS.map((month, i) => ({
-    month,
-    revenue: (monthlyRevenueCentsMap[i] ?? 0) / 100, // convert cents to euros
-  }));
-
-  // Current month revenue
-  const currentMonthIndex = new Date().getMonth();
-  const currentMonthRevenueCents = monthlyRevenueCentsMap[currentMonthIndex] ?? 0;
-
-  return {
-    totalOrders: orderAgg._count.id,
-    totalRevenueCents: orderAgg._sum.totalAmount ?? 0,
-    totalCustomers: distinctCustomers.length,
-    activeProducts: activeProductCount,
-    pendingOrders: pendingOrderCount,
-    revenueData,
-    currentMonthRevenueCents,
-  };
-}
 
 /**
  * Format an integer amount in cents as a French-locale EUR string.
@@ -154,8 +73,33 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const firstName = session.user.name?.split(' ')[0] ?? 'Createur';
   const currentYear = new Date().getFullYear();
 
-  // Fetch real stats from the database
-  const stats = await getDashboardStats(session.user.id);
+  // Fetch stats via use case
+  const overviewRepository = new PrismaCreatorOverviewRepository(prisma);
+  const getOverviewUseCase = new GetCreatorOverviewUseCase(overviewRepository);
+  const result = await getOverviewUseCase.execute({
+    creatorId: session.user.id,
+    year: currentYear,
+  });
+
+  if (result.isFailure) {
+    return (
+      <div className="container py-10">
+        <p className="text-destructive">Erreur: {result.error}</p>
+      </div>
+    );
+  }
+
+  const stats = result.value!;
+
+  // Map monthly revenue to chart format
+  const revenueData: MonthlyRevenue[] = MONTH_LABELS.map((month, i) => {
+    const point = stats.monthlyRevenue.find((p) => p.month === i);
+    return { month, revenue: (point?.revenueCents ?? 0) / 100 };
+  });
+
+  const currentMonthIndex = new Date().getMonth();
+  const currentMonthRevenueCents =
+    stats.monthlyRevenue.find((p) => p.month === currentMonthIndex)?.revenueCents ?? 0;
 
   return (
     <div className="space-y-10">
@@ -192,7 +136,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           />
           <StatCard
             title="CA ce mois-ci"
-            value={formatCentsAsEur(stats.currentMonthRevenueCents)}
+            value={formatCentsAsEur(currentMonthRevenueCents)}
             icon={TrendingUp}
           />
         </div>
@@ -200,7 +144,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       {/* Revenue Chart */}
       <section aria-label="Chiffre d'affaires" data-coach-mark="revenue">
-        <RevenueChart data={stats.revenueData} year={currentYear} />
+        <RevenueChart data={revenueData} year={currentYear} />
       </section>
 
       {/* Quick Actions */}

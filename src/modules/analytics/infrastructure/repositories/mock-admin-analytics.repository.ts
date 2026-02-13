@@ -1,4 +1,9 @@
-import type { AdminAnalyticsRepository, AdminPlatformStats } from '../../application/ports';
+import type {
+  AdminAnalyticsRepository,
+  AdminPlatformStats,
+  MonthlyRevenueDataPoint,
+  CreatorRevenueBreakdown,
+} from '../../application/ports';
 import { TimePeriod } from '../../domain/value-objects';
 
 /**
@@ -84,5 +89,22 @@ export class MockAdminAnalyticsRepository implements AdminAnalyticsRepository {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     return data;
+  }
+
+  async getMonthlyRevenue(_year: number): Promise<MonthlyRevenueDataPoint[]> {
+    return Array.from({ length: 12 }, (_, i) => ({
+      month: i,
+      revenue: Math.floor(Math.random() * 500000) + 100000,
+    }));
+  }
+
+  async getRevenueByCreator(limit: number): Promise<CreatorRevenueBreakdown[]> {
+    return Array.from({ length: Math.min(limit, 3) }, (_, i) => ({
+      creatorId: `mock-creator-${i + 1}`,
+      creatorName: `Createur ${i + 1}`,
+      creatorEmail: `creator${i + 1}@example.com`,
+      orderCount: 10 * (3 - i),
+      totalRevenue: 500000 * (3 - i),
+    }));
   }
 }

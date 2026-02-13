@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma/client';
 import { CollectionDetail } from './collection-detail';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
+import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
 
 export const metadata: Metadata = {
   title: 'Detail collection | Kpsull',
@@ -28,28 +30,23 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
 
   const { id } = await params;
 
-  const collection = await prisma.project.findUnique({
-    where: { id, creatorId: session.user.id },
-    include: {
-      products: {
-        select: { id: true, name: true, price: true, status: true },
-        orderBy: { name: 'asc' },
-      },
-    },
-  });
+  const projectRepo = new PrismaProjectRepository(prisma);
+  const productRepo = new PrismaProductRepository(prisma);
 
-  if (!collection) {
+  const collection = await projectRepo.findById(id);
+
+  if (!collection || collection.creatorId !== session.user.id) {
     notFound();
   }
 
-  const unassignedProducts = await prisma.product.findMany({
-    where: {
-      creatorId: session.user.id,
-      projectId: null,
-    },
-    select: { id: true, name: true, price: true, status: true },
-    orderBy: { name: 'asc' },
-  });
+  // Fetch collection products and unassigned products in parallel
+  const [collectionProducts, unassignedProductsList] = await Promise.all([
+    productRepo.findByCreatorId(session.user.id, { projectId: id }),
+    productRepo.findByCreatorId(session.user.id),
+  ]);
+
+  // Filter unassigned products (no projectId)
+  const unassignedProducts = unassignedProductsList.filter((p) => !p.projectId);
 
   return (
     <div className="space-y-6">
@@ -69,21 +66,21 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
 
       <CollectionDetail
         collection={{
-          id: collection.id,
+          id: collection.idString,
           name: collection.name,
-          description: collection.description,
+          description: collection.description ?? null,
         }}
-        products={collection.products.map((p) => ({
-          id: p.id,
+        products={collectionProducts.map((p) => ({
+          id: p.idString,
           name: p.name,
-          price: p.price,
-          status: p.status,
+          price: p.price.amount,
+          status: p.status.value,
         }))}
         unassignedProducts={unassignedProducts.map((p) => ({
-          id: p.id,
+          id: p.idString,
           name: p.name,
-          price: p.price,
-          status: p.status,
+          price: p.price.amount,
+          status: p.status.value,
         }))}
       />
     </div>

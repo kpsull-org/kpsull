@@ -4,8 +4,17 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/client';
 import { ProductForm } from '@/components/products/product-form';
 import { ProductActions } from './product-actions';
+import { VariantManager } from './variant-manager';
+import { ImageManager } from './image-manager';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { GetProductDetailUseCase } from '@/modules/products/application/use-cases/products/get-product-detail.use-case';
+import { ListProjectsUseCase } from '@/modules/products/application/use-cases/projects/list-projects.use-case';
+import { ListVariantsUseCase } from '@/modules/products/application/use-cases/variants/list-variants.use-case';
+import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
+import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
+import { PrismaVariantRepository } from '@/modules/products/infrastructure/repositories/prisma-variant.repository';
+import { PrismaProductImageRepository } from '@/modules/products/infrastructure/repositories/prisma-product-image.repository';
 
 export const metadata: Metadata = {
   title: 'Detail produit | Kpsull',
@@ -29,19 +38,38 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   const { id } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { id, creatorId: session.user.id },
-  });
+  const productRepo = new PrismaProductRepository(prisma);
+  const projectRepo = new PrismaProjectRepository(prisma);
+  const variantRepo = new PrismaVariantRepository(prisma);
+  const imageRepo = new PrismaProductImageRepository(prisma);
 
-  if (!product) {
+  const [productResult, collectionsResult, variantsResult, images] = await Promise.all([
+    new GetProductDetailUseCase(productRepo).execute({ productId: id, creatorId: session.user.id }),
+    new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id }),
+    new ListVariantsUseCase(variantRepo, productRepo).execute({ productId: id }),
+    imageRepo.findByProductId(id),
+  ]);
+
+  if (productResult.isFailure || !productResult.value) {
     notFound();
   }
 
-  const collections = await prisma.project.findMany({
-    where: { creatorId: session.user.id },
-    select: { id: true, name: true },
-    orderBy: { name: 'asc' },
-  });
+  const product = productResult.value;
+  const collections = (collectionsResult.value?.projects ?? []).map((p) => ({ id: p.id, name: p.name }));
+  const variants = (variantsResult.value?.variants ?? []).map((v) => ({
+    id: v.id,
+    name: v.name,
+    sku: v.sku,
+    priceOverride: v.priceOverride ? Math.round(v.priceOverride * 100) : undefined,
+    stock: v.stock,
+    isAvailable: v.isAvailable,
+  }));
+  const imageData = images.map((img) => ({
+    id: img.idString,
+    url: img.url.url,
+    alt: img.alt,
+    position: img.position,
+  }));
 
   const statusLabels: Record<string, string> = {
     DRAFT: 'Brouillon',
@@ -78,18 +106,26 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         </div>
       </div>
 
-      <div className="max-w-2xl">
-        <ProductForm
-          mode="edit"
-          productId={product.id}
-          initialValues={{
-            name: product.name,
-            description: product.description ?? undefined,
-            price: product.price,
-            projectId: product.projectId ?? undefined,
-          }}
-          collections={collections}
-        />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <ProductForm
+            mode="edit"
+            productId={product.id}
+            initialValues={{
+              name: product.name,
+              description: product.description,
+              price: product.price,
+              projectId: product.projectId,
+            }}
+            collections={collections}
+          />
+
+          <VariantManager productId={product.id} variants={variants} />
+        </div>
+
+        <div className="space-y-6">
+          <ImageManager productId={product.id} images={imageData} />
+        </div>
       </div>
     </div>
   );
