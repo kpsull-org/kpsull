@@ -92,6 +92,18 @@ describe("ValueObject", () => {
     });
   });
 
+  describe("getProps", () => {
+    it("should return a shallow clone of props", () => {
+      const money = Money.create(100, "EUR");
+      const cloned = (money as unknown as { getProps: () => MoneyProps }).getProps();
+
+      expect(cloned.amount).toBe(100);
+      expect(cloned.currency).toBe("EUR");
+      // Should be a copy, not the same reference
+      expect(cloned).not.toBe((money as unknown as { props: MoneyProps }).props);
+    });
+  });
+
   describe("value access", () => {
     it("should expose value through getter", () => {
       const email = Email.create("test@example.com");

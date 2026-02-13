@@ -36,9 +36,6 @@ export function ReactivateCreatorDialog({
       confirmLabel="Confirmer la reactivation"
       pendingLabel="Reactivation en cours..."
       confirmClassName="bg-green-600 hover:bg-green-700 text-white"
-      mockEmailAction="reactivation"
-      mockEmailSubject="Votre compte createur a ete reactive"
-      mockEmailBodyPrefix="Votre compte a ete reactive. Motif: "
     />
   );
 }

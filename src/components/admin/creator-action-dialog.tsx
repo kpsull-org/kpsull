@@ -26,9 +26,6 @@ interface CreatorActionDialogProps {
   confirmLabel: string;
   pendingLabel: string;
   confirmClassName?: string;
-  mockEmailAction: string;
-  mockEmailSubject: string;
-  mockEmailBodyPrefix: string;
 }
 
 export function CreatorActionDialog({
@@ -48,9 +45,6 @@ export function CreatorActionDialog({
   confirmLabel,
   pendingLabel,
   confirmClassName,
-  mockEmailAction,
-  mockEmailSubject,
-  mockEmailBodyPrefix,
 }: CreatorActionDialogProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(open);
@@ -80,11 +74,6 @@ export function CreatorActionDialog({
       const result = await onAction(creatorId, reason.trim());
 
       if (result.success) {
-        console.log(`[MOCK EMAIL] Notification de ${mockEmailAction} envoyee a ${creatorName}:`, {
-          to: `${creatorName}@example.com`,
-          subject: mockEmailSubject,
-          body: `${mockEmailBodyPrefix}${reason.trim()}`,
-        });
         handleOpenChange(false);
         router.refresh();
       } else {

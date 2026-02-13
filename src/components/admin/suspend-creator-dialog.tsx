@@ -36,9 +36,6 @@ export function SuspendCreatorDialog({
       confirmLabel="Confirmer la suspension"
       pendingLabel="Suspension en cours..."
       confirmClassName="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-      mockEmailAction="suspension"
-      mockEmailSubject="Votre compte createur a ete suspendu"
-      mockEmailBodyPrefix="Votre compte a ete suspendu pour la raison suivante: "
     />
   );
 }

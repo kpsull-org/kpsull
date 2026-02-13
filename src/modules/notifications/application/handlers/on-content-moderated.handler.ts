@@ -9,10 +9,7 @@ export interface ContentModeratedPayload {
 }
 
 export class OnContentModeratedHandler implements IEventHandler {
-  async handle(event: DomainEvent<ContentModeratedPayload>): Promise<void> {
-    const { flaggedContentId, action, creatorId } = event.payload;
-    console.log(
-      `[Notification] Content ${flaggedContentId} moderated (${action}) for creator ${creatorId}`
-    );
+  async handle(_event: DomainEvent<ContentModeratedPayload>): Promise<void> {
+    // Notification will be sent via email service when implemented
   }
 }

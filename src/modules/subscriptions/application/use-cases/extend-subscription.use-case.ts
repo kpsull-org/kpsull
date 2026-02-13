@@ -69,9 +69,6 @@ export class ExtendSubscriptionUseCase
     // Save the updated subscription
     await this.subscriptionRepository.save(subscription);
 
-    // TODO: Create audit log
-    // TODO: Send notification email to creator
-
     return Result.ok({
       subscriptionId: subscription.idString,
       previousEndDate,

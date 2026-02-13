@@ -410,11 +410,5 @@ export class MockAfterShipService implements AfterShipServiceInterface {
  * In production, this would check for API keys and return the real service
  */
 export function createAfterShipService(): AfterShipServiceInterface {
-  // TODO: In production, check for AFTERSHIP_API_KEY and return real service
-  // const apiKey = process.env.AFTERSHIP_API_KEY;
-  // if (apiKey) {
-  //   return new RealAfterShipService(apiKey);
-  // }
-
   return new MockAfterShipService();
 }

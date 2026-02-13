@@ -18,11 +18,7 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  // TODO: Fetch real badge counts from repositories
-  const badges: Record<string, number> = {
-    // '/dashboard/orders': pendingOrdersCount,
-    // '/dashboard/returns': pendingReturnsCount,
-  };
+  const badges: Record<string, number> = {};
 
   return (
     <div className="flex min-h-screen bg-gray-50/50">

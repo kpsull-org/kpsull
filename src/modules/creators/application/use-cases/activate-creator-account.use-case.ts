@@ -62,12 +62,6 @@ export class ActivateCreatorAccountUseCase
     // 4. Update user role to CREATOR
     await this.userRepository.updateRole(input.userId, 'CREATOR');
 
-    // TODO: In future stories:
-    // - Create Creator entity
-    // - Create FREE subscription
-    // - Send welcome email via Resend
-    // - Create admin notification
-
     return Result.ok({
       message: 'Compte créateur activé avec succès',
     });
