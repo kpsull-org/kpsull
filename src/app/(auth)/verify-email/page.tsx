@@ -15,7 +15,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') ?? '';
 
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+  const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -79,7 +79,7 @@ function VerifyEmailContent() {
       }
 
       setCooldown(RESEND_COOLDOWN);
-      setOtp(Array(6).fill(''));
+      setOtp(new Array(6).fill(''));
     } catch {
       setError('Erreur de connexion.');
     }

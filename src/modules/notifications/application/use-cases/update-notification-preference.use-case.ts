@@ -30,6 +30,6 @@ export class UpdateNotificationPreferenceUseCase {
       input.inApp
     );
 
-    return Result.ok(undefined);
+    return Result.ok();
   }
 }

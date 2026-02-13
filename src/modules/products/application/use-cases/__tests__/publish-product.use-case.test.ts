@@ -5,6 +5,11 @@ import { Money } from '../../../domain/value-objects/money.vo';
 import { TestProductRepository } from '../../../__tests__/helpers/test-product.repository';
 import { TestSubscriptionService } from '../../../__tests__/helpers/test-subscription.service';
 
+function createDraftProduct(creatorId = 'creator-123'): Product {
+  const price = Money.create(29.99).value;
+  return Product.create({ creatorId, name: 'Mon Produit', price }).value;
+}
+
 describe('PublishProductUseCase', () => {
   let useCase: PublishProductUseCase;
   let mockProductRepo: TestProductRepository;
@@ -15,11 +20,6 @@ describe('PublishProductUseCase', () => {
     mockSubscriptionService = new TestSubscriptionService();
     useCase = new PublishProductUseCase(mockProductRepo, mockSubscriptionService);
   });
-
-  function createDraftProduct(creatorId = 'creator-123'): Product {
-    const price = Money.create(29.99).value;
-    return Product.create({ creatorId, name: 'Mon Produit', price }).value;
-  }
 
   describe('execute', () => {
     it('should publish a draft product successfully', async () => {

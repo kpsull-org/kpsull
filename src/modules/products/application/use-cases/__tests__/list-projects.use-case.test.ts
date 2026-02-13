@@ -3,6 +3,19 @@ import { ListProjectsUseCase } from '../projects/list-projects.use-case';
 import { Project } from '../../../domain/entities/project.entity';
 import { TestProjectRepository } from '../../../__tests__/helpers/test-project.repository';
 
+function createProject(overrides: Partial<{ id: string; creatorId: string; name: string; description: string; coverImage: string; productCount: number; createdAt: Date; updatedAt: Date }> = {}): Project {
+  return Project.reconstitute({
+    id: overrides.id ?? 'project-1',
+    creatorId: overrides.creatorId ?? 'creator-123',
+    name: overrides.name ?? 'Ma Collection',
+    description: overrides.description,
+    coverImage: overrides.coverImage,
+    productCount: overrides.productCount ?? 0,
+    createdAt: overrides.createdAt ?? new Date(),
+    updatedAt: overrides.updatedAt ?? new Date(),
+  }).value;
+}
+
 describe('ListProjectsUseCase', () => {
   let useCase: ListProjectsUseCase;
   let mockRepo: TestProjectRepository;
@@ -11,19 +24,6 @@ describe('ListProjectsUseCase', () => {
     mockRepo = new TestProjectRepository();
     useCase = new ListProjectsUseCase(mockRepo);
   });
-
-  function createProject(overrides: Partial<{ id: string; creatorId: string; name: string; description: string; coverImage: string; productCount: number; createdAt: Date; updatedAt: Date }> = {}): Project {
-    return Project.reconstitute({
-      id: overrides.id ?? 'project-1',
-      creatorId: overrides.creatorId ?? 'creator-123',
-      name: overrides.name ?? 'Ma Collection',
-      description: overrides.description,
-      coverImage: overrides.coverImage,
-      productCount: overrides.productCount ?? 0,
-      createdAt: overrides.createdAt ?? new Date(),
-      updatedAt: overrides.updatedAt ?? new Date(),
-    }).value;
-  }
 
   describe('execute', () => {
     it('should return empty list when no projects', async () => {

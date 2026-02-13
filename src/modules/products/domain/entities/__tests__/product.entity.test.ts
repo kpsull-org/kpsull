@@ -211,7 +211,7 @@ describe('Product Entity', () => {
     it('should unassign from project', () => {
       const product = createProduct({ projectId: 'project-1' }).value;
 
-      product.assignToProject(undefined);
+      product.assignToProject();
 
       expect(product.projectId).toBeUndefined();
     });

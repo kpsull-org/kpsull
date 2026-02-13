@@ -5,7 +5,7 @@ import { TestSubscriptionRepository } from '../../../__tests__/helpers/test-subs
 import { createTestSubscription } from '../../../__tests__/helpers/subscription.factory';
 
 class MockAuthorizationService implements IAuthorizationService {
-  private adminIds = new Set<string>();
+  private readonly adminIds = new Set<string>();
 
   setAdmin(userId: string): void {
     this.adminIds.add(userId);

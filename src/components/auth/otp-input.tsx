@@ -12,7 +12,7 @@ interface OtpInputProps {
   disabled?: boolean;
 }
 
-export function OtpInput({ value, onChange, disabled = false }: OtpInputProps) {
+export function OtpInput({ value, onChange, disabled = false }: Readonly<OtpInputProps>) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const setInputRef = useCallback(
@@ -30,7 +30,7 @@ export function OtpInput({ value, onChange, disabled = false }: OtpInputProps) {
 
   const handleChange = useCallback(
     (index: number, inputValue: string) => {
-      const digit = inputValue.replace(/\D/g, '').slice(-1);
+      const digit = inputValue.replaceAll(/\D/g, '').slice(-1);
       const newValue = [...value];
       newValue[index] = digit;
       onChange(newValue);
@@ -67,7 +67,7 @@ export function OtpInput({ value, onChange, disabled = false }: OtpInputProps) {
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLInputElement>) => {
       e.preventDefault();
-      const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LENGTH);
+      const pastedData = e.clipboardData.getData('text').replaceAll(/\D/g, '').slice(0, OTP_LENGTH);
       if (pastedData.length === 0) return;
 
       const newValue = [...value];

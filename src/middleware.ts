@@ -13,16 +13,20 @@ const { auth } = NextAuth(authConfigEdge);
 
 type AuthRequest = Parameters<Parameters<typeof auth>[0]>[0];
 
-function unauthorizedResponse(req: AuthRequest, isApi: boolean) {
-  return isApi
-    ? NextResponse.json({ error: 'Non authentifie' }, { status: 401 })
-    : NextResponse.redirect(new URL('/login', req.url));
+function unauthorizedApiResponse() {
+  return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
 }
 
-function forbiddenResponse(req: AuthRequest, isApi: boolean, message: string) {
-  return isApi
-    ? NextResponse.json({ error: message }, { status: 403 })
-    : NextResponse.redirect(new URL('/', req.url));
+function unauthorizedPageResponse(req: AuthRequest) {
+  return NextResponse.redirect(new URL('/login', req.url));
+}
+
+function forbiddenApiResponse(message: string) {
+  return NextResponse.json({ error: message }, { status: 403 });
+}
+
+function forbiddenPageResponse(req: AuthRequest) {
+  return NextResponse.redirect(new URL('/', req.url));
 }
 
 function checkRouteAccess(
@@ -32,10 +36,10 @@ function checkRouteAccess(
   errorMessage: string
 ) {
   if (!req.auth?.user) {
-    return unauthorizedResponse(req, isApi);
+    return isApi ? unauthorizedApiResponse() : unauthorizedPageResponse(req);
   }
   if (!allowedRoles.includes(req.auth.user.role)) {
-    return forbiddenResponse(req, isApi, errorMessage);
+    return isApi ? forbiddenApiResponse(errorMessage) : forbiddenPageResponse(req);
   }
   return null;
 }

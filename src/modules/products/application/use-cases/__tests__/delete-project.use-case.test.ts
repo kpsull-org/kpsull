@@ -3,6 +3,17 @@ import { DeleteProjectUseCase } from '../projects/delete-project.use-case';
 import { Project } from '../../../domain/entities/project.entity';
 import { TestProjectRepository } from '../../../__tests__/helpers/test-project.repository';
 
+function createProject(overrides: Partial<{ id: string; creatorId: string; productCount: number }> = {}): Project {
+  return Project.reconstitute({
+    id: overrides.id ?? 'project-123',
+    creatorId: overrides.creatorId ?? 'creator-123',
+    name: 'Ma Collection',
+    productCount: overrides.productCount ?? 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }).value;
+}
+
 describe('DeleteProjectUseCase', () => {
   let useCase: DeleteProjectUseCase;
   let mockRepo: TestProjectRepository;
@@ -11,17 +22,6 @@ describe('DeleteProjectUseCase', () => {
     mockRepo = new TestProjectRepository();
     useCase = new DeleteProjectUseCase(mockRepo);
   });
-
-  function createProject(overrides: Partial<{ id: string; creatorId: string; productCount: number }> = {}): Project {
-    return Project.reconstitute({
-      id: overrides.id ?? 'project-123',
-      creatorId: overrides.creatorId ?? 'creator-123',
-      name: 'Ma Collection',
-      productCount: overrides.productCount ?? 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).value;
-  }
 
   describe('execute', () => {
     it('should delete project successfully', async () => {

@@ -8,7 +8,7 @@ import { SubscriptionRepository } from '../../application/ports/subscription.rep
  * and exposes `savedSubscription` for save verification.
  */
 export class TestSubscriptionRepository implements SubscriptionRepository {
-  private store = new Map<string, Subscription>();
+  private readonly store = new Map<string, Subscription>();
   public savedSubscription: Subscription | null = null;
 
   set(key: string, subscription: Subscription): void {

@@ -105,7 +105,10 @@ const templates: Record<NotificationTypeValue, EmailTemplate> = {
         (d.reason ? infoBox(`Raison : ${d.reason}`) : '') +
         paragraph("Si un paiement a été effectué, le remboursement sera traité sous 5 à 10 jours ouvrés.")
       ),
-    text: (d) => `Commande #${d.orderNumber} annulée.${d.reason ? ` Raison: ${d.reason}` : ''}`,
+    text: (d) => {
+      const reasonSuffix = d.reason ? ` Raison: ${d.reason}` : '';
+      return `Commande #${d.orderNumber} annulée.${reasonSuffix}`;
+    },
   },
 
   REFUND_PROCESSED: {
@@ -143,7 +146,10 @@ const templates: Record<NotificationTypeValue, EmailTemplate> = {
         (d.reason ? infoBox(`Raison : ${d.reason}`) : '') +
         paragraph("Si vous estimez que cette décision est injuste, vous pouvez ouvrir un litige.")
       ),
-    text: (d) => `Retour refusé pour la commande #${d.orderNumber}.${d.reason ? ` Raison: ${d.reason}` : ''}`,
+    text: (d) => {
+      const reasonSuffix = d.reason ? ` Raison: ${d.reason}` : '';
+      return `Retour refusé pour la commande #${d.orderNumber}.${reasonSuffix}`;
+    },
   },
 
   DISPUTE_UPDATE: {
@@ -235,16 +241,22 @@ const templates: Record<NotificationTypeValue, EmailTemplate> = {
   },
 
   REVIEW_RECEIVED: {
-    subject: (d) => `Nouvel avis reçu${d.productName ? ` pour ${d.productName}` : ''} - Kpsull`,
+    subject: (d) => {
+      const productSuffix = d.productName ? ` pour ${d.productName}` : '';
+      return `Nouvel avis reçu${productSuffix} - Kpsull`;
+    },
     html: (d) =>
       baseLayout(
         'Nouvel avis client',
-        paragraph(`Un client a laissé un avis${d.productName ? ` pour <strong>${d.productName}</strong>` : ''}.`) +
+        paragraph(`Un client a laissé un avis${d.productName ? ' pour <strong>' + d.productName + '</strong>' : ''}.`) +
         (d.rating ? infoBox(highlight('Note', `${'★'.repeat(Number(d.rating))}${'☆'.repeat(5 - Number(d.rating))}`)) : '') +
         (d.comment ? paragraph(`"${d.comment}"`) : '') +
         ctaButton('Voir mes avis', `${process.env.NEXTAUTH_URL ?? ''}/dashboard/reviews`)
       ),
-    text: (d) => `Nouvel avis reçu${d.productName ? ` pour ${d.productName}` : ''}. Note: ${d.rating}/5.`,
+    text: (d) => {
+      const productSuffix = d.productName ? ` pour ${d.productName}` : '';
+      return `Nouvel avis reçu${productSuffix}. Note: ${d.rating}/5.`;
+    },
   },
 
   SUBSCRIPTION_RENEWED: {
@@ -294,7 +306,10 @@ const templates: Record<NotificationTypeValue, EmailTemplate> = {
         (d.reason ? infoBox(`Raison : ${d.reason}`) : '') +
         paragraph("Si vous pensez qu'il s'agit d'une erreur, contactez notre support.")
       ),
-    text: (d) => `Compte suspendu.${d.reason ? ` Raison: ${d.reason}` : ''}`,
+    text: (d) => {
+      const reasonSuffix = d.reason ? ` Raison: ${d.reason}` : '';
+      return `Compte suspendu.${reasonSuffix}`;
+    },
   },
 
   ACCOUNT_REACTIVATED: {

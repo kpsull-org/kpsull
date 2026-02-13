@@ -212,7 +212,7 @@ export class Order extends Entity<OrderProps> {
    */
   private static generateOrderNumber(): string {
     const timestamp = Date.now().toString(36).toUpperCase();
-    const random = crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase();
+    const random = crypto.randomUUID().replaceAll('-', '').substring(0, 4).toUpperCase();
     return `ORD-${timestamp}-${random}`;
   }
 

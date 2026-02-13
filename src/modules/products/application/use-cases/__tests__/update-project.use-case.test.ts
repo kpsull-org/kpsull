@@ -3,6 +3,18 @@ import { UpdateProjectUseCase } from '../projects/update-project.use-case';
 import { Project } from '../../../domain/entities/project.entity';
 import { TestProjectRepository } from '../../../__tests__/helpers/test-project.repository';
 
+function createProject(overrides: Partial<{ id: string; creatorId: string; name: string; description: string; productCount: number }> = {}): Project {
+  return Project.reconstitute({
+    id: overrides.id ?? 'project-123',
+    creatorId: overrides.creatorId ?? 'creator-123',
+    name: overrides.name ?? 'Ma Collection',
+    description: overrides.description,
+    productCount: overrides.productCount ?? 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }).value;
+}
+
 describe('UpdateProjectUseCase', () => {
   let useCase: UpdateProjectUseCase;
   let mockRepo: TestProjectRepository;
@@ -11,18 +23,6 @@ describe('UpdateProjectUseCase', () => {
     mockRepo = new TestProjectRepository();
     useCase = new UpdateProjectUseCase(mockRepo);
   });
-
-  function createProject(overrides: Partial<{ id: string; creatorId: string; name: string; description: string; productCount: number }> = {}): Project {
-    return Project.reconstitute({
-      id: overrides.id ?? 'project-123',
-      creatorId: overrides.creatorId ?? 'creator-123',
-      name: overrides.name ?? 'Ma Collection',
-      description: overrides.description,
-      productCount: overrides.productCount ?? 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).value;
-  }
 
   describe('execute', () => {
     it('should update project name successfully', async () => {

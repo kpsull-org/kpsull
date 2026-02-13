@@ -14,11 +14,11 @@ function Toggle({
   checked,
   disabled,
   onChange,
-}: {
+}: Readonly<{
   checked: boolean;
   disabled?: boolean;
   onChange: (value: boolean) => void;
-}) {
+}>) {
   return (
     <button
       type="button"
@@ -45,7 +45,7 @@ function Toggle({
   );
 }
 
-export function NotificationPreferencesClient({ preferences }: Props) {
+export function NotificationPreferencesClient({ preferences }: Readonly<Props>) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [localPrefs, setLocalPrefs] = useState(preferences);
@@ -78,16 +78,16 @@ export function NotificationPreferencesClient({ preferences }: Props) {
         body: JSON.stringify({ type, email: newEmail, inApp: newInApp }),
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        startTransition(() => {
+          router.refresh();
+        });
+      } else {
         setLocalPrefs((prev) =>
           prev.map((p) =>
             p.type === type ? { ...p, [field]: !value } : p
           )
         );
-      } else {
-        startTransition(() => {
-          router.refresh();
-        });
       }
     } catch {
       setLocalPrefs((prev) =>

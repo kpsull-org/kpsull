@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Result } from '@/shared/domain';
 import type {
   IEmailService,
@@ -7,7 +8,7 @@ import type {
 
 export class ConsoleEmailService implements IEmailService {
   async send(input: SendEmailInput): Promise<Result<SendEmailResult>> {
-    const id = `console-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const id = `console-${randomUUID()}`;
 
     console.log(`[Email] To: ${Array.isArray(input.to) ? input.to.join(', ') : input.to}`);
     console.log(`[Email] Subject: ${input.subject}`);

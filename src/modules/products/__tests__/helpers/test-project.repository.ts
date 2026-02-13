@@ -4,8 +4,8 @@ import type { Project } from '../../domain/entities/project.entity';
 export class TestProjectRepository implements ProjectRepository {
   public savedProject: Project | null = null;
   public deletedId: string | null = null;
-  private projects: Map<string, Project> = new Map();
-  private projectsByCreator: Map<string, Project[]> = new Map();
+  private readonly projects: Map<string, Project> = new Map();
+  private readonly projectsByCreator: Map<string, Project[]> = new Map();
 
   set(project: Project): void {
     this.projects.set(project.idString, project);

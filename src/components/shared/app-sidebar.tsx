@@ -32,7 +32,7 @@ interface SidebarNavProps {
   onNavigate?: () => void;
 }
 
-function SidebarNav({ items, badges, onNavigate }: SidebarNavProps) {
+function SidebarNav({ items, badges, onNavigate }: Readonly<SidebarNavProps>) {
   const pathname = usePathname();
 
   return (
@@ -72,7 +72,7 @@ export interface AppSidebarProps {
   badges?: Record<string, number>;
 }
 
-export function AppSidebar({ items, sectionLabel, badges }: AppSidebarProps) {
+export function AppSidebar({ items, sectionLabel, badges }: Readonly<AppSidebarProps>) {
   const pathname = usePathname();
 
   return (

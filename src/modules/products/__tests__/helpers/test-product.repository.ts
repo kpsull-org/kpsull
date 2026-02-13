@@ -4,7 +4,7 @@ import type { ProductVariant } from '../../domain/entities/product-variant.entit
 
 export class TestProductRepository implements ProductRepository {
   public savedProduct: Product | null = null;
-  private products: Map<string, Product> = new Map();
+  private readonly products: Map<string, Product> = new Map();
 
   set(product: Product): void {
     this.products.set(product.idString, product);
@@ -35,7 +35,11 @@ export class TestProductRepository implements ProductRepository {
     return [];
   }
 
-  async saveVariant(): Promise<void> {}
+  async saveVariant(): Promise<void> {
+    // No-op for testing
+  }
 
-  async deleteVariant(): Promise<void> {}
+  async deleteVariant(): Promise<void> {
+    // No-op for testing
+  }
 }

@@ -45,7 +45,7 @@ export function CreatorActionDialog({
   confirmLabel,
   pendingLabel,
   confirmClassName,
-}: CreatorActionDialogProps) {
+}: Readonly<CreatorActionDialogProps>) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(open);
   const [reason, setReason] = useState('');

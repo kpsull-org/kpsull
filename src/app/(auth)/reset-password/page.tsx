@@ -17,7 +17,7 @@ function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') ?? '';
 
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+  const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -86,7 +86,7 @@ function ResetPasswordContent() {
       }
 
       setCooldown(RESEND_COOLDOWN);
-      setOtp(Array(6).fill(''));
+      setOtp(new Array(6).fill(''));
     } catch {
       setError('Erreur de connexion.');
     }

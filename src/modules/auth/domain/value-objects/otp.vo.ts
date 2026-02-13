@@ -1,4 +1,4 @@
-import { randomInt } from 'crypto';
+import { randomInt } from 'node:crypto';
 
 export class OTP {
   private static readonly EXPIRY_MINUTES = 10;

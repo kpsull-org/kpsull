@@ -8,10 +8,10 @@ import type { ErrorContext } from '@/components/error';
 export default function ErrorPage({
   error,
   reset,
-}: {
+}: Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>) {
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);

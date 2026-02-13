@@ -310,17 +310,10 @@ export function CoachMarks({
     <>
       <SpotlightOverlay targetRect={targetRect} />
 
-      <div
-        className="fixed inset-0 z-[9999]"
+      <button
+        type="button"
+        className="fixed inset-0 z-[9999] cursor-default bg-transparent border-none p-0"
         onClick={handleSkip}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleSkip();
-          }
-        }}
-        role="button"
-        tabIndex={0}
         aria-label="Fermer le guide"
       />
 

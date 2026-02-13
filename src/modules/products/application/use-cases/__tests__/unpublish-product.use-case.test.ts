@@ -5,6 +5,20 @@ import { Money } from '../../../domain/value-objects/money.vo';
 import { TestProductRepository } from '../../../__tests__/helpers/test-product.repository';
 import { TestSubscriptionService } from '../../../__tests__/helpers/test-subscription.service';
 
+function createPublishedProduct(id = 'product-123', creatorId = 'creator-123'): Product {
+  return Product.reconstitute({
+    id,
+    creatorId,
+    name: 'Mon Produit',
+    priceAmount: 2999,
+    priceCurrency: 'EUR',
+    status: 'PUBLISHED',
+    publishedAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }).value;
+}
+
 describe('UnpublishProductUseCase', () => {
   let useCase: UnpublishProductUseCase;
   let mockProductRepo: TestProductRepository;
@@ -15,20 +29,6 @@ describe('UnpublishProductUseCase', () => {
     mockSubscriptionService = new TestSubscriptionService();
     useCase = new UnpublishProductUseCase(mockProductRepo, mockSubscriptionService);
   });
-
-  function createPublishedProduct(id = 'product-123', creatorId = 'creator-123'): Product {
-    return Product.reconstitute({
-      id,
-      creatorId,
-      name: 'Mon Produit',
-      priceAmount: 2999,
-      priceCurrency: 'EUR',
-      status: 'PUBLISHED',
-      publishedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).value;
-  }
 
   describe('execute', () => {
     it('should unpublish a published product successfully', async () => {

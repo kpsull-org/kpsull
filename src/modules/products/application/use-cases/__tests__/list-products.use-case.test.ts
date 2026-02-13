@@ -35,19 +35,19 @@ class TestProductListRepository implements ProductListRepository {
   }
 }
 
+function createProduct(overrides: { name: string; price: number; projectId?: string; description?: string }): Product {
+  return Product.create({
+    creatorId: 'creator-123',
+    name: overrides.name,
+    description: overrides.description,
+    projectId: overrides.projectId,
+    price: Money.create(overrides.price).value,
+  }).value;
+}
+
 describe('ListProductsUseCase', () => {
   let useCase: ListProductsUseCase;
   let mockRepo: TestProductListRepository;
-
-  function createProduct(overrides: { name: string; price: number; projectId?: string; description?: string }): Product {
-    return Product.create({
-      creatorId: 'creator-123',
-      name: overrides.name,
-      description: overrides.description,
-      projectId: overrides.projectId,
-      price: Money.create(overrides.price).value,
-    }).value;
-  }
 
   beforeEach(() => {
     mockRepo = new TestProductListRepository();
