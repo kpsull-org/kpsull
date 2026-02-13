@@ -79,12 +79,13 @@ export function Header({ user }: HeaderProps) {
 
             {/* Profile icon + dropdown */}
             <div className="group/profile ml-6 flex h-full items-center">
-              <button className="flex items-center transition-opacity hover:opacity-70" aria-label="Mon compte">
+              <button className="flex items-center gap-2 transition-opacity hover:opacity-70" aria-label="Mon compte">
                 <AccountIcon className="h-5 w-5" />
+                <span className="font-[family-name:var(--font-archivo)] text-[18px] font-medium uppercase tracking-wide">Compte</span>
               </button>
 
-              {/* Profile dropdown panel */}
-              <div className="pointer-events-none absolute -left-[5px] right-0 top-full opacity-0 group-hover/profile:pointer-events-auto group-hover/profile:opacity-100 transition-[opacity] duration-200">
+              {/* Profile dropdown panel - pt-3 creates invisible hover bridge */}
+              <div className="pointer-events-none absolute -left-[5px] right-0 top-full pt-3 opacity-0 group-hover/profile:pointer-events-auto group-hover/profile:opacity-100 transition-[opacity] duration-200">
                 <div className="relative bg-white pb-[18px]">
                   {/* Vertical grid lines */}
                   <div className="absolute inset-y-0 left-[5px] flex gap-1">
