@@ -147,7 +147,7 @@ const templates: Record<NotificationTypeValue, EmailTemplate> = {
   },
 
   DISPUTE_UPDATE: {
-    subject: (d) => `Mise à jour de votre litige - Kpsull`,
+    subject: (_d) => `Mise à jour de votre litige - Kpsull`,
     html: (d) =>
       baseLayout(
         'Mise à jour de votre litige',
