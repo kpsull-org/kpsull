@@ -41,14 +41,17 @@ RUN groupadd --system --gid 1001 appgroup
 RUN useradd --system --uid 1001 --gid appgroup --no-create-home appuser
 
 COPY --from=builder --chmod=555 /app/public ./public
-COPY --from=builder --chown=appuser:appgroup --chmod=555 /app/.next/standalone ./
-COPY --from=builder --chown=appuser:appgroup --chmod=555 /app/.next/static ./.next/static
+COPY --from=builder --chown=appuser:appgroup /app/.next/standalone ./
+COPY --from=builder --chown=appuser:appgroup /app/.next/static ./.next/static
+
+# Ensure .next/cache is writable by appuser for image optimization
+RUN mkdir -p .next/cache && chown appuser:appgroup .next/cache
 COPY --from=builder --chmod=555 /app/prisma ./prisma
 COPY --from=builder --chmod=555 /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chmod=555 /app/node_modules/@prisma ./node_modules/@prisma
 
-# Install prisma CLI for migrate deploy
-RUN bun add -g prisma@7
+# Install prisma CLI for migrate deploy + seed dependencies (not in standalone build)
+RUN bun add -g prisma@7 && bun add bcryptjs pg @prisma/adapter-pg
 
 # Create a minimal prisma config for Docker runtime (no heavy deps needed)
 RUN printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n    url: process.env.DATABASE_URL,\n  },\n};\n' > prisma.config.mjs
