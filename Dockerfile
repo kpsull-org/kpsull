@@ -50,8 +50,8 @@ COPY --from=builder --chmod=555 /app/prisma ./prisma
 COPY --from=builder --chmod=555 /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chmod=555 /app/node_modules/@prisma ./node_modules/@prisma
 
-# Install prisma CLI for migrate deploy
-RUN bun add -g prisma@7
+# Install prisma CLI for migrate deploy + seed dependencies (not in standalone build)
+RUN bun add -g prisma@7 && bun add bcryptjs pg @prisma/adapter-pg
 
 # Create a minimal prisma config for Docker runtime (no heavy deps needed)
 RUN printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n    url: process.env.DATABASE_URL,\n  },\n};\n' > prisma.config.mjs
@@ -88,12 +88,8 @@ CMD ["/bin/sh", "-c", "\
   \" && \
   echo '========== RUNNING PRISMA MIGRATE ==========' && \
   bunx prisma migrate deploy --schema prisma/schema.prisma 2>&1 && \
-  if [ \"$RUN_SEED\" = \"true\" ]; then \
-    echo '========== RUNNING SEED ==========' && \
-    (bun run prisma/seed.ts 2>&1 || echo 'SEED WARNING: seed failed but continuing startup...'); \
-  else \
-    echo '========== SKIPPING SEED (set RUN_SEED=true to enable) =========='; \
-  fi && \
+  echo '========== RUNNING SEED ==========' && \
+  (bun run prisma/seed.ts 2>&1 || echo 'SEED WARNING: seed failed but continuing startup...') && \
   echo '========== STARTING SERVER ==========' && \
   bun server.js || \
   echo 'STARTUP FAILED - check logs above for details' \
