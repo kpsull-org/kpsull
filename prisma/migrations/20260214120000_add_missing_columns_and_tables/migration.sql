@@ -45,4 +45,7 @@ CREATE UNIQUE INDEX "notification_preferences_userId_type_key" ON "notification_
 CREATE INDEX "notification_preferences_userId_idx" ON "notification_preferences"("userId");
 
 -- AddForeignKey
+ALTER TABLE "carts" ADD CONSTRAINT "carts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "notification_preferences" ADD CONSTRAINT "notification_preferences_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
