@@ -41,8 +41,11 @@ RUN groupadd --system --gid 1001 appgroup
 RUN useradd --system --uid 1001 --gid appgroup --no-create-home appuser
 
 COPY --from=builder --chmod=555 /app/public ./public
-COPY --from=builder --chown=appuser:appgroup --chmod=555 /app/.next/standalone ./
-COPY --from=builder --chown=appuser:appgroup --chmod=555 /app/.next/static ./.next/static
+COPY --from=builder --chown=appuser:appgroup /app/.next/standalone ./
+COPY --from=builder --chown=appuser:appgroup /app/.next/static ./.next/static
+
+# Ensure .next/cache is writable by appuser for image optimization
+RUN mkdir -p .next/cache && chown appuser:appgroup .next/cache
 COPY --from=builder --chmod=555 /app/prisma ./prisma
 COPY --from=builder --chmod=555 /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chmod=555 /app/node_modules/@prisma ./node_modules/@prisma
@@ -85,8 +88,12 @@ CMD ["/bin/sh", "-c", "\
   \" && \
   echo '========== RUNNING PRISMA MIGRATE ==========' && \
   bunx prisma migrate deploy --schema prisma/schema.prisma 2>&1 && \
-  echo '========== RUNNING SEED ==========' && \
-  (bun run prisma/seed.ts 2>&1 || echo 'SEED WARNING: seed failed but continuing startup...') && \
+  if [ \"$RUN_SEED\" = \"true\" ]; then \
+    echo '========== RUNNING SEED ==========' && \
+    (bun run prisma/seed.ts 2>&1 || echo 'SEED WARNING: seed failed but continuing startup...'); \
+  else \
+    echo '========== SKIPPING SEED (set RUN_SEED=true to enable) =========='; \
+  fi && \
   echo '========== STARTING SERVER ==========' && \
   bun server.js || \
   echo 'STARTUP FAILED - check logs above for details' \
