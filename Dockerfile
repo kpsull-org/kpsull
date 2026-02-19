@@ -52,10 +52,9 @@ COPY --from=builder --chmod=555 /app/node_modules/@prisma ./node_modules/@prisma
 
 # Install prisma CLI for migrate deploy + seed dependencies (not in standalone build)
 # Re-generate Prisma client after bun add to avoid version mismatch with installed @prisma/client
-RUN bun add -g prisma@7 && bun add bcryptjs pg @prisma/adapter-pg && bunx prisma generate --schema prisma/schema.prisma
-
 # Create a minimal prisma config for Docker runtime (no heavy deps needed)
-RUN printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n    url: process.env.DATABASE_URL,\n  },\n};\n' > prisma.config.mjs
+RUN bun add -g prisma@7 && bun add bcryptjs pg @prisma/adapter-pg && bunx prisma generate --schema prisma/schema.prisma && \
+    printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n    url: process.env.DATABASE_URL,\n  },\n};\n' > prisma.config.mjs
 
 USER appuser
 
