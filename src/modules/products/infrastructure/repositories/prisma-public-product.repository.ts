@@ -154,7 +154,6 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
       id: prismaVariant.id,
       productId: prismaVariant.productId,
       name: prismaVariant.name,
-      sku: prismaVariant.sku ?? undefined,
       priceOverrideAmount: prismaVariant.priceOverride ?? undefined,
       priceOverrideCurrency: prismaVariant.priceOverride ? 'EUR' : undefined,
       stock: prismaVariant.stock,

@@ -23,23 +23,6 @@ describe('ProductVariant Entity', () => {
       expect(result.value.isAvailable).toBe(true);
     });
 
-    it('should create a variant with optional sku', () => {
-      // Arrange
-      const props = {
-        productId: 'product-123',
-        name: 'Couleur Rouge',
-        sku: 'SKU-RED-001',
-        stock: 5,
-      };
-
-      // Act
-      const result = ProductVariant.create(props);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.sku).toBe('SKU-RED-001');
-    });
-
     it('should create a variant with optional priceOverride', () => {
       // Arrange
       const priceOverride = Money.fromCents(1999, 'EUR');
@@ -197,7 +180,6 @@ describe('ProductVariant Entity', () => {
         id: 'variant-123',
         productId: 'product-123',
         name: 'Taille L',
-        sku: 'SKU-L-001',
         priceOverrideAmount: 2999,
         priceOverrideCurrency: 'EUR',
         stock: 15,
@@ -212,7 +194,6 @@ describe('ProductVariant Entity', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value.idString).toBe('variant-123');
       expect(result.value.name).toBe('Taille L');
-      expect(result.value.sku).toBe('SKU-L-001');
       expect(result.value.priceOverride!.amount).toBe(2999);
       expect(result.value.stock).toBe(15);
     });
@@ -475,39 +456,6 @@ describe('ProductVariant Entity', () => {
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(variant.name).toBe('Taille L');
-    });
-  });
-
-  describe('updateSku', () => {
-    it('should update SKU successfully', () => {
-      // Arrange
-      const variant = ProductVariant.create({
-        productId: 'product-123',
-        name: 'Taille M',
-        stock: 10,
-      }).value;
-
-      // Act
-      variant.updateSku('SKU-NEW-001');
-
-      // Assert
-      expect(variant.sku).toBe('SKU-NEW-001');
-    });
-
-    it('should remove SKU when undefined is passed', () => {
-      // Arrange
-      const variant = ProductVariant.create({
-        productId: 'product-123',
-        name: 'Taille M',
-        sku: 'SKU-OLD-001',
-        stock: 10,
-      }).value;
-
-      // Act
-      variant.updateSku(undefined);
-
-      // Assert
-      expect(variant.sku).toBeUndefined();
     });
   });
 

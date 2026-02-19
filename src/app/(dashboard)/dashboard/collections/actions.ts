@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 import { z } from 'zod';
+import { cloudinary } from '@/lib/cloudinary';
+import { validateImageFile } from '@/lib/utils/file-validation';
 import { CreateProjectUseCase } from '@/modules/products/application/use-cases/projects/create-project.use-case';
 import { UpdateProjectUseCase } from '@/modules/products/application/use-cases/projects/update-project.use-case';
 import { DeleteProjectUseCase } from '@/modules/products/application/use-cases/projects/delete-project.use-case';
@@ -192,4 +194,61 @@ export async function removeProductFromCollection(productId: string): Promise<Ac
   }
 
   return { success: true };
+}
+
+export async function uploadCollectionCoverImage(
+  collectionId: string,
+  formData: FormData
+): Promise<ActionResult & { url?: string }> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect('/login');
+  }
+
+  if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
+    return { success: false, error: "Vous n'etes pas autorise a effectuer cette action" };
+  }
+
+  const file = formData.get('file') as File | null;
+  if (!file) {
+    return { success: false, error: 'Aucun fichier fourni' };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const validationResult = validateImageFile(buffer, file.name);
+  if (validationResult.isFailure) {
+    return { success: false, error: validationResult.error! };
+  }
+
+  try {
+    const base64 = buffer.toString('base64');
+    const dataUri = `data:${file.type};base64,${base64}`;
+
+    const uploadResult = await cloudinary.uploader.upload(dataUri, {
+      folder: `kpsull/collections/${collectionId}`,
+      public_id: 'cover',
+      overwrite: true,
+      quality: 'auto',
+      fetch_format: 'auto',
+    });
+
+    const updateProjectUseCase = new UpdateProjectUseCase(projectRepository);
+    const result = await updateProjectUseCase.execute({
+      projectId: collectionId,
+      creatorId: session.user.id,
+      coverImage: uploadResult.secure_url,
+    });
+
+    if (result.isFailure) {
+      return { success: false, error: result.error! };
+    }
+
+    revalidatePath('/dashboard/collections');
+    revalidatePath(`/dashboard/collections/${collectionId}`);
+
+    return { success: true, url: uploadResult.secure_url };
+  } catch {
+    return { success: false, error: "Erreur lors de l'upload de l'image de couverture" };
+  }
 }

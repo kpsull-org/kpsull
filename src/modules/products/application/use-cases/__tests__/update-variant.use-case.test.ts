@@ -8,7 +8,6 @@ describe('UpdateVariantUseCase', () => {
   let mockVariantRepo: {
     findById: Mock;
     findByProductId: Mock;
-    findBySku: Mock;
     save: Mock;
     delete: Mock;
     countByProductId: Mock;
@@ -19,7 +18,6 @@ describe('UpdateVariantUseCase', () => {
     mockVariantRepo = {
       findById: vi.fn(),
       findByProductId: vi.fn(),
-      findBySku: vi.fn(),
       save: vi.fn(),
       delete: vi.fn(),
       countByProductId: vi.fn(),
@@ -30,7 +28,6 @@ describe('UpdateVariantUseCase', () => {
       id: 'variant-123',
       productId: 'product-123',
       name: 'Taille M',
-      sku: 'SKU-M-001',
       priceOverrideAmount: 2999,
       priceOverrideCurrency: 'EUR',
       stock: 10,
@@ -39,7 +36,6 @@ describe('UpdateVariantUseCase', () => {
     }).value;
 
     mockVariantRepo.findById.mockResolvedValue(existingVariant);
-    mockVariantRepo.findBySku.mockResolvedValue(null);
     mockVariantRepo.save.mockResolvedValue(undefined);
 
     useCase = new UpdateVariantUseCase(mockVariantRepo as unknown as VariantRepository);
@@ -78,21 +74,6 @@ describe('UpdateVariantUseCase', () => {
       expect(result.value.isAvailable).toBe(true);
     });
 
-    it('should update variant SKU successfully', async () => {
-      // Arrange
-      const input: UpdateVariantInput = {
-        id: 'variant-123',
-        sku: 'SKU-NEW-001',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.sku).toBe('SKU-NEW-001');
-    });
-
     it('should update variant price override successfully', async () => {
       // Arrange
       const input: UpdateVariantInput = {
@@ -129,7 +110,6 @@ describe('UpdateVariantUseCase', () => {
         id: 'variant-123',
         name: 'Taille XL',
         stock: 30,
-        sku: 'SKU-XL-001',
       };
 
       // Act
@@ -139,7 +119,6 @@ describe('UpdateVariantUseCase', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value.name).toBe('Taille XL');
       expect(result.value.stock).toBe(30);
-      expect(result.value.sku).toBe('SKU-XL-001');
     });
 
     it('should fail when variant does not exist', async () => {
@@ -190,50 +169,6 @@ describe('UpdateVariantUseCase', () => {
       expect(result.error).toContain('négatif');
     });
 
-    it('should fail when new SKU already exists for another variant', async () => {
-      // Arrange
-      const anotherVariant = ProductVariant.reconstitute({
-        id: 'variant-456',
-        productId: 'product-456',
-        name: 'Autre Variante',
-        sku: 'SKU-TAKEN',
-        stock: 5,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).value;
-
-      mockVariantRepo.findBySku.mockResolvedValue(anotherVariant);
-
-      const input: UpdateVariantInput = {
-        id: 'variant-123',
-        sku: 'SKU-TAKEN',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('SKU');
-    });
-
-    it('should allow keeping same SKU', async () => {
-      // Arrange
-      mockVariantRepo.findBySku.mockResolvedValue(existingVariant);
-
-      const input: UpdateVariantInput = {
-        id: 'variant-123',
-        sku: 'SKU-M-001', // Same as existing
-        name: 'Taille M Updated',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-    });
-
     it('should update stock to zero and mark as unavailable', async () => {
       // Arrange
       const input: UpdateVariantInput = {
@@ -250,19 +185,5 @@ describe('UpdateVariantUseCase', () => {
       expect(result.value.isAvailable).toBe(false);
     });
 
-    it('should remove SKU when set to empty string', async () => {
-      // Arrange
-      const input: UpdateVariantInput = {
-        id: 'variant-123',
-        removeSku: true,
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.sku).toBeUndefined();
-    });
   });
 });

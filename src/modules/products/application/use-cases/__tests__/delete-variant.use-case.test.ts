@@ -8,7 +8,6 @@ describe('DeleteVariantUseCase', () => {
   let mockVariantRepo: {
     findById: Mock;
     findByProductId: Mock;
-    findBySku: Mock;
     save: Mock;
     delete: Mock;
     countByProductId: Mock;
@@ -19,7 +18,6 @@ describe('DeleteVariantUseCase', () => {
     mockVariantRepo = {
       findById: vi.fn(),
       findByProductId: vi.fn(),
-      findBySku: vi.fn(),
       save: vi.fn(),
       delete: vi.fn(),
       countByProductId: vi.fn(),
@@ -30,7 +28,6 @@ describe('DeleteVariantUseCase', () => {
       id: 'variant-123',
       productId: 'product-123',
       name: 'Taille M',
-      sku: 'SKU-M-001',
       stock: 10,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-15'),

@@ -2,10 +2,9 @@ import { Metadata } from 'next';
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/client';
-import { ProductForm } from '@/components/products/product-form';
 import { ProductActions } from './product-actions';
-import { VariantManager } from './variant-manager';
-import { ImageManager } from './image-manager';
+import { ProductDetailClient } from './product-detail-client';
+import { parseSizes } from '@/lib/utils/parse-sizes';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { GetProductDetailUseCase } from '@/modules/products/application/use-cases/products/get-product-detail.use-case';
@@ -15,6 +14,7 @@ import { PrismaProductRepository } from '@/modules/products/infrastructure/repos
 import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
 import { PrismaVariantRepository } from '@/modules/products/infrastructure/repositories/prisma-variant.repository';
 import { PrismaProductImageRepository } from '@/modules/products/infrastructure/repositories/prisma-product-image.repository';
+import type { SkuOutput } from '../actions';
 
 export const metadata: Metadata = {
   title: 'Detail produit | Kpsull',
@@ -43,12 +43,40 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   const variantRepo = new PrismaVariantRepository(prisma);
   const imageRepo = new PrismaProductImageRepository(prisma);
 
-  const [productResult, collectionsResult, variantsResult, images] = await Promise.all([
-    new GetProductDetailUseCase(productRepo).execute({ productId: id, creatorId: session.user.id }),
-    new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id }),
-    new ListVariantsUseCase(variantRepo, productRepo).execute({ productId: id }),
-    imageRepo.findByProductId(id),
-  ]);
+  const [productResult, collectionsResult, variantsResult, images, productExtra, styles, rawSkus] =
+    await Promise.all([
+      new GetProductDetailUseCase(productRepo).execute({ productId: id, creatorId: session.user.id }),
+      new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id }),
+      new ListVariantsUseCase(variantRepo, productRepo).execute({ productId: id }),
+      imageRepo.findByProductId(id),
+      prisma.product.findUnique({
+        where: { id },
+        select: {
+          styleId: true,
+          sizes: true,
+          category: true,
+          gender: true,
+          materials: true,
+          fit: true,
+          season: true,
+          madeIn: true,
+          careInstructions: true,
+          certifications: true,
+          weight: true,
+        },
+      }),
+      prisma.style.findMany({
+        where: {
+          OR: [{ creatorId: null }, { creatorId: session.user.id }],
+        },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, isCustom: true },
+      }),
+      prisma.productSku.findMany({
+        where: { productId: id },
+        orderBy: [{ variantId: 'asc' }, { size: 'asc' }],
+      }),
+    ]);
 
   if (productResult.isFailure || !productResult.value) {
     notFound();
@@ -56,19 +84,31 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   const product = productResult.value;
   const collections = (collectionsResult.value?.projects ?? []).map((p) => ({ id: p.id, name: p.name }));
+
   const variants = (variantsResult.value?.variants ?? []).map((v) => ({
     id: v.id,
     name: v.name,
-    sku: v.sku,
     priceOverride: v.priceOverride ? Math.round(v.priceOverride * 100) : undefined,
-    stock: v.stock,
-    isAvailable: v.isAvailable,
+    color: v.color,
+    colorCode: v.colorCode,
+    images: v.images,
   }));
+
   const imageData = images.map((img) => ({
     id: img.idString,
     url: img.url.url,
     alt: img.alt,
     position: img.position,
+  }));
+
+  const initialSizes = parseSizes(productExtra?.sizes);
+
+  const initialSkus: SkuOutput[] = rawSkus.map((s) => ({
+    id: s.id,
+    productId: s.productId,
+    variantId: s.variantId ?? undefined,
+    size: s.size ?? undefined,
+    stock: s.stock,
   }));
 
   const statusLabels: Record<string, string> = {
@@ -78,9 +118,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   };
 
   const statusBadgeClasses: Record<string, string> = {
-    DRAFT: 'bg-yellow-100 text-yellow-800',
-    PUBLISHED: 'bg-green-100 text-green-800',
-    ARCHIVED: 'bg-gray-100 text-gray-800',
+    DRAFT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    PUBLISHED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    ARCHIVED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
   };
 
   return (
@@ -106,27 +146,31 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <ProductForm
-            mode="edit"
-            productId={product.id}
-            initialValues={{
-              name: product.name,
-              description: product.description,
-              price: product.price,
-              projectId: product.projectId,
-            }}
-            collections={collections}
-          />
-
-          <VariantManager productId={product.id} variants={variants} />
-        </div>
-
-        <div className="space-y-6">
-          <ImageManager productId={product.id} images={imageData} />
-        </div>
-      </div>
+      <ProductDetailClient
+        productId={product.id}
+        initialFormValues={{
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          projectId: product.projectId,
+          styleId: productExtra?.styleId ?? undefined,
+          category: productExtra?.category ?? undefined,
+          gender: productExtra?.gender ?? undefined,
+          materials: productExtra?.materials ?? undefined,
+          fit: productExtra?.fit ?? undefined,
+          season: productExtra?.season ?? undefined,
+          madeIn: productExtra?.madeIn ?? undefined,
+          careInstructions: productExtra?.careInstructions ?? undefined,
+          certifications: productExtra?.certifications ?? undefined,
+          weight: productExtra?.weight ?? undefined,
+        }}
+        collections={collections}
+        styles={styles}
+        initialVariants={variants}
+        initialSizes={initialSizes}
+        initialSkus={initialSkus}
+        initialProductImages={imageData}
+      />
     </div>
   );
 }

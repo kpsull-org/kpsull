@@ -11,10 +11,12 @@ export interface VariantOutput {
   id: string;
   productId: string;
   name: string;
-  sku?: string;
   priceOverride?: number;
   stock: number;
   isAvailable: boolean;
+  color?: string;
+  colorCode?: string;
+  images: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,10 +53,12 @@ export class ListVariantsUseCase implements UseCase<ListVariantsInput, ListVaria
       id: variant.idString,
       productId: variant.productId,
       name: variant.name,
-      sku: variant.sku,
       priceOverride: variant.priceOverride?.displayAmount,
       stock: variant.stock,
       isAvailable: variant.isAvailable,
+      color: variant.color,
+      colorCode: variant.colorCode,
+      images: variant.images,
       createdAt: variant.createdAt,
       updatedAt: variant.updatedAt,
     }));

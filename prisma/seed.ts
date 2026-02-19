@@ -419,20 +419,135 @@ async function main() {
   // PRODUCT IMAGES
   // ============================================
 
+  const PRODUCT_IMAGES: Record<string, { url: string; alt: string; position: number }[]> = {
+    // ─── JOSE - Streetwear ───────────────────────────────────────────────
+    'prod_jose_hoodie_noir': [
+      { url: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&h=800&fit=crop', alt: 'Hoodie Oversize Noir - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop', alt: 'Hoodie Oversize Noir - Vue dos', position: 1 },
+      { url: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=800&h=800&fit=crop', alt: 'Hoodie Oversize Noir - Détail capuche', position: 2 },
+    ],
+    'prod_jose_tshirt_graphic': [
+      { url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop', alt: 'T-shirt Graphique Antidote - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1503341338985-95661e5a8f6e?w=800&h=800&fit=crop', alt: 'T-shirt Graphique Antidote - Vue dos', position: 1 },
+    ],
+    'prod_jose_pantalon_cargo': [
+      { url: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&h=800&fit=crop', alt: 'Pantalon Cargo Kaki - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&h=800&fit=crop', alt: 'Pantalon Cargo Kaki - Détail poches', position: 1 },
+    ],
+    'prod_jose_bomber': [
+      { url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop', alt: 'Bomber Matelassé - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1553143820-6bb68bc34679?w=800&h=800&fit=crop', alt: 'Bomber Matelassé - Vue détail', position: 1 },
+    ],
+    'prod_jose_bonnet': [
+      { url: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=800&h=800&fit=crop', alt: 'Bonnet Laine Merinos - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1510598155534-9b4a5da5c9e5?w=800&h=800&fit=crop', alt: 'Bonnet Laine Merinos - Porté', position: 1 },
+    ],
+    'prod_jose_casquette': [
+      { url: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&h=800&fit=crop', alt: 'Casquette Brodée KPSULL - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&h=800&fit=crop', alt: 'Casquette Brodée KPSULL - Portée', position: 1 },
+    ],
+    'prod_jose_tote': [
+      { url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=800&fit=crop', alt: 'Tote Bag Canvas - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&h=800&fit=crop', alt: 'Tote Bag Canvas - Détail', position: 1 },
+    ],
+    'prod_jose_sweat': [
+      { url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop', alt: 'Sweat Col Rond Gris Chiné - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&h=800&fit=crop', alt: 'Sweat Col Rond Gris Chiné - Vue dos', position: 1 },
+    ],
+
+    // ─── SOPHIE - Céramique ──────────────────────────────────────────────
+    'prod_sophie_bol_raku': [
+      { url: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&h=800&fit=crop', alt: 'Bol Raku Terre & Feu - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1603903631918-a8c8a40e4c25?w=800&h=800&fit=crop', alt: 'Bol Raku Terre & Feu - Vue de dessus', position: 1 },
+      { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=800&fit=crop', alt: 'Bol Raku Terre & Feu - Détail émaillage', position: 2 },
+    ],
+    'prod_sophie_vase_bleu': [
+      { url: 'https://images.unsplash.com/photo-1612196808214-b7c07b51e12b?w=800&h=800&fit=crop', alt: 'Vase Bleu Cobalt - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=800&h=800&fit=crop', alt: 'Vase Bleu Cobalt - Détail émail', position: 1 },
+    ],
+    'prod_sophie_tasse_duo': [
+      { url: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&h=800&fit=crop', alt: 'Duo de Tasses Espresso - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=800&fit=crop', alt: 'Duo de Tasses Espresso - Mise en scène', position: 1 },
+    ],
+    'prod_sophie_assiette': [
+      { url: 'https://images.unsplash.com/photo-1588951291046-c66b4f9875e5?w=800&h=800&fit=crop', alt: 'Assiette Plate Wabi-Sabi - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1601699165292-b3b1acd6472c?w=800&h=800&fit=crop', alt: 'Assiette Plate Wabi-Sabi - Détail bords', position: 1 },
+    ],
+    'prod_sophie_bougeoir': [
+      { url: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800&h=800&fit=crop', alt: 'Bougeoir Sculpté - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1603905830888-36f4f0bf9a96?w=800&h=800&fit=crop', alt: 'Bougeoir Sculpté - Avec bougie', position: 1 },
+    ],
+
+    // ─── LUCAS - Streetwear Design ───────────────────────────────────────
+    'prod_lucas_hoodie_art': [
+      { url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&h=800&fit=crop', alt: 'Hoodie Urban Canvas - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&h=800&fit=crop', alt: 'Hoodie Urban Canvas - Détail print', position: 1 },
+      { url: 'https://images.unsplash.com/photo-1516478177764-9fe5bd7e9717?w=800&h=800&fit=crop', alt: 'Hoodie Urban Canvas - Porté', position: 2 },
+    ],
+    'prod_lucas_tshirt_typo': [
+      { url: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop', alt: 'T-shirt Typo Bold - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&h=800&fit=crop', alt: 'T-shirt Typo Bold - Vue dos', position: 1 },
+    ],
+    'prod_lucas_veste_jean': [
+      { url: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=800&fit=crop', alt: 'Veste Jean Customisée - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=800&h=800&fit=crop', alt: 'Veste Jean Customisée - Détail patches', position: 1 },
+    ],
+    'prod_lucas_short_mesh': [
+      { url: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&h=800&fit=crop', alt: 'Short Mesh Basketball - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1562183241-b937e95585b6?w=800&h=800&fit=crop', alt: 'Short Mesh Basketball - Vue détail', position: 1 },
+    ],
+    'prod_lucas_sac_banane': [
+      { url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=800&fit=crop', alt: 'Sac Banane Réflectif - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1491637639811-60e2756cc1c7?w=800&h=800&fit=crop', alt: 'Sac Banane Réflectif - Porté', position: 1 },
+    ],
+
+    // ─── CLAIRE - Mode Vintage ───────────────────────────────────────────
+    'prod_claire_robe_70s': [
+      { url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=800&fit=crop', alt: 'Robe Bohème 70s - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&h=800&fit=crop', alt: 'Robe Bohème 70s - Vue fleurie', position: 1 },
+      { url: 'https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=800&h=800&fit=crop', alt: 'Robe Bohème 70s - Vue de détail', position: 2 },
+    ],
+    'prod_claire_blazer_xl': [
+      { url: 'https://images.unsplash.com/photo-1562184552-9f081a2ce676?w=800&h=800&fit=crop', alt: 'Blazer Oversize 90s - Vue face', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop', alt: 'Blazer Oversize 90s - Vue dos', position: 1 },
+    ],
+    'prod_claire_jupe_plissee': [
+      { url: 'https://images.unsplash.com/photo-1594035035756-5e9cd6a03781?w=800&h=800&fit=crop', alt: 'Jupe Plissée Écossaise - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1583496661160-fb5218afa9a1?w=800&h=800&fit=crop', alt: 'Jupe Plissée Écossaise - Détail tartan', position: 1 },
+    ],
+    'prod_claire_pull_mohair': [
+      { url: 'https://images.unsplash.com/photo-1549465220-1a629bd08dbd?w=800&h=800&fit=crop', alt: 'Pull Mohair Pastel - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=800&fit=crop', alt: 'Pull Mohair Pastel - Détail texture', position: 1 },
+    ],
+
+    // ─── MARC - Accessoires Vintage ──────────────────────────────────────
+    'prod_marc_montre_auto': [
+      { url: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&h=800&fit=crop', alt: 'Montre Automatique Restaurée - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?w=800&h=800&fit=crop', alt: 'Montre Automatique Restaurée - Détail cadran', position: 1 },
+      { url: 'https://images.unsplash.com/photo-1539874754764-5a96559165b0?w=800&h=800&fit=crop', alt: 'Montre Automatique Restaurée - Bracelet cuir', position: 2 },
+    ],
+    'prod_marc_ceinture_cuir': [
+      { url: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=800&h=800&fit=crop', alt: 'Ceinture Cuir Patiné - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&h=800&fit=crop', alt: 'Ceinture Cuir Patiné - Détail boucle', position: 1 },
+    ],
+    'prod_marc_lunettes_retro': [
+      { url: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&h=800&fit=crop', alt: 'Lunettes Rétro Écaille - Vue principale', position: 0 },
+      { url: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&h=800&fit=crop', alt: 'Lunettes Rétro Écaille - Vue de profil', position: 1 },
+    ],
+  };
+
   await prisma.productImage.deleteMany({
     where: { productId: { in: allProducts.map((p) => p.id) } },
   });
 
-  const productImages = allProducts.map((p) => ({
-    productId: p.id,
-    url: `https://picsum.photos/seed/${p.id.replace('prod_', '')}/800/800`,
-    position: 0,
-  }));
-
-  for (const img of productImages) {
-    await prisma.productImage.create({ data: img });
+  let imageCount = 0;
+  for (const [productId, images] of Object.entries(PRODUCT_IMAGES)) {
+    for (const img of images) {
+      await prisma.productImage.create({ data: { productId, ...img } });
+      imageCount++;
+    }
   }
-  console.log(`✅ ${productImages.length} product images created`);
+  console.log(`✅ ${imageCount} product images created (2-3 per product)`);
 
   // ============================================
   // CREATOR PAGES
@@ -479,21 +594,21 @@ async function main() {
 
   const sectionsData = [
     // Jose
-    { pageId: pageJose.id, type: SectionType.HERO, position: 0, title: 'KPSULL Officiel', content: JSON.stringify({ subtitle: "L'antidote a l'uniforme", backgroundImage: 'https://picsum.photos/seed/kpsull-hero/1920/600', ctaText: 'Decouvrir', ctaLink: '#products' }) },
-    { pageId: pageJose.id, type: SectionType.ABOUT, position: 1, title: 'Notre histoire', content: JSON.stringify({ text: 'KPSULL est ne de la conviction que la mode peut etre unique, locale et accessible. Chaque piece est concue et fabriquee en France.', image: 'https://picsum.photos/seed/kpsull-about/400/400' }) },
+    { pageId: pageJose.id, type: SectionType.HERO, position: 0, title: 'KPSULL Officiel', content: JSON.stringify({ subtitle: "L'antidote a l'uniforme", backgroundImage: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1920&h=600&fit=crop', ctaText: 'Decouvrir', ctaLink: '#products' }) },
+    { pageId: pageJose.id, type: SectionType.ABOUT, position: 1, title: 'Notre histoire', content: JSON.stringify({ text: 'KPSULL est ne de la conviction que la mode peut etre unique, locale et accessible. Chaque piece est concue et fabriquee en France.', image: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=400&h=400&fit=crop' }) },
     { pageId: pageJose.id, type: SectionType.PRODUCTS_GRID, position: 2, title: 'Nos creations', content: JSON.stringify({ columns: 3, limit: 9 }) },
     { pageId: pageJose.id, type: SectionType.CONTACT, position: 3, title: 'Contact', content: JSON.stringify({ email: 'jose.lecreateur@kpsull.fr', instagram: '@kpsull', showForm: true }) },
     // Sophie
-    { pageId: pageSophie.id, type: SectionType.HERO, position: 0, title: 'Sophie Ceramique', content: JSON.stringify({ subtitle: "L'art du feu et de la terre", backgroundImage: 'https://picsum.photos/seed/sophie-hero/1920/600', ctaText: 'Explorer', ctaLink: '#products' }) },
+    { pageId: pageSophie.id, type: SectionType.HERO, position: 0, title: 'Sophie Ceramique', content: JSON.stringify({ subtitle: "L'art du feu et de la terre", backgroundImage: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=1920&h=600&fit=crop', ctaText: 'Explorer', ctaLink: '#products' }) },
     { pageId: pageSophie.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Mes creations', content: JSON.stringify({ columns: 3, limit: 6 }) },
     // Lucas
-    { pageId: pageLucas.id, type: SectionType.HERO, position: 0, title: 'Lucas Design Studio', content: JSON.stringify({ subtitle: 'Le streetwear comme une toile', backgroundImage: 'https://picsum.photos/seed/lucas-hero/1920/600', ctaText: 'Voir la collection', ctaLink: '#products' }) },
+    { pageId: pageLucas.id, type: SectionType.HERO, position: 0, title: 'Lucas Design Studio', content: JSON.stringify({ subtitle: 'Le streetwear comme une toile', backgroundImage: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=1920&h=600&fit=crop', ctaText: 'Voir la collection', ctaLink: '#products' }) },
     { pageId: pageLucas.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'La collection', content: JSON.stringify({ columns: 3, limit: 6 }) },
     // Claire
-    { pageId: pageClaire.id, type: SectionType.HERO, position: 0, title: 'Claire Vintage', content: JSON.stringify({ subtitle: 'La mode qui traverse le temps', backgroundImage: 'https://picsum.photos/seed/claire-hero/1920/600', ctaText: 'Chiner', ctaLink: '#products' }) },
+    { pageId: pageClaire.id, type: SectionType.HERO, position: 0, title: 'Claire Vintage', content: JSON.stringify({ subtitle: 'La mode qui traverse le temps', backgroundImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&h=600&fit=crop', ctaText: 'Chiner', ctaLink: '#products' }) },
     { pageId: pageClaire.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Pieces chinees', content: JSON.stringify({ columns: 2, limit: 4 }) },
     // Marc
-    { pageId: pageMarc.id, type: SectionType.HERO, position: 0, title: 'Marc Accessories', content: JSON.stringify({ subtitle: "Le charme des accessoires d'antan", backgroundImage: 'https://picsum.photos/seed/marc-hero/1920/600', ctaText: 'Decouvrir', ctaLink: '#products' }) },
+    { pageId: pageMarc.id, type: SectionType.HERO, position: 0, title: 'Marc Accessories', content: JSON.stringify({ subtitle: "Le charme des accessoires d'antan", backgroundImage: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=1920&h=600&fit=crop', ctaText: 'Decouvrir', ctaLink: '#products' }) },
     { pageId: pageMarc.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Mes trouvailles', content: JSON.stringify({ columns: 3, limit: 3 }) },
   ];
 
@@ -999,6 +1114,38 @@ async function main() {
   });
 
   console.log('   ✅ 4 orders for Marc');
+
+  // ============================================
+  // SYSTEM STYLES
+  // ============================================
+
+  console.log('\n🎨 Creating system styles...');
+
+  const systemStyles = [
+    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers' },
+    { name: 'Vintage', description: 'Pieces retro et secondes mains revisitees' },
+    { name: 'Ceramique', description: 'Artisanat ceramique, poterie et creations en argile' },
+    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre' },
+    { name: 'Boheme', description: 'Esprit libre, matieres naturelles, imprimés ethniques' },
+    { name: 'Sportswear', description: 'Vetements techniques et confortables pour le sport' },
+    { name: 'Luxe', description: 'Matieres nobles, finitions haut de gamme, editions limitees' },
+    { name: 'Art', description: 'Creations artistiques uniques, editions limitees signees' },
+  ];
+
+  for (const style of systemStyles) {
+    await prisma.style.upsert({
+      where: { name: style.name },
+      update: {},
+      create: {
+        name: style.name,
+        description: style.description,
+        isCustom: false,
+        creatorId: null,
+      },
+    });
+  }
+
+  console.log(`   ✅ ${systemStyles.length} system styles created`);
 
   // ============================================
   // SUMMARY

@@ -10,7 +10,6 @@ describe('ListVariantsUseCase', () => {
   let mockVariantRepo: {
     findById: Mock;
     findByProductId: Mock;
-    findBySku: Mock;
     save: Mock;
     delete: Mock;
     countByProductId: Mock;
@@ -28,7 +27,6 @@ describe('ListVariantsUseCase', () => {
     mockVariantRepo = {
       findById: vi.fn(),
       findByProductId: vi.fn(),
-      findBySku: vi.fn(),
       save: vi.fn(),
       delete: vi.fn(),
       countByProductId: vi.fn(),
@@ -142,7 +140,6 @@ describe('ListVariantsUseCase', () => {
         id: 'variant-1',
         productId: 'product-123',
         name: 'Version Premium',
-        sku: 'SKU-PREMIUM',
         priceOverrideAmount: 3999,
         priceOverrideCurrency: 'EUR',
         stock: 15,
@@ -166,10 +163,12 @@ describe('ListVariantsUseCase', () => {
         id: 'variant-1',
         productId: 'product-123',
         name: 'Version Premium',
-        sku: 'SKU-PREMIUM',
         priceOverride: 39.99,
         stock: 15,
         isAvailable: true,
+        color: undefined,
+        colorCode: undefined,
+        images: [],
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -244,7 +243,7 @@ describe('ListVariantsUseCase', () => {
       expect(variants[0]?.priceOverride).toBeUndefined();
     });
 
-    it('should return variants without SKU as undefined', async () => {
+    it('should return variants without priceOverride as undefined when not set', async () => {
       // Arrange
       const variant = ProductVariant.reconstitute({
         id: 'variant-1',
@@ -267,7 +266,7 @@ describe('ListVariantsUseCase', () => {
       // Assert
       expect(result.isSuccess).toBe(true);
       const variants = result.value?.variants ?? [];
-      expect(variants[0]?.sku).toBeUndefined();
+      expect(variants[0]?.priceOverride).toBeUndefined();
     });
 
     it('should indicate variant availability based on stock', async () => {

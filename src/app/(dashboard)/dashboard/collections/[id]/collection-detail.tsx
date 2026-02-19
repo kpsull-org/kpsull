@@ -13,6 +13,7 @@ import {
   assignProductToCollection,
   removeProductFromCollection,
 } from '../actions';
+import { CollectionCoverUpload } from './collection-cover-upload';
 
 interface ProductItem {
   id: string;
@@ -26,6 +27,7 @@ interface CollectionDetailProps {
     id: string;
     name: string;
     description: string | null;
+    coverImage: string | null;
   };
   products: ProductItem[];
   unassignedProducts: ProductItem[];
@@ -120,6 +122,11 @@ export function CollectionDetail({
           {error}
         </div>
       )}
+
+      <CollectionCoverUpload
+        collectionId={collection.id}
+        currentCoverImage={collection.coverImage}
+      />
 
       <Card>
         <CardHeader>

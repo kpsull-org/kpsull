@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { createVariant, updateVariant, deleteVariant } from '../actions';
-import { Plus, Pencil, Trash2, X, Check, Package } from 'lucide-react';
+import { createVariant, updateVariant, deleteVariant, addVariantImage, removeVariantImage } from '../actions';
+import { compressImage } from '@/lib/utils/image-compression';
+import { Plus, Pencil, Trash2, X, Check, Package, AlertCircle, ImagePlus } from 'lucide-react';
 
 interface Variant {
   id: string;
@@ -16,11 +17,181 @@ interface Variant {
   priceOverride?: number;
   stock: number;
   isAvailable: boolean;
+  color?: string;
+  colorCode?: string;
+  images: string[];
 }
 
 interface VariantManagerProps {
   productId: string;
   variants: Variant[];
+}
+
+const PRESET_COLORS = [
+  { name: 'Noir', hex: '#000000' },
+  { name: 'Blanc', hex: '#FFFFFF' },
+  { name: 'Gris', hex: '#808080' },
+  { name: 'Beige', hex: '#F5F0E8' },
+  { name: 'Rouge', hex: '#DC2626' },
+  { name: 'Rose', hex: '#F472B6' },
+  { name: 'Orange', hex: '#F97316' },
+  { name: 'Jaune', hex: '#FCD34D' },
+  { name: 'Vert', hex: '#16A34A' },
+  { name: 'Bleu', hex: '#2563EB' },
+  { name: 'Marine', hex: '#1E3A5F' },
+  { name: 'Violet', hex: '#7C3AED' },
+  { name: 'Marron', hex: '#92400E' },
+  { name: 'Camel', hex: '#C19A6B' },
+];
+
+interface ColorPickerProps {
+  colorName: string;
+  colorCode: string;
+  onColorNameChange: (v: string) => void;
+  onColorCodeChange: (v: string) => void;
+  idPrefix: string;
+}
+
+function ColorPicker({ colorName, colorCode, onColorNameChange, onColorCodeChange, idPrefix }: ColorPickerProps) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs">Couleur</Label>
+      <div className="flex gap-2">
+        <div className="relative">
+          <input
+            type="color"
+            value={colorCode || '#000000'}
+            onChange={(e) => {
+              onColorCodeChange(e.target.value);
+              if (!colorName) {
+                const preset = PRESET_COLORS.find(
+                  (c) => c.hex.toLowerCase() === e.target.value.toLowerCase()
+                );
+                if (preset) onColorNameChange(preset.name);
+              }
+            }}
+            className="h-9 w-12 cursor-pointer rounded-md border border-input p-0.5"
+            id={`${idPrefix}-color-picker`}
+          />
+        </div>
+        <Input
+          id={`${idPrefix}-color-name`}
+          value={colorName}
+          onChange={(e) => onColorNameChange(e.target.value)}
+          placeholder="Nom (ex: Bleu marine)"
+          className="h-9 flex-1"
+        />
+        <Input
+          value={colorCode}
+          onChange={(e) => onColorCodeChange(e.target.value)}
+          placeholder="#000000"
+          className="h-9 w-28 font-mono text-xs"
+        />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {PRESET_COLORS.map((c) => (
+          <button
+            key={c.hex}
+            type="button"
+            title={c.name}
+            onClick={() => {
+              onColorCodeChange(c.hex);
+              onColorNameChange(c.name);
+            }}
+            className="h-5 w-5 rounded-full border border-border transition-transform hover:scale-110"
+            style={{ backgroundColor: c.hex }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface VariantImageSlotProps {
+  variantId: string;
+  productId: string;
+  images: string[];
+  isLoading?: boolean;
+}
+
+function VariantImageSlot({ variantId, productId, images, isLoading }: VariantImageSlotProps) {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [localImages, setLocalImages] = useState(images);
+  const firstImage = localImages[0];
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const compressed = await compressImage(file, { maxDimension: 1200, quality: 0.85 });
+      const formData = new FormData();
+      formData.append('file', compressed.file);
+      const result = await addVariantImage(variantId, productId, formData);
+      if (result.success && result.url) {
+        setLocalImages((prev) => [...prev, result.url!]);
+        router.refresh();
+      }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!firstImage) return;
+    setUploading(true);
+    try {
+      await removeVariantImage(variantId, productId, firstImage);
+      setLocalImages((prev) => prev.filter((u) => u !== firstImage));
+      router.refresh();
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div
+      className="relative h-14 w-14 shrink-0 rounded-lg border-2 border-dashed border-muted-foreground/30 overflow-hidden cursor-pointer hover:border-muted-foreground/60 transition-colors group"
+      onClick={() => !uploading && fileInputRef.current?.click()}
+      title={firstImage ? 'Changer la photo' : 'Ajouter une photo'}
+    >
+      {firstImage ? (
+        <>
+          <img src={firstImage} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center"
+              aria-label="Supprimer la photo"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="h-full w-full flex items-center justify-center text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+          {uploading ? (
+            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/50 border-t-transparent animate-spin" />
+          ) : (
+            <ImagePlus className="h-5 w-5" />
+          )}
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={handleFileChange}
+        className="hidden"
+        disabled={uploading || isLoading}
+      />
+    </div>
+  );
 }
 
 export function VariantManager({ productId, variants }: VariantManagerProps) {
@@ -35,18 +206,24 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
   const [newSku, setNewSku] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [newStock, setNewStock] = useState('0');
+  const [newColor, setNewColor] = useState('');
+  const [newColorCode, setNewColorCode] = useState('');
 
   // Edit form state
   const [editName, setEditName] = useState('');
   const [editSku, setEditSku] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('0');
+  const [editColor, setEditColor] = useState('');
+  const [editColorCode, setEditColorCode] = useState('');
 
   function resetCreateForm() {
     setNewName('');
     setNewSku('');
     setNewPrice('');
     setNewStock('0');
+    setNewColor('');
+    setNewColorCode('');
     setShowCreateForm(false);
     setError(null);
   }
@@ -57,6 +234,8 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
     setEditSku(variant.sku ?? '');
     setEditPrice(variant.priceOverride ? (variant.priceOverride / 100).toFixed(2) : '');
     setEditStock(String(variant.stock));
+    setEditColor(variant.color ?? '');
+    setEditColorCode(variant.colorCode ?? '');
     setError(null);
   }
 
@@ -77,9 +256,10 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
       const result = await createVariant({
         productId,
         name: newName.trim(),
-        sku: newSku.trim() || undefined,
         priceOverride: priceInCents && priceInCents > 0 ? priceInCents : undefined,
         stock,
+        color: newColor.trim() || undefined,
+        colorCode: newColorCode.trim() || undefined,
       });
 
       if (!result.success) {
@@ -99,11 +279,12 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
       const priceInCents = editPrice ? Math.round(parseFloat(editPrice) * 100) : undefined;
       const result = await updateVariant(variantId, productId, {
         name: editName.trim() || undefined,
-        sku: editSku.trim() || undefined,
-        removeSku: !editSku.trim() ? true : undefined,
         priceOverride: priceInCents && priceInCents > 0 ? priceInCents : undefined,
         removePriceOverride: !editPrice ? true : undefined,
         stock: !isNaN(stock) ? stock : undefined,
+        color: editColor.trim() || undefined,
+        colorCode: editColorCode.trim() || undefined,
+        removeColor: !editColor.trim() ? true : undefined,
       });
 
       if (!result.success) {
@@ -135,11 +316,7 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
           Variantes ({variants.length})
         </CardTitle>
         {!showCreateForm && (
-          <Button
-            onClick={() => setShowCreateForm(true)}
-            size="sm"
-            className="gap-2"
-          >
+          <Button onClick={() => setShowCreateForm(true)} size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
             Ajouter
           </Button>
@@ -147,13 +324,14 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <div className="rounded-md bg-destructive/15 px-4 py-3 text-sm text-destructive">
-            {error}
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
 
         {showCreateForm && (
-          <div className="rounded-lg border p-4 space-y-3">
+          <div className="rounded-lg border p-4 space-y-4 bg-muted/20">
             <h4 className="font-medium text-sm">Nouvelle variante</h4>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -162,7 +340,7 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                   id="new-variant-name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Ex: Taille M"
+                  placeholder="Ex: Taille M, Bleu S..."
                   className="h-9"
                 />
               </div>
@@ -172,12 +350,12 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                   id="new-variant-sku"
                   value={newSku}
                   onChange={(e) => setNewSku(e.target.value)}
-                  placeholder="Ex: PROD-M"
+                  placeholder="Ex: PROD-M-BLU"
                   className="h-9"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="new-variant-price" className="text-xs">Prix (EUR)</Label>
+                <Label htmlFor="new-variant-price" className="text-xs">Prix specifique (EUR)</Label>
                 <Input
                   id="new-variant-price"
                   type="number"
@@ -185,7 +363,7 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                   min="0"
                   value={newPrice}
                   onChange={(e) => setNewPrice(e.target.value)}
-                  placeholder="Laisser vide = prix produit"
+                  placeholder="Vide = prix du produit"
                   className="h-9"
                 />
               </div>
@@ -201,6 +379,13 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                 />
               </div>
             </div>
+            <ColorPicker
+              colorName={newColor}
+              colorCode={newColorCode}
+              onColorNameChange={setNewColor}
+              onColorCodeChange={setNewColorCode}
+              idPrefix="new"
+            />
             <div className="flex gap-2">
               <Button onClick={handleCreate} disabled={isPending} size="sm" className="gap-1">
                 <Check className="h-3 w-3" />
@@ -215,15 +400,15 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
         )}
 
         {variants.length === 0 && !showCreateForm && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Aucune variante. Ajoutez des variantes pour gerer les tailles, couleurs, etc.
+          <p className="text-sm text-muted-foreground text-center py-6">
+            Aucune variante. Ajoutez des variantes pour gerer les couleurs, tailles, editions limitees...
           </p>
         )}
 
         {variants.map((variant) => (
           <div key={variant.id} className="rounded-lg border p-3">
             {editingId === variant.id ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Nom</Label>
@@ -264,6 +449,13 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                     />
                   </div>
                 </div>
+                <ColorPicker
+                  colorName={editColor}
+                  colorCode={editColorCode}
+                  onColorNameChange={setEditColor}
+                  onColorCodeChange={setEditColorCode}
+                  idPrefix={`edit-${variant.id}`}
+                />
                 <div className="flex gap-2">
                   <Button onClick={() => handleUpdate(variant.id)} disabled={isPending} size="sm" className="gap-1">
                     <Check className="h-3 w-3" />
@@ -277,32 +469,54 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
               </div>
             ) : (
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <span className="font-medium text-sm">{variant.name}</span>
-                    {variant.sku && (
-                      <span className="ml-2 text-xs text-muted-foreground">SKU: {variant.sku}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    {variant.priceOverride ? (
-                      <span>{(variant.priceOverride / 100).toFixed(2)} EUR</span>
-                    ) : (
-                      <span className="italic">Prix produit</span>
-                    )}
-                    <span>Stock: {variant.stock}</span>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        variant.isAvailable
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {variant.isAvailable ? 'Disponible' : 'Epuise'}
-                    </span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <VariantImageSlot
+                    variantId={variant.id}
+                    productId={productId}
+                    images={variant.images}
+                    isLoading={isPending}
+                  />
+                  {variant.colorCode && (
+                    <div
+                      className="h-6 w-6 rounded-full border-2 border-border shrink-0"
+                      style={{ backgroundColor: variant.colorCode }}
+                      title={variant.color ?? variant.colorCode}
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-sm">{variant.name}</span>
+                      {variant.color && (
+                        <span className="text-xs text-muted-foreground">{variant.color}</span>
+                      )}
+                      {variant.sku && (
+                        <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                          {variant.sku}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      {variant.priceOverride ? (
+                        <span className="text-xs text-muted-foreground">
+                          {(variant.priceOverride / 100).toFixed(2)} EUR
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Prix produit</span>
+                      )}
+                      <span className="text-xs text-muted-foreground">Stock : {variant.stock}</span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          variant.isAvailable
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        }`}
+                      >
+                        {variant.isAvailable ? 'Disponible' : 'Epuise'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <Button
                     onClick={() => startEditing(variant)}
                     disabled={isPending}

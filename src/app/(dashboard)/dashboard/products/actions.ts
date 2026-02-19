@@ -19,14 +19,20 @@ import { ReorderProductImagesUseCase } from '@/modules/products/application/use-
 import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
 import { PrismaVariantRepository } from '@/modules/products/infrastructure/repositories/prisma-variant.repository';
 import { PrismaProductImageRepository } from '@/modules/products/infrastructure/repositories/prisma-product-image.repository';
+import { PrismaSkuRepository } from '@/modules/products/infrastructure/repositories/prisma-sku.repository';
 import { NoopSubscriptionService } from '@/modules/products/infrastructure/services/noop-subscription.service';
-import { NoopImageUploadService } from '@/modules/products/infrastructure/services/noop-image-upload.service';
+import { CloudinaryImageUploadService } from '@/modules/products/infrastructure/services/cloudinary-image-upload.service';
+import { UpsertSkuUseCase } from '@/modules/products/application/use-cases/skus/upsert-sku.use-case';
+import type { SkuOutput } from '@/modules/products/application/use-cases/skus/list-skus.use-case';
+
+export type { SkuOutput };
 
 const productRepository = new PrismaProductRepository(prisma);
 const variantRepository = new PrismaVariantRepository(prisma);
 const productImageRepository = new PrismaProductImageRepository(prisma);
+const skuRepository = new PrismaSkuRepository(prisma);
 const subscriptionService = new NoopSubscriptionService();
-const imageUploadService = new NoopImageUploadService();
+const imageUploadService = new CloudinaryImageUploadService();
 
 export interface ActionResult {
   success: boolean;
@@ -41,28 +47,49 @@ const createProductSchema = z.object({
   projectId: z.string().optional(),
 });
 
+const sizeEntrySchema = z.object({
+  size: z.string().min(1),
+  weight: z.number().positive().optional(),
+  width: z.number().positive().optional(),
+  height: z.number().positive().optional(),
+  length: z.number().positive().optional(),
+});
+
 const updateProductSchema = z.object({
   name: z.string().min(1, 'Le nom du produit est requis').optional(),
   description: z.string().optional(),
   price: z.number().positive('Le prix doit etre positif').optional(),
   projectId: z.string().nullable().optional(),
+  styleId: z.string().nullable().optional(),
+  sizes: z.array(sizeEntrySchema).optional(),
+  category: z.string().optional(),
+  gender: z.string().optional(),
+  materials: z.string().optional(),
+  fit: z.string().optional(),
+  season: z.string().optional(),
+  madeIn: z.string().optional(),
+  careInstructions: z.string().optional(),
+  certifications: z.string().optional(),
+  weight: z.number().int().optional(),
 });
 
 const createVariantSchema = z.object({
   productId: z.string().min(1, "L'ID du produit est requis"),
   name: z.string().min(1, 'Le nom de la variante est requis'),
-  sku: z.string().optional(),
   priceOverride: z.number().positive('Le prix doit etre positif').optional(),
   stock: z.number().int().min(0, 'Le stock ne peut pas etre negatif'),
+  color: z.string().optional(),
+  colorCode: z.string().optional(),
 });
 
 const updateVariantSchema = z.object({
   name: z.string().min(1, 'Le nom de la variante est requis').optional(),
-  sku: z.string().optional(),
-  removeSku: z.boolean().optional(),
   priceOverride: z.number().positive('Le prix doit etre positif').optional(),
   removePriceOverride: z.boolean().optional(),
   stock: z.number().int().min(0, 'Le stock ne peut pas etre negatif').optional(),
+  color: z.string().optional(),
+  colorCode: z.string().optional(),
+  removeColor: z.boolean().optional(),
 });
 
 // ─── Auth helper ───────────────────────────────────────────────────
@@ -120,6 +147,17 @@ export async function updateProduct(
     description?: string;
     price?: number;
     projectId?: string | null;
+    styleId?: string | null;
+    sizes?: Array<{ size: string; weight?: number; width?: number; height?: number; length?: number }>;
+    category?: string | null;
+    gender?: string | null;
+    materials?: string | null;
+    fit?: string | null;
+    season?: string | null;
+    madeIn?: string | null;
+    careInstructions?: string | null;
+    certifications?: string | null;
+    weight?: number | null;
   }
 ): Promise<ActionResult> {
   const { session, error } = await requireCreatorAuth();
@@ -131,15 +169,49 @@ export async function updateProduct(
     return { success: false, error: firstError?.message ?? 'Donnees invalides' };
   }
 
+  const { styleId, sizes, category, gender, materials, fit, season, madeIn, careInstructions, certifications, weight, ...coreData } = validationResult.data;
+
   const updateProductUseCase = new UpdateProductUseCase(productRepository);
   const result = await updateProductUseCase.execute({
     productId,
     creatorId: session.user.id,
-    ...validationResult.data,
+    ...coreData,
   });
 
   if (result.isFailure) {
     return { success: false, error: result.error! };
+  }
+
+  const hasExtraFields =
+    styleId !== undefined ||
+    sizes !== undefined ||
+    category !== undefined ||
+    gender !== undefined ||
+    materials !== undefined ||
+    fit !== undefined ||
+    season !== undefined ||
+    madeIn !== undefined ||
+    careInstructions !== undefined ||
+    certifications !== undefined ||
+    weight !== undefined;
+
+  if (hasExtraFields) {
+    await prisma.product.update({
+      where: { id: productId },
+      data: {
+        ...(styleId !== undefined && { styleId }),
+        ...(sizes !== undefined && { sizes }),
+        ...(category !== undefined && { category }),
+        ...(gender !== undefined && { gender }),
+        ...(materials !== undefined && { materials }),
+        ...(fit !== undefined && { fit }),
+        ...(season !== undefined && { season }),
+        ...(madeIn !== undefined && { madeIn }),
+        ...(careInstructions !== undefined && { careInstructions }),
+        ...(certifications !== undefined && { certifications }),
+        ...(weight !== undefined && { weight }),
+      },
+    });
   }
 
   revalidatePath('/dashboard/products');
@@ -207,14 +279,58 @@ export async function unpublishProduct(productId: string): Promise<ActionResult>
   return { success: true };
 }
 
+export async function archiveProduct(productId: string): Promise<ActionResult> {
+  const { session, error } = await requireCreatorAuth();
+  if (error) return { success: false, error };
+
+  const product = await prisma.product.findUnique({ where: { id: productId } });
+  if (!product || product.creatorId !== session.user.id) {
+    return { success: false, error: 'Produit introuvable' };
+  }
+
+  await prisma.product.update({
+    where: { id: productId },
+    data: { status: 'ARCHIVED' },
+  });
+
+  revalidatePath('/dashboard/products');
+  revalidatePath(`/dashboard/products/${productId}`);
+
+  return { success: true };
+}
+
+// ─── SKU Actions ───────────────────────────────────────────────────
+
+export async function upsertSku(data: {
+  productId: string;
+  variantId?: string;
+  size?: string;
+  stock: number;
+}): Promise<ActionResult & { sku?: SkuOutput }> {
+  const { error } = await requireCreatorAuth();
+  if (error) return { success: false, error };
+
+  const upsertSkuUseCase = new UpsertSkuUseCase(skuRepository, productRepository);
+  const result = await upsertSkuUseCase.execute(data);
+
+  if (result.isFailure) {
+    return { success: false, error: result.error! };
+  }
+
+  revalidatePath(`/dashboard/products/${data.productId}`);
+
+  return { success: true, sku: result.value };
+}
+
 // ─── Variant Actions ───────────────────────────────────────────────
 
 export async function createVariant(data: {
   productId: string;
   name: string;
-  sku?: string;
   priceOverride?: number;
   stock: number;
+  color?: string;
+  colorCode?: string;
 }): Promise<ActionResult> {
   const { error } = await requireCreatorAuth();
   if (error) return { success: false, error };
@@ -242,11 +358,12 @@ export async function updateVariant(
   productId: string,
   data: {
     name?: string;
-    sku?: string;
-    removeSku?: boolean;
     priceOverride?: number;
     removePriceOverride?: boolean;
     stock?: number;
+    color?: string;
+    colorCode?: string;
+    removeColor?: boolean;
   }
 ): Promise<ActionResult> {
   const { error } = await requireCreatorAuth();
@@ -294,7 +411,7 @@ export async function deleteVariant(variantId: string, productId: string): Promi
 export async function uploadProductImage(
   productId: string,
   formData: FormData
-): Promise<ActionResult> {
+): Promise<ActionResult & { url?: string }> {
   const { error } = await requireCreatorAuth();
   if (error) return { success: false, error };
 
@@ -324,7 +441,7 @@ export async function uploadProductImage(
 
   revalidatePath(`/dashboard/products/${productId}`);
 
-  return { success: true, id: result.value.id };
+  return { success: true, id: result.value.id, url: result.value.url };
 }
 
 export async function deleteProductImage(
@@ -365,5 +482,64 @@ export async function reorderProductImages(
 
   revalidatePath(`/dashboard/products/${productId}`);
 
+  return { success: true };
+}
+
+// ─── Variant Image Actions ──────────────────────────────────────────
+
+export async function addVariantImage(
+  variantId: string,
+  productId: string,
+  formData: FormData
+): Promise<ActionResult & { url?: string }> {
+  const { error } = await requireCreatorAuth();
+  if (error) return { success: false, error };
+
+  const file = formData.get('file') as File | null;
+  if (!file) return { success: false, error: 'Fichier manquant' };
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const uploadResult = await imageUploadService.upload(buffer, file.name);
+  if (uploadResult.isFailure) return { success: false, error: uploadResult.error! };
+
+  const url = uploadResult.value;
+
+  const existing = await prisma.productVariant.findUnique({
+    where: { id: variantId },
+    select: { images: true },
+  });
+  const currentImages = Array.isArray(existing?.images) ? (existing.images as string[]) : [];
+
+  await prisma.productVariant.update({
+    where: { id: variantId },
+    data: { images: [...currentImages, url] },
+  });
+
+  revalidatePath(`/dashboard/products/${productId}`);
+  return { success: true, url };
+}
+
+export async function removeVariantImage(
+  variantId: string,
+  productId: string,
+  imageUrl: string
+): Promise<ActionResult> {
+  const { error } = await requireCreatorAuth();
+  if (error) return { success: false, error };
+
+  const existing = await prisma.productVariant.findUnique({
+    where: { id: variantId },
+    select: { images: true },
+  });
+  const currentImages = Array.isArray(existing?.images) ? (existing.images as string[]) : [];
+
+  await imageUploadService.delete(imageUrl);
+
+  await prisma.productVariant.update({
+    where: { id: variantId },
+    data: { images: currentImages.filter((u) => u !== imageUrl) },
+  });
+
+  revalidatePath(`/dashboard/products/${productId}`);
   return { success: true };
 }
