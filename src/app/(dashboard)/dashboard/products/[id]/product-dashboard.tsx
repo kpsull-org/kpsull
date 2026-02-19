@@ -17,6 +17,8 @@ import {
   upsertSku,
 } from '../actions';
 import { compressImage } from '@/lib/utils/image-compression';
+import { PRESET_COLORS } from '@/lib/utils/product-colors';
+import { ShippingDimensionsTable } from '@/components/products/shipping-dimensions-table';
 import {
   Plus,
   AlertCircle,
@@ -105,23 +107,6 @@ interface SkuCell {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const PRESET_COLORS = [
-  { name: 'Noir', hex: '#000000' },
-  { name: 'Blanc', hex: '#FFFFFF' },
-  { name: 'Gris', hex: '#808080' },
-  { name: 'Beige', hex: '#F5F0E8' },
-  { name: 'Rouge', hex: '#DC2626' },
-  { name: 'Rose', hex: '#F472B6' },
-  { name: 'Orange', hex: '#F97316' },
-  { name: 'Jaune', hex: '#FCD34D' },
-  { name: 'Vert', hex: '#16A34A' },
-  { name: 'Bleu', hex: '#2563EB' },
-  { name: 'Marine', hex: '#1E3A5F' },
-  { name: 'Violet', hex: '#7C3AED' },
-  { name: 'Marron', hex: '#92400E' },
-  { name: 'Camel', hex: '#C19A6B' },
-];
 
 const SIZE_GROUPS = [
   { id: 'unique', label: 'Taille unique', sizes: ['Unique'] },
@@ -1160,57 +1145,11 @@ export function ProductDashboard({
                 <p className="text-xs text-muted-foreground">
                   Ces informations sont utilisées pour calculer les frais d&apos;envoi.
                 </p>
-                <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] gap-2 px-1">
-                  <span className="text-xs font-medium text-muted-foreground">Taille</span>
-                  <span className="text-xs font-medium text-muted-foreground">Poids (g)</span>
-                  <span className="text-xs font-medium text-muted-foreground">Larg. (cm)</span>
-                  <span className="text-xs font-medium text-muted-foreground">Haut. (cm)</span>
-                  <span className="text-xs font-medium text-muted-foreground">Long. (cm)</span>
-                </div>
-                {sizes.map((entry, idx) => (
-                  <div key={entry.size} className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] gap-2 items-center">
-                    <span className="text-xs font-medium truncate">{entry.size}</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={entry.weight ?? ''}
-                      onChange={(e) => updateShippingDimension(idx, 'weight', e.target.value)}
-                      onBlur={saveShippingDimensions}
-                      placeholder="300"
-                      className="h-8 text-sm"
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={entry.width ?? ''}
-                      onChange={(e) => updateShippingDimension(idx, 'width', e.target.value)}
-                      onBlur={saveShippingDimensions}
-                      placeholder="30"
-                      className="h-8 text-sm"
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={entry.height ?? ''}
-                      onChange={(e) => updateShippingDimension(idx, 'height', e.target.value)}
-                      onBlur={saveShippingDimensions}
-                      placeholder="40"
-                      className="h-8 text-sm"
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={entry.length ?? ''}
-                      onChange={(e) => updateShippingDimension(idx, 'length', e.target.value)}
-                      onBlur={saveShippingDimensions}
-                      placeholder="5"
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                ))}
+                <ShippingDimensionsTable
+                  sizes={sizes}
+                  onChange={(idx, field, value) => updateShippingDimension(idx, field, value)}
+                  onBlur={saveShippingDimensions}
+                />
               </div>
             )}
           </div>

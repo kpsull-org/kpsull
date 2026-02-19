@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { updateProduct } from '../actions';
+import { ShippingDimensionsTable } from '@/components/products/shipping-dimensions-table';
 import { Plus, Save, Ruler, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import type { SizeEntry } from '@/lib/utils/parse-sizes';
 
@@ -251,62 +252,12 @@ export function SizeManager({ productId, initialSizes }: SizeManagerProps) {
                 <p className="text-xs text-muted-foreground">
                   Ces informations sont utilisees pour calculer les frais d&apos;envoi.
                 </p>
-                {/* Shipping table header */}
-                <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] gap-2 px-1">
-                  <span className="text-xs font-medium text-muted-foreground">Taille</span>
-                  <span className="text-xs font-medium text-muted-foreground">Poids (g)</span>
-                  <span className="text-xs font-medium text-muted-foreground">Larg. (cm)</span>
-                  <span className="text-xs font-medium text-muted-foreground">Haut. (cm)</span>
-                  <span className="text-xs font-medium text-muted-foreground">Long. (cm)</span>
-                </div>
-                {sizes.map((entry, index) => (
-                  <div key={index} className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] gap-2 items-center">
-                    <span className="text-xs font-medium truncate">{entry.size || '—'}</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={entry.weight ?? ''}
-                      onChange={(e) =>
-                        updateField(index, 'weight', e.target.value ? Number(e.target.value) : undefined)
-                      }
-                      placeholder="300"
-                      className="h-8 text-sm"
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={entry.width ?? ''}
-                      onChange={(e) =>
-                        updateField(index, 'width', e.target.value ? Number(e.target.value) : undefined)
-                      }
-                      placeholder="30"
-                      className="h-8 text-sm"
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={entry.height ?? ''}
-                      onChange={(e) =>
-                        updateField(index, 'height', e.target.value ? Number(e.target.value) : undefined)
-                      }
-                      placeholder="40"
-                      className="h-8 text-sm"
-                    />
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={entry.length ?? ''}
-                      onChange={(e) =>
-                        updateField(index, 'length', e.target.value ? Number(e.target.value) : undefined)
-                      }
-                      placeholder="5"
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                ))}
+                <ShippingDimensionsTable
+                  sizes={sizes}
+                  onChange={(idx, field, value) =>
+                    updateField(idx, field, value ? Number(value) : undefined)
+                  }
+                />
               </div>
             )}
           </div>

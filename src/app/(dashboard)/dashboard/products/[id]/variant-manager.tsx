@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createVariant, updateVariant, deleteVariant, addVariantImage, removeVariantImage } from '../actions';
 import { compressImage } from '@/lib/utils/image-compression';
+import { PRESET_COLORS } from '@/lib/utils/product-colors';
 import { Plus, Pencil, Trash2, X, Check, Package, AlertCircle, ImagePlus } from 'lucide-react';
 
 interface Variant {
   id: string;
   name: string;
-  sku?: string;
   priceOverride?: number;
   stock: number;
   isAvailable: boolean;
@@ -26,23 +26,6 @@ interface VariantManagerProps {
   productId: string;
   variants: Variant[];
 }
-
-const PRESET_COLORS = [
-  { name: 'Noir', hex: '#000000' },
-  { name: 'Blanc', hex: '#FFFFFF' },
-  { name: 'Gris', hex: '#808080' },
-  { name: 'Beige', hex: '#F5F0E8' },
-  { name: 'Rouge', hex: '#DC2626' },
-  { name: 'Rose', hex: '#F472B6' },
-  { name: 'Orange', hex: '#F97316' },
-  { name: 'Jaune', hex: '#FCD34D' },
-  { name: 'Vert', hex: '#16A34A' },
-  { name: 'Bleu', hex: '#2563EB' },
-  { name: 'Marine', hex: '#1E3A5F' },
-  { name: 'Violet', hex: '#7C3AED' },
-  { name: 'Marron', hex: '#92400E' },
-  { name: 'Camel', hex: '#C19A6B' },
-];
 
 interface ColorPickerProps {
   colorName: string;
@@ -203,7 +186,6 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
 
   // Create form state
   const [newName, setNewName] = useState('');
-  const [newSku, setNewSku] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [newStock, setNewStock] = useState('0');
   const [newColor, setNewColor] = useState('');
@@ -211,7 +193,6 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
 
   // Edit form state
   const [editName, setEditName] = useState('');
-  const [editSku, setEditSku] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('0');
   const [editColor, setEditColor] = useState('');
@@ -219,7 +200,6 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
 
   function resetCreateForm() {
     setNewName('');
-    setNewSku('');
     setNewPrice('');
     setNewStock('0');
     setNewColor('');
@@ -231,7 +211,6 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
   function startEditing(variant: Variant) {
     setEditingId(variant.id);
     setEditName(variant.name);
-    setEditSku(variant.sku ?? '');
     setEditPrice(variant.priceOverride ? (variant.priceOverride / 100).toFixed(2) : '');
     setEditStock(String(variant.stock));
     setEditColor(variant.color ?? '');
@@ -345,16 +324,6 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="new-variant-sku" className="text-xs">SKU</Label>
-                <Input
-                  id="new-variant-sku"
-                  value={newSku}
-                  onChange={(e) => setNewSku(e.target.value)}
-                  placeholder="Ex: PROD-M-BLU"
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1">
                 <Label htmlFor="new-variant-price" className="text-xs">Prix specifique (EUR)</Label>
                 <Input
                   id="new-variant-price"
@@ -415,14 +384,6 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">SKU</Label>
-                    <Input
-                      value={editSku}
-                      onChange={(e) => setEditSku(e.target.value)}
                       className="h-9"
                     />
                   </div>
@@ -488,11 +449,6 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
                       <span className="font-medium text-sm">{variant.name}</span>
                       {variant.color && (
                         <span className="text-xs text-muted-foreground">{variant.color}</span>
-                      )}
-                      {variant.sku && (
-                        <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
-                          {variant.sku}
-                        </span>
                       )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5">
