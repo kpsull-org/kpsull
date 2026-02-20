@@ -1,6 +1,7 @@
 import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
 import { VariantRepository } from '../../ports/variant.repository.interface';
+import { ImageUploadService } from '../../ports/image-upload.service.interface';
 
 export interface DeleteVariantInput {
   id: string;
@@ -17,9 +18,13 @@ export interface DeleteVariantOutput {
  *
  * Deletes an existing variant permanently.
  * Validates that the variant exists before deletion.
+ * Deletes associated Cloudinary images (best effort).
  */
 export class DeleteVariantUseCase implements UseCase<DeleteVariantInput, DeleteVariantOutput> {
-  constructor(private readonly variantRepository: VariantRepository) {}
+  constructor(
+    private readonly variantRepository: VariantRepository,
+    private readonly imageUploadService: ImageUploadService
+  ) {}
 
   async execute(input: DeleteVariantInput): Promise<Result<DeleteVariantOutput>> {
     // Find the existing variant
@@ -34,6 +39,18 @@ export class DeleteVariantUseCase implements UseCase<DeleteVariantInput, DeleteV
       productId: variant.productId,
       name: variant.name,
     };
+
+    // Delete Cloudinary images (best effort)
+    if (variant.images.length > 0) {
+      await Promise.all(
+        variant.images.map(async (url) => {
+          const result = await this.imageUploadService.delete(url);
+          if (result.isFailure) {
+            console.warn(`Failed to delete variant image from Cloudinary: ${url} - ${result.error}`);
+          }
+        })
+      );
+    }
 
     // Delete the variant
     await this.variantRepository.delete(input.id);

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { DeleteVariantUseCase, type DeleteVariantInput } from '../variants/delete-variant.use-case';
 import type { VariantRepository } from '../../ports/variant.repository.interface';
+import type { ImageUploadService } from '../../ports/image-upload.service.interface';
+import { Result } from '@/shared/domain';
 import { ProductVariant } from '../../../domain/entities/product-variant.entity';
 
 describe('DeleteVariantUseCase', () => {
@@ -12,6 +14,10 @@ describe('DeleteVariantUseCase', () => {
     delete: Mock;
     countByProductId: Mock;
   };
+  let mockImageUploadService: {
+    upload: Mock;
+    delete: Mock;
+  };
   let existingVariant: ProductVariant;
 
   beforeEach(() => {
@@ -21,6 +27,11 @@ describe('DeleteVariantUseCase', () => {
       save: vi.fn(),
       delete: vi.fn(),
       countByProductId: vi.fn(),
+    };
+
+    mockImageUploadService = {
+      upload: vi.fn(),
+      delete: vi.fn().mockResolvedValue(Result.ok()),
     };
 
     // Create an existing variant for tests
@@ -36,7 +47,10 @@ describe('DeleteVariantUseCase', () => {
     mockVariantRepo.findById.mockResolvedValue(existingVariant);
     mockVariantRepo.delete.mockResolvedValue(undefined);
 
-    useCase = new DeleteVariantUseCase(mockVariantRepo as unknown as VariantRepository);
+    useCase = new DeleteVariantUseCase(
+      mockVariantRepo as unknown as VariantRepository,
+      mockImageUploadService as unknown as ImageUploadService
+    );
   });
 
   describe('execute', () => {
@@ -113,6 +127,70 @@ describe('DeleteVariantUseCase', () => {
       // Assert
       expect(mockVariantRepo.findById).toHaveBeenCalledWith('variant-123');
       expect(mockVariantRepo.findById).toHaveBeenCalledBefore(mockVariantRepo.delete);
+    });
+
+    it('should delete variant images from Cloudinary before deleting', async () => {
+      // Arrange
+      const variantWithImages = ProductVariant.reconstitute({
+        id: 'variant-with-imgs',
+        productId: 'product-123',
+        name: 'Taille L',
+        stock: 5,
+        images: [
+          'https://res.cloudinary.com/demo/image/upload/v1/kpsull/var-img1.jpg',
+          'https://res.cloudinary.com/demo/image/upload/v1/kpsull/var-img2.jpg',
+        ],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).value;
+      mockVariantRepo.findById.mockResolvedValue(variantWithImages);
+
+      const input: DeleteVariantInput = { id: 'variant-with-imgs' };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(mockImageUploadService.delete).toHaveBeenCalledTimes(2);
+      expect(mockImageUploadService.delete).toHaveBeenCalledWith('https://res.cloudinary.com/demo/image/upload/v1/kpsull/var-img1.jpg');
+      expect(mockImageUploadService.delete).toHaveBeenCalledWith('https://res.cloudinary.com/demo/image/upload/v1/kpsull/var-img2.jpg');
+    });
+
+    it('should still delete variant if Cloudinary deletion fails', async () => {
+      // Arrange
+      const variantWithImages = ProductVariant.reconstitute({
+        id: 'variant-with-imgs',
+        productId: 'product-123',
+        name: 'Taille L',
+        stock: 5,
+        images: ['https://res.cloudinary.com/demo/image/upload/v1/kpsull/var-img1.jpg'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).value;
+      mockVariantRepo.findById.mockResolvedValue(variantWithImages);
+      mockImageUploadService.delete.mockResolvedValue(Result.fail('Cloudinary error'));
+
+      const input: DeleteVariantInput = { id: 'variant-with-imgs' };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert - deletion should succeed despite Cloudinary failure
+      expect(result.isSuccess).toBe(true);
+      expect(mockVariantRepo.delete).toHaveBeenCalledWith('variant-with-imgs');
+    });
+
+    it('should not call Cloudinary if variant has no images', async () => {
+      // Arrange - existingVariant has no images (default)
+      const input: DeleteVariantInput = { id: 'variant-123' };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(mockImageUploadService.delete).not.toHaveBeenCalled();
     });
   });
 });
