@@ -1,0 +1,16 @@
+export const PRESET_COLORS = [
+  { name: 'Noir', hex: '#000000' },
+  { name: 'Blanc', hex: '#FFFFFF' },
+  { name: 'Gris', hex: '#808080' },
+  { name: 'Beige', hex: '#F5F0E8' },
+  { name: 'Rouge', hex: '#DC2626' },
+  { name: 'Rose', hex: '#F472B6' },
+  { name: 'Orange', hex: '#F97316' },
+  { name: 'Jaune', hex: '#FCD34D' },
+  { name: 'Vert', hex: '#16A34A' },
+  { name: 'Bleu', hex: '#2563EB' },
+  { name: 'Marine', hex: '#1E3A5F' },
+  { name: 'Violet', hex: '#7C3AED' },
+  { name: 'Marron', hex: '#92400E' },
+  { name: 'Camel', hex: '#C19A6B' },
+];

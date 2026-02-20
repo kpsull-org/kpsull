@@ -4,9 +4,11 @@ import { Money } from '../value-objects/money.vo';
 interface ProductVariantProps {
   productId: string;
   name: string;
-  sku?: string;
   priceOverride?: Money;
   stock: number;
+  color?: string;
+  colorCode?: string;
+  images?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,19 +16,22 @@ interface ProductVariantProps {
 interface CreateProductVariantProps {
   productId: string;
   name: string;
-  sku?: string;
   priceOverride?: Money;
   stock: number;
+  color?: string;
+  colorCode?: string;
 }
 
 interface ReconstituteProductVariantProps {
   id: string;
   productId: string;
   name: string;
-  sku?: string;
   priceOverrideAmount?: number;
   priceOverrideCurrency?: string;
   stock: number;
+  color?: string;
+  colorCode?: string;
+  images?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,16 +61,24 @@ export class ProductVariant extends Entity<ProductVariantProps> {
     return this.props.name;
   }
 
-  get sku(): string | undefined {
-    return this.props.sku;
-  }
-
   get priceOverride(): Money | undefined {
     return this.props.priceOverride;
   }
 
   get stock(): number {
     return this.props.stock;
+  }
+
+  get color(): string | undefined {
+    return this.props.color;
+  }
+
+  get colorCode(): string | undefined {
+    return this.props.colorCode;
+  }
+
+  get images(): string[] {
+    return this.props.images ?? [];
   }
 
   get createdAt(): Date {
@@ -117,10 +130,12 @@ export class ProductVariant extends Entity<ProductVariantProps> {
     return Result.ok();
   }
 
-  updateSku(sku: string | undefined): void {
-    this.props.sku = sku;
+  updateColor(color: string | undefined, colorCode: string | undefined): void {
+    this.props.color = color;
+    this.props.colorCode = colorCode;
     this.props.updatedAt = new Date();
   }
+
 
   disable(): Result<void> {
     this.props.stock = 0;
@@ -153,9 +168,10 @@ export class ProductVariant extends Entity<ProductVariantProps> {
       new ProductVariant({
         productId: props.productId.trim(),
         name: props.name.trim(),
-        sku: props.sku,
         priceOverride: props.priceOverride,
         stock: props.stock,
+        color: props.color,
+        colorCode: props.colorCode,
         createdAt: now,
         updatedAt: now,
       })
@@ -173,9 +189,11 @@ export class ProductVariant extends Entity<ProductVariantProps> {
         {
           productId: props.productId,
           name: props.name,
-          sku: props.sku,
           priceOverride,
           stock: props.stock,
+          color: props.color,
+          colorCode: props.colorCode,
+          images: props.images ?? [],
           createdAt: props.createdAt,
           updatedAt: props.updatedAt,
         },

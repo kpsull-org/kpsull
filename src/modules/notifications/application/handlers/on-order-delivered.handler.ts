@@ -1,7 +1,5 @@
-import type { DomainEvent } from '@/shared/domain/domain-event.base';
-import type { IEventHandler } from '@/shared/application/ports/domain-event-dispatcher.interface';
 import type { IEmailService } from '../ports/email.service.interface';
-import { SendEmailNotificationUseCase } from '../use-cases/send-email-notification.use-case';
+import { BaseEmailHandler, type EmailNotification } from './base-email.handler';
 
 export interface OrderDeliveredPayload {
   orderId: string;
@@ -9,17 +7,12 @@ export interface OrderDeliveredPayload {
   customerEmail: string;
 }
 
-export class OnOrderDeliveredHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnOrderDeliveredHandler extends BaseEmailHandler<OrderDeliveredPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<OrderDeliveredPayload>): Promise<void> {
-    const { customerEmail, orderNumber, orderId } = event.payload;
-    const useCase = new SendEmailNotificationUseCase(this.emailService);
-
-    await useCase.execute({
-      to: customerEmail,
-      type: 'ORDER_DELIVERED',
-      data: { orderNumber, orderId },
-    });
+  getNotifications({ customerEmail, orderNumber, orderId }: OrderDeliveredPayload): EmailNotification[] {
+    return [{ to: customerEmail, type: 'ORDER_DELIVERED', data: { orderNumber, orderId } }];
   }
 }

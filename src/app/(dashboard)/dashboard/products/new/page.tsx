@@ -2,11 +2,11 @@ import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/client';
-import { ProductForm } from '@/components/products/product-form';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { ListProjectsUseCase } from '@/modules/products/application/use-cases/projects/list-projects.use-case';
 import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
+import { NewProductPageClient } from './new-product-page-client';
 
 export const metadata: Metadata = {
   title: 'Nouveau produit | Kpsull',
@@ -25,8 +25,18 @@ export default async function NewProductPage() {
   }
 
   const projectRepo = new PrismaProjectRepository(prisma);
-  const result = await new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id });
-  const collections = (result.value?.projects ?? []).map((p) => ({ id: p.id, name: p.name }));
+  const [collectionsResult, styles] = await Promise.all([
+    new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id }),
+    prisma.style.findMany({
+      where: {
+        OR: [{ creatorId: null }, { creatorId: session.user.id }],
+      },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, isCustom: true },
+    }),
+  ]);
+
+  const collections = (collectionsResult.value?.projects ?? []).map((p) => ({ id: p.id, name: p.name }));
 
   return (
     <div className="space-y-6">
@@ -44,9 +54,7 @@ export default async function NewProductPage() {
         </p>
       </div>
 
-      <div className="max-w-2xl">
-        <ProductForm mode="create" collections={collections} />
-      </div>
+      <NewProductPageClient collections={collections} styles={styles} />
     </div>
   );
 }

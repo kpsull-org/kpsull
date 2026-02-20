@@ -6,20 +6,22 @@ import { VariantRepository } from '../../ports/variant.repository.interface';
 export interface UpdateVariantInput {
   id: string;
   name?: string;
-  sku?: string;
-  removeSku?: boolean;
   priceOverride?: number;
   removePriceOverride?: boolean;
   stock?: number;
+  color?: string;
+  colorCode?: string;
+  removeColor?: boolean;
 }
 
 export interface UpdateVariantOutput {
   id: string;
   productId: string;
   name: string;
-  sku?: string;
   priceOverride?: number;
   stock: number;
+  color?: string;
+  colorCode?: string;
   isAvailable: boolean;
 }
 
@@ -44,11 +46,14 @@ export class UpdateVariantUseCase implements UseCase<UpdateVariantInput, UpdateV
     const stockResult = this.updateStock(variant, input);
     if (stockResult?.isFailure) return stockResult;
 
-    const skuResult = await this.updateSku(variant, input);
-    if (skuResult?.isFailure) return skuResult;
-
     const priceResult = this.updatePrice(variant, input);
     if (priceResult?.isFailure) return priceResult;
+
+    if (input.removeColor) {
+      variant.updateColor(undefined, undefined);
+    } else if (input.color !== undefined || input.colorCode !== undefined) {
+      variant.updateColor(input.color, input.colorCode);
+    }
 
     await this.variantRepository.save(variant);
 
@@ -56,9 +61,10 @@ export class UpdateVariantUseCase implements UseCase<UpdateVariantInput, UpdateV
       id: variant.idString,
       productId: variant.productId,
       name: variant.name,
-      sku: variant.sku,
       priceOverride: variant.priceOverride?.displayAmount,
       stock: variant.stock,
+      color: variant.color,
+      colorCode: variant.colorCode,
       isAvailable: variant.isAvailable,
     });
   }
@@ -73,22 +79,6 @@ export class UpdateVariantUseCase implements UseCase<UpdateVariantInput, UpdateV
     if (input.stock === undefined) return null;
     const result = variant.updateStock(input.stock);
     return result.isFailure ? Result.fail(result.error!) : null;
-  }
-
-  private async updateSku(variant: Awaited<ReturnType<VariantRepository['findById']>> & object, input: UpdateVariantInput): Promise<Result<UpdateVariantOutput> | null> {
-    if (input.removeSku) {
-      variant.updateSku(undefined);
-      return null;
-    }
-    if (input.sku === undefined) return null;
-    if (input.sku !== variant.sku) {
-      const existing = await this.variantRepository.findBySku(input.sku);
-      if (existing && existing.idString !== variant.idString) {
-        return Result.fail('Ce SKU est déjà utilisé par une autre variante');
-      }
-    }
-    variant.updateSku(input.sku);
-    return null;
   }
 
   private updatePrice(variant: Awaited<ReturnType<VariantRepository['findById']>> & object, input: UpdateVariantInput): Result<UpdateVariantOutput> | null {

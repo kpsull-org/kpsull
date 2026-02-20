@@ -28,25 +28,15 @@ export class PrismaVariantRepository implements VariantRepository {
     return prismaVariants.map((v) => this.toDomainVariant(v));
   }
 
-  async findBySku(sku: string): Promise<ProductVariant | null> {
-    const prismaVariant = await this.prisma.productVariant.findFirst({
-      where: { sku },
-    });
-
-    if (!prismaVariant) {
-      return null;
-    }
-
-    return this.toDomainVariant(prismaVariant);
-  }
-
   async save(variant: ProductVariant): Promise<void> {
     const data = {
       productId: variant.productId,
       name: variant.name,
-      sku: variant.sku ?? null,
       priceOverride: variant.priceOverride?.amount ?? null,
       stock: variant.stock,
+      color: variant.color ?? null,
+      colorCode: variant.colorCode ?? null,
+      images: variant.images.length > 0 ? variant.images : [],
       updatedAt: variant.updatedAt,
     };
 
@@ -76,10 +66,12 @@ export class PrismaVariantRepository implements VariantRepository {
       id: prismaVariant.id,
       productId: prismaVariant.productId,
       name: prismaVariant.name,
-      sku: prismaVariant.sku ?? undefined,
       priceOverrideAmount: prismaVariant.priceOverride ?? undefined,
       priceOverrideCurrency: prismaVariant.priceOverride ? 'EUR' : undefined,
       stock: prismaVariant.stock,
+      color: prismaVariant.color ?? undefined,
+      colorCode: prismaVariant.colorCode ?? undefined,
+      images: Array.isArray(prismaVariant.images) ? (prismaVariant.images as string[]) : [],
       createdAt: prismaVariant.createdAt,
       updatedAt: prismaVariant.updatedAt,
     });

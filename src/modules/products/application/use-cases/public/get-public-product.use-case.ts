@@ -17,7 +17,6 @@ export interface GetPublicProductInput {
 export interface PublicVariantOutput {
   id: string;
   name: string;
-  sku?: string;
   priceOverride?: number;
   stock: number;
   isAvailable: boolean;
@@ -88,7 +87,6 @@ export class GetPublicProductUseCase implements UseCase<GetPublicProductInput, G
     const variantDtos: PublicVariantOutput[] = availableVariants.map((variant) => ({
       id: variant.idString,
       name: variant.name,
-      sku: variant.sku,
       priceOverride: variant.priceOverride?.displayAmount,
       stock: variant.stock,
       isAvailable: variant.isAvailable,

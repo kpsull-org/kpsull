@@ -8,18 +8,20 @@ import { ProductRepository } from '../../ports/product.repository.interface';
 export interface CreateVariantInput {
   productId: string;
   name: string;
-  sku?: string;
   priceOverride?: number;
   stock: number;
+  color?: string;
+  colorCode?: string;
 }
 
 export interface CreateVariantOutput {
   id: string;
   productId: string;
   name: string;
-  sku?: string;
   priceOverride?: number;
   stock: number;
+  color?: string;
+  colorCode?: string;
   isAvailable: boolean;
 }
 
@@ -42,14 +44,6 @@ export class CreateVariantUseCase implements UseCase<CreateVariantInput, CreateV
       return Result.fail('Le produit n\'existe pas');
     }
 
-    // Check SKU uniqueness if provided
-    if (input.sku) {
-      const existingVariant = await this.variantRepository.findBySku(input.sku);
-      if (existingVariant) {
-        return Result.fail('Ce SKU est déjà utilisé par une autre variante');
-      }
-    }
-
     // Create price override if provided
     let priceOverride: Money | undefined;
     if (input.priceOverride !== undefined) {
@@ -64,9 +58,10 @@ export class CreateVariantUseCase implements UseCase<CreateVariantInput, CreateV
     const variantResult = ProductVariant.create({
       productId: input.productId,
       name: input.name,
-      sku: input.sku,
       priceOverride,
       stock: input.stock,
+      color: input.color,
+      colorCode: input.colorCode,
     });
 
     if (variantResult.isFailure) {
@@ -82,9 +77,10 @@ export class CreateVariantUseCase implements UseCase<CreateVariantInput, CreateV
       id: variant.idString,
       productId: variant.productId,
       name: variant.name,
-      sku: variant.sku,
       priceOverride: variant.priceOverride?.displayAmount,
       stock: variant.stock,
+      color: variant.color,
+      colorCode: variant.colorCode,
       isAvailable: variant.isAvailable,
     });
   }

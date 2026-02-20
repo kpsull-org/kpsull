@@ -23,14 +23,14 @@ const SIZE_FILTERS = ["XS", "S", "M", "L", "XL"];
 
 // Placeholder product data
 const PLACEHOLDER_PRODUCTS = [
-  { id: 1, name: "Veste en jean oversized", price: 89 },
-  { id: 2, name: "T-shirt basique blanc", price: 25 },
-  { id: 3, name: "Pantalon cargo noir", price: 75 },
-  { id: 4, name: "Robe midi fleurie", price: 120 },
-  { id: 5, name: "Chemise rayée", price: 65 },
-  { id: 6, name: "Pull col roulé", price: 95 },
-  { id: 7, name: "Jupe plissée", price: 80 },
-  { id: 8, name: "Blouson cuir", price: 280 },
+  { id: 1, name: "Veste en jean oversized", price: 89, creator: "Lucas Design", imageUrl: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&h=800&fit=crop" },
+  { id: 2, name: "T-shirt basique blanc", price: 25, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop" },
+  { id: 3, name: "Pantalon cargo noir", price: 75, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&h=800&fit=crop" },
+  { id: 4, name: "Robe midi fleurie", price: 120, creator: "Claire Vintage", imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&h=800&fit=crop" },
+  { id: 5, name: "Hoodie oversize", price: 89, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=600&h=800&fit=crop" },
+  { id: 6, name: "Pull mohair pastel", price: 95, creator: "Claire Vintage", imageUrl: "https://images.unsplash.com/photo-1549465220-1a629bd08dbd?w=600&h=800&fit=crop" },
+  { id: 7, name: "Jupe plissée écossaise", price: 80, creator: "Claire Vintage", imageUrl: "https://images.unsplash.com/photo-1594035035756-5e9cd6a03781?w=600&h=800&fit=crop" },
+  { id: 8, name: "Blouson matelassé", price: 125, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop" },
 ];
 
 function FilterSection() {
@@ -157,16 +157,20 @@ export default function CataloguePage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {PLACEHOLDER_PRODUCTS.map((product) => (
               <div key={product.id} className="group cursor-pointer">
-                {/* Product Image Placeholder */}
-                <div className="aspect-[3/4] bg-muted rounded-[15px] mb-3 transition-transform group-hover:scale-[1.02]" />
-
+                {/* Product Image */}
+                <div className="aspect-[3/4] bg-muted rounded-[15px] mb-3 overflow-hidden transition-transform group-hover:scale-[1.02]">
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 {/* Product Info */}
                 <h3 className="font-montserrat font-semibold text-sm uppercase mb-1">
                   {product.name}
                 </h3>
-                <p className="font-montserrat font-bold text-base">
-                  {product.price}EUR
-                </p>
+                <p className="font-montserrat text-xs text-muted-foreground mb-1">{product.creator}</p>
+                <p className="font-montserrat font-bold text-base">{product.price}EUR</p>
               </div>
             ))}
           </div>

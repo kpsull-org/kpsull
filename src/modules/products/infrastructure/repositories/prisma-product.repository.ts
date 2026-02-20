@@ -139,7 +139,6 @@ export class PrismaProductRepository implements ProductRepository, ProductListRe
     const data = {
       productId: variant.productId,
       name: variant.name,
-      sku: variant.sku ?? null,
       priceOverride: variant.priceOverride?.amount ?? null,
       stock: variant.stock,
       updatedAt: variant.updatedAt,
@@ -187,7 +186,6 @@ export class PrismaProductRepository implements ProductRepository, ProductListRe
       id: prismaVariant.id,
       productId: prismaVariant.productId,
       name: prismaVariant.name,
-      sku: prismaVariant.sku ?? undefined,
       priceOverrideAmount: prismaVariant.priceOverride ?? undefined,
       priceOverrideCurrency: prismaVariant.priceOverride ? 'EUR' : undefined,
       stock: prismaVariant.stock,

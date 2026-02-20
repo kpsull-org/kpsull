@@ -69,6 +69,7 @@ export default async function CollectionDetailPage({ params }: CollectionDetailP
           id: collection.idString,
           name: collection.name,
           description: collection.description ?? null,
+          coverImage: collection.coverImage ?? null,
         }}
         products={collectionProducts.map((p) => ({
           id: p.idString,

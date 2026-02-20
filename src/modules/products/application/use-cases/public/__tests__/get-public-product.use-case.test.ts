@@ -39,7 +39,6 @@ describe('GetPublicProductUseCase', () => {
     return ProductVariant.create({
       productId,
       name: 'Taille M',
-      sku: 'SKU-M',
       priceOverride,
       stock,
     }).value;

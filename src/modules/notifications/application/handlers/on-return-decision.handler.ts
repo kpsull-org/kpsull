@@ -1,7 +1,5 @@
-import type { DomainEvent } from '@/shared/domain/domain-event.base';
-import type { IEventHandler } from '@/shared/application/ports/domain-event-dispatcher.interface';
 import type { IEmailService } from '../ports/email.service.interface';
-import { SendEmailNotificationUseCase } from '../use-cases/send-email-notification.use-case';
+import { BaseEmailHandler, type EmailNotification } from './base-email.handler';
 
 export interface ReturnDecisionPayload {
   returnId: string;
@@ -13,17 +11,12 @@ export interface ReturnDecisionPayload {
   returnAddress?: string;
 }
 
-export class OnReturnDecisionHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnReturnDecisionHandler extends BaseEmailHandler<ReturnDecisionPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<ReturnDecisionPayload>): Promise<void> {
-    const { customerEmail, orderNumber, approved, reason, returnAddress } = event.payload;
-    const useCase = new SendEmailNotificationUseCase(this.emailService);
-
-    await useCase.execute({
-      to: customerEmail,
-      type: approved ? 'RETURN_APPROVED' : 'RETURN_REJECTED',
-      data: { orderNumber, reason, returnAddress },
-    });
+  getNotifications({ customerEmail, orderNumber, approved, reason, returnAddress }: ReturnDecisionPayload): EmailNotification[] {
+    return [{ to: customerEmail, type: approved ? 'RETURN_APPROVED' : 'RETURN_REJECTED', data: { orderNumber, reason, returnAddress } }];
   }
 }

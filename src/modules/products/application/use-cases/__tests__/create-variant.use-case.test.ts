@@ -3,14 +3,12 @@ import { CreateVariantUseCase, type CreateVariantInput } from '../variants/creat
 import type { VariantRepository } from '../../ports/variant.repository.interface';
 import type { ProductRepository } from '../../ports/product.repository.interface';
 import { Product } from '../../../domain/entities/product.entity';
-import { ProductVariant } from '../../../domain/entities/product-variant.entity';
 
 describe('CreateVariantUseCase', () => {
   let useCase: CreateVariantUseCase;
   let mockVariantRepo: {
     findById: Mock;
     findByProductId: Mock;
-    findBySku: Mock;
     save: Mock;
     delete: Mock;
     countByProductId: Mock;
@@ -28,7 +26,6 @@ describe('CreateVariantUseCase', () => {
     mockVariantRepo = {
       findById: vi.fn(),
       findByProductId: vi.fn(),
-      findBySku: vi.fn(),
       save: vi.fn(),
       delete: vi.fn(),
       countByProductId: vi.fn(),
@@ -56,7 +53,6 @@ describe('CreateVariantUseCase', () => {
     }).value;
 
     mockProductRepo.findById.mockResolvedValue(validProduct);
-    mockVariantRepo.findBySku.mockResolvedValue(null);
     mockVariantRepo.save.mockResolvedValue(undefined);
 
     useCase = new CreateVariantUseCase(
@@ -83,23 +79,6 @@ describe('CreateVariantUseCase', () => {
       expect(result.value.stock).toBe(10);
       expect(result.value.productId).toBe('product-123');
       expect(mockVariantRepo.save).toHaveBeenCalledTimes(1);
-    });
-
-    it('should create a variant with optional SKU', async () => {
-      // Arrange
-      const input: CreateVariantInput = {
-        productId: 'product-123',
-        name: 'Couleur Rouge',
-        sku: 'SKU-RED-001',
-        stock: 5,
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.sku).toBe('SKU-RED-001');
     });
 
     it('should create a variant with optional price override', async () => {
@@ -168,48 +147,6 @@ describe('CreateVariantUseCase', () => {
       // Assert
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('négatif');
-    });
-
-    it('should fail when SKU already exists', async () => {
-      // Arrange
-      const existingVariant = ProductVariant.create({
-        productId: 'product-456',
-        name: 'Autre Variante',
-        sku: 'SKU-EXISTING',
-        stock: 5,
-      }).value;
-
-      mockVariantRepo.findBySku.mockResolvedValue(existingVariant);
-
-      const input: CreateVariantInput = {
-        productId: 'product-123',
-        name: 'Taille M',
-        sku: 'SKU-EXISTING',
-        stock: 10,
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('SKU');
-    });
-
-    it('should not check SKU uniqueness when no SKU provided', async () => {
-      // Arrange
-      const input: CreateVariantInput = {
-        productId: 'product-123',
-        name: 'Taille M',
-        stock: 10,
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(mockVariantRepo.findBySku).not.toHaveBeenCalled();
     });
 
     it('should return variant with generated ID', async () => {
