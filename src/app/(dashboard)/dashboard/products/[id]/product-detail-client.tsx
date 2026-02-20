@@ -15,6 +15,7 @@ interface StyleOption {
   id: string;
   name: string;
   isCustom: boolean;
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
 }
 
 interface InitialFormValues {

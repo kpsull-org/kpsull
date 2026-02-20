@@ -322,6 +322,34 @@ const templates: Record<NotificationTypeValue, EmailTemplate> = {
       ),
     text: () => 'Votre compte créateur Kpsull a été réactivé !',
   },
+
+  STYLE_APPROVED: {
+    subject: (d) => `Votre style "${d.styleName}" a été approuvé - Kpsull`,
+    html: (d) =>
+      baseLayout(
+        'Votre style est en ligne !',
+        paragraph(`Bonne nouvelle ! Votre style <strong>${d.styleName ?? ''}</strong> a été approuvé par notre équipe.`) +
+        paragraph("Vous pouvez maintenant publier vos articles utilisant ce style.") +
+        ctaButton('Voir mes produits', `${process.env.NEXTAUTH_URL ?? ''}/dashboard/products`)
+      ),
+    text: (d) => `Votre style "${d.styleName}" a été approuvé. Vous pouvez maintenant publier vos articles.`,
+  },
+
+  STYLE_REJECTED: {
+    subject: (d) => `Votre style "${d.styleName}" n'a pas été approuvé - Kpsull`,
+    html: (d) =>
+      baseLayout(
+        'Demande de style refusée',
+        paragraph(`Votre style <strong>${d.styleName ?? ''}</strong> n'a pas pu être approuvé par notre équipe.`) +
+        (d.reason ? infoBox(`Motif : ${d.reason}`) : '') +
+        paragraph("Vous pouvez soumettre un nouveau style en tenant compte de ce retour.") +
+        ctaButton('Proposer un nouveau style', `${process.env.NEXTAUTH_URL ?? ''}/dashboard/products`)
+      ),
+    text: (d) => {
+      const reasonSuffix = d.reason ? ` Motif: ${d.reason}` : '';
+      return `Votre style "${d.styleName}" n'a pas été approuvé.${reasonSuffix}`;
+    },
+  },
 };
 
 export function getEmailTemplate(type: NotificationTypeValue): EmailTemplate | undefined {

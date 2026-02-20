@@ -356,52 +356,82 @@ async function main() {
   console.log('✅ Projects created (6 collections)');
 
   // ============================================
+  // SYSTEM STYLES
+  // ============================================
+
+  console.log('\n🎨 Creating system styles...');
+
+  const systemStylesData = [
+    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers' },
+    { name: 'Vintage', description: 'Pieces retro et secondes mains revisitees' },
+    { name: 'Ceramique', description: 'Artisanat ceramique, poterie et creations en argile' },
+    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre' },
+    { name: 'Boheme', description: 'Esprit libre, matieres naturelles, imprimés ethniques' },
+    { name: 'Sportswear', description: 'Vetements techniques et confortables pour le sport' },
+    { name: 'Luxe', description: 'Matieres nobles, finitions haut de gamme, editions limitees' },
+    { name: 'Art', description: 'Creations artistiques uniques, editions limitees signees' },
+  ];
+
+  const styleMap: Record<string, string> = {};
+  for (const style of systemStylesData) {
+    const s = await prisma.style.upsert({
+      where: { name: style.name },
+      update: {},
+      create: { name: style.name, description: style.description, isCustom: false, creatorId: null },
+      select: { id: true, name: true },
+    });
+    styleMap[style.name] = s.id;
+  }
+
+  console.log(`   ✅ ${systemStylesData.length} system styles created`);
+
+  // ============================================
   // PRODUCTS
   // ============================================
 
   // --- Jose: 8 products streetwear ---
   const joseProducts = [
-    { id: 'prod_jose_hoodie_noir', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Hoodie Oversize Noir', description: 'Hoodie oversize en coton bio 350g, coupe ample et capuche doublee.', price: 8900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(25) },
-    { id: 'prod_jose_tshirt_graphic', creatorId: jose.id, projectId: projJoseStreet.id, name: 'T-shirt Graphique "Antidote"', description: 'T-shirt en coton epais avec serigraphie "Antidote" sur le dos.', price: 4500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22) },
-    { id: 'prod_jose_pantalon_cargo', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Pantalon Cargo Kaki', description: 'Cargo coupe droite avec 6 poches, tissu ripstop.', price: 7500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20) },
-    { id: 'prod_jose_bomber', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Bomber Matelasse', description: 'Bomber leger matelasse, zip YKK, doublure satin.', price: 12500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18) },
-    { id: 'prod_jose_bonnet', creatorId: jose.id, projectId: projJoseAccess.id, name: 'Bonnet Laine Merinos', description: 'Bonnet tricote en laine merinos, taille unique.', price: 3500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15) },
-    { id: 'prod_jose_casquette', creatorId: jose.id, projectId: projJoseAccess.id, name: 'Casquette Brodee KPSULL', description: 'Casquette 5 panels avec broderie logo, fermeture metal.', price: 3900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12) },
-    { id: 'prod_jose_tote', creatorId: jose.id, projectId: projJoseAccess.id, name: 'Tote Bag Canvas', description: 'Tote bag en toile canvas resistante, serigraphie artisanale.', price: 2500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10) },
-    { id: 'prod_jose_sweat', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Sweat Col Rond Gris Chine', description: 'Sweat classique col rond en molleton bio, coupe reguliere.', price: 6900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(8) },
+    { id: 'prod_jose_hoodie_noir', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Hoodie Oversize Noir', description: 'Hoodie oversize en coton bio 350g, coupe ample et capuche doublee.', price: 8900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(25), styleId: styleMap['Streetwear'] },
+    { id: 'prod_jose_tshirt_graphic', creatorId: jose.id, projectId: projJoseStreet.id, name: 'T-shirt Graphique "Antidote"', description: 'T-shirt en coton epais avec serigraphie "Antidote" sur le dos.', price: 4500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22), styleId: styleMap['Streetwear'] },
+    { id: 'prod_jose_pantalon_cargo', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Pantalon Cargo Kaki', description: 'Cargo coupe droite avec 6 poches, tissu ripstop.', price: 7500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20), styleId: styleMap['Streetwear'] },
+    { id: 'prod_jose_bomber', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Bomber Matelasse', description: 'Bomber leger matelasse, zip YKK, doublure satin.', price: 12500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18), styleId: styleMap['Streetwear'] },
+    { id: 'prod_jose_bonnet', creatorId: jose.id, projectId: projJoseAccess.id, name: 'Bonnet Laine Merinos', description: 'Bonnet tricote en laine merinos, taille unique.', price: 3500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15), styleId: styleMap['Streetwear'] },
+    { id: 'prod_jose_casquette', creatorId: jose.id, projectId: projJoseAccess.id, name: 'Casquette Brodee KPSULL', description: 'Casquette 5 panels avec broderie logo, fermeture metal.', price: 3900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12), styleId: styleMap['Streetwear'] },
+    { id: 'prod_jose_tote', creatorId: jose.id, projectId: projJoseAccess.id, name: 'Tote Bag Canvas', description: 'Tote bag en toile canvas resistante, serigraphie artisanale.', price: 2500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10), styleId: styleMap['Art'] },
+    { id: 'prod_jose_sweat', creatorId: jose.id, projectId: projJoseStreet.id, name: 'Sweat Col Rond Gris Chine', description: 'Sweat classique col rond en molleton bio, coupe reguliere.', price: 6900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(8), styleId: styleMap['Streetwear'] },
   ];
 
   // --- Sophie: 5 products ceramique ---
   const sophieProducts = [
-    { id: 'prod_sophie_bol_raku', creatorId: sophie.id, projectId: projSophie.id, name: 'Bol Raku Terre & Feu', description: 'Bol en gres emaille raku, piece unique aux reflets cuivres.', price: 4500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(28) },
-    { id: 'prod_sophie_vase_bleu', creatorId: sophie.id, projectId: projSophie.id, name: 'Vase Bleu Cobalt', description: 'Vase tourne main en porcelaine, email bleu cobalt profond.', price: 7800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(25) },
-    { id: 'prod_sophie_tasse_duo', creatorId: sophie.id, projectId: projSophie.id, name: 'Duo de Tasses Espresso', description: 'Deux tasses espresso en gres blanc, anse minimaliste.', price: 3200, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22) },
-    { id: 'prod_sophie_assiette', creatorId: sophie.id, projectId: projSophie.id, name: 'Assiette Plate Wabi-Sabi', description: 'Assiette plate en gres chamotte, bords irreguliers volontaires.', price: 3800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18) },
-    { id: 'prod_sophie_bougeoir', creatorId: sophie.id, projectId: projSophie.id, name: 'Bougeoir Sculpte', description: 'Bougeoir en gres noir mat, forme organique sculptee a la main.', price: 2900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14) },
+    { id: 'prod_sophie_bol_raku', creatorId: sophie.id, projectId: projSophie.id, name: 'Bol Raku Terre & Feu', description: 'Bol en gres emaille raku, piece unique aux reflets cuivres.', price: 4500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(28), styleId: styleMap['Ceramique'] },
+    { id: 'prod_sophie_vase_bleu', creatorId: sophie.id, projectId: projSophie.id, name: 'Vase Bleu Cobalt', description: 'Vase tourne main en porcelaine, email bleu cobalt profond.', price: 7800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(25), styleId: styleMap['Ceramique'] },
+    { id: 'prod_sophie_tasse_duo', creatorId: sophie.id, projectId: projSophie.id, name: 'Duo de Tasses Espresso', description: 'Deux tasses espresso en gres blanc, anse minimaliste.', price: 3200, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22), styleId: styleMap['Ceramique'] },
+    { id: 'prod_sophie_assiette', creatorId: sophie.id, projectId: projSophie.id, name: 'Assiette Plate Wabi-Sabi', description: 'Assiette plate en gres chamotte, bords irreguliers volontaires.', price: 3800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18), styleId: styleMap['Ceramique'] },
+    { id: 'prod_sophie_bougeoir', creatorId: sophie.id, projectId: projSophie.id, name: 'Bougeoir Sculpte', description: 'Bougeoir en gres noir mat, forme organique sculptee a la main.', price: 2900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14), styleId: styleMap['Ceramique'] },
   ];
 
   // --- Lucas: 5 products streetwear design ---
   const lucasProducts = [
-    { id: 'prod_lucas_hoodie_art', creatorId: lucas.id, projectId: projLucas.id, name: 'Hoodie "Urban Canvas"', description: 'Hoodie avec print all-over graphique inspire du street art bordelais.', price: 9500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20) },
-    { id: 'prod_lucas_tshirt_typo', creatorId: lucas.id, projectId: projLucas.id, name: 'T-shirt Typo Bold', description: 'T-shirt avec typographie bold exclusive, coton bio 180g.', price: 3900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18) },
-    { id: 'prod_lucas_veste_jean', creatorId: lucas.id, projectId: projLucas.id, name: 'Veste Jean Customisee', description: 'Veste en jean vintage avec patchs et broderies faites main.', price: 14500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15) },
-    { id: 'prod_lucas_short_mesh', creatorId: lucas.id, projectId: projLucas.id, name: 'Short Mesh Basketball', description: 'Short en mesh avec bandes laterales imprimees.', price: 5500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12) },
-    { id: 'prod_lucas_sac_banane', creatorId: lucas.id, projectId: projLucas.id, name: 'Sac Banane Reflectif', description: 'Sac banane en tissu reflectif 3M, zip etanche.', price: 4200, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10) },
+    { id: 'prod_lucas_hoodie_art', creatorId: lucas.id, projectId: projLucas.id, name: 'Hoodie "Urban Canvas"', description: 'Hoodie avec print all-over graphique inspire du street art bordelais.', price: 9500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20), styleId: styleMap['Art'] },
+    { id: 'prod_lucas_tshirt_typo', creatorId: lucas.id, projectId: projLucas.id, name: 'T-shirt Typo Bold', description: 'T-shirt avec typographie bold exclusive, coton bio 180g.', price: 3900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18), styleId: styleMap['Streetwear'] },
+    { id: 'prod_lucas_veste_jean', creatorId: lucas.id, projectId: projLucas.id, name: 'Veste Jean Customisee', description: 'Veste en jean vintage avec patchs et broderies faites main.', price: 14500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15), styleId: styleMap['Art'] },
+    { id: 'prod_lucas_short_mesh', creatorId: lucas.id, projectId: projLucas.id, name: 'Short Mesh Basketball', description: 'Short en mesh avec bandes laterales imprimees.', price: 5500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12), styleId: styleMap['Sportswear'] },
+    { id: 'prod_lucas_sac_banane', creatorId: lucas.id, projectId: projLucas.id, name: 'Sac Banane Reflectif', description: 'Sac banane en tissu reflectif 3M, zip etanche.', price: 4200, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10), styleId: styleMap['Streetwear'] },
   ];
 
   // --- Claire: 4 products mode vintage ---
   const claireProducts = [
-    { id: 'prod_claire_robe_70s', creatorId: claire.id, projectId: projClaire.id, name: 'Robe Boheme 70s', description: 'Robe longue fleurie style 70s, tissu fluide et ceinture macrame.', price: 8500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22) },
-    { id: 'prod_claire_blazer_xl', creatorId: claire.id, projectId: projClaire.id, name: 'Blazer Oversize 90s', description: 'Blazer oversize prince-de-galles, epaulettes structurees.', price: 9500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18) },
-    { id: 'prod_claire_jupe_plissee', creatorId: claire.id, projectId: projClaire.id, name: 'Jupe Plissee Ecossaise', description: 'Jupe plissee mi-longue en tartan ecossais authentique.', price: 6500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14) },
-    { id: 'prod_claire_pull_mohair', creatorId: claire.id, projectId: projClaire.id, name: 'Pull Mohair Pastel', description: 'Pull oversize en mohair italien, coloris rose poudre.', price: 7800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10) },
+    { id: 'prod_claire_robe_70s', creatorId: claire.id, projectId: projClaire.id, name: 'Robe Boheme 70s', description: 'Robe longue fleurie style 70s, tissu fluide et ceinture macrame.', price: 8500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22), styleId: styleMap['Boheme'] },
+    { id: 'prod_claire_blazer_xl', creatorId: claire.id, projectId: projClaire.id, name: 'Blazer Oversize 90s', description: 'Blazer oversize prince-de-galles, epaulettes structurees.', price: 9500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18), styleId: styleMap['Vintage'] },
+    { id: 'prod_claire_jupe_plissee', creatorId: claire.id, projectId: projClaire.id, name: 'Jupe Plissee Ecossaise', description: 'Jupe plissee mi-longue en tartan ecossais authentique.', price: 6500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14), styleId: styleMap['Vintage'] },
+    { id: 'prod_claire_pull_mohair', creatorId: claire.id, projectId: projClaire.id, name: 'Pull Mohair Pastel', description: 'Pull oversize en mohair italien, coloris rose poudre.', price: 7800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10), styleId: styleMap['Vintage'] },
   ];
 
   // --- Marc: 3 products accessoires vintage ---
   const marcProducts = [
-    { id: 'prod_marc_montre_auto', creatorId: marc.id, projectId: projMarc.id, name: 'Montre Automatique Restauree', description: 'Montre mecanique des annees 60 entierement restauree, bracelet cuir.', price: 18500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15) },
-    { id: 'prod_marc_ceinture_cuir', creatorId: marc.id, projectId: projMarc.id, name: 'Ceinture Cuir Patine', description: 'Ceinture en cuir pleine fleur patine a la main, boucle laiton.', price: 6500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12) },
-    { id: 'prod_marc_lunettes_retro', creatorId: marc.id, projectId: projMarc.id, name: 'Lunettes Retro Ecaille', description: 'Monture retro en acetate ecaille, verres solaires polarises.', price: 12000, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(8) },
+    { id: 'prod_marc_montre_auto', creatorId: marc.id, projectId: projMarc.id, name: 'Montre Automatique Restauree', description: 'Montre mecanique des annees 60 entierement restauree, bracelet cuir.', price: 18500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15), styleId: styleMap['Luxe'] },
+    { id: 'prod_marc_ceinture_cuir', creatorId: marc.id, projectId: projMarc.id, name: 'Ceinture Cuir Patine', description: 'Ceinture en cuir pleine fleur patine a la main, boucle laiton.', price: 6500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12), styleId: styleMap['Vintage'] },
+    { id: 'prod_marc_lunettes_retro', creatorId: marc.id, projectId: projMarc.id, name: 'Lunettes Retro Ecaille', description: 'Monture retro en acetate ecaille, verres solaires polarises.', price: 12000, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(8), styleId: styleMap['Vintage'] },
   ];
 
   const allProducts = [...joseProducts, ...sophieProducts, ...lucasProducts, ...claireProducts, ...marcProducts];
@@ -409,7 +439,7 @@ async function main() {
   for (const product of allProducts) {
     await prisma.product.upsert({
       where: { id: product.id },
-      update: {},
+      update: { styleId: product.styleId ?? null },
       create: product,
     });
   }
@@ -1116,42 +1146,235 @@ async function main() {
   console.log('   ✅ 4 orders for Marc');
 
   // ============================================
-  // SYSTEM STYLES
-  // ============================================
-
-  console.log('\n🎨 Creating system styles...');
-
-  const systemStyles = [
-    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers' },
-    { name: 'Vintage', description: 'Pieces retro et secondes mains revisitees' },
-    { name: 'Ceramique', description: 'Artisanat ceramique, poterie et creations en argile' },
-    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre' },
-    { name: 'Boheme', description: 'Esprit libre, matieres naturelles, imprimés ethniques' },
-    { name: 'Sportswear', description: 'Vetements techniques et confortables pour le sport' },
-    { name: 'Luxe', description: 'Matieres nobles, finitions haut de gamme, editions limitees' },
-    { name: 'Art', description: 'Creations artistiques uniques, editions limitees signees' },
-  ];
-
-  for (const style of systemStyles) {
-    await prisma.style.upsert({
-      where: { name: style.name },
-      update: {},
-      create: {
-        name: style.name,
-        description: style.description,
-        isCustom: false,
-        creatorId: null,
-      },
-    });
-  }
-
-  console.log(`   ✅ ${systemStyles.length} system styles created`);
-
-  // ============================================
   // SUMMARY
   // ============================================
 
   const totalOrders = orderCounter;
+
+  // ============================================
+  // PRODUCT VARIANTS & SKUS (Couleurs & Stocks)
+  // ============================================
+
+  console.log('\n👗 Creating product variants and SKUs...');
+
+  // Clean up existing variants/SKUs for demo products
+  await prisma.productSku.deleteMany({ where: { productId: { in: allProducts.map((p) => p.id) } } });
+  await prisma.productVariant.deleteMany({ where: { productId: { in: allProducts.map((p) => p.id) } } });
+
+  // ─── Tailles par produit (JSON field) ────────────────────────────────────
+  // Seuls les vêtements ont des tailles. Accessoires, céramiques, sacs → pas de taille.
+  // prod_jose_pantalon_cargo et prod_claire_jupe_plissee: mono-coloris → pas de variante, juste des tailles.
+  const PRODUCT_SIZES: Record<string, { size: string }[]> = {
+    // Jose - Streetwear
+    'prod_jose_hoodie_noir':    [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_jose_tshirt_graphic': [{ size: 'S'  }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_jose_pantalon_cargo': [{ size: '38' }, { size: '40' }, { size: '42' }, { size: '44' }, { size: '46' }],
+    'prod_jose_bomber':         [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L'  }, { size: 'XL'  }],
+    'prod_jose_sweat':          [{ size: 'S'  }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_jose_bonnet':         [{ size: 'Unique' }],
+    'prod_jose_casquette':      [{ size: 'Unique' }],
+    // Lucas - Streetwear Design
+    'prod_lucas_hoodie_art':    [{ size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_lucas_tshirt_typo':   [{ size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_lucas_short_mesh':    [{ size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_lucas_veste_jean':    [{ size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    // Claire - Mode Vintage
+    'prod_claire_robe_70s':     [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L'  }],
+    'prod_claire_blazer_xl':    [{ size: 'S'  }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_claire_jupe_plissee': [{ size: '34' }, { size: '36' }, { size: '38' }, { size: '40' }, { size: '42' }],
+    'prod_claire_pull_mohair':  [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L'  }, { size: 'XL'  }],
+  };
+
+  for (const [productId, sizes] of Object.entries(PRODUCT_SIZES)) {
+    await prisma.product.update({ where: { id: productId }, data: { sizes } });
+  }
+
+  // ─── Produits AVEC variantes couleur ─────────────────────────────────────
+  // stock[i] = stock pour la taille i (même ordre que PRODUCT_SIZES[productId]).
+  // Profils utilisés :
+  //   new_launch  → stock abondant, collection fraîchement lancée
+  //   mid_season  → mi-saison, les tailles populaires (M/L) se vendent bien
+  //   bestseller  → tailles cœur (M/L) sold out, stock résiduel sur les extrêmes
+  //   end_season  → quasi épuisé, derniers exemplaires
+  //   rare        → pièce artisanale, très peu d'unités
+  type VariantDef = { id: string; name: string; color: string; colorCode: string; stock: number[] };
+
+  const PRODUCT_VARIANT_DEFS: Record<string, VariantDef[]> = {
+
+    // ── Jose Hoodie (XS S M L XL XXL) ─────────────────────────────────────
+    // Bestseller : Noir avec M/L sold out, Gris chiné mi-saison
+    'prod_jose_hoodie_noir': [
+      { id: 'var_jose_hoodie_blk',  name: 'Noir',       color: 'Noir',       colorCode: '#1a1a1a', stock: [3, 5,  0,  0,  4,  8] },
+      { id: 'var_jose_hoodie_grey', name: 'Gris Chiné', color: 'Gris Chiné', colorCode: '#9e9e9e', stock: [8, 12, 15, 11,  7,  3] },
+    ],
+
+    // ── Jose T-shirt Graphic (S M L XL XXL) ───────────────────────────────
+    // Mi-saison : Blanc équilibré, Noir taille M en rupture, Gris bien stocké
+    'prod_jose_tshirt_graphic': [
+      { id: 'var_jose_ts_white', name: 'Blanc', color: 'Blanc', colorCode: '#f5f5f5', stock: [5,  8, 10,  8,  4] },
+      { id: 'var_jose_ts_black', name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [2,  4,  0,  3,  6] },
+      { id: 'var_jose_ts_grey',  name: 'Gris',  color: 'Gris',  colorCode: '#757575', stock: [10, 14, 16, 12,  5] },
+    ],
+
+    // ── Jose Bomber (XS S M L XL) ─────────────────────────────────────────
+    // Nouveau lancement : stock abondant, Noir légèrement plus demandé
+    'prod_jose_bomber': [
+      { id: 'var_jose_bomber_black', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', stock: [12, 18, 20, 15,  9] },
+      { id: 'var_jose_bomber_khaki', name: 'Kaki', color: 'Kaki', colorCode: '#7d7c5e', stock: [10, 15, 18, 13,  8] },
+    ],
+
+    // ── Jose Sweat Col Rond (S M L XL XXL) ───────────────────────────────
+    // Mi-saison : Gris chiné bestseller, Blanc cassé nouveau coloris
+    'prod_jose_sweat': [
+      { id: 'var_jose_sweat_grey',  name: 'Gris Chiné',  color: 'Gris Chiné',  colorCode: '#9e9e9e', stock: [6, 10, 12,  8,  3] },
+      { id: 'var_jose_sweat_black', name: 'Noir',         color: 'Noir',         colorCode: '#1a1a1a', stock: [4,  7,  9,  5,  2] },
+      { id: 'var_jose_sweat_white', name: 'Blanc Cassé',  color: 'Blanc Cassé',  colorCode: '#faf7f2', stock: [8, 12, 14, 10,  4] },
+    ],
+
+    // ── Jose Bonnet (Taille Unique) ───────────────────────────────────────
+    // Accessoire : stock par couleur, 1 seule taille
+    'prod_jose_bonnet': [
+      { id: 'var_jose_bonnet_grey',  name: 'Gris',   color: 'Gris',   colorCode: '#9e9e9e', stock: [14] },
+      { id: 'var_jose_bonnet_black', name: 'Noir',   color: 'Noir',   colorCode: '#1a1a1a', stock: [8]  },
+      { id: 'var_jose_bonnet_navy',  name: 'Marine', color: 'Marine', colorCode: '#1a237e', stock: [5]  },
+    ],
+
+    // ── Jose Casquette (Taille Unique) ────────────────────────────────────
+    'prod_jose_casquette': [
+      { id: 'var_jose_cap_black', name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [12] },
+      { id: 'var_jose_cap_white', name: 'Blanc', color: 'Blanc', colorCode: '#f5f5f5', stock: [7]  },
+    ],
+
+    // ── Lucas Hoodie Art (S M L XL) ───────────────────────────────────────
+    // Mi-saison : Noir légèrement plus populaire que Blanc
+    'prod_lucas_hoodie_art': [
+      { id: 'var_lucas_hoodie_black', name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [5,  8,  6, 4] },
+      { id: 'var_lucas_hoodie_white', name: 'Blanc', color: 'Blanc', colorCode: '#f5f5f5', stock: [7, 10,  9, 5] },
+    ],
+
+    // ── Lucas T-shirt Typo (S M L XL) ────────────────────────────────────
+    // Nouveau lancement : stock abondant sur les 3 coloris
+    'prod_lucas_tshirt_typo': [
+      { id: 'var_lucas_ts_white', name: 'Blanc', color: 'Blanc', colorCode: '#f5f5f5', stock: [15, 20, 18, 12] },
+      { id: 'var_lucas_ts_black', name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [14, 18, 16, 11] },
+      { id: 'var_lucas_ts_ecru',  name: 'Écru',  color: 'Écru',  colorCode: '#f5f0e8', stock: [12, 17, 15,  9] },
+    ],
+
+    // ── Lucas Short Mesh (S M L XL) ───────────────────────────────────────
+    // Bestseller : M et L sold out, stock résiduel sur S et XL
+    'prod_lucas_short_mesh': [
+      { id: 'var_lucas_short_black', name: 'Noir',   color: 'Noir',   colorCode: '#1a1a1a', stock: [4, 0, 0, 3] },
+      { id: 'var_lucas_short_navy',  name: 'Marine', color: 'Marine', colorCode: '#1a237e', stock: [6, 2, 1, 5] },
+    ],
+
+    // ── Lucas Veste Jean Customisée (S M L XL) ───────────────────────────
+    // Pièce artisanale rare : très peu d'unités (chaque veste est unique)
+    'prod_lucas_veste_jean': [
+      { id: 'var_lucas_jean_blue',  name: 'Denim Bleu', color: 'Denim Bleu', colorCode: '#5c7fa3', stock: [1, 1, 0, 1] },
+      { id: 'var_lucas_jean_black', name: 'Denim Noir', color: 'Denim Noir', colorCode: '#2d2d2d', stock: [1, 0, 1, 0] },
+    ],
+
+    // ── Claire Robe Bohème 70s (XS S M L) ────────────────────────────────
+    // Fin de saison : quasi épuisée, quelques exemplaires restants
+    'prod_claire_robe_70s': [
+      { id: 'var_claire_robe_floral', name: 'Floral', color: 'Floral', colorCode: '#e91e63', stock: [1, 0, 0, 1] },
+      { id: 'var_claire_robe_bleu',   name: 'Bleu',   color: 'Bleu',   colorCode: '#1565c0', stock: [2, 1, 0, 0] },
+    ],
+
+    // ── Claire Blazer Oversize 90s (S M L XL XXL) ────────────────────────
+    // Mi-saison : bon stock général, Prince-de-galles légèrement plus rare
+    'prod_claire_blazer_xl': [
+      { id: 'var_claire_blazer_pdg',  name: 'Prince-de-galles', color: 'Prince-de-galles', colorCode: '#78909c', stock: [4,  7,  9,  6, 2] },
+      { id: 'var_claire_blazer_noir', name: 'Noir',             color: 'Noir',             colorCode: '#1a1a1a', stock: [5,  8, 10,  7, 3] },
+    ],
+
+    // ── Claire Pull Mohair Pastel (XS S M L XL) ──────────────────────────
+    // Nouveau lancement automne : stock complet, 3 coloris disponibles
+    'prod_claire_pull_mohair': [
+      { id: 'var_claire_pull_rose',  name: 'Rose Poudre', color: 'Rose Poudre', colorCode: '#f8bbd9', stock: [14, 20, 22, 17, 9] },
+      { id: 'var_claire_pull_blanc', name: 'Blanc Cassé', color: 'Blanc Cassé', colorCode: '#faf7f2', stock: [12, 18, 20, 15, 7] },
+      { id: 'var_claire_pull_bleu',  name: 'Bleu Ciel',   color: 'Bleu Ciel',   colorCode: '#b3d9f7', stock: [10, 16, 18, 13, 6] },
+    ],
+  };
+
+  // ─── Produits SANS variante couleur, AVEC tailles ────────────────────────
+  // Coloris unique dans le nom (kaki, tartan) → pas de choix couleur,
+  // juste des SKUs par taille (variantId = null).
+  const PRODUCTS_SIZE_ONLY: Record<string, number[]> = {
+    // Mi-saison : grandes tailles moins demandées
+    'prod_jose_pantalon_cargo': [6, 9, 11, 7, 3],  // 38 40 42 44 46
+    // Fin de saison : grandes tailles épuisées
+    'prod_claire_jupe_plissee': [2, 3,  1, 0, 0],  // 34 36 38 40 42
+  };
+
+  // ─── Produits SANS variante ET SANS taille ───────────────────────────────
+  // Pièces uniques (céramique), accessoires non déclinés, tote bag.
+  const PRODUCTS_BASE_STOCK: Record<string, number> = {
+    'prod_jose_tote':           25,  // Tote basique, réapprovisionné régulièrement
+    'prod_sophie_bol_raku':      3,  // Gres raku, tirage très limité (pièce unique)
+    'prod_sophie_vase_bleu':     2,  // Porcelaine tournée main, quasi épuisé
+    'prod_sophie_tasse_duo':     5,  // Quelques paires disponibles
+    'prod_sophie_assiette':      4,  // Pièces wabi-sabi, stock limité
+    'prod_sophie_bougeoir':      6,  // Petit objet, stock correct
+    'prod_lucas_sac_banane':    12,  // Produit réapprovisionnable, bon stock
+    'prod_marc_montre_auto':     1,  // Montre vintage = pièce unique restaurée
+    'prod_marc_ceinture_cuir':   4,  // Quelques ceintures patinées disponibles
+    'prod_marc_lunettes_retro':  2,  // Montures rares, quasi épuisées
+  };
+
+  let variantCount = 0;
+  let skuCount = 0;
+
+  // 1. Créer les variantes couleur + SKUs par taille
+  for (const [productId, variantDefs] of Object.entries(PRODUCT_VARIANT_DEFS)) {
+    const productSizes = PRODUCT_SIZES[productId] ?? [];
+
+    for (const vd of variantDefs) {
+      const variant = await prisma.productVariant.upsert({
+        where: { id: vd.id },
+        update: { name: vd.name, color: vd.color, colorCode: vd.colorCode },
+        create: { id: vd.id, productId, name: vd.name, color: vd.color, colorCode: vd.colorCode, stock: 0, images: [] },
+      });
+      variantCount++;
+
+      if (productSizes.length > 0) {
+        // SKU par taille (ex: Hoodie XS/Noir → 3 unités)
+        for (const [si, sizeEntry] of productSizes.entries()) {
+          await prisma.productSku.create({
+            data: { productId, variantId: variant.id, size: sizeEntry.size, stock: vd.stock[si] ?? 0 },
+          });
+          skuCount++;
+        }
+      } else {
+        // Pas de taille définie → SKU global sans taille
+        await prisma.productSku.create({
+          data: { productId, variantId: variant.id, size: null, stock: vd.stock[0] ?? 0 },
+        });
+        skuCount++;
+      }
+    }
+  }
+
+  // 2. Créer les SKUs taille seulement (sans variante couleur)
+  for (const [productId, stockPerSize] of Object.entries(PRODUCTS_SIZE_ONLY)) {
+    const productSizes = PRODUCT_SIZES[productId] ?? [];
+    for (const [si, sizeEntry] of productSizes.entries()) {
+      await prisma.productSku.create({
+        data: { productId, variantId: null, size: sizeEntry.size, stock: stockPerSize[si] ?? 0 },
+      });
+      skuCount++;
+    }
+  }
+
+  // 3. Créer les SKUs globaux (sans variante, sans taille)
+  for (const [productId, stock] of Object.entries(PRODUCTS_BASE_STOCK)) {
+    await prisma.productSku.create({
+      data: { productId, variantId: null, size: null, stock },
+    });
+    skuCount++;
+  }
+
+  console.log(`✅ ${variantCount} variants created, ${skuCount} SKUs created`);
 
   console.log('\n🎉 Seed completed!\n');
   console.log('📊 Summary:');

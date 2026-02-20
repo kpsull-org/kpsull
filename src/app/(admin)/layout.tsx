@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma/client';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
+import { StyleStatus } from '@prisma/client';
 
 export default async function AdminLayout({
   children,
@@ -22,7 +24,13 @@ export default async function AdminLayout({
     redirect('/');
   }
 
-  const badges: Record<string, number> = {};
+  const pendingStylesCount = await prisma.style.count({
+    where: { status: StyleStatus.PENDING_APPROVAL },
+  });
+
+  const badges: Record<string, number> = {
+    '/admin/styles': pendingStylesCount,
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50/50">

@@ -557,6 +557,22 @@ export function ProductDashboard({
   function handleAddVariant() {
     if (!newVarName.trim()) return;
     setError(null);
+
+    // Capture base stocks before adding the first variant so we can migrate them
+    const isFirstVariant = variants.length === 0;
+    const baseStocksToMigrate: Array<{ size?: string; stock: number }> = [];
+    if (isFirstVariant) {
+      if (!hasSizes) {
+        const stock = getCell(undefined, undefined).stock;
+        if (stock > 0) baseStocksToMigrate.push({ stock });
+      } else {
+        for (const { size } of sizes) {
+          const stock = getCell(undefined, size).stock;
+          if (stock > 0) baseStocksToMigrate.push({ size, stock });
+        }
+      }
+    }
+
     startVariantTransition(async () => {
       const result = await createVariant({
         productId,
@@ -568,8 +584,26 @@ export function ProductDashboard({
       if (!result.success) {
         setError(result.error ?? 'Erreur lors de la création');
       } else {
+        const newVariantId = result.id!;
+
+        // Migrate base stock to the new variant when it's the first one added
+        if (isFirstVariant && baseStocksToMigrate.length > 0) {
+          await Promise.all(
+            baseStocksToMigrate.map(({ size, stock }) =>
+              upsertSku({ productId, variantId: newVariantId, size, stock })
+            )
+          );
+          setMatrix((prev) => {
+            const newMap = new Map(prev);
+            for (const { size, stock } of baseStocksToMigrate) {
+              newMap.set(skuKey(newVariantId, size), { stock });
+            }
+            return newMap;
+          });
+        }
+
         const newVariant: DashboardVariant = {
-          id: result.id!,
+          id: newVariantId,
           name: newVarName.trim(),
           color: newVarName.trim() || undefined,
           colorCode: newVarColorCode || undefined,

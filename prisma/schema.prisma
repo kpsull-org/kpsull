@@ -85,6 +85,12 @@ enum ModerationActionType {
   DELETE
 }
 
+enum StyleStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
 // ============================================
 // USER & AUTH (Auth.js compatible)
 // ============================================
@@ -399,12 +405,14 @@ model Project {
 }
 
 model Style {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  imageUrl    String?
-  isCustom    Boolean  @default(false)
-  creatorId   String?  // null = style système prédéfini
+  id              String      @id @default(cuid())
+  name            String      @unique
+  description     String?
+  imageUrl        String?
+  isCustom        Boolean     @default(false)
+  creatorId       String?     // null = style système prédéfini
+  status          StyleStatus @default(APPROVED)
+  rejectionReason String?
 
   products Product[]
 
@@ -412,6 +420,7 @@ model Style {
   updatedAt DateTime @updatedAt
 
   @@index([creatorId])
+  @@index([status])
   @@map("styles")
 }
 

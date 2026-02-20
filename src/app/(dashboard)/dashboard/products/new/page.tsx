@@ -29,10 +29,14 @@ export default async function NewProductPage() {
     new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id }),
     prisma.style.findMany({
       where: {
-        OR: [{ creatorId: null }, { creatorId: session.user.id }],
+        OR: [
+          { isCustom: false, status: 'APPROVED' },
+          { isCustom: true, creatorId: session.user.id, status: 'PENDING_APPROVAL' },
+          { isCustom: true, creatorId: session.user.id, status: 'APPROVED' },
+        ],
       },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true, isCustom: true },
+      select: { id: true, name: true, isCustom: true, status: true },
     }),
   ]);
 

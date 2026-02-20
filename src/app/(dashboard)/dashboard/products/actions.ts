@@ -200,6 +200,21 @@ export async function updateProduct(
     }
   }
 
+  // Validate styleId: style must exist and not be REJECTED
+  let forceDraft = false;
+  if (styleId !== undefined && styleId !== null) {
+    const styleRecord = await prisma.style.findUnique({
+      where: { id: styleId },
+      select: { status: true },
+    });
+    if (!styleRecord || styleRecord.status === 'REJECTED') {
+      return { success: false, error: 'Le style sélectionné est invalide ou a été refusé' };
+    }
+    if (styleRecord.status === 'PENDING_APPROVAL') {
+      forceDraft = true;
+    }
+  }
+
   // Single atomic update combining core and extra fields
   await prisma.product.update({
     where: { id: productId },
@@ -209,6 +224,7 @@ export async function updateProduct(
       ...(price !== undefined && { price: Math.round(price * 100) }),
       ...(projectId !== undefined && { projectId }),
       ...(styleId !== undefined && { styleId }),
+      ...(forceDraft && { status: 'DRAFT' }),
       ...(sizes !== undefined && { sizes }),
       ...(category !== undefined && { category }),
       ...(gender !== undefined && { gender }),

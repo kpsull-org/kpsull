@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createProduct, updateProduct, type ActionResult } from '@/app/(dashboard)/dashboard/products/actions';
+import { requestNewStyle, uploadStyleImage } from '@/app/(dashboard)/dashboard/styles/actions';
 
 const CATEGORY_TREE: Record<string, string[]> = {
   'Hauts': ['T-shirt', 'Chemise', 'Polo', 'Haut', 'Blouse', 'Top', 'Débardeur', 'Body'],
@@ -80,6 +81,7 @@ interface StyleOption {
   id: string;
   name: string;
   isCustom: boolean;
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
 }
 
 interface ProductFormProps {
@@ -335,8 +337,97 @@ export function ProductForm({ mode, productId, initialValues, collections, style
     });
   }
 
-  const systemStyles = styles.filter((s) => !s.isCustom);
-  const customStyles = styles.filter((s) => s.isCustom);
+  // Local styles state to add newly proposed styles without page reload
+  const [localStyles, setLocalStyles] = useState(styles);
+
+  // Modal state
+  const [showStyleModal, setShowStyleModal] = useState(false);
+  const [modalName, setModalName] = useState('');
+  const [modalDesc, setModalDesc] = useState('');
+  const [modalFile, setModalFile] = useState<File | null>(null);
+  const [modalPreviewUrl, setModalPreviewUrl] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [isModalPending, startModalTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function selectModalFile(file: File | null) {
+    if (modalPreviewUrl) URL.revokeObjectURL(modalPreviewUrl);
+    setModalFile(file);
+    setModalPreviewUrl(file ? URL.createObjectURL(file) : null);
+  }
+
+  function handleDropZoneDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragOver(true);
+  }
+
+  function handleDropZoneDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragOver(false);
+  }
+
+  function handleDropZoneDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file?.type.startsWith('image/')) {
+      selectModalFile(file);
+    }
+  }
+
+  function handleProposeStyle() {
+    if (!modalName.trim()) {
+      setModalError('Le nom du style est requis');
+      return;
+    }
+    setModalError(null);
+
+    startModalTransition(async () => {
+      let imageUrl: string | undefined;
+
+      if (modalFile) {
+        const fd = new FormData();
+        fd.append('file', modalFile);
+        const uploadResult = await uploadStyleImage(fd);
+        if (!uploadResult.success) {
+          setModalError(uploadResult.error ?? "Erreur lors de l'upload de l'image");
+          return;
+        }
+        imageUrl = uploadResult.url;
+      }
+
+      const result = await requestNewStyle({
+        name: modalName.trim(),
+        description: modalDesc.trim() || undefined,
+        imageUrl,
+      });
+
+      if (!result.success) {
+        setModalError(result.error ?? 'Une erreur est survenue');
+        return;
+      }
+
+      // Add new style to local list and auto-select it
+      const newStyle: StyleOption = {
+        id: result.id!,
+        name: modalName.trim(),
+        isCustom: true,
+        status: 'PENDING_APPROVAL',
+      };
+      setLocalStyles((prev) => [...prev, newStyle]);
+      setStyleId(result.id!);
+
+      // Reset modal
+      setShowStyleModal(false);
+      setModalName('');
+      setModalDesc('');
+      selectModalFile(null);
+    });
+  }
+
+  const systemStyles = localStyles.filter((s) => !s.isCustom);
+  const customStyles = localStyles.filter((s) => s.isCustom);
 
   return (
     <Card>
@@ -361,9 +452,9 @@ export function ProductForm({ mode, productId, initialValues, collections, style
           {/* Section — Informations de base */}
           <div className="space-y-3">
             <SectionTitle label="Informations de base" />
-            {/* Nom (2/4) + Collection (1/4) + Prix (1/4) */}
+            {/* Nom (3/4) + Prix (1/4) */}
             <div className="grid grid-cols-4 gap-3">
-              <div className="col-span-2 space-y-1.5">
+              <div className="col-span-3 space-y-1.5">
                 <Label htmlFor="name">Nom *</Label>
                 <Input
                   id="name"
@@ -372,22 +463,6 @@ export function ProductForm({ mode, productId, initialValues, collections, style
                   placeholder="Nom du produit"
                   required
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="collection">Collection</Label>
-                <select
-                  id="collection"
-                  value={projectId}
-                  onChange={(e) => setProjectId(e.target.value)}
-                  className={`${SELECT_CLASS} disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  <option value="">Aucune collection</option>
-                  {collections.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="price">Prix (EUR) *</Label>
@@ -415,36 +490,187 @@ export function ProductForm({ mode, productId, initialValues, collections, style
                 className={TEXTAREA_CLASS}
               />
             </div>
-            {/* Style (si disponible) */}
-            {styles.length > 0 && (
-              <div className="space-y-1.5 max-w-xs">
-                <Label htmlFor="style">Style</Label>
+            {/* Collection (1/3) + Style (2/3) */}
+            <div className="grid grid-cols-3 gap-3 items-end">
+              <div className="space-y-1.5">
+                <Label htmlFor="collection">Collection</Label>
                 <select
-                  id="style"
-                  value={styleId}
-                  onChange={(e) => setStyleId(e.target.value)}
+                  id="collection"
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
                   className={`${SELECT_CLASS} disabled:cursor-not-allowed disabled:opacity-50`}
                 >
-                  <option value="">Aucun style</option>
-                  {systemStyles.length > 0 && (
-                    <optgroup label="Styles">
-                      {systemStyles.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {customStyles.length > 0 && (
-                    <optgroup label="Mes styles">
-                      {customStyles.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
+                  <option value="">Aucune</option>
+                  {collections.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label htmlFor="style">Style</Label>
+                <div className="flex gap-2">
+                  <select
+                    id="style"
+                    value={styleId}
+                    onChange={(e) => setStyleId(e.target.value)}
+                    className={`${SELECT_CLASS} flex-1 disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    <option value="">Aucun style</option>
+                    {systemStyles.length > 0 && (
+                      <optgroup label="Styles">
+                        {systemStyles.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {customStyles.length > 0 && (
+                      <optgroup label="Mes styles">
+                        {customStyles.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}{s.status === 'PENDING_APPROVAL' ? ' (En attente)' : ''}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowStyleModal(true)}
+                    className="shrink-0 text-xs h-10 px-3"
+                  >
+                    + Proposer
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal proposer un style */}
+            {showStyleModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg space-y-4">
+                  <h2 className="text-lg font-semibold">Proposer un nouveau style</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Votre demande sera examinée par notre équipe. En attendant la validation,
+                    vos articles utilisant ce style resteront en brouillon.
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="modal-style-name">Nom du style *</Label>
+                      <Input
+                        id="modal-style-name"
+                        value={modalName}
+                        onChange={(e) => { setModalName(e.target.value); setModalError(null); }}
+                        placeholder="ex: Bohème chic"
+                        disabled={isModalPending}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="modal-style-desc">Description</Label>
+                      <textarea
+                        id="modal-style-desc"
+                        value={modalDesc}
+                        onChange={(e) => setModalDesc(e.target.value)}
+                        placeholder="Décrivez ce style en quelques mots..."
+                        disabled={isModalPending}
+                        rows={2}
+                        className={`${TEXTAREA_CLASS} resize-none`}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>Image de référence</Label>
+                      {/* Hidden file input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        disabled={isModalPending}
+                        className="sr-only"
+                        onChange={(e) => selectModalFile(e.target.files?.[0] ?? null)}
+                      />
+                      {/* Drop zone 16:9 */}
+                      <button
+                        type="button"
+                        disabled={isModalPending}
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={handleDropZoneDragOver}
+                        onDragLeave={handleDropZoneDragLeave}
+                        onDrop={handleDropZoneDrop}
+                        className={[
+                          'relative block w-full overflow-hidden rounded-lg border-2 border-dashed transition-colors',
+                          isDragOver
+                            ? 'border-primary bg-primary/5'
+                            : 'border-input hover:border-primary/50 hover:bg-muted/30',
+                          isModalPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                        ].join(' ')}
+                        style={{ aspectRatio: '16 / 9' }}
+                      >
+                        {modalPreviewUrl ? (
+                          <img
+                            src={modalPreviewUrl}
+                            alt="Aperçu"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-muted-foreground">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-8 w-8 opacity-40"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                            <p className="text-xs font-medium">
+                              {isDragOver ? 'Déposez l\'image ici' : 'Cliquez ou glissez une image'}
+                            </p>
+                            <p className="text-[10px] opacity-60">PNG, JPG, WEBP — ratio 16:9 recommandé</p>
+                          </div>
+                        )}
+                        {/* Change overlay on hover when image selected */}
+                        {modalPreviewUrl && !isModalPending && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity hover:bg-black/30 hover:opacity-100">
+                            <span className="rounded-md bg-black/60 px-2 py-1 text-xs text-white">
+                              Changer l&apos;image
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                      {modalFile && (
+                        <p className="text-[10px] text-muted-foreground truncate">{modalFile.name}</p>
+                      )}
+                    </div>
+
+                    {modalError && (
+                      <p className="text-sm text-destructive">{modalError}</p>
+                    )}
+
+                    <div className="flex gap-2 justify-end pt-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setShowStyleModal(false); setModalError(null); selectModalFile(null); }}
+                        disabled={isModalPending}
+                      >
+                        Annuler
+                      </Button>
+                      <Button type="button" size="sm" disabled={isModalPending} onClick={handleProposeStyle}>
+                        {isModalPending ? 'Envoi...' : 'Soumettre la demande'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
