@@ -283,7 +283,6 @@ export function ProductForm({ mode, productId, initialValues, collections, style
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, description, price, projectId, styleId, gender, category, materials, fit, season, madeIn, careInstructions, certifications, weight, mode]);
 
   useEffect(() => {
