@@ -11,8 +11,10 @@ import { CreateProjectUseCase } from '@/modules/products/application/use-cases/p
 import { UpdateProjectUseCase } from '@/modules/products/application/use-cases/projects/update-project.use-case';
 import { DeleteProjectUseCase } from '@/modules/products/application/use-cases/projects/delete-project.use-case';
 import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
+import { CloudinaryImageUploadService } from '@/modules/products/infrastructure/services/cloudinary-image-upload.service';
 
 const projectRepository = new PrismaProjectRepository(prisma);
+const imageUploadService = new CloudinaryImageUploadService();
 
 export interface ActionResult {
   success: boolean;
@@ -115,7 +117,7 @@ export async function deleteCollection(collectionId: string): Promise<ActionResu
     return { success: false, error: "Vous n'etes pas autorise a effectuer cette action" };
   }
 
-  const deleteProjectUseCase = new DeleteProjectUseCase(projectRepository);
+  const deleteProjectUseCase = new DeleteProjectUseCase(projectRepository, imageUploadService);
   const result = await deleteProjectUseCase.execute({
     projectId: collectionId,
     creatorId: session.user.id,

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.kpsull.cloudinary-cleanup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/eliott/.bun/bin/bun</string>
+        <string>run</string>
+        <string>/Users/eliott/conductor/workspaces/kpsull/missoula/scripts/cloudinary-cleanup.ts</string>
+        <string>--delete</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/eliott/conductor/workspaces/kpsull/missoula</string>
+
+    <!-- 5h du matin heure locale (fuseau français sur ce Mac) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>5</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/eliott/Library/Logs/cloudinary-cleanup.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/eliott/Library/Logs/cloudinary-cleanup.error.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

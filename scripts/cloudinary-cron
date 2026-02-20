@@ -1,0 +1,2 @@
+CRON_TZ=Europe/Paris
+0 5 * * * bun run /app/scripts/cloudinary-cleanup.ts --delete

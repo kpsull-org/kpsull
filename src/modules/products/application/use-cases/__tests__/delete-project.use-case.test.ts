@@ -1,14 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { DeleteProjectUseCase } from '../projects/delete-project.use-case';
+import type { ImageUploadService } from '../../ports/image-upload.service.interface';
+import { Result } from '@/shared/domain';
 import { Project } from '../../../domain/entities/project.entity';
 import { TestProjectRepository } from '../../../__tests__/helpers/test-project.repository';
 
-function createProject(overrides: Partial<{ id: string; creatorId: string; productCount: number }> = {}): Project {
+function createProject(overrides: Partial<{ id: string; creatorId: string; productCount: number; coverImage?: string }> = {}): Project {
   return Project.reconstitute({
     id: overrides.id ?? 'project-123',
     creatorId: overrides.creatorId ?? 'creator-123',
     name: 'Ma Collection',
     productCount: overrides.productCount ?? 0,
+    coverImage: overrides.coverImage,
     createdAt: new Date(),
     updatedAt: new Date(),
   }).value;
@@ -17,10 +20,23 @@ function createProject(overrides: Partial<{ id: string; creatorId: string; produ
 describe('DeleteProjectUseCase', () => {
   let useCase: DeleteProjectUseCase;
   let mockRepo: TestProjectRepository;
+  let mockImageUploadService: {
+    upload: Mock;
+    delete: Mock;
+  };
 
   beforeEach(() => {
     mockRepo = new TestProjectRepository();
-    useCase = new DeleteProjectUseCase(mockRepo);
+
+    mockImageUploadService = {
+      upload: vi.fn(),
+      delete: vi.fn().mockResolvedValue(Result.ok()),
+    };
+
+    useCase = new DeleteProjectUseCase(
+      mockRepo,
+      mockImageUploadService as unknown as ImageUploadService
+    );
   });
 
   describe('execute', () => {
@@ -90,6 +106,57 @@ describe('DeleteProjectUseCase', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('Creator ID');
+    });
+
+    it('should delete cover image from Cloudinary before deleting project', async () => {
+      // Arrange
+      const coverImageUrl = 'https://res.cloudinary.com/demo/image/upload/v1/kpsull/collections/cover.jpg';
+      mockRepo.set(createProject({ coverImage: coverImageUrl }));
+
+      // Act
+      const result = await useCase.execute({
+        projectId: 'project-123',
+        creatorId: 'creator-123',
+      });
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(mockImageUploadService.delete).toHaveBeenCalledOnce();
+      expect(mockImageUploadService.delete).toHaveBeenCalledWith(coverImageUrl);
+      expect(mockRepo.deletedId).toBe('project-123');
+    });
+
+    it('should still delete project if Cloudinary deletion fails', async () => {
+      // Arrange
+      const coverImageUrl = 'https://res.cloudinary.com/demo/image/upload/v1/kpsull/collections/cover.jpg';
+      mockRepo.set(createProject({ coverImage: coverImageUrl }));
+      mockImageUploadService.delete.mockResolvedValue(Result.fail('Cloudinary error'));
+
+      // Act
+      const result = await useCase.execute({
+        projectId: 'project-123',
+        creatorId: 'creator-123',
+      });
+
+      // Assert - deletion should succeed despite Cloudinary failure
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.deleted).toBe(true);
+      expect(mockRepo.deletedId).toBe('project-123');
+    });
+
+    it('should not call Cloudinary if project has no cover image', async () => {
+      // Arrange - project without coverImage
+      mockRepo.set(createProject({ coverImage: undefined }));
+
+      // Act
+      const result = await useCase.execute({
+        projectId: 'project-123',
+        creatorId: 'creator-123',
+      });
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(mockImageUploadService.delete).not.toHaveBeenCalled();
     });
   });
 });
