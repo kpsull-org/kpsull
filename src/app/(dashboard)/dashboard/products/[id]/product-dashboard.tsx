@@ -515,9 +515,14 @@ export function ProductDashboard({
   }
 
   function saveShippingDimensions() {
+    setError(null);
     startSizeTransition(async () => {
-      await updateProduct(productId, { sizes });
-      router.refresh();
+      const result = await updateProduct(productId, { sizes });
+      if (!result.success) {
+        setError(result.error ?? 'Erreur lors de la sauvegarde');
+      } else {
+        router.refresh();
+      }
     });
   }
 

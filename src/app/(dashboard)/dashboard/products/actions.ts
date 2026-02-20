@@ -487,12 +487,40 @@ export async function reorderProductImages(
 
 // ─── Variant Image Actions ──────────────────────────────────────────
 
+type VariantImagesResult =
+  | { success: true; currentImages: string[] }
+  | { success: false; error: string };
+
+async function getVariantCurrentImages(
+  variantId: string,
+  productId: string,
+  userId: string
+): Promise<VariantImagesResult> {
+  const variant = await prisma.productVariant.findUnique({
+    where: { id: variantId },
+    select: { images: true, productId: true, product: { select: { creatorId: true } } },
+  });
+
+  if (!variant) {
+    return { success: false, error: 'Variante introuvable' };
+  }
+  if (variant.productId !== productId) {
+    return { success: false, error: 'Variante introuvable' };
+  }
+  if (variant.product.creatorId !== userId) {
+    return { success: false, error: "Vous n'etes pas autorise a effectuer cette action" };
+  }
+
+  const currentImages = Array.isArray(variant.images) ? (variant.images as string[]) : [];
+  return { success: true, currentImages };
+}
+
 export async function addVariantImage(
   variantId: string,
   productId: string,
   formData: FormData
 ): Promise<ActionResult & { url?: string }> {
-  const { error } = await requireCreatorAuth();
+  const { session, error } = await requireCreatorAuth();
   if (error) return { success: false, error };
 
   const file = formData.get('file') as File | null;
@@ -504,15 +532,12 @@ export async function addVariantImage(
 
   const url = uploadResult.value;
 
-  const existing = await prisma.productVariant.findUnique({
-    where: { id: variantId },
-    select: { images: true },
-  });
-  const currentImages = Array.isArray(existing?.images) ? (existing.images as string[]) : [];
+  const variantResult = await getVariantCurrentImages(variantId, productId, session.user.id);
+  if (!variantResult.success) return { success: false, error: variantResult.error };
 
   await prisma.productVariant.update({
     where: { id: variantId },
-    data: { images: [...currentImages, url] },
+    data: { images: [...variantResult.currentImages, url] },
   });
 
   revalidatePath(`/dashboard/products/${productId}`);
@@ -524,20 +549,17 @@ export async function removeVariantImage(
   productId: string,
   imageUrl: string
 ): Promise<ActionResult> {
-  const { error } = await requireCreatorAuth();
+  const { session, error } = await requireCreatorAuth();
   if (error) return { success: false, error };
 
-  const existing = await prisma.productVariant.findUnique({
-    where: { id: variantId },
-    select: { images: true },
-  });
-  const currentImages = Array.isArray(existing?.images) ? (existing.images as string[]) : [];
+  const variantResult = await getVariantCurrentImages(variantId, productId, session.user.id);
+  if (!variantResult.success) return { success: false, error: variantResult.error };
 
   await imageUploadService.delete(imageUrl);
 
   await prisma.productVariant.update({
     where: { id: variantId },
-    data: { images: currentImages.filter((u) => u !== imageUrl) },
+    data: { images: variantResult.currentImages.filter((u) => u !== imageUrl) },
   });
 
   revalidatePath(`/dashboard/products/${productId}`);
