@@ -1,7 +1,5 @@
-import type { DomainEvent } from '@/shared/domain/domain-event.base';
-import type { IEventHandler } from '@/shared/application/ports/domain-event-dispatcher.interface';
 import type { IEmailService } from '../ports/email.service.interface';
-import { SendEmailNotificationUseCase } from '../use-cases/send-email-notification.use-case';
+import { BaseEmailHandler, type EmailNotification } from './base-email.handler';
 
 export interface ReviewReceivedPayload {
   reviewId: string;
@@ -11,17 +9,12 @@ export interface ReviewReceivedPayload {
   comment?: string;
 }
 
-export class OnReviewReceivedHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnReviewReceivedHandler extends BaseEmailHandler<ReviewReceivedPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<ReviewReceivedPayload>): Promise<void> {
-    const { creatorEmail, productName, rating, comment } = event.payload;
-    const useCase = new SendEmailNotificationUseCase(this.emailService);
-
-    await useCase.execute({
-      to: creatorEmail,
-      type: 'REVIEW_RECEIVED',
-      data: { productName, rating, comment },
-    });
+  getNotifications({ creatorEmail, productName, rating, comment }: ReviewReceivedPayload): EmailNotification[] {
+    return [{ to: creatorEmail, type: 'REVIEW_RECEIVED', data: { productName, rating, comment } }];
   }
 }

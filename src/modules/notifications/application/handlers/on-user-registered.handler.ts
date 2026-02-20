@@ -1,6 +1,6 @@
 import type { DomainEvent } from '@/shared/domain/domain-event.base';
-import type { IEventHandler } from '@/shared/application/ports/domain-event-dispatcher.interface';
 import type { IEmailService } from '../ports/email.service.interface';
+import { BaseEmailHandler, type EmailNotification } from './base-email.handler';
 import { SendEmailNotificationUseCase } from '../use-cases/send-email-notification.use-case';
 
 export interface UserRegisteredPayload {
@@ -8,16 +8,20 @@ export interface UserRegisteredPayload {
   email: string;
 }
 
-export class OnUserRegisteredHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnUserRegisteredHandler extends BaseEmailHandler<UserRegisteredPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<UserRegisteredPayload>): Promise<void> {
-    const { email } = event.payload;
+  getNotifications({ email }: UserRegisteredPayload): EmailNotification[] {
+    return [{ to: email, type: 'WELCOME' }];
+  }
+
+  override async handle(event: DomainEvent<UserRegisteredPayload>): Promise<void> {
     const useCase = new SendEmailNotificationUseCase(this.emailService);
-    const result = await useCase.execute({ to: email, type: 'WELCOME' });
-
+    const result = await useCase.execute({ to: event.payload.email, type: 'WELCOME' });
     if (result.isFailure) {
-      console.error(`[Notification] Failed to send welcome email to ${email}: ${result.error}`);
+      console.error(`[Notification] Failed to send welcome email to ${event.payload.email}: ${result.error}`);
     }
   }
 }

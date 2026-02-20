@@ -1,7 +1,5 @@
-import type { DomainEvent } from '@/shared/domain/domain-event.base';
-import type { IEventHandler } from '@/shared/application/ports/domain-event-dispatcher.interface';
 import type { IEmailService } from '../ports/email.service.interface';
-import { SendEmailNotificationUseCase } from '../use-cases/send-email-notification.use-case';
+import { BaseEmailHandler, type EmailNotification } from './base-email.handler';
 
 export interface OrderPaidPayload {
   orderId: string;
@@ -13,26 +11,15 @@ export interface OrderPaidPayload {
   address: string;
 }
 
-export class OnOrderPaidHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnOrderPaidHandler extends BaseEmailHandler<OrderPaidPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<OrderPaidPayload>): Promise<void> {
-    const { customerEmail, creatorEmail, orderNumber, amount, customerName, address, orderId } =
-      event.payload;
-    const useCase = new SendEmailNotificationUseCase(this.emailService);
-
-    // Email client: commande confirmée
-    await useCase.execute({
-      to: customerEmail,
-      type: 'ORDER_CONFIRMED',
-      data: { orderNumber, amount, address },
-    });
-
-    // Email créateur: nouvelle commande + paiement
-    await useCase.execute({
-      to: creatorEmail,
-      type: 'ORDER_RECEIVED',
-      data: { orderNumber, amount, customerName, orderId },
-    });
+  getNotifications({ customerEmail, creatorEmail, orderNumber, amount, customerName, address, orderId }: OrderPaidPayload): EmailNotification[] {
+    return [
+      { to: customerEmail, type: 'ORDER_CONFIRMED', data: { orderNumber, amount, address } },
+      { to: creatorEmail, type: 'ORDER_RECEIVED', data: { orderNumber, amount, customerName, orderId } },
+    ];
   }
 }

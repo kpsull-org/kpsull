@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeEach, type Mock, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { DeleteProductImageUseCase } from '../images/delete-product-image.use-case';
 import { ImageUploadService } from '../../ports/image-upload.service.interface';
 import { ProductImageRepository } from '../../ports/product-image.repository.interface';
 import { Result } from '@/shared/domain';
 import { ProductImage } from '../../../domain/entities/product-image.entity';
+import {
+  createMockProductImage,
+  createMockProductImageRepository,
+  type MockProductImageRepository,
+} from '../../../__tests__/helpers/mock-product-image';
 
 describe('DeleteProductImageUseCase', () => {
   let useCase: DeleteProductImageUseCase;
@@ -11,31 +16,7 @@ describe('DeleteProductImageUseCase', () => {
     upload: Mock;
     delete: Mock;
   };
-  let mockProductImageRepository: {
-    findById: Mock;
-    findByProductId: Mock;
-    save: Mock;
-    saveMany: Mock;
-    delete: Mock;
-    countByProductId: Mock;
-  };
-
-  const createMockProductImage = (overrides: Partial<{
-    id: string;
-    productId: string;
-    url: string;
-    position: number;
-  }> = {}) => {
-    return ProductImage.reconstitute({
-      id: overrides.id ?? 'image-123',
-      productId: overrides.productId ?? 'product-456',
-      url: overrides.url ?? 'https://cdn.example.com/image.jpg',
-      urlType: 'product',
-      alt: 'Test image',
-      position: overrides.position ?? 0,
-      createdAt: new Date(),
-    }).value;
-  };
+  let mockProductImageRepository: MockProductImageRepository;
 
   beforeEach(() => {
     mockImageUploadService = {
@@ -43,14 +24,7 @@ describe('DeleteProductImageUseCase', () => {
       delete: vi.fn(),
     };
 
-    mockProductImageRepository = {
-      findById: vi.fn(),
-      findByProductId: vi.fn(),
-      save: vi.fn(),
-      saveMany: vi.fn(),
-      delete: vi.fn(),
-      countByProductId: vi.fn(),
-    };
+    mockProductImageRepository = createMockProductImageRepository();
 
     useCase = new DeleteProductImageUseCase(
       mockImageUploadService as ImageUploadService,

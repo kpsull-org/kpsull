@@ -1,7 +1,5 @@
-import type { DomainEvent } from '@/shared/domain/domain-event.base';
-import type { IEventHandler } from '@/shared/application/ports/domain-event-dispatcher.interface';
 import type { IEmailService } from '../ports/email.service.interface';
-import { SendEmailNotificationUseCase } from '../use-cases/send-email-notification.use-case';
+import { BaseEmailHandler, type EmailNotification } from './base-email.handler';
 
 export interface SubscriptionRenewedPayload {
   creatorEmail: string;
@@ -10,18 +8,13 @@ export interface SubscriptionRenewedPayload {
   nextBillingDate: string;
 }
 
-export class OnSubscriptionRenewedHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnSubscriptionRenewedHandler extends BaseEmailHandler<SubscriptionRenewedPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<SubscriptionRenewedPayload>): Promise<void> {
-    const { creatorEmail, planName, amount, nextBillingDate } = event.payload;
-    const useCase = new SendEmailNotificationUseCase(this.emailService);
-
-    await useCase.execute({
-      to: creatorEmail,
-      type: 'SUBSCRIPTION_RENEWED',
-      data: { planName, amount, nextBillingDate },
-    });
+  getNotifications({ creatorEmail, planName, amount, nextBillingDate }: SubscriptionRenewedPayload): EmailNotification[] {
+    return [{ to: creatorEmail, type: 'SUBSCRIPTION_RENEWED', data: { planName, amount, nextBillingDate } }];
   }
 }
 
@@ -31,18 +24,13 @@ export interface SubscriptionExpiringPayload {
   expiryDate: string;
 }
 
-export class OnSubscriptionExpiringHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnSubscriptionExpiringHandler extends BaseEmailHandler<SubscriptionExpiringPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<SubscriptionExpiringPayload>): Promise<void> {
-    const { creatorEmail, planName, expiryDate } = event.payload;
-    const useCase = new SendEmailNotificationUseCase(this.emailService);
-
-    await useCase.execute({
-      to: creatorEmail,
-      type: 'SUBSCRIPTION_EXPIRING',
-      data: { planName, expiryDate },
-    });
+  getNotifications({ creatorEmail, planName, expiryDate }: SubscriptionExpiringPayload): EmailNotification[] {
+    return [{ to: creatorEmail, type: 'SUBSCRIPTION_EXPIRING', data: { planName, expiryDate } }];
   }
 }
 
@@ -51,17 +39,12 @@ export interface PaymentFailedPayload {
   planName: string;
 }
 
-export class OnPaymentFailedHandler implements IEventHandler {
-  constructor(private readonly emailService: IEmailService) {}
+export class OnPaymentFailedHandler extends BaseEmailHandler<PaymentFailedPayload> {
+  constructor(emailService: IEmailService) {
+    super(emailService);
+  }
 
-  async handle(event: DomainEvent<PaymentFailedPayload>): Promise<void> {
-    const { creatorEmail, planName } = event.payload;
-    const useCase = new SendEmailNotificationUseCase(this.emailService);
-
-    await useCase.execute({
-      to: creatorEmail,
-      type: 'PAYMENT_FAILED',
-      data: { planName },
-    });
+  getNotifications({ creatorEmail, planName }: PaymentFailedPayload): EmailNotification[] {
+    return [{ to: creatorEmail, type: 'PAYMENT_FAILED', data: { planName } }];
   }
 }

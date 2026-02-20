@@ -1,44 +1,19 @@
-import { describe, it, expect, beforeEach, type Mock, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ReorderProductImagesUseCase } from '../images/reorder-product-images.use-case';
 import { ProductImageRepository } from '../../ports/product-image.repository.interface';
 import { ProductImage } from '../../../domain/entities/product-image.entity';
+import {
+  createMockProductImage,
+  createMockProductImageRepository,
+  type MockProductImageRepository,
+} from '../../../__tests__/helpers/mock-product-image';
 
 describe('ReorderProductImagesUseCase', () => {
   let useCase: ReorderProductImagesUseCase;
-  let mockProductImageRepository: {
-    findById: Mock;
-    findByProductId: Mock;
-    save: Mock;
-    saveMany: Mock;
-    delete: Mock;
-    countByProductId: Mock;
-  };
-
-  const createMockProductImage = (overrides: Partial<{
-    id: string;
-    productId: string;
-    position: number;
-  }> = {}) => {
-    return ProductImage.reconstitute({
-      id: overrides.id ?? 'image-123',
-      productId: overrides.productId ?? 'product-456',
-      url: 'https://cdn.example.com/image.jpg',
-      urlType: 'product',
-      alt: 'Test image',
-      position: overrides.position ?? 0,
-      createdAt: new Date(),
-    }).value;
-  };
+  let mockProductImageRepository: MockProductImageRepository;
 
   beforeEach(() => {
-    mockProductImageRepository = {
-      findById: vi.fn(),
-      findByProductId: vi.fn(),
-      save: vi.fn(),
-      saveMany: vi.fn(),
-      delete: vi.fn(),
-      countByProductId: vi.fn(),
-    };
+    mockProductImageRepository = createMockProductImageRepository();
 
     useCase = new ReorderProductImagesUseCase(
       mockProductImageRepository as ProductImageRepository
