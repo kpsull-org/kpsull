@@ -27,7 +27,8 @@
     "dev:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next dev --webpack",
     "build:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next build --webpack",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "seed:images": "bun prisma/scripts/upload-seed-images.ts"
   },
   "overrides": {
     "hono": "^4.11.9",

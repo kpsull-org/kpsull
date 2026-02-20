@@ -34,6 +34,7 @@ import { seedNewCreators } from './seed-new-creators';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
+import * as fs from 'fs';
 
 const connectionString =
   process.env.DATABASE_URL ||
@@ -54,6 +55,16 @@ function daysAgo(n: number): Date {
 /** Date N days from now */
 function daysFromNow(n: number): Date {
   return new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+}
+
+/** Charge les images seed générées par prisma/scripts/upload-seed-images.ts */
+function loadSeedImages(): Record<string, { main: string[]; variants: Record<string, string[]> }> {
+  try {
+    const raw = fs.readFileSync('./prisma/seed-assets/product-images.json', 'utf-8');
+    return JSON.parse(raw) as Record<string, { main: string[]; variants: Record<string, string[]> }>;
+  } catch {
+    return {}; // Fallback: URLs Unsplash hardcodées dans les données
+  }
 }
 
 async function main() {
@@ -1773,6 +1784,501 @@ async function main() {
   // ============================================
 
   const totalOrders = orderCounter + newOrders;
+
+  // ============================================
+  // NEW PRODUCTS WITH VARIANTS (10 products)
+  // ============================================
+
+  console.log('\n🆕 Creating 10 new products with color variants...');
+
+  const seedImages = loadSeedImages();
+
+  // Helper: récupère les images d'une variante depuis seed-assets ou fallback Unsplash
+  function getVariantImages(productId: string, variantId: string, fallbackUrls: string[]): string[] {
+    const productEntry = seedImages[productId];
+    if (productEntry?.variants?.[variantId]?.length) {
+      return productEntry.variants[variantId] ?? fallbackUrls;
+    }
+    return fallbackUrls;
+  }
+
+  function getMainImages(productId: string, fallbackUrls: string[]): string[] {
+    const productEntry = seedImages[productId];
+    if (productEntry?.main?.length) {
+      return productEntry.main;
+    }
+    return fallbackUrls;
+  }
+
+  // ── Nouveaux produits Jose (STUDIO) ──────────────────────────────────────
+  const newProductsJose = [
+    {
+      id: 'prod_new_tshirt_basique',
+      name: 'T-Shirt Basique Premium',
+      description: 'T-shirt en coton bio 180g, coupe régulière, coutures renforcées. L\'essentiel du vestiaire.',
+      price: 3900,
+      creatorId: jose.id,
+      projectId: projJoseStreet.id,
+      category: 'T-shirt',
+      gender: 'Unisexe',
+      materials: '100% Coton Bio 180g',
+      fit: 'Regular',
+      season: 'Toute saison',
+      madeIn: 'France',
+      careInstructions: 'Lavage 30°',
+      certifications: 'OEKO-TEX,GOTS Bio',
+      weight: 180,
+    },
+    {
+      id: 'prod_new_hoodie_premium',
+      name: 'Hoodie Premium Oversize',
+      description: 'Hoodie oversize 350g, molleton brossé intérieur, poche kangourou double. Confort maximal.',
+      price: 7900,
+      creatorId: jose.id,
+      projectId: projJoseStreet.id,
+      category: 'Sweat à capuche',
+      gender: 'Unisexe',
+      materials: '80% Coton Bio, 20% Polyester recyclé, 350g',
+      fit: 'Oversize',
+      season: 'Automne-Hiver',
+      madeIn: 'France',
+      careInstructions: 'Lavage 30° à l\'envers',
+      certifications: 'OEKO-TEX',
+      weight: 350,
+    },
+  ];
+
+  // ── Nouveaux produits Lucas (STUDIO) ─────────────────────────────────────
+  const newProductsLucas = [
+    {
+      id: 'prod_new_jogger_tech',
+      name: 'Jogger Technique Performance',
+      description: 'Jogging en tissu technique stretch 4 directions, taille élastique ajustable, poches zippées.',
+      price: 6500,
+      creatorId: lucas.id,
+      projectId: projLucas.id,
+      category: 'Pantalon',
+      gender: 'Unisexe',
+      materials: '88% Polyester recyclé, 12% Elasthane',
+      fit: 'Regular',
+      season: 'Toute saison',
+      madeIn: 'Portugal',
+      careInstructions: 'Lavage 40°',
+      certifications: 'OEKO-TEX',
+      weight: 200,
+    },
+    {
+      id: 'prod_new_veste_coach',
+      name: 'Veste Coach Windbreaker',
+      description: 'Veste coupe-vent légère, coupe coach oversize, zip YKK intégral, poches latérales.',
+      price: 8900,
+      creatorId: lucas.id,
+      projectId: projLucas.id,
+      category: 'Veste',
+      gender: 'Unisexe',
+      materials: '100% Polyester ripstop',
+      fit: 'Oversize',
+      season: 'Printemps-Été',
+      madeIn: 'Portugal',
+      careInstructions: 'Lavage 30°',
+      certifications: 'OEKO-TEX',
+      weight: 180,
+    },
+    {
+      id: 'prod_new_longline_tee',
+      name: 'Longline Tee Graphique',
+      description: 'T-shirt long tombant sous les hanches, print dos exclusif, coton épais 220g.',
+      price: 4900,
+      creatorId: lucas.id,
+      projectId: projLucas.id,
+      category: 'T-shirt',
+      gender: 'Unisexe',
+      materials: '100% Coton Bio 220g',
+      fit: 'Oversize',
+      season: 'Toute saison',
+      madeIn: 'Portugal',
+      careInstructions: 'Lavage 30° à l\'envers',
+      certifications: 'OEKO-TEX',
+      weight: 220,
+    },
+    {
+      id: 'prod_new_sweat_zip',
+      name: 'Sweat Zip Technique',
+      description: 'Sweat zippé en molleton technique 300g, col montant, zip YKK double curseur.',
+      price: 6900,
+      creatorId: lucas.id,
+      projectId: projLucas.id,
+      category: 'Sweat',
+      gender: 'Unisexe',
+      materials: '80% Coton Bio, 20% Polyester recyclé, 300g',
+      fit: 'Regular',
+      season: 'Automne-Hiver',
+      madeIn: 'Portugal',
+      careInstructions: 'Lavage 30°',
+      certifications: 'OEKO-TEX',
+      weight: 300,
+    },
+  ];
+
+  // ── Nouveaux produits Claire (ESSENTIEL) ──────────────────────────────────
+  const newProductsClaire = [
+    {
+      id: 'prod_new_croptop',
+      name: 'Crop Top Athleisure Côtelé',
+      description: 'Crop top en jersey côtelé stretch, bretelles réglables, coupe ajustée. Idéal sport ou casual.',
+      price: 2900,
+      creatorId: claire.id,
+      projectId: projClaire.id,
+      category: 'Top',
+      gender: 'Femme',
+      materials: '95% Coton, 5% Elasthane',
+      fit: 'Slim',
+      season: 'Toute saison',
+      madeIn: 'France',
+      careInstructions: 'Lavage 30°',
+      certifications: 'OEKO-TEX',
+      weight: 120,
+    },
+    {
+      id: 'prod_new_pull_colroule',
+      name: 'Pull Col Roulé Essentiel',
+      description: 'Pull col roulé en laine fine mérinos, toucher doux, coupe légèrement oversize.',
+      price: 7500,
+      creatorId: claire.id,
+      projectId: projClaire.id,
+      category: 'Pull',
+      gender: 'Femme',
+      materials: '100% Laine Mérinos fine',
+      fit: 'Regular',
+      season: 'Automne-Hiver',
+      madeIn: 'France',
+      careInstructions: 'Lavage main 30°',
+      certifications: 'OEKO-TEX',
+      weight: 280,
+    },
+    {
+      id: 'prod_new_debardeur',
+      name: 'Débardeur Oversize Coton',
+      description: 'Débardeur oversize en coton biologique, encolure large, bretelles tombantes.',
+      price: 2500,
+      creatorId: claire.id,
+      projectId: projClaire.id,
+      category: 'Top',
+      gender: 'Femme',
+      materials: '100% Coton Bio 160g',
+      fit: 'Oversize',
+      season: 'Printemps-Été',
+      madeIn: 'France',
+      careInstructions: 'Lavage 30°',
+      certifications: 'OEKO-TEX,GOTS Bio',
+      weight: 160,
+    },
+  ];
+
+  // ── Nouveau produit Marc (ESSENTIEL) ─────────────────────────────────────
+  const newProductsMarc = [
+    {
+      id: 'prod_new_short_sport',
+      name: 'Short Sport Premium 7"',
+      description: 'Short de sport 7 pouces en polyester technique léger, intérieur filet intégré, ceinture élastique.',
+      price: 4500,
+      creatorId: marc.id,
+      projectId: projMarc.id,
+      category: 'Short',
+      gender: 'Homme',
+      materials: '100% Polyester recyclé léger',
+      fit: 'Regular',
+      season: 'Printemps-Été',
+      madeIn: 'Portugal',
+      careInstructions: 'Lavage 40°',
+      certifications: 'OEKO-TEX',
+      weight: 140,
+    },
+    {
+      id: 'prod_new_legging_sport',
+      name: 'Legging Sport Taille Haute',
+      description: 'Legging sport taille haute en tissu compressif 4 directions, couture plate anti-frottements.',
+      price: 5500,
+      creatorId: marc.id,
+      projectId: projMarc.id,
+      category: 'Legging',
+      gender: 'Femme',
+      materials: '78% Polyester recyclé, 22% Elasthane',
+      fit: 'Slim',
+      season: 'Toute saison',
+      madeIn: 'Portugal',
+      careInstructions: 'Lavage 30°',
+      certifications: 'OEKO-TEX',
+      weight: 180,
+    },
+  ];
+
+  const allNewProducts = [
+    ...newProductsJose,
+    ...newProductsLucas,
+    ...newProductsClaire,
+    ...newProductsMarc,
+  ];
+
+  for (const product of allNewProducts) {
+    await prisma.product.upsert({
+      where: { id: product.id },
+      update: {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category: product.category,
+        gender: product.gender,
+        materials: product.materials,
+        fit: product.fit,
+        season: product.season,
+        madeIn: product.madeIn,
+        careInstructions: product.careInstructions,
+        certifications: (product as { certifications?: string }).certifications ?? null,
+        weight: (product as { weight?: number }).weight ?? null,
+      },
+      create: {
+        id: product.id,
+        creatorId: product.creatorId,
+        projectId: product.projectId,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        status: ProductStatus.PUBLISHED,
+        publishedAt: daysAgo(5),
+        category: product.category,
+        gender: product.gender,
+        materials: product.materials,
+        fit: product.fit,
+        season: product.season,
+        madeIn: product.madeIn,
+        careInstructions: product.careInstructions,
+        certifications: (product as { certifications?: string }).certifications ?? null,
+        weight: (product as { weight?: number }).weight ?? null,
+      },
+    });
+  }
+
+  // ── Images des nouveaux produits ─────────────────────────────────────────
+  // Fallbacks: tableaux d'URLs string (format attendu par getMainImages)
+  const NEW_PRODUCT_IMAGES: Record<string, { url: string; alt: string; position: number }[]> = {
+    'prod_new_tshirt_basique': getMainImages('prod_new_tshirt_basique', [
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1503341338985-95661e5a8f6e?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `T-Shirt Basique Premium - ${position === 0 ? 'Vue face' : 'Vue dos'}`, position })),
+
+    'prod_new_hoodie_premium': getMainImages('prod_new_hoodie_premium', [
+      'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Hoodie Premium Oversize - ${position === 0 ? 'Vue face' : 'Vue dos'}`, position })),
+
+    'prod_new_jogger_tech': getMainImages('prod_new_jogger_tech', [
+      'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1562183241-b937e95585b6?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Jogger Technique - ${position === 0 ? 'Vue principale' : 'Détail taille'}`, position })),
+
+    'prod_new_veste_coach': getMainImages('prod_new_veste_coach', [
+      'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Veste Coach - ${position === 0 ? 'Vue face' : 'Vue dos'}`, position })),
+
+    'prod_new_croptop': getMainImages('prod_new_croptop', [
+      'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Crop Top Athleisure - ${position === 0 ? 'Vue principale' : 'Détail tissu'}`, position })),
+
+    'prod_new_short_sport': getMainImages('prod_new_short_sport', [
+      'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1562183241-b937e95585b6?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Short Sport - ${position === 0 ? 'Vue principale' : 'Vue détail'}`, position })),
+
+    'prod_new_pull_colroule': getMainImages('prod_new_pull_colroule', [
+      'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1458530308642-23cf011179e0?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Pull Col Roulé - ${position === 0 ? 'Vue principale' : 'Détail col'}`, position })),
+
+    'prod_new_debardeur': getMainImages('prod_new_debardeur', [
+      'https://images.unsplash.com/photo-1503341338985-95661e5a8f6e?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Débardeur Oversize - Vue principale`, position })),
+
+    'prod_new_longline_tee': getMainImages('prod_new_longline_tee', [
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Longline Tee - ${position === 0 ? 'Vue face' : 'Vue dos'}`, position })),
+
+    'prod_new_sweat_zip': getMainImages('prod_new_sweat_zip', [
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Sweat Zip - ${position === 0 ? 'Vue face' : 'Vue dos'}`, position })),
+
+    'prod_new_legging_sport': getMainImages('prod_new_legging_sport', [
+      'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800&h=800&fit=crop',
+    ]).map((url, position) => ({ url, alt: `Legging Sport - Vue principale`, position })),
+  };
+
+  await prisma.productImage.deleteMany({
+    where: { productId: { in: allNewProducts.map((p) => p.id) } },
+  });
+
+  let newImageCount = 0;
+  for (const [productId, images] of Object.entries(NEW_PRODUCT_IMAGES)) {
+    for (const img of images) {
+      await prisma.productImage.create({ data: { productId, url: img.url, alt: img.alt, position: img.position } });
+      newImageCount++;
+    }
+  }
+
+  // ── Tailles des nouveaux produits ────────────────────────────────────────
+  const NEW_PRODUCT_SIZES: Record<string, { size: string }[]> = {
+    'prod_new_tshirt_basique':  [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_new_hoodie_premium':  [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_new_jogger_tech':     [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_new_veste_coach':     [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_new_croptop':         [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_new_short_sport':     [{ size: 'S'  }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_new_pull_colroule':   [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_new_debardeur':       [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_new_longline_tee':    [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_new_sweat_zip':       [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_new_legging_sport':   [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+  };
+
+  for (const [productId, sizes] of Object.entries(NEW_PRODUCT_SIZES)) {
+    await prisma.product.update({ where: { id: productId }, data: { sizes } });
+  }
+
+  // ── Variantes couleur des nouveaux produits ───────────────────────────────
+  // stock[i] = stock pour la taille i (même ordre que NEW_PRODUCT_SIZES[productId])
+  type NewVariantDef = {
+    id: string;
+    name: string;
+    color: string;
+    colorCode: string;
+    stock: number[];
+    fallbackImages: string[];
+  };
+
+  const NEW_PRODUCT_VARIANT_DEFS: Record<string, NewVariantDef[]> = {
+    // ── T-Shirt Basique (XS S M L XL XXL) ──────────────────────────────────
+    'prod_new_tshirt_basique': [
+      { id: 'var_new_tshirt_blanc',  name: 'Blanc',  color: 'Blanc',  colorCode: '#f5f5f5', stock: [10, 18, 20, 15,  8,  4], fallbackImages: ['https://images.unsplash.com/photo-1581655353564-df123364d42e?w=800&h=800&fit=crop'] },
+      { id: 'var_new_tshirt_noir',   name: 'Noir',   color: 'Noir',   colorCode: '#1a1a1a', stock: [8,  14, 18, 12,  6,  2], fallbackImages: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop'] },
+      { id: 'var_new_tshirt_marine', name: 'Marine', color: 'Marine', colorCode: '#1B2A4A', stock: [6,  12, 15, 10,  5,  2], fallbackImages: ['https://images.unsplash.com/photo-1529374255-1e9231d7a1a4?w=800&h=800&fit=crop'] },
+      { id: 'var_new_tshirt_rouge',  name: 'Rouge',  color: 'Rouge',  colorCode: '#C0392B', stock: [5,  10, 12,  8,  4,  1], fallbackImages: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Hoodie Premium (XS S M L XL XXL) ───────────────────────────────────
+    'prod_new_hoodie_premium': [
+      { id: 'var_new_hoodie_noir',  name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [8, 12, 15, 10,  6,  3], fallbackImages: ['https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=800&h=800&fit=crop'] },
+      { id: 'var_new_hoodie_blanc', name: 'Blanc', color: 'Blanc', colorCode: '#f5f5f5', stock: [6, 10, 14,  8,  4,  2], fallbackImages: ['https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&h=800&fit=crop'] },
+      { id: 'var_new_hoodie_ecru',  name: 'Écru',  color: 'Écru',  colorCode: '#f5f0e8', stock: [5,  9, 12,  7,  4,  2], fallbackImages: ['https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&h=800&fit=crop'] },
+      { id: 'var_new_hoodie_kaki',  name: 'Kaki',  color: 'Kaki',  colorCode: '#7d7c5e', stock: [4,  8, 10,  6,  3,  1], fallbackImages: ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Jogger Technique (XS S M L XL XXL) ─────────────────────────────────
+    'prod_new_jogger_tech': [
+      { id: 'var_new_jogger_noir',   name: 'Noir',   color: 'Noir',   colorCode: '#1a1a1a', stock: [6, 10, 14,  9,  5,  2], fallbackImages: ['https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&h=800&fit=crop'] },
+      { id: 'var_new_jogger_grey',   name: 'Gris',   color: 'Gris',   colorCode: '#9e9e9e', stock: [5,  9, 12,  8,  4,  2], fallbackImages: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&h=800&fit=crop'] },
+      { id: 'var_new_jogger_marine', name: 'Marine', color: 'Marine', colorCode: '#1B2A4A', stock: [4,  8, 10,  7,  3,  1], fallbackImages: ['https://images.unsplash.com/photo-1553143820-6bb68bc34679?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Veste Coach (XS S M L XL) ──────────────────────────────────────────
+    'prod_new_veste_coach': [
+      { id: 'var_new_coach_noir', name: 'Noir',         color: 'Noir',         colorCode: '#1a1a1a', stock: [5, 8, 10, 7, 3], fallbackImages: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop'] },
+      { id: 'var_new_coach_vert', name: 'Vert Forêt',   color: 'Vert Forêt',   colorCode: '#2d5016', stock: [4, 7,  9, 6, 2], fallbackImages: ['https://images.unsplash.com/photo-1590739225338-0e6f5d1da7c1?w=800&h=800&fit=crop'] },
+      { id: 'var_new_coach_navy', name: 'Marine',        color: 'Marine',       colorCode: '#1B2A4A', stock: [4, 6,  8, 5, 2], fallbackImages: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Crop Top Athleisure (XS S M L XL) ──────────────────────────────────
+    'prod_new_croptop': [
+      { id: 'var_new_croptop_blanc', name: 'Blanc',      color: 'Blanc',      colorCode: '#f5f5f5', stock: [8, 12, 14, 10, 5], fallbackImages: ['https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=800&h=800&fit=crop'] },
+      { id: 'var_new_croptop_noir',  name: 'Noir',       color: 'Noir',       colorCode: '#1a1a1a', stock: [7, 11, 13,  9, 4], fallbackImages: ['https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=800&h=800&fit=crop'] },
+      { id: 'var_new_croptop_rose',  name: 'Rose Poudre', color: 'Rose Poudre', colorCode: '#f8bbd9', stock: [6,  9, 11,  8, 3], fallbackImages: ['https://images.unsplash.com/photo-1549465220-1a629bd08dbd?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Short Sport (S M L XL XXL) ──────────────────────────────────────────
+    'prod_new_short_sport': [
+      { id: 'var_new_short_noir', name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [6, 10, 12, 8, 4], fallbackImages: ['https://images.unsplash.com/photo-1499400955083-4b29b88f5f28?w=800&h=800&fit=crop'] },
+      { id: 'var_new_short_grey', name: 'Gris',  color: 'Gris',  colorCode: '#9e9e9e', stock: [5,  9, 10, 7, 3], fallbackImages: ['https://images.unsplash.com/photo-1539710094960-3c18b5a6e5e3?w=800&h=800&fit=crop'] },
+      { id: 'var_new_short_bleu', name: 'Bleu',  color: 'Bleu',  colorCode: '#1565c0', stock: [4,  7,  9, 6, 2], fallbackImages: ['https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Pull Col Roulé (XS S M L XL) ───────────────────────────────────────
+    'prod_new_pull_colroule': [
+      { id: 'var_new_pull_creme', name: 'Crème',  color: 'Crème',  colorCode: '#f5f0e8', stock: [10, 15, 18, 12, 6], fallbackImages: ['https://images.unsplash.com/photo-1551488831-00ddcf7b4aad?w=800&h=800&fit=crop'] },
+      { id: 'var_new_pull_noir',  name: 'Noir',   color: 'Noir',   colorCode: '#1a1a1a', stock: [8,  12, 15, 10, 5], fallbackImages: ['https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&h=800&fit=crop'] },
+      { id: 'var_new_pull_camel', name: 'Camel',  color: 'Camel',  colorCode: '#c9a05a', stock: [7,  10, 13,  8, 4], fallbackImages: ['https://images.unsplash.com/photo-1512327428351-61cf032f5a32?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Débardeur Oversize (XS S M L XL) ───────────────────────────────────
+    'prod_new_debardeur': [
+      { id: 'var_new_debardeur_blanc', name: 'Blanc', color: 'Blanc', colorCode: '#f5f5f5', stock: [8, 12, 14, 10, 5], fallbackImages: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop'] },
+      { id: 'var_new_debardeur_noir',  name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [7, 10, 12,  9, 4], fallbackImages: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop'] },
+      { id: 'var_new_debardeur_gris',  name: 'Gris',  color: 'Gris',  colorCode: '#9e9e9e', stock: [5,  8, 10,  7, 3], fallbackImages: ['https://images.unsplash.com/photo-1559136555-9303baea8eae?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Longline Tee (XS S M L XL XXL) ─────────────────────────────────────
+    'prod_new_longline_tee': [
+      { id: 'var_new_longline_noir',  name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [6, 10, 14, 10,  6,  2], fallbackImages: ['https://images.unsplash.com/photo-1618354691438-25bc04584c23?w=800&h=800&fit=crop'] },
+      { id: 'var_new_longline_blanc', name: 'Blanc', color: 'Blanc', colorCode: '#f5f5f5', stock: [5,  9, 12,  9,  5,  2], fallbackImages: ['https://images.unsplash.com/photo-1581655353564-df123364d42e?w=800&h=800&fit=crop'] },
+      { id: 'var_new_longline_gris',  name: 'Gris',  color: 'Gris',  colorCode: '#9e9e9e', stock: [4,  8, 10,  8,  4,  1], fallbackImages: ['https://images.unsplash.com/photo-1529374255-1e9231d7a1a4?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Sweat Zip (XS S M L XL XXL) ────────────────────────────────────────
+    'prod_new_sweat_zip': [
+      { id: 'var_new_sweatzip_noir', name: 'Noir',  color: 'Noir',  colorCode: '#1a1a1a', stock: [6, 10, 12,  8,  5,  2], fallbackImages: ['https://images.unsplash.com/photo-1610386648444-4af6fbec5fa5?w=800&h=800&fit=crop'] },
+      { id: 'var_new_sweatzip_gris', name: 'Gris',  color: 'Gris',  colorCode: '#9e9e9e', stock: [5,  9, 11,  7,  4,  2], fallbackImages: ['https://images.unsplash.com/photo-1611312449408-fcedd27dff05?w=800&h=800&fit=crop'] },
+      { id: 'var_new_sweatzip_navy', name: 'Marine', color: 'Marine', colorCode: '#1B2A4A', stock: [4,  7, 10,  6,  3,  1], fallbackImages: ['https://images.unsplash.com/photo-1612336469928-4a0eb8fef58a?w=800&h=800&fit=crop'] },
+    ],
+
+    // ── Legging Sport (XS S M L XL) ────────────────────────────────────────
+    'prod_new_legging_sport': [
+      { id: 'var_new_legging_noir',   name: 'Noir',   color: 'Noir',   colorCode: '#1a1a1a', stock: [8, 14, 16, 12, 6], fallbackImages: ['https://images.unsplash.com/photo-1576551488405-560c52818de7?w=800&h=800&fit=crop'] },
+      { id: 'var_new_legging_marine', name: 'Marine', color: 'Marine', colorCode: '#1B2A4A', stock: [6, 11, 14, 10, 5], fallbackImages: ['https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&h=800&fit=crop'] },
+      { id: 'var_new_legging_rose',   name: 'Rose',   color: 'Rose',   colorCode: '#f8bbd9', stock: [5,  9, 12,  8, 4], fallbackImages: ['https://images.unsplash.com/photo-1494436261687-24a14bc27e69?w=800&h=800&fit=crop'] },
+    ],
+  };
+
+  // Cleanup des variantes/SKUs existants pour les nouveaux produits
+  await prisma.productSku.deleteMany({ where: { productId: { in: allNewProducts.map((p) => p.id) } } });
+  await prisma.productVariant.deleteMany({ where: { productId: { in: allNewProducts.map((p) => p.id) } } });
+
+  let newVariantCount = 0;
+  let newSkuCount = 0;
+
+  for (const [productId, variantDefs] of Object.entries(NEW_PRODUCT_VARIANT_DEFS)) {
+    const productSizes = NEW_PRODUCT_SIZES[productId] ?? [];
+
+    for (const vd of variantDefs) {
+      const variantImages = getVariantImages(productId, vd.id, vd.fallbackImages);
+
+      await prisma.productVariant.upsert({
+        where: { id: vd.id },
+        update: { name: vd.name, color: vd.color, colorCode: vd.colorCode, images: variantImages },
+        create: {
+          id: vd.id,
+          productId,
+          name: vd.name,
+          color: vd.color,
+          colorCode: vd.colorCode,
+          stock: 0,
+          images: variantImages,
+        },
+      });
+      newVariantCount++;
+
+      for (const [si, sizeEntry] of productSizes.entries()) {
+        await prisma.productSku.create({
+          data: { productId, variantId: vd.id, size: sizeEntry.size, stock: vd.stock[si] ?? 0 },
+        });
+        newSkuCount++;
+      }
+    }
+  }
+
+  console.log(`✅ ${allNewProducts.length} new products created (Jose:2, Lucas:4, Claire:3, Marc:2)`);
+  console.log(`✅ ${newImageCount} product images created for new products`);
+  console.log(`✅ ${newVariantCount} new variants created, ${newSkuCount} new SKUs created`);
 
   // ============================================
   // PRODUCT VARIANTS & SKUS (Couleurs & Stocks)
