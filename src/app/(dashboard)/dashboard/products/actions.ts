@@ -227,7 +227,12 @@ export async function deleteProduct(productId: string): Promise<ActionResult> {
   const { session, error } = await requireCreatorAuth();
   if (error) return { success: false, error };
 
-  const deleteProductUseCase = new DeleteProductUseCase(productRepository);
+  const deleteProductUseCase = new DeleteProductUseCase(
+    productRepository,
+    productImageRepository,
+    variantRepository,
+    imageUploadService
+  );
   const result = await deleteProductUseCase.execute({
     productId,
     creatorId: session.user.id,
@@ -397,7 +402,7 @@ export async function deleteVariant(variantId: string, productId: string): Promi
   const { error } = await requireCreatorAuth();
   if (error) return { success: false, error };
 
-  const deleteVariantUseCase = new DeleteVariantUseCase(variantRepository);
+  const deleteVariantUseCase = new DeleteVariantUseCase(variantRepository, imageUploadService);
   const result = await deleteVariantUseCase.execute({ id: variantId });
 
   if (result.isFailure) {
