@@ -25,7 +25,7 @@ interface GoogleSignInButtonProps {
  */
 export function GoogleSignInButton({
   mode = 'signin',
-  callbackUrl = '/',
+  callbackUrl = '/auth/redirect',
 }: GoogleSignInButtonProps) {
   const handleClick = () => {
     signIn('google', { callbackUrl });

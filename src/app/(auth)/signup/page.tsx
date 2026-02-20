@@ -42,7 +42,7 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <GoogleSignInButton mode="signup" callbackUrl="/" />
+      <GoogleSignInButton mode="signup" callbackUrl="/auth/redirect" />
 
       <p className="text-center text-sm text-muted-foreground">
         En vous inscrivant, vous acceptez nos{' '}
