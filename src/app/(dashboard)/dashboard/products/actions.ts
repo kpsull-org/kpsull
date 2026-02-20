@@ -5,8 +5,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 import { z } from 'zod';
+import { Money } from '@/modules/products/domain/value-objects/money.vo';
 import { CreateProductUseCase } from '@/modules/products/application/use-cases/products/create-product.use-case';
-import { UpdateProductUseCase } from '@/modules/products/application/use-cases/products/update-product.use-case';
 import { DeleteProductUseCase } from '@/modules/products/application/use-cases/products/delete-product.use-case';
 import { PublishProductUseCase } from '@/modules/products/application/use-cases/products/publish-product.use-case';
 import { UnpublishProductUseCase } from '@/modules/products/application/use-cases/products/unpublish-product.use-case';
@@ -169,50 +169,53 @@ export async function updateProduct(
     return { success: false, error: firstError?.message ?? 'Donnees invalides' };
   }
 
-  const { styleId, sizes, category, gender, materials, fit, season, madeIn, careInstructions, certifications, weight, ...coreData } = validationResult.data;
+  const { name, description, price, projectId, styleId, sizes, category, gender, materials, fit, season, madeIn, careInstructions, certifications, weight } = validationResult.data;
 
-  const updateProductUseCase = new UpdateProductUseCase(productRepository);
-  const result = await updateProductUseCase.execute({
-    productId,
-    creatorId: session.user.id,
-    ...coreData,
+  // Verify ownership
+  const existing = await prisma.product.findUnique({ where: { id: productId }, select: { creatorId: true } });
+  if (!existing || existing.creatorId !== session.user.id) {
+    return { success: false, error: "Vous n'etes pas autorise a modifier ce produit" };
+  }
+
+  // Validate business rules inline (mirrors use case / entity logic)
+  if (name !== undefined) {
+    if (!name.trim()) {
+      return { success: false, error: 'Le nom du produit est requis' };
+    }
+    if (name.length > 200) {
+      return { success: false, error: 'Le nom ne peut pas dépasser 200 caractères' };
+    }
+  }
+
+  if (price !== undefined) {
+    const moneyResult = Money.create(price);
+    if (moneyResult.isFailure) {
+      return { success: false, error: moneyResult.error! };
+    }
+  }
+
+  // Single atomic update combining core and extra fields
+  await prisma.product.update({
+    where: { id: productId },
+    data: {
+      ...(name !== undefined && { name: name.trim() }),
+      ...(description !== undefined && { description }),
+      ...(price !== undefined && { price: Math.round(price * 100) }),
+      ...(projectId !== undefined && { projectId }),
+      ...(styleId !== undefined && { styleId }),
+      ...(sizes !== undefined && { sizes }),
+      ...(category !== undefined && { category }),
+      ...(gender !== undefined && { gender }),
+      ...(materials !== undefined && { materials }),
+      ...(fit !== undefined && { fit }),
+      ...(season !== undefined && { season }),
+      ...(madeIn !== undefined && { madeIn }),
+      ...(careInstructions !== undefined && { careInstructions }),
+      ...(certifications !== undefined && { certifications }),
+      ...(weight !== undefined && { weight }),
+      updatedAt: new Date(),
+    },
   });
-
-  if (result.isFailure) {
-    return { success: false, error: result.error! };
-  }
-
-  const hasExtraFields =
-    styleId !== undefined ||
-    sizes !== undefined ||
-    category !== undefined ||
-    gender !== undefined ||
-    materials !== undefined ||
-    fit !== undefined ||
-    season !== undefined ||
-    madeIn !== undefined ||
-    careInstructions !== undefined ||
-    certifications !== undefined ||
-    weight !== undefined;
-
-  if (hasExtraFields) {
-    await prisma.product.update({
-      where: { id: productId },
-      data: {
-        ...(styleId !== undefined && { styleId }),
-        ...(sizes !== undefined && { sizes }),
-        ...(category !== undefined && { category }),
-        ...(gender !== undefined && { gender }),
-        ...(materials !== undefined && { materials }),
-        ...(fit !== undefined && { fit }),
-        ...(season !== undefined && { season }),
-        ...(madeIn !== undefined && { madeIn }),
-        ...(careInstructions !== undefined && { careInstructions }),
-        ...(certifications !== undefined && { certifications }),
-        ...(weight !== undefined && { weight }),
-      },
-    });
-  }
 
   revalidatePath('/dashboard/products');
   revalidatePath(`/dashboard/products/${productId}`);
