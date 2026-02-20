@@ -320,9 +320,12 @@ function InlineColorPicker({ color, onChange }: { color: string; onChange: (c: s
   return (
     <div className="relative h-5 w-5 shrink-0" title="Cliquer pour changer la couleur">
       <div
+        role="button"
+        tabIndex={0}
         className="h-full w-full rounded-full border-2 border-white ring-1 ring-border hover:ring-primary/60 transition-all cursor-pointer"
         style={{ backgroundColor: color }}
         onClick={() => pickerRef.current?.click()}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') pickerRef.current?.click(); }}
       />
       <input
         type="color"
@@ -909,10 +912,14 @@ export function ProductDashboard({
         {/* ── Modal: Ajouter une taille ──────────────────────────────────── */}
         {addingSizeOpen && (
           <div
+            role="button"
+            tabIndex={0}
             className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
             onClick={() => { setAddingSizeOpen(false); setNewSizeInput(''); }}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSizeOpen(false); setNewSizeInput(''); } }}
           >
             <div
+              role="dialog"
               className="bg-background border rounded-xl p-5 w-[480px] max-h-[80vh] overflow-y-auto shadow-xl space-y-3"
               onClick={(e) => e.stopPropagation()}
             >
@@ -1082,10 +1089,14 @@ export function ProductDashboard({
         {/* ── Modal: Ajouter une couleur ─────────────────────────────────── */}
         {addingVariant && (
           <div
+            role="button"
+            tabIndex={0}
             className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
             onClick={() => { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); }}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); } }}
           >
             <div
+              role="dialog"
               className="bg-background border rounded-xl p-5 w-80 shadow-xl space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
@@ -1095,9 +1106,12 @@ export function ProductDashboard({
               <div className="flex items-center gap-3">
                 <div className="relative h-10 w-10 shrink-0 cursor-pointer" title="Choisir une couleur">
                   <div
+                    role="button"
+                    tabIndex={0}
                     className="h-full w-full rounded-full border-2 border-white ring-2 ring-border hover:ring-primary/60 transition-all"
                     style={{ backgroundColor: newVarColorCode }}
                     onClick={() => newColorPickerRef.current?.click()}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') newColorPickerRef.current?.click(); }}
                   />
                   <input
                     type="color"

@@ -43,7 +43,7 @@ export interface ActionResult {
 const priceSchema = z
   .number()
   .positive('Le prix doit etre positif')
-  .refine((v) => Math.round(v * 100) === Math.round(v * 100), 'Prix invalide')
+  .refine((v) => Math.round(v * 100) === v * 100, 'Prix invalide')
   .transform((v) => Math.round(v * 100) / 100);
 
 const createProductSchema = z.object({
