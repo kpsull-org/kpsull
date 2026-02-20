@@ -162,7 +162,7 @@ export function ProductForm({ mode, productId, initialValues, collections, style
           madeIn: madeIn || null,
           careInstructions: careInstructions || null,
           certifications: certifications.length > 0 ? certifications.join(',') : null,
-          weight: weight ? parseInt(weight, 10) : null,
+          weight: weight ? Number.parseInt(weight, 10) : null,
         });
       }
 

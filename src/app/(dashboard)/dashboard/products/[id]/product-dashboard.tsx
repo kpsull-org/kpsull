@@ -409,7 +409,7 @@ export function ProductDashboard({
       const newMap = new Map(prev);
       newMap.set(k, {
         ...existing,
-        stock: Math.max(0, parseInt(value) || 0),
+        stock: Math.max(0, Number.parseInt(value) || 0),
       });
       return newMap;
     });
@@ -662,6 +662,9 @@ export function ProductDashboard({
                               setEditingSizeIdx(idx);
                               setEditSizeName(size);
                             }}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setEditingSizeIdx(idx); setEditSizeName(size); } }}
                           >
                             {size}
                           </span>
@@ -804,6 +807,9 @@ export function ProductDashboard({
                               setEditingNameVariantId(v.id);
                               setEditingNameValue(v.name);
                             }}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { setEditingNameVariantId(v.id); setEditingNameValue(v.name); } }}
                             title="Double-cliquer pour modifier le nom"
                           >
                             {v.name}

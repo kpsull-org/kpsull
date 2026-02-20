@@ -133,7 +133,7 @@ export function CollectionCoverUpload({
           <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
             <img
               src={currentCoverImage}
-              alt="Image de couverture"
+              alt="Couverture de la collection"
               className="h-full w-full object-cover"
             />
           </div>
@@ -142,6 +142,9 @@ export function CollectionCoverUpload({
             <div
               className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={handleUpload}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleUpload(); }}
             >
               <ImageIcon className="h-12 w-12 mb-3 opacity-30" />
               <p className="text-sm font-medium text-muted-foreground">

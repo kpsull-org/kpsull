@@ -31,7 +31,7 @@ export class CloudinaryImageUploadService implements ImageUploadService {
       const mimeType = getMimeType(filename);
       const sanitized = filename
         .replace(/\.[^/.]+$/, '')
-        .replace(/[^a-zA-Z0-9-]/g, '_');
+        .replaceAll(/[^a-zA-Z0-9-]/g, '_');
       const publicId = `${Date.now()}-${sanitized}`;
       const base64 = `data:${mimeType};base64,${file.toString('base64')}`;
 

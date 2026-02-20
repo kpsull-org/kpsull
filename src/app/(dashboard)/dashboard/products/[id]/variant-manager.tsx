@@ -140,6 +140,9 @@ function VariantImageSlot({ variantId, productId, images, isLoading }: VariantIm
     <div
       className="relative h-14 w-14 shrink-0 rounded-lg border-2 border-dashed border-muted-foreground/30 overflow-hidden cursor-pointer hover:border-muted-foreground/60 transition-colors group"
       onClick={() => !uploading && fileInputRef.current?.click()}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!uploading) fileInputRef.current?.click(); } }}
       title={firstImage ? 'Changer la photo' : 'Ajouter une photo'}
     >
       {firstImage ? (
