@@ -234,11 +234,11 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
     }
 
     startTransition(async () => {
-      const priceInCents = newPrice ? Math.round(parseFloat(newPrice) * 100) : undefined;
+      const parsedPrice = newPrice ? parseFloat(newPrice) : undefined;
       const result = await createVariant({
         productId,
         name: newName.trim(),
-        priceOverride: priceInCents && priceInCents > 0 ? priceInCents : undefined,
+        priceOverride: parsedPrice && parsedPrice > 0 ? parsedPrice : undefined,
         stock,
         color: newColor.trim() || undefined,
         colorCode: newColorCode.trim() || undefined,
@@ -258,10 +258,10 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
     const stock = parseInt(editStock, 10);
 
     startTransition(async () => {
-      const priceInCents = editPrice ? Math.round(parseFloat(editPrice) * 100) : undefined;
+      const parsedPrice = editPrice ? parseFloat(editPrice) : undefined;
       const result = await updateVariant(variantId, productId, {
         name: editName.trim() || undefined,
-        priceOverride: priceInCents && priceInCents > 0 ? priceInCents : undefined,
+        priceOverride: parsedPrice && parsedPrice > 0 ? parsedPrice : undefined,
         removePriceOverride: !editPrice ? true : undefined,
         stock: !isNaN(stock) ? stock : undefined,
         color: editColor.trim() || undefined,

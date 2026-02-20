@@ -40,10 +40,16 @@ export interface ActionResult {
   id?: string;
 }
 
+const priceSchema = z
+  .number()
+  .positive('Le prix doit etre positif')
+  .refine((v) => Math.round(v * 100) === Math.round(v * 100), 'Prix invalide')
+  .transform((v) => Math.round(v * 100) / 100);
+
 const createProductSchema = z.object({
   name: z.string().min(1, 'Le nom du produit est requis'),
   description: z.string().optional(),
-  price: z.number().positive('Le prix doit etre positif'),
+  price: priceSchema,
   projectId: z.string().optional(),
 });
 
@@ -57,26 +63,26 @@ const sizeEntrySchema = z.object({
 
 const updateProductSchema = z.object({
   name: z.string().min(1, 'Le nom du produit est requis').optional(),
-  description: z.string().optional(),
-  price: z.number().positive('Le prix doit etre positif').optional(),
+  description: z.string().nullable().optional(),
+  price: priceSchema.optional(),
   projectId: z.string().nullable().optional(),
   styleId: z.string().nullable().optional(),
   sizes: z.array(sizeEntrySchema).optional(),
-  category: z.string().optional(),
-  gender: z.string().optional(),
-  materials: z.string().optional(),
-  fit: z.string().optional(),
-  season: z.string().optional(),
-  madeIn: z.string().optional(),
-  careInstructions: z.string().optional(),
-  certifications: z.string().optional(),
-  weight: z.number().int().optional(),
+  category: z.string().nullable().optional(),
+  gender: z.string().nullable().optional(),
+  materials: z.string().nullable().optional(),
+  fit: z.string().nullable().optional(),
+  season: z.string().nullable().optional(),
+  madeIn: z.string().nullable().optional(),
+  careInstructions: z.string().nullable().optional(),
+  certifications: z.string().nullable().optional(),
+  weight: z.number().int().nullable().optional(),
 });
 
 const createVariantSchema = z.object({
   productId: z.string().min(1, "L'ID du produit est requis"),
   name: z.string().min(1, 'Le nom de la variante est requis'),
-  priceOverride: z.number().positive('Le prix doit etre positif').optional(),
+  priceOverride: priceSchema.optional(),
   stock: z.number().int().min(0, 'Le stock ne peut pas etre negatif'),
   color: z.string().optional(),
   colorCode: z.string().optional(),
@@ -84,7 +90,7 @@ const createVariantSchema = z.object({
 
 const updateVariantSchema = z.object({
   name: z.string().min(1, 'Le nom de la variante est requis').optional(),
-  priceOverride: z.number().positive('Le prix doit etre positif').optional(),
+  priceOverride: priceSchema.optional(),
   removePriceOverride: z.boolean().optional(),
   stock: z.number().int().min(0, 'Le stock ne peut pas etre negatif').optional(),
   color: z.string().optional(),

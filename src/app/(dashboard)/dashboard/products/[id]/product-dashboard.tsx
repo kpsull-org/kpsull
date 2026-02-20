@@ -313,6 +313,30 @@ function BaseImageStrip({ productId, images, onAdd, onRemove }: BaseImageStripPr
   );
 }
 
+// ─── InlineColorPicker ────────────────────────────────────────────────────────
+
+function InlineColorPicker({ color, onChange }: { color: string; onChange: (c: string) => void }) {
+  const pickerRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="relative h-5 w-5 shrink-0" title="Cliquer pour changer la couleur">
+      <div
+        className="h-full w-full rounded-full border-2 border-white ring-1 ring-border hover:ring-primary/60 transition-all cursor-pointer"
+        style={{ backgroundColor: color }}
+        onClick={() => pickerRef.current?.click()}
+      />
+      <input
+        type="color"
+        ref={pickerRef}
+        value={color}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+    </div>
+  );
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export function ProductDashboard({
@@ -348,8 +372,7 @@ export function ProductDashboard({
   // Editing variant inline
   const [editingNameVariantId, setEditingNameVariantId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState('');
-  const [colorPickerVariantId, setColorPickerVariantId] = useState<string | null>(null);
-
+  const newColorPickerRef = useRef<HTMLInputElement>(null);
   // Adding size (new column)
   const [addingSizeOpen, setAddingSizeOpen] = useState(false);
   const [newSizeInput, setNewSizeInput] = useState('');
@@ -604,8 +627,8 @@ export function ProductDashboard({
       (s.length && s.length > 0)
   );
 
-  // colspan = 1 (couleur) + nb tailles ou 1 (globale) + 1 (add taille) + 1 (trash)
-  const colSpanTotal = 1 + (hasSizes ? sizes.length : 1) + 2;
+  // colspan = 1 (couleur) + nb tailles ou 1 (globale) + 1 (add taille + trash fusionnés)
+  const colSpanTotal = 1 + (hasSizes ? sizes.length : 1) + 1;
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -705,8 +728,6 @@ export function ProductDashboard({
                     Taille
                   </button>
                 </th>
-                {/* Colonne suppression */}
-                <th className="w-10 pb-2" />
               </tr>
             </thead>
 
@@ -753,7 +774,6 @@ export function ProductDashboard({
                     </td>
                   )}
                   <td />
-                  <td />
                 </tr>
               )}
 
@@ -761,7 +781,7 @@ export function ProductDashboard({
               {variants.map((v) => (
                 <tr key={v.id}>
                   <td className="py-0.5 min-w-[260px]">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 overflow-hidden">
                       <VariantImageStrip
                         variantId={v.id}
                         productId={productId}
@@ -783,14 +803,9 @@ export function ProductDashboard({
                       />
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         {v.colorCode ? (
-                          <button
-                            type="button"
-                            title="Cliquer pour changer la couleur"
-                            onClick={() =>
-                              setColorPickerVariantId((prev) => (prev === v.id ? null : v.id))
-                            }
-                            className="h-5 w-5 rounded-full border-2 border-white ring-1 ring-border hover:ring-primary/60 transition-all cursor-pointer shrink-0"
-                            style={{ backgroundColor: v.colorCode }}
+                          <InlineColorPicker
+                            color={v.colorCode}
+                            onChange={(c) => handleQuickColorChange(v.id, c)}
                           />
                         ) : null}
                         {editingNameVariantId === v.id ? (
@@ -803,65 +818,25 @@ export function ProductDashboard({
                               if (e.key === 'Enter') commitNameEdit(v.id);
                               if (e.key === 'Escape') setEditingNameVariantId(null);
                             }}
-                            className="font-medium text-sm border-b border-primary bg-transparent outline-none w-full min-w-0"
+                            className="font-medium text-sm border-b-2 border-primary bg-transparent outline-none w-full min-w-0"
                           />
                         ) : (
                           <span
-                            className="font-medium text-sm truncate cursor-default select-none"
-                            onDoubleClick={() => {
+                            className="font-medium text-sm truncate cursor-text select-none border-b-2 border-transparent"
+                            onClick={() => {
                               setEditingNameVariantId(v.id);
                               setEditingNameValue(v.name);
                             }}
                             role="button"
                             tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter') { setEditingNameVariantId(v.id); setEditingNameValue(v.name); } }}
-                            title="Double-cliquer pour modifier le nom"
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setEditingNameVariantId(v.id); setEditingNameValue(v.name); } }}
+                            title="Cliquer pour modifier le nom"
                           >
                             {v.name}
                           </span>
                         )}
                       </div>
                     </div>
-                    {colorPickerVariantId === v.id && (
-                      <div className="mt-1.5 p-2 border rounded-md bg-background space-y-1.5">
-                        <div className="flex flex-wrap gap-1">
-                          {PRESET_COLORS.map((c) => (
-                            <button
-                              key={c.hex}
-                              type="button"
-                              title={c.name}
-                              onClick={() => {
-                                handleQuickColorChange(v.id, c.hex);
-                                setColorPickerVariantId(null);
-                              }}
-                              className={`h-5 w-5 rounded-full border hover:scale-125 transition-transform ${
-                                v.colorCode?.toLowerCase() === c.hex.toLowerCase()
-                                  ? 'ring-2 ring-primary ring-offset-1'
-                                  : 'border-border'
-                              }`}
-                              style={{ backgroundColor: c.hex }}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={v.colorCode ?? '#000000'}
-                            onChange={(e) => handleQuickColorChange(v.id, e.target.value)}
-                            className="h-7 w-8 cursor-pointer rounded border p-0.5 shrink-0"
-                            title="Couleur personnalisée"
-                          />
-                          <span className="text-xs text-muted-foreground flex-1">Couleur libre</span>
-                          <button
-                            type="button"
-                            onClick={() => setColorPickerVariantId(null)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </td>
 
                   {/* Cellules stock */}
@@ -900,16 +875,15 @@ export function ProductDashboard({
                       })()}
                     </td>
                   )}
-                  <td />
-                  <td className="p-0 pl-1 w-10 align-middle">
+                  <td className="p-0 pl-1 align-middle min-w-[100px]">
                     <button
                       type="button"
                       onClick={() => handleDeleteVariant(v.id)}
                       disabled={isPendingVariant}
                       title="Supprimer cette couleur"
-                      className="h-8 w-8 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors group/trash"
+                      className="flex items-center justify-center border-2 border-dashed border-muted-foreground/20 rounded-lg w-full h-11 text-muted-foreground/40 hover:text-destructive hover:border-destructive/50 transition-colors"
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground/40 group-hover/trash:text-destructive transition-colors" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </td>
                 </tr>
@@ -918,214 +892,153 @@ export function ProductDashboard({
               {/* Ligne "+ Ajouter couleur" */}
               <tr>
                 <td colSpan={colSpanTotal} className="pt-2">
-                  {addingVariant ? (
-                    <div className="space-y-1.5 p-3 rounded-lg border bg-muted/20">
-                      <Input
-                        autoFocus
-                        value={newVarName}
-                        onChange={(e) => setNewVarName(e.target.value)}
-                        placeholder="Nom de la couleur (ex: Bleu marine)"
-                        className="h-8 text-sm"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAddVariant();
-                          if (e.key === 'Escape') {
-                            setAddingVariant(false);
-                            setNewVarName('');
-                            setNewVarColorCode('#000000');
-                          }
-                        }}
-                      />
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={newVarColorCode}
-                          onChange={(e) => {
-                            setNewVarColorCode(e.target.value);
-                            const preset = PRESET_COLORS.find(
-                              (c) => c.hex.toLowerCase() === e.target.value.toLowerCase()
-                            );
-                            if (preset && !newVarName) setNewVarName(preset.name);
-                          }}
-                          className="h-8 w-10 cursor-pointer rounded border p-0.5 shrink-0"
-                        />
-                        <div className="flex flex-wrap gap-1">
-                          {PRESET_COLORS.map((c) => (
-                            <button
-                              key={c.hex}
-                              type="button"
-                              title={c.name}
-                              onClick={() => {
-                                setNewVarColorCode(c.hex);
-                                if (!newVarName) setNewVarName(c.name);
-                              }}
-                              className="h-5 w-5 rounded-full border border-border hover:scale-125 transition-transform"
-                              style={{ backgroundColor: c.hex }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleAddVariant}
-                          disabled={isPendingVariant || !newVarName.trim()}
-                          className="gap-1"
-                        >
-                          <Check className="h-3.5 w-3.5" /> Créer
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setAddingVariant(false);
-                            setNewVarName('');
-                            setNewVarColorCode('#000000');
-                          }}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setAddingVariant(true)}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border-2 border-dashed rounded-lg px-3 py-2 hover:border-muted-foreground/50 transition-colors"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Ajouter une couleur
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setAddingVariant(true)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border-2 border-dashed rounded-lg px-3 py-2 hover:border-muted-foreground/50 transition-colors"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Ajouter une couleur
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* ── Size picker accordéon ──────────────────────────────────────── */}
+        {/* ── Modal: Ajouter une taille ──────────────────────────────────── */}
         {addingSizeOpen && (
-          <div className="border rounded-lg p-3 space-y-2">
-            {(() => {
-              const suggestedIds = getSuggestedGroupIds(category, gender);
-              const suggestedGroups = SIZE_GROUPS.filter((g) => suggestedIds.includes(g.id));
-              const otherGroups = SIZE_GROUPS.filter((g) => !suggestedIds.includes(g.id));
-              const hasSuggestions = suggestedGroups.length > 0;
+          <div
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            onClick={() => { setAddingSizeOpen(false); setNewSizeInput(''); }}
+          >
+            <div
+              className="bg-background border rounded-xl p-5 w-[480px] max-h-[80vh] overflow-y-auto shadow-xl space-y-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-sm font-medium">Ajouter une taille</p>
 
-              function renderGroup(group: (typeof SIZE_GROUPS)[number]) {
-                return (
-                  <div key={group.id} className="border rounded-md overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setOpenSizeGroup((prev) => (prev === group.id ? null : group.id))}
-                      className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
-                    >
-                      <div>
-                        <span className="font-medium">{group.label}</span>
-                        {'note' in group && group.note && (
-                          <span className="text-xs text-muted-foreground ml-2">{group.note}</span>
+              {(() => {
+                const suggestedIds = getSuggestedGroupIds(category, gender);
+                const suggestedGroups = SIZE_GROUPS.filter((g) => suggestedIds.includes(g.id));
+                const otherGroups = SIZE_GROUPS.filter((g) => !suggestedIds.includes(g.id));
+                const hasSuggestions = suggestedGroups.length > 0;
+
+                function renderGroup(group: (typeof SIZE_GROUPS)[number]) {
+                  return (
+                    <div key={group.id} className="border rounded-md overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setOpenSizeGroup((prev) => (prev === group.id ? null : group.id))}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                      >
+                        <div>
+                          <span className="font-medium">{group.label}</span>
+                          {'note' in group && group.note && (
+                            <span className="text-xs text-muted-foreground ml-2">{group.note}</span>
+                          )}
+                        </div>
+                        {openSizeGroup === group.id ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
                         )}
-                      </div>
-                      {openSizeGroup === group.id ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                      {openSizeGroup === group.id && (
+                        <div className="px-3 pb-3 flex flex-wrap gap-1.5 border-t pt-2">
+                          {group.sizes.map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => { addSize(s); setAddingSizeOpen(false); }}
+                              disabled={alreadyAddedSizes.has(s.toLowerCase())}
+                              className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
                       )}
-                    </button>
-                    {openSizeGroup === group.id && (
-                      <div className="px-3 pb-3 flex flex-wrap gap-1.5 border-t pt-2">
-                        {group.sizes.map((s) => (
-                          <button
-                            key={s}
-                            type="button"
-                            onClick={() => addSize(s)}
-                            disabled={alreadyAddedSizes.has(s.toLowerCase())}
-                            className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
+                    </div>
+                  );
+                }
 
-              if (!hasSuggestions) {
+                if (!hasSuggestions) {
+                  return (
+                    <>
+                      <p className="text-xs font-medium text-muted-foreground">Choisir un référentiel de tailles</p>
+                      {SIZE_GROUPS.map(renderGroup)}
+                    </>
+                  );
+                }
+
                 return (
                   <>
-                    <p className="text-xs font-medium text-muted-foreground">Choisir un référentiel de tailles</p>
-                    {SIZE_GROUPS.map(renderGroup)}
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Référentiels suggérés
+                        {(gender === 'Bébé' || gender === 'Enfant') ? (
+                          <span className="ml-1 text-muted-foreground/60">pour {gender}</span>
+                        ) : category ? (
+                          <span className="ml-1 text-muted-foreground/60">pour {category}</span>
+                        ) : null}
+                      </p>
+                      {suggestedGroups.map(renderGroup)}
+                    </div>
+
+                    {otherGroups.length > 0 && (
+                      <details className="group/others">
+                        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1 list-none flex items-center gap-1 select-none">
+                          <ChevronDown className="h-3.5 w-3.5 group-open/others:rotate-180 transition-transform" />
+                          Autres référentiels
+                        </summary>
+                        <div className="space-y-1.5 mt-1.5">
+                          {otherGroups.map(renderGroup)}
+                        </div>
+                      </details>
+                    )}
                   </>
                 );
-              }
+              })()}
 
-              return (
-                <>
-                  <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Référentiels suggérés
-                      {(gender === 'Bébé' || gender === 'Enfant') ? (
-                        <span className="ml-1 text-muted-foreground/60">pour {gender}</span>
-                      ) : category ? (
-                        <span className="ml-1 text-muted-foreground/60">pour {category}</span>
-                      ) : null}
-                    </p>
-                    {suggestedGroups.map(renderGroup)}
-                  </div>
-
-                  {otherGroups.length > 0 && (
-                    <details className="group/others">
-                      <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1 list-none flex items-center gap-1 select-none">
-                        <ChevronDown className="h-3.5 w-3.5 group-open/others:rotate-180 transition-transform" />
-                        Autres référentiels
-                      </summary>
-                      <div className="space-y-1.5 mt-1.5">
-                        {otherGroups.map(renderGroup)}
-                      </div>
-                    </details>
-                  )}
-                </>
-              );
-            })()}
-
-            {/* Taille personnalisée */}
-            <div className="flex gap-2 pt-1">
-              <Input
-                value={newSizeInput}
-                onChange={(e) => setNewSizeInput(e.target.value)}
-                placeholder="Taille personnalisée (ex: 42-44, L/XL)..."
-                className="h-8 text-sm"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newSizeInput.trim()) {
-                    addSize(newSizeInput);
-                    setAddingSizeOpen(false);
-                  }
-                  if (e.key === 'Escape') setAddingSizeOpen(false);
-                }}
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  if (newSizeInput.trim()) {
-                    addSize(newSizeInput);
-                    setAddingSizeOpen(false);
-                  }
-                }}
-                disabled={!newSizeInput.trim()}
-              >
-                <Check className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAddingSizeOpen(false)}
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
+              {/* Taille personnalisée */}
+              <div className="flex gap-2 pt-1">
+                <Input
+                  autoFocus
+                  value={newSizeInput}
+                  onChange={(e) => setNewSizeInput(e.target.value)}
+                  placeholder="Taille personnalisée (ex: 42-44, L/XL)..."
+                  className="h-8 text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newSizeInput.trim()) {
+                      addSize(newSizeInput);
+                      setAddingSizeOpen(false);
+                    }
+                    if (e.key === 'Escape') { setAddingSizeOpen(false); setNewSizeInput(''); }
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    if (newSizeInput.trim()) {
+                      addSize(newSizeInput);
+                      setAddingSizeOpen(false);
+                    }
+                  }}
+                  disabled={!newSizeInput.trim()}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setAddingSizeOpen(false); setNewSizeInput(''); }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -1163,6 +1076,94 @@ export function ProductDashboard({
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Modal: Ajouter une couleur ─────────────────────────────────── */}
+        {addingVariant && (
+          <div
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            onClick={() => { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); }}
+          >
+            <div
+              className="bg-background border rounded-xl p-5 w-80 shadow-xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-sm font-medium">Nouvelle couleur</p>
+
+              {/* Circle picker + nom */}
+              <div className="flex items-center gap-3">
+                <div className="relative h-10 w-10 shrink-0 cursor-pointer" title="Choisir une couleur">
+                  <div
+                    className="h-full w-full rounded-full border-2 border-white ring-2 ring-border hover:ring-primary/60 transition-all"
+                    style={{ backgroundColor: newVarColorCode }}
+                    onClick={() => newColorPickerRef.current?.click()}
+                  />
+                  <input
+                    type="color"
+                    ref={newColorPickerRef}
+                    value={newVarColorCode}
+                    onChange={(e) => {
+                      setNewVarColorCode(e.target.value);
+                      const preset = PRESET_COLORS.find(
+                        (c) => c.hex.toLowerCase() === e.target.value.toLowerCase()
+                      );
+                      if (preset && (!newVarName || PRESET_COLORS.some(p => p.name === newVarName))) setNewVarName(preset.name);
+                    }}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <Input
+                  autoFocus
+                  value={newVarName}
+                  onChange={(e) => setNewVarName(e.target.value)}
+                  placeholder="Nom de la couleur"
+                  className="h-9 flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddVariant();
+                    if (e.key === 'Escape') { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); }
+                  }}
+                />
+              </div>
+
+              {/* Preset colors */}
+              <div className="flex flex-wrap gap-1.5">
+                {PRESET_COLORS.map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    title={c.name}
+                    onClick={() => { setNewVarColorCode(c.hex); if (!newVarName || PRESET_COLORS.some(p => p.name === newVarName)) setNewVarName(c.name); }}
+                    className={`h-6 w-6 rounded-full border-2 hover:scale-110 transition-transform ${newVarColorCode.toLowerCase() === c.hex.toLowerCase() ? 'border-primary ring-1 ring-primary/60 scale-110' : 'border-white ring-1 ring-border/60'}`}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+              </div>
+
+              {/* Boutons */}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleAddVariant}
+                  disabled={isPendingVariant || !newVarName.trim()}
+                  className="flex-1 gap-1"
+                >
+                  <Check className="h-3.5 w-3.5" /> Valider
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); }}
+                  className="flex-1 gap-1"
+                >
+                  <X className="h-3.5 w-3.5" /> Annuler
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 
