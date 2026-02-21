@@ -33,6 +33,12 @@ export class DeleteVariantUseCase implements UseCase<DeleteVariantInput, DeleteV
       return Result.fail('La variante n\'existe pas');
     }
 
+    // Prevent deleting the last variant — a product must always have at least one
+    const variantCount = await this.variantRepository.countByProductId(variant.productId);
+    if (variantCount <= 1) {
+      return Result.fail('Impossible de supprimer la dernière variante d\'un produit');
+    }
+
     // Store info before deletion for response
     const deletedInfo = {
       id: variant.idString,

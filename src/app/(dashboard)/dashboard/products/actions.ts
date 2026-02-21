@@ -13,12 +13,8 @@ import { UnpublishProductUseCase } from '@/modules/products/application/use-case
 import { CreateVariantUseCase } from '@/modules/products/application/use-cases/variants/create-variant.use-case';
 import { UpdateVariantUseCase } from '@/modules/products/application/use-cases/variants/update-variant.use-case';
 import { DeleteVariantUseCase } from '@/modules/products/application/use-cases/variants/delete-variant.use-case';
-import { UploadProductImageUseCase } from '@/modules/products/application/use-cases/images/upload-product-image.use-case';
-import { DeleteProductImageUseCase } from '@/modules/products/application/use-cases/images/delete-product-image.use-case';
-import { ReorderProductImagesUseCase } from '@/modules/products/application/use-cases/images/reorder-product-images.use-case';
 import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
 import { PrismaVariantRepository } from '@/modules/products/infrastructure/repositories/prisma-variant.repository';
-import { PrismaProductImageRepository } from '@/modules/products/infrastructure/repositories/prisma-product-image.repository';
 import { PrismaSkuRepository } from '@/modules/products/infrastructure/repositories/prisma-sku.repository';
 import { NoopSubscriptionService } from '@/modules/products/infrastructure/services/noop-subscription.service';
 import { CloudinaryImageUploadService } from '@/modules/products/infrastructure/services/cloudinary-image-upload.service';
@@ -29,7 +25,6 @@ export type { SkuOutput };
 
 const productRepository = new PrismaProductRepository(prisma);
 const variantRepository = new PrismaVariantRepository(prisma);
-const productImageRepository = new PrismaProductImageRepository(prisma);
 const skuRepository = new PrismaSkuRepository(prisma);
 const subscriptionService = new NoopSubscriptionService();
 const imageUploadService = new CloudinaryImageUploadService();
@@ -251,7 +246,6 @@ export async function deleteProduct(productId: string): Promise<ActionResult> {
 
   const deleteProductUseCase = new DeleteProductUseCase(
     productRepository,
-    productImageRepository,
     variantRepository,
     imageUploadService
   );
@@ -426,85 +420,6 @@ export async function deleteVariant(variantId: string, productId: string): Promi
 
   const deleteVariantUseCase = new DeleteVariantUseCase(variantRepository, imageUploadService);
   const result = await deleteVariantUseCase.execute({ id: variantId });
-
-  if (result.isFailure) {
-    return { success: false, error: result.error! };
-  }
-
-  revalidatePath(`/dashboard/products/${productId}`);
-
-  return { success: true };
-}
-
-// ─── Image Actions ─────────────────────────────────────────────────
-
-export async function uploadProductImage(
-  productId: string,
-  formData: FormData
-): Promise<ActionResult & { url?: string }> {
-  const { error } = await requireCreatorAuth();
-  if (error) return { success: false, error };
-
-  const file = formData.get('file') as File | null;
-  if (!file) {
-    return { success: false, error: 'Aucun fichier selectionne' };
-  }
-
-  const alt = (formData.get('alt') as string) ?? '';
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const uploadUseCase = new UploadProductImageUseCase(
-    imageUploadService,
-    productImageRepository,
-    productRepository
-  );
-  const result = await uploadUseCase.execute({
-    productId,
-    file: buffer,
-    filename: file.name,
-    alt,
-  });
-
-  if (result.isFailure) {
-    return { success: false, error: result.error! };
-  }
-
-  revalidatePath(`/dashboard/products/${productId}`);
-
-  return { success: true, id: result.value.id, url: result.value.url };
-}
-
-export async function deleteProductImage(
-  imageId: string,
-  productId: string
-): Promise<ActionResult> {
-  const { error } = await requireCreatorAuth();
-  if (error) return { success: false, error };
-
-  const deleteImageUseCase = new DeleteProductImageUseCase(
-    imageUploadService,
-    productImageRepository
-  );
-  const result = await deleteImageUseCase.execute({ imageId });
-
-  if (result.isFailure) {
-    return { success: false, error: result.error! };
-  }
-
-  revalidatePath(`/dashboard/products/${productId}`);
-
-  return { success: true };
-}
-
-export async function reorderProductImages(
-  productId: string,
-  imageIds: string[]
-): Promise<ActionResult> {
-  const { error } = await requireCreatorAuth();
-  if (error) return { success: false, error };
-
-  const reorderUseCase = new ReorderProductImagesUseCase(productImageRepository);
-  const result = await reorderUseCase.execute({ productId, imageIds });
 
   if (result.isFailure) {
     return { success: false, error: result.error! };

@@ -5,15 +5,8 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface ProductImage {
-  id: string;
-  url: string;
-  alt: string;
-  position: number;
-}
-
 interface ProductGalleryProps {
-  images: ProductImage[];
+  images: string[];
   productName: string;
 }
 
@@ -51,8 +44,8 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       {/* Main image */}
       <div className="relative aspect-square bg-muted rounded-lg overflow-hidden">
         <Image
-          src={selectedImage.url}
-          alt={selectedImage.alt || productName}
+          src={selectedImage}
+          alt={`${productName} - Image ${selectedIndex + 1}`}
           fill
           className="object-cover"
           priority
@@ -84,9 +77,9 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       {/* Thumbnails */}
       {images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {images.map((image, index) => (
+          {images.map((url, index) => (
             <button
-              key={image.id}
+              key={index}
               onClick={() => setSelectedIndex(index)}
               className={`relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-colors ${
                 index === selectedIndex
@@ -95,8 +88,8 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               }`}
             >
               <Image
-                src={image.url}
-                alt={image.alt || `${productName} - Image ${index + 1}`}
+                src={url}
+                alt={`${productName} - Image ${index + 1}`}
                 fill
                 className="object-cover"
                 sizes="64px"

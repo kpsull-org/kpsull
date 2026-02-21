@@ -2,7 +2,7 @@ import { Entity, UniqueId, Result } from '@/shared/domain';
 
 interface ProductSkuProps {
   productId: string;
-  variantId?: string;
+  variantId: string;
   size?: string;
   stock: number;
   createdAt: Date;
@@ -11,7 +11,7 @@ interface ProductSkuProps {
 
 interface CreateProductSkuData {
   productId: string;
-  variantId?: string;
+  variantId: string;
   size?: string;
   stock: number;
 }
@@ -19,7 +19,7 @@ interface CreateProductSkuData {
 interface ReconstituteProductSkuData {
   id: string;
   productId: string;
-  variantId?: string;
+  variantId: string;
   size?: string;
   stock: number;
   createdAt: Date;
@@ -39,7 +39,7 @@ export class ProductSku extends Entity<ProductSkuProps> {
     return this.props.productId;
   }
 
-  get variantId(): string | undefined {
+  get variantId(): string {
     return this.props.variantId;
   }
 

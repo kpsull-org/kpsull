@@ -34,7 +34,7 @@ export class PrismaSkuRepository implements SkuRepository {
       create: {
         id: sku.idString,
         productId: sku.productId,
-        variantId: sku.variantId ?? null,
+        variantId: sku.variantId,
         size: sku.size ?? null,
         stock: sku.stock,
         createdAt: sku.createdAt,
@@ -58,7 +58,7 @@ export class PrismaSkuRepository implements SkuRepository {
     const result = ProductSku.reconstitute({
       id: prismaSku.id,
       productId: prismaSku.productId,
-      variantId: prismaSku.variantId ?? undefined,
+      variantId: prismaSku.variantId!,
       size: prismaSku.size ?? undefined,
       stock: prismaSku.stock,
       createdAt: prismaSku.createdAt,

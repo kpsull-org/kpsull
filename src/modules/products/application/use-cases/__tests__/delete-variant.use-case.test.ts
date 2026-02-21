@@ -45,6 +45,7 @@ describe('DeleteVariantUseCase', () => {
     }).value;
 
     mockVariantRepo.findById.mockResolvedValue(existingVariant);
+    mockVariantRepo.countByProductId.mockResolvedValue(2); // More than 1 variant, deletion allowed
     mockVariantRepo.delete.mockResolvedValue(undefined);
 
     useCase = new DeleteVariantUseCase(
@@ -191,6 +192,20 @@ describe('DeleteVariantUseCase', () => {
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(mockImageUploadService.delete).not.toHaveBeenCalled();
+    });
+
+    it('should fail when trying to delete the last variant of a product', async () => {
+      // Arrange - only 1 variant remaining
+      mockVariantRepo.countByProductId.mockResolvedValue(1);
+      const input: DeleteVariantInput = { id: 'variant-123' };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('dernière variante');
+      expect(mockVariantRepo.delete).not.toHaveBeenCalled();
     });
   });
 });

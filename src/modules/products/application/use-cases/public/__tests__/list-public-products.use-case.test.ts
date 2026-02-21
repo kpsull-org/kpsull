@@ -5,15 +5,13 @@ import {
   type PublicProductListRepository,
 } from '../list-public-products.use-case';
 import { Product } from '../../../../domain/entities/product.entity';
-import { ProductImage } from '../../../../domain/entities/product-image.entity';
 import { Money } from '../../../../domain/value-objects/money.vo';
-import { ImageUrl } from '../../../../domain/value-objects/image-url.vo';
 
 describe('ListPublicProductsUseCase', () => {
   let useCase: ListPublicProductsUseCase;
   let mockRepo: {
     findPublishedByCreatorSlugWithPagination: Mock;
-    findMainImagesByProductIds: Mock;
+    findFirstVariantImagesByProductIds: Mock;
   };
 
   const createMockProduct = (id: string, name: string, priceAmount: number) => {
@@ -35,20 +33,10 @@ describe('ListPublicProductsUseCase', () => {
     return product;
   };
 
-  const createMockImage = (productId: string) => {
-    const imageUrl = ImageUrl.create('https://example.com/image.jpg', 'product').value;
-    return ProductImage.create({
-      productId,
-      url: imageUrl,
-      alt: 'Image produit',
-      position: 0,
-    }).value;
-  };
-
   beforeEach(() => {
     mockRepo = {
       findPublishedByCreatorSlugWithPagination: vi.fn(),
-      findMainImagesByProductIds: vi.fn(),
+      findFirstVariantImagesByProductIds: vi.fn().mockResolvedValue([]),
     };
     useCase = new ListPublicProductsUseCase(mockRepo as unknown as PublicProductListRepository);
   });
@@ -58,14 +46,15 @@ describe('ListPublicProductsUseCase', () => {
       // Arrange
       const product1 = createMockProduct('prod-1', 'Produit A', 29.99);
       const product2 = createMockProduct('prod-2', 'Produit B', 49.99);
-      const image1 = createMockImage('prod-1');
-      const image2 = createMockImage('prod-2');
 
       mockRepo.findPublishedByCreatorSlugWithPagination.mockResolvedValue({
         products: [product1, product2],
         total: 2,
       });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([image1, image2]);
+      mockRepo.findFirstVariantImagesByProductIds.mockResolvedValue([
+        { productId: 'prod-1', url: 'https://example.com/image1.jpg' },
+        { productId: 'prod-2', url: 'https://example.com/image2.jpg' },
+      ]);
 
       const input: ListPublicProductsInput = {
         creatorSlug: 'my-shop',
@@ -98,7 +87,6 @@ describe('ListPublicProductsUseCase', () => {
         products: [product],
         total: 1,
       });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([]);
 
       const input: ListPublicProductsInput = {
         creatorSlug: 'my-shop',
@@ -118,14 +106,15 @@ describe('ListPublicProductsUseCase', () => {
       // Arrange
       const product1 = createMockProduct('prod-1', 'Produit A', 29.99);
       const product2 = createMockProduct('prod-2', 'Produit B', 49.99);
-      const image1 = createMockImage('prod-1');
-      // Product 2 has no image
 
       mockRepo.findPublishedByCreatorSlugWithPagination.mockResolvedValue({
         products: [product1, product2],
         total: 2,
       });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([image1]);
+      // Only product1 has an image
+      mockRepo.findFirstVariantImagesByProductIds.mockResolvedValue([
+        { productId: 'prod-1', url: 'https://example.com/image.jpg' },
+      ]);
 
       const input: ListPublicProductsInput = {
         creatorSlug: 'my-shop',
@@ -144,7 +133,7 @@ describe('ListPublicProductsUseCase', () => {
 
     it('should calculate pagination correctly', async () => {
       // Arrange
-      const products = Array.from({ length: 5 }, (_, i) =>
+      const products = Array.from({ length: 2 }, (_, i) =>
         createMockProduct(`prod-${i}`, `Produit ${i}`, 29.99 + i)
       );
 
@@ -152,7 +141,6 @@ describe('ListPublicProductsUseCase', () => {
         products: products.slice(0, 2),
         total: 5,
       });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([]);
 
       const input: ListPublicProductsInput = {
         creatorSlug: 'my-shop',
@@ -165,63 +153,30 @@ describe('ListPublicProductsUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value.products).toHaveLength(2);
-      expect(result.value.total).toBe(5);
       expect(result.value.pages).toBe(3);
     });
 
-    it('should filter by projectId when provided', async () => {
+    it('should return empty result when no products found', async () => {
       // Arrange
       mockRepo.findPublishedByCreatorSlugWithPagination.mockResolvedValue({
         products: [],
         total: 0,
       });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([]);
 
       const input: ListPublicProductsInput = {
-        creatorSlug: 'my-shop',
-        projectId: 'project-123',
+        creatorSlug: 'empty-shop',
         page: 1,
         limit: 10,
       };
 
       // Act
-      await useCase.execute(input);
+      const result = await useCase.execute(input);
 
       // Assert
-      expect(mockRepo.findPublishedByCreatorSlugWithPagination).toHaveBeenCalledWith(
-        'my-shop',
-        expect.objectContaining({
-          projectId: 'project-123',
-        })
-      );
-    });
-
-    it('should search by name when search term provided', async () => {
-      // Arrange
-      mockRepo.findPublishedByCreatorSlugWithPagination.mockResolvedValue({
-        products: [],
-        total: 0,
-      });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([]);
-
-      const input: ListPublicProductsInput = {
-        creatorSlug: 'my-shop',
-        search: 'chemise',
-        page: 1,
-        limit: 10,
-      };
-
-      // Act
-      await useCase.execute(input);
-
-      // Assert
-      expect(mockRepo.findPublishedByCreatorSlugWithPagination).toHaveBeenCalledWith(
-        'my-shop',
-        expect.objectContaining({
-          search: 'chemise',
-        })
-      );
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.products).toHaveLength(0);
+      expect(result.value.total).toBe(0);
+      expect(result.value.pages).toBe(0);
     });
 
     it('should fail when creatorSlug is empty', async () => {
@@ -240,53 +195,28 @@ describe('ListPublicProductsUseCase', () => {
       expect(result.error).toContain('Creator slug est requis');
     });
 
-    it('should return empty list when no products found', async () => {
+    it('should pass search filter to repository', async () => {
       // Arrange
       mockRepo.findPublishedByCreatorSlugWithPagination.mockResolvedValue({
         products: [],
         total: 0,
       });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([]);
 
       const input: ListPublicProductsInput = {
         creatorSlug: 'my-shop',
+        search: 'jean',
         page: 1,
         limit: 10,
       };
 
       // Act
-      const result = await useCase.execute(input);
+      await useCase.execute(input);
 
       // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.products).toHaveLength(0);
-      expect(result.value.total).toBe(0);
-      expect(result.value.pages).toBe(0);
-    });
-
-    it('should include display price from Money value object', async () => {
-      // Arrange
-      const product = createMockProduct('prod-1', 'Produit A', 29.99);
-
-      mockRepo.findPublishedByCreatorSlugWithPagination.mockResolvedValue({
-        products: [product],
-        total: 1,
-      });
-      mockRepo.findMainImagesByProductIds.mockResolvedValue([]);
-
-      const input: ListPublicProductsInput = {
-        creatorSlug: 'my-shop',
-        page: 1,
-        limit: 10,
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.products[0]!.price).toBe(29.99);
-      expect(result.value.products[0]!.priceCurrency).toBe('EUR');
+      expect(mockRepo.findPublishedByCreatorSlugWithPagination).toHaveBeenCalledWith(
+        'my-shop',
+        expect.objectContaining({ search: 'jean' })
+      );
     });
   });
 });

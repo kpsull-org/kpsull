@@ -1,7 +1,6 @@
 import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
 import { Product } from '../../../domain/entities/product.entity';
-import { ProductImage } from '../../../domain/entities/product-image.entity';
 
 export interface PublicProductListRepository {
   findPublishedByCreatorSlugWithPagination(
@@ -14,7 +13,9 @@ export interface PublicProductListRepository {
     }
   ): Promise<{ products: Product[]; total: number }>;
 
-  findMainImagesByProductIds(productIds: string[]): Promise<ProductImage[]>;
+  findFirstVariantImagesByProductIds(
+    productIds: string[]
+  ): Promise<{ productId: string; url: string }[]>;
 }
 
 export interface ListPublicProductsInput {
@@ -48,6 +49,7 @@ export interface ListPublicProductsOutput {
  * Lists published products of a creator with pagination.
  * Only returns PUBLISHED products.
  * Does not expose sensitive data like creatorId.
+ * Main image is the first image of the first variant.
  */
 export class ListPublicProductsUseCase implements UseCase<ListPublicProductsInput, ListPublicProductsOutput> {
   constructor(private readonly productRepository: PublicProductListRepository) {}
@@ -80,14 +82,14 @@ export class ListPublicProductsUseCase implements UseCase<ListPublicProductsInpu
       });
     }
 
-    // Get main images for all products
+    // Get first variant image for all products
     const productIds = products.map((p) => p.idString);
-    const mainImages = await this.productRepository.findMainImagesByProductIds(productIds);
+    const firstImages = await this.productRepository.findFirstVariantImagesByProductIds(productIds);
 
     // Create a map of productId -> mainImageUrl
     const imageMap = new Map<string, string>();
-    for (const image of mainImages) {
-      imageMap.set(image.productId, image.url.url);
+    for (const { productId, url } of firstImages) {
+      imageMap.set(productId, url);
     }
 
     // Map to public DTOs (without creatorId)

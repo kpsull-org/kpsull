@@ -116,9 +116,11 @@ describe('CreateProductUseCase', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(mockRepo.savedVariants).toHaveLength(1);
-      expect(mockRepo.savedVariants[0]?.name).toBe('Défaut');
+      expect(mockRepo.savedVariants[0]?.name).toBe('Mon Produit');
       expect(mockRepo.savedVariants[0]?.productId).toBe(result.value.id);
       expect(mockRepo.savedVariants[0]?.stock).toBe(0);
+      expect(mockRepo.savedVariants[0]?.color).toBe('unique');
+      expect(mockRepo.savedVariants[0]?.colorCode).toBe('#000000');
     });
   });
 });

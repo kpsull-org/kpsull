@@ -6,16 +6,13 @@ import {
 } from '../get-public-product.use-case';
 import { Product } from '../../../../domain/entities/product.entity';
 import { ProductVariant } from '../../../../domain/entities/product-variant.entity';
-import { ProductImage } from '../../../../domain/entities/product-image.entity';
 import { Money } from '../../../../domain/value-objects/money.vo';
-import { ImageUrl } from '../../../../domain/value-objects/image-url.vo';
 
 describe('GetPublicProductUseCase', () => {
   let useCase: GetPublicProductUseCase;
   let mockRepo: {
     findPublishedById: Mock;
     findVariantsByProductId: Mock;
-    findImagesByProductId: Mock;
   };
 
   const createMockProduct = (isPublished = true) => {
@@ -35,22 +32,22 @@ describe('GetPublicProductUseCase', () => {
     return product;
   };
 
-  const createMockVariant = (productId: string, stock = 10, priceOverride?: Money) => {
-    return ProductVariant.create({
+  const createMockVariant = (
+    productId: string,
+    stock = 10,
+    images: string[] = [],
+    priceOverride?: Money
+  ) => {
+    return ProductVariant.reconstitute({
+      id: 'variant-' + Math.random(),
       productId,
       name: 'Taille M',
-      priceOverride,
+      priceOverrideAmount: priceOverride?.amount,
+      priceOverrideCurrency: priceOverride ? 'EUR' : undefined,
       stock,
-    }).value;
-  };
-
-  const createMockImage = (productId: string, position = 0) => {
-    const imageUrl = ImageUrl.create('https://example.com/image.jpg', 'product').value;
-    return ProductImage.create({
-      productId,
-      url: imageUrl,
-      alt: 'Image produit',
-      position,
+      images,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }).value;
   };
 
@@ -58,7 +55,6 @@ describe('GetPublicProductUseCase', () => {
     mockRepo = {
       findPublishedById: vi.fn(),
       findVariantsByProductId: vi.fn(),
-      findImagesByProductId: vi.fn(),
     };
     useCase = new GetPublicProductUseCase(mockRepo as unknown as PublicProductRepository);
   });
@@ -67,14 +63,12 @@ describe('GetPublicProductUseCase', () => {
     it('should return a published product with variants and images', async () => {
       // Arrange
       const product = createMockProduct(true);
-      const variant1 = createMockVariant(product.idString, 10);
-      const variant2 = createMockVariant(product.idString, 5);
-      const image1 = createMockImage(product.idString, 0);
-      const image2 = createMockImage(product.idString, 1);
+      const imageUrl = 'https://example.com/image.jpg';
+      const variant1 = createMockVariant(product.idString, 10, [imageUrl]);
+      const variant2 = createMockVariant(product.idString, 5, []);
 
       mockRepo.findPublishedById.mockResolvedValue(product);
       mockRepo.findVariantsByProductId.mockResolvedValue([variant1, variant2]);
-      mockRepo.findImagesByProductId.mockResolvedValue([image1, image2]);
 
       const input: GetPublicProductInput = {
         productId: product.idString,
@@ -91,7 +85,8 @@ describe('GetPublicProductUseCase', () => {
       expect(result.value.price).toBe(29.99);
       expect(result.value.priceCurrency).toBe('EUR');
       expect(result.value.variants).toHaveLength(2);
-      expect(result.value.images).toHaveLength(2);
+      expect(result.value.images).toHaveLength(1);
+      expect(result.value.images[0]).toBe(imageUrl);
     });
 
     it('should not expose creatorId in public response', async () => {
@@ -99,7 +94,6 @@ describe('GetPublicProductUseCase', () => {
       const product = createMockProduct(true);
       mockRepo.findPublishedById.mockResolvedValue(product);
       mockRepo.findVariantsByProductId.mockResolvedValue([]);
-      mockRepo.findImagesByProductId.mockResolvedValue([]);
 
       const input: GetPublicProductInput = {
         productId: product.idString,
@@ -121,7 +115,6 @@ describe('GetPublicProductUseCase', () => {
 
       mockRepo.findPublishedById.mockResolvedValue(product);
       mockRepo.findVariantsByProductId.mockResolvedValue([availableVariant, outOfStockVariant]);
-      mockRepo.findImagesByProductId.mockResolvedValue([]);
 
       const input: GetPublicProductInput = {
         productId: product.idString,
@@ -140,11 +133,10 @@ describe('GetPublicProductUseCase', () => {
       // Arrange
       const product = createMockProduct(true);
       const priceOverride = Money.create(39.99).value;
-      const variantWithOverride = createMockVariant(product.idString, 10, priceOverride);
+      const variantWithOverride = createMockVariant(product.idString, 10, [], priceOverride);
 
       mockRepo.findPublishedById.mockResolvedValue(product);
       mockRepo.findVariantsByProductId.mockResolvedValue([variantWithOverride]);
-      mockRepo.findImagesByProductId.mockResolvedValue([]);
 
       const input: GetPublicProductInput = {
         productId: product.idString,
@@ -158,16 +150,14 @@ describe('GetPublicProductUseCase', () => {
       expect(result.value.variants[0]!.priceOverride).toBe(39.99);
     });
 
-    it('should return images sorted by position', async () => {
+    it('should return mainImageUrl from first variant image', async () => {
       // Arrange
       const product = createMockProduct(true);
-      const image1 = createMockImage(product.idString, 2);
-      const image2 = createMockImage(product.idString, 0);
-      const image3 = createMockImage(product.idString, 1);
+      const imageUrl = 'https://example.com/main.jpg';
+      const variant = createMockVariant(product.idString, 10, [imageUrl, 'https://example.com/second.jpg']);
 
       mockRepo.findPublishedById.mockResolvedValue(product);
-      mockRepo.findVariantsByProductId.mockResolvedValue([]);
-      mockRepo.findImagesByProductId.mockResolvedValue([image1, image2, image3]);
+      mockRepo.findVariantsByProductId.mockResolvedValue([variant]);
 
       const input: GetPublicProductInput = {
         productId: product.idString,
@@ -178,10 +168,8 @@ describe('GetPublicProductUseCase', () => {
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.value.images).toHaveLength(3);
-      expect(result.value.images[0]!.position).toBe(0);
-      expect(result.value.images[1]!.position).toBe(1);
-      expect(result.value.images[2]!.position).toBe(2);
+      expect(result.value.images).toHaveLength(2);
+      expect(result.value.mainImageUrl).toBe(imageUrl);
     });
 
     it('should fail when product not found', async () => {
@@ -214,34 +202,13 @@ describe('GetPublicProductUseCase', () => {
       expect(result.error).toContain('Product ID est requis');
     });
 
-    it('should include main image URL in response', async () => {
+    it('should return undefined mainImageUrl when no variant images', async () => {
       // Arrange
       const product = createMockProduct(true);
-      const mainImage = createMockImage(product.idString, 0);
+      const variantNoImages = createMockVariant(product.idString, 10, []);
 
       mockRepo.findPublishedById.mockResolvedValue(product);
-      mockRepo.findVariantsByProductId.mockResolvedValue([]);
-      mockRepo.findImagesByProductId.mockResolvedValue([mainImage]);
-
-      const input: GetPublicProductInput = {
-        productId: product.idString,
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.mainImageUrl).toBe('https://example.com/image.jpg');
-    });
-
-    it('should return undefined mainImageUrl when no images', async () => {
-      // Arrange
-      const product = createMockProduct(true);
-
-      mockRepo.findPublishedById.mockResolvedValue(product);
-      mockRepo.findVariantsByProductId.mockResolvedValue([]);
-      mockRepo.findImagesByProductId.mockResolvedValue([]);
+      mockRepo.findVariantsByProductId.mockResolvedValue([variantNoImages]);
 
       const input: GetPublicProductInput = {
         productId: product.idString,
@@ -261,7 +228,6 @@ describe('GetPublicProductUseCase', () => {
 
       mockRepo.findPublishedById.mockResolvedValue(product);
       mockRepo.findVariantsByProductId.mockResolvedValue([]);
-      mockRepo.findImagesByProductId.mockResolvedValue([]);
 
       const input: GetPublicProductInput = {
         productId: product.idString,
@@ -273,6 +239,25 @@ describe('GetPublicProductUseCase', () => {
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.value.projectId).toBe('project-1');
+    });
+
+    it('should include variant images in response', async () => {
+      // Arrange
+      const product = createMockProduct(true);
+      const images = ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'];
+      const variant = createMockVariant(product.idString, 10, images);
+
+      mockRepo.findPublishedById.mockResolvedValue(product);
+      mockRepo.findVariantsByProductId.mockResolvedValue([variant]);
+
+      const input: GetPublicProductInput = { productId: product.idString };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.variants[0]!.images).toEqual(images);
     });
   });
 });

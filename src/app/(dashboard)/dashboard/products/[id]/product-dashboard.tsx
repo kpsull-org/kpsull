@@ -11,8 +11,6 @@ import {
   deleteVariant,
   addVariantImage,
   removeVariantImage,
-  uploadProductImage,
-  deleteProductImage,
   updateProduct,
   upsertSku,
 } from '../actions';
@@ -48,7 +46,6 @@ interface ProductDashboardProps {
   initialVariants: DashboardVariant[];
   initialSizes: SizeEntry[];
   initialSkus: SkuOutput[];
-  initialProductImages: Array<{ id: string; url: string }>;
   category?: string;
   gender?: string;
 }
@@ -227,92 +224,6 @@ function VariantImageStrip({ variantId, productId, images, onAdd, onRemove }: Va
   );
 }
 
-// ─── BaseImageStrip ───────────────────────────────────────────────────────────
-
-interface BaseImageStripProps {
-  productId: string;
-  images: Array<{ id: string; url: string }>;
-  onAdd: (img: { id: string; url: string }) => void;
-  onRemove: (id: string) => void;
-}
-
-function BaseImageStrip({ productId, images, onAdd, onRemove }: BaseImageStripProps) {
-  const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
-  async function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
-    setUploading(true);
-    for (const file of files) {
-      try {
-        const compressed = await compressImage(file, { maxDimension: 2000, quality: 0.85 });
-        const fd = new FormData();
-        fd.append('file', compressed.file);
-        fd.append('alt', file.name.replace(/\.[^/.]+$/, ''));
-        const result = await uploadProductImage(productId, fd);
-        if (result.success && result.id && result.url) {
-          onAdd({ id: result.id, url: result.url });
-        }
-      } catch {
-        // continue with next file
-      }
-    }
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    router.refresh();
-  }
-
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      {images.slice(0, 4).map((img) => (
-        <div key={img.id} className="relative group/img h-10 w-10 rounded border overflow-hidden shrink-0">
-          <img src={img.url} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/50 transition-colors flex items-center justify-center">
-            <button
-              type="button"
-              onClick={() => {
-                onRemove(img.id);
-                void deleteProductImage(img.id, productId);
-                router.refresh();
-              }}
-              className="opacity-0 group-hover/img:opacity-100 text-white"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        </div>
-      ))}
-      {images.length > 4 && (
-        <div className="h-10 w-10 rounded border bg-muted flex items-center justify-center shrink-0 text-[10px] font-medium text-muted-foreground">
-          +{images.length - 4}
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={() => !uploading && fileInputRef.current?.click()}
-        disabled={uploading}
-        className="h-10 w-10 rounded border-2 border-dashed border-muted-foreground/25 flex items-center justify-center hover:border-muted-foreground/50 transition-colors shrink-0"
-      >
-        {uploading ? (
-          <div className="h-3 w-3 rounded-full border border-t-transparent border-muted-foreground/50 animate-spin" />
-        ) : (
-          <Plus className="h-4 w-4 text-muted-foreground/40" />
-        )}
-      </button>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        multiple
-        onChange={handleFilesChange}
-        className="hidden"
-      />
-    </div>
-  );
-}
-
 // ─── InlineColorPicker ────────────────────────────────────────────────────────
 
 function InlineColorPicker({ color, onChange }: { color: string; onChange: (c: string) => void }) {
@@ -347,7 +258,6 @@ export function ProductDashboard({
   initialVariants,
   initialSizes,
   initialSkus,
-  initialProductImages,
   category,
   gender,
 }: ProductDashboardProps) {
@@ -360,7 +270,6 @@ export function ProductDashboard({
   const [variants, setVariants] = useState<DashboardVariant[]>(initialVariants);
   const [sizes, setSizes] = useState<SizeEntry[]>(initialSizes);
   const [matrix, setMatrix] = useState<Map<string, SkuCell>>(() => buildMatrix(initialSkus));
-  const [baseProductImages, setBaseProductImages] = useState<Array<{ id: string; url: string }>>(initialProductImages);
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [shippingOpen, setShippingOpen] = useState(false);
@@ -769,51 +678,6 @@ export function ProductDashboard({
             </thead>
 
             <tbody>
-              {/* Ligne "Produit" si pas de variante couleur */}
-              {!hasVariants && (
-                <tr>
-                  <td className="py-0.5 min-w-[260px]">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <BaseImageStrip
-                        productId={productId}
-                        images={baseProductImages}
-                        onAdd={(img) => setBaseProductImages((prev) => [...prev, img])}
-                        onRemove={(id) => setBaseProductImages((prev) => prev.filter((i) => i.id !== id))}
-                      />
-                      <span className="font-medium text-sm">Produit</span>
-                    </div>
-                  </td>
-                  {hasSizes ? (
-                    sizes.map(({ size }) => (
-                      <td key={size} className="p-0">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={getCell(undefined, size).stock === 0 ? '' : getCell(undefined, size).stock}
-                          onChange={(e) => updateCell(undefined, size, e.target.value)}
-                          placeholder="0"
-                          className={`h-11 text-center text-base font-semibold transition-colors ${getCell(undefined, size).stock === 0 ? 'border-dashed bg-muted/20 text-muted-foreground/60' : ''}`}
-                          aria-label={`Stock taille ${size}`}
-                        />
-                      </td>
-                    ))
-                  ) : (
-                    <td className="p-0">
-                      <Input
-                        type="number"
-                        min="0"
-                        value={getCell(undefined, undefined).stock === 0 ? '' : getCell(undefined, undefined).stock}
-                        onChange={(e) => updateCell(undefined, undefined, e.target.value)}
-                        placeholder="0"
-                        className="h-11 text-center text-base font-semibold"
-                        aria-label="Stock global"
-                      />
-                    </td>
-                  )}
-                  <td />
-                </tr>
-              )}
-
               {/* Lignes variantes */}
               {variants.map((v) => (
                 <tr key={v.id}>

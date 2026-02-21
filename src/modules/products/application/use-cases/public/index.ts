@@ -4,7 +4,6 @@ export {
   type GetPublicProductOutput,
   type PublicProductRepository,
   type PublicVariantOutput,
-  type PublicImageOutput,
 } from './get-public-product.use-case';
 
 export {

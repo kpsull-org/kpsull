@@ -60,11 +60,15 @@ export class CreateProductUseCase implements UseCase<CreateProductInput, CreateP
     // Persist the product
     await this.productRepository.save(product);
 
-    // Auto-create a default variant — every product starts with one variant
+    // Auto-create a default variant — every product starts with one variant.
+    // The default variant uses color "unique" to signal it's transparent to the UI
+    // (no color selector shown if it's the only variant).
     const defaultVariantResult = ProductVariant.create({
       productId: product.idString,
-      name: 'Défaut',
+      name: input.name,
       stock: 0,
+      color: 'unique',
+      colorCode: '#000000',
     });
 
     if (defaultVariantResult.isSuccess) {

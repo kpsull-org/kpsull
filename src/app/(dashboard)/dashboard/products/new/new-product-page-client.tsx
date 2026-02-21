@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { ProductForm } from '@/components/products/product-form';
 import { SizeManager } from '../[id]/size-manager';
 import { VariantManager } from '../[id]/variant-manager';
-import { ImageManager } from '../[id]/image-manager';
 import { publishProduct } from '../actions';
 import { CheckCircle, ArrowRight, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -120,7 +119,6 @@ export function NewProductPageClient({ collections, styles }: NewProductPageClie
       {/* Sections */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <ImageManager productId={productId} images={[]} />
           <SizeManager productId={productId} initialSizes={[]} />
           <VariantManager productId={productId} variants={[]} />
         </div>
