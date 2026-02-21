@@ -80,7 +80,7 @@ async function ensureSeedImages(): Promise<void> {
 
   execFileSync('bun', ['prisma/scripts/upload-seed-images.ts'], {
     stdio: 'inherit',
-    env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin' },
+    env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin' }, // NOSONAR - seed script, PATH overridden to fixed value
   });
 
   console.log('\nImages generees et uploadees sur Cloudinary\n');
