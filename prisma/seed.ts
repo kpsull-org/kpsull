@@ -3,7 +3,7 @@
  *
  * Cree:
  * - 1 admin (admin@kpsull.fr)
- * - 20 createurs (5 originaux + 15 via seed-new-creators.ts)
+ * - 10 createurs (5 originaux + 5 via seed-new-creators.ts - images Pollinations.ai)
  * - 20 clients avec profils complets
  * - ~475 produits repartis entre les createurs
  * - ~100+ commandes avec differents statuts
@@ -59,25 +59,24 @@ function daysFromNow(n: number): Date {
 }
 
 /**
- * Génère les images via Gemini si GOOGLE_AI_API_KEY est défini et que le JSON n'existe pas.
- * En production, cela génère les vraies images Cloudinary automatiquement lors du seed.
+ * Génère les images via Pollinations.ai (gratuit, IA générative) si le JSON n'existe pas encore.
+ * En production, le JSON est commité dans le repo → aucune génération requise.
  */
 async function ensureSeedImages(): Promise<void> {
   const jsonPath = './prisma/seed-assets/product-images.json';
-  const apiKey = process.env.GOOGLE_AI_API_KEY;
 
   if (fs.existsSync(jsonPath)) {
     console.log('✅ Images seed déjà générées (cache trouvé)\n');
     return;
   }
 
-  if (!apiKey) {
-    console.log('⚠️  GOOGLE_AI_API_KEY absent - images fallback Unsplash utilisées\n');
+  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    console.log('⚠️  Variables Cloudinary absentes - seed sans images\n');
     return;
   }
 
-  console.log('📸 Génération des images seed via Gemini (première exécution)...');
-  console.log('   ⏳ ~22 minutes pour 200 images (6.5s × 200 appels Gemini)\n');
+  console.log('📸 Génération des images seed (première exécution)...');
+  console.log('   ⏳ ~30s avec Picsum (fallback gratuit) | quelques minutes avec Unsplash\n');
 
   execFileSync('bun', ['prisma/scripts/upload-seed-images.ts'], {
     stdio: 'inherit',
@@ -115,7 +114,7 @@ function loadSeedImages(): {
 async function main() {
   console.log('🌱 Seeding Kpsull marketplace database...\n');
 
-  // Génère les images Gemini si GOOGLE_AI_API_KEY dispo et JSON absent
+  // Génère les images Pollinations.ai si JSON absent (cache miss)
   await ensureSeedImages();
 
   // Hash password once for all users
@@ -1922,13 +1921,19 @@ async function main() {
   // NEW CREATORS (modular seed)
   // ============================================
 
-  console.log('\n🚀 Seeding new creators (15 additional)...');
+  console.log('\n🚀 Seeding new creators (5 additional)...');
+
+  const allSeedImages = loadSeedImages();
 
   const {
     users: newCreators,
     totalProducts: newProducts,
     totalOrders: newOrders,
-  } = await seedNewCreators(prisma, hashedPassword, admin, clients, daysAgo, daysFromNow);
+  } = await seedNewCreators(
+    prisma, hashedPassword, admin, clients, daysAgo, daysFromNow,
+    allSeedImages.products,
+    allSeedImages.collections,
+  );
 
   console.log(`   ✅ ${newCreators.length} new creators seeded with ${newProducts} products and ${newOrders} orders`);
 
@@ -1944,8 +1949,7 @@ async function main() {
 
   console.log('\n🆕 Creating 10 new products with color variants...');
 
-  const seedImages = loadSeedImages();
-  const seedProductImages = seedImages.products;
+  const seedProductImages = allSeedImages.products;
 
   // Helper: récupère les images d'une variante depuis seed-assets ou fallback
   function getVariantImages(productId: string, variantId: string, fallbackUrls: string[]): string[] {
