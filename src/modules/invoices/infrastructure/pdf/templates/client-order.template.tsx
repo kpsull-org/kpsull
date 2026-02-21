@@ -1,7 +1,14 @@
 import React from 'react';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
 import type { InvoiceData } from '../../../domain/entities/invoice.entity';
-import { sharedStyles as styles, formatAmount, formatDate } from './shared-styles';
+import { sharedStyles as styles, formatDate } from './shared-styles';
+import {
+  PdfIssuerBrand,
+  PdfIssuedAtLine,
+  PdfItemRows,
+  PdfTotalsSection,
+  PdfLegalFooter,
+} from './shared-components';
 
 interface Props {
   data: InvoiceData;
@@ -11,18 +18,11 @@ export const ClientOrderTemplate: React.FC<Props> = ({ data }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.companyName}>KPSULL</Text>
-          <Text style={{ fontSize: 9, color: '#666666', marginTop: 4 }}>{data.issuer.address}</Text>
-          <Text style={{ fontSize: 9, color: '#666666' }}>SIRET : {data.issuer.siret}</Text>
-          <Text style={{ fontSize: 9, color: '#666666' }}>{data.issuer.email}</Text>
-        </View>
+        <PdfIssuerBrand data={data} />
         <View>
           <Text style={styles.invoiceTitle}>FACTURE</Text>
           <Text style={styles.invoiceNumber}>{data.number}</Text>
-          <Text style={{ fontSize: 9, color: '#666666', textAlign: 'right', marginTop: 4 }}>
-            Émise le {formatDate(data.issuedAt)}
-          </Text>
+          <PdfIssuedAtLine issuedAt={data.issuedAt} />
           {data.dueAt && (
             <Text style={{ fontSize: 9, color: '#666666', textAlign: 'right' }}>
               Échéance : {formatDate(data.dueAt)}
@@ -53,29 +53,9 @@ export const ClientOrderTemplate: React.FC<Props> = ({ data }) => (
         <Text style={styles.colPrice}>Prix unitaire</Text>
         <Text style={styles.colTotal}>Total</Text>
       </View>
-      {data.items.map((item, index) => (
-        <View key={index} style={styles.tableRow}>
-          <Text style={styles.colDescription}>{item.description}</Text>
-          <Text style={styles.colQty}>{item.quantity}</Text>
-          <Text style={styles.colPrice}>{formatAmount(item.unitPrice)}</Text>
-          <Text style={styles.colTotal}>{formatAmount(item.totalPrice)}</Text>
-        </View>
-      ))}
+      <PdfItemRows items={data.items} />
 
-      <View style={styles.totalsSection}>
-        <View style={styles.totalRow}>
-          <Text>Sous-total HT</Text>
-          <Text>{formatAmount(data.subtotal)}</Text>
-        </View>
-        <View style={styles.totalRow}>
-          <Text>TVA ({(data.taxRate * 100).toFixed(0)} %)</Text>
-          <Text>{formatAmount(data.taxAmount)}</Text>
-        </View>
-        <View style={styles.totalFinal}>
-          <Text>TOTAL TTC</Text>
-          <Text>{formatAmount(data.total)}</Text>
-        </View>
-      </View>
+      <PdfTotalsSection data={data} />
 
       {(data.shippingAddress ?? data.shippingCarrier ?? data.notes) && (
         <View style={styles.deliveryBox}>
@@ -101,17 +81,10 @@ export const ClientOrderTemplate: React.FC<Props> = ({ data }) => (
         </View>
       )}
 
-      <View style={styles.footer}>
-        <Text>
-          {`${data.issuer.name} — SIRET ${data.issuer.siret}${data.issuer.vatNumber ? ` — N° TVA ${data.issuer.vatNumber}` : ''} — ${data.issuer.email}`}
-        </Text>
-        <Text style={{ marginTop: 3 }}>
-          {`Conditions de règlement : ${data.paymentConditions ?? 'Paiement immédiat par carte bancaire'} — Pas d'escompte pour paiement anticipé`}
-        </Text>
-        <Text style={{ marginTop: 2 }}>
-          En cas de retard de paiement : indemnité forfaitaire de recouvrement 40 € + intérêts au taux BCE majoré de 10 points (art. L441-10 C. com.)
-        </Text>
-      </View>
+      <PdfLegalFooter
+        data={data}
+        defaultPaymentConditions="Paiement immédiat par carte bancaire"
+      />
     </Page>
   </Document>
 );

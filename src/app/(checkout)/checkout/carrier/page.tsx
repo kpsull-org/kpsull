@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useCartStore } from '@/lib/stores/cart.store';
+import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
 import { CartSummary } from '@/components/checkout/cart-summary';
 import { CarrierSelector } from '@/components/checkout/carrier-selector';
@@ -37,7 +38,7 @@ import { formatPrice } from '@/lib/utils/format';
  */
 export default function CarrierPage() {
   const router = useRouter();
-  const [isHydrated, setIsHydrated] = useState(false);
+  const isHydrated = useCartHydration();
   const [selectedCarrier, setSelectedCarrier] = useState<CarrierSelection | null>(null);
   const [selectedRelayPoint, setSelectedRelayPoint] = useState<RelayPoint | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,14 +54,6 @@ export default function CarrierPage() {
   const getTotal = useCartStore((state) => state.getTotal);
 
   useEffect(() => {
-    const unsubFinishHydration = useCartStore.persist.onFinishHydration(() => {
-      setIsHydrated(true);
-    });
-
-    if (useCartStore.persist.hasHydrated()) {
-      setIsHydrated(true);
-    }
-
     // Vérifier que l'adresse de livraison est présente
     const addressResult = parseSessionStorage('shippingAddress', ShippingAddressSchema);
     if (!addressResult.success) {
@@ -76,10 +69,6 @@ export default function CarrierPage() {
         setSelectedRelayPoint(carrierResult.data.relayPoint);
       }
     }
-
-    return () => {
-      unsubFinishHydration();
-    };
   }, [router]);
 
   useEffect(() => {

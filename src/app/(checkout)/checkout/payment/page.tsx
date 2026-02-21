@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useCartStore } from '@/lib/stores/cart.store';
+import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
 import { CartSummary } from '@/components/checkout/cart-summary';
 import {
@@ -40,7 +41,7 @@ import {
  */
 export default function PaymentPage() {
   const router = useRouter();
-  const [isHydrated, setIsHydrated] = useState(false);
+  const isHydrated = useCartHydration();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
@@ -51,16 +52,6 @@ export default function PaymentPage() {
   const clear = useCartStore((state) => state.clear);
 
   useEffect(() => {
-    // Attendre que l'hydratation soit terminee
-    const unsubFinishHydration = useCartStore.persist.onFinishHydration(() => {
-      setIsHydrated(true);
-    });
-
-    // Si deja hydrate, mettre a jour immediatement
-    if (useCartStore.persist.hasHydrated()) {
-      setIsHydrated(true);
-    }
-
     // Load shipping address with Zod validation
     const result = parseSessionStorage('shippingAddress', ShippingAddressSchema);
     if (result.success) {
@@ -77,11 +68,7 @@ export default function PaymentPage() {
     } else if (carrierResult.error) {
       router.push('/checkout/carrier');
     }
-
-    return () => {
-      unsubFinishHydration();
-    };
-  }, []);
+  }, [router]);
 
   const formatPrice = (cents: number) =>
     new Intl.NumberFormat('fr-FR', {

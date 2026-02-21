@@ -12,6 +12,7 @@ import {
 } from '@/components/checkout/shipping-address-form';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
 import { CartSummary } from '@/components/checkout/cart-summary';
+import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 
 interface GuestInfo {
   email: string;
@@ -33,7 +34,7 @@ interface GuestInfo {
  */
 export default function ShippingPage() {
   const router = useRouter();
-  const [isHydrated, setIsHydrated] = useState(false);
+  const isHydrated = useCartHydration();
   const [isLoading, setIsLoading] = useState(false);
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
 
@@ -41,25 +42,11 @@ export default function ShippingPage() {
   const getTotal = useCartStore((state) => state.getTotal);
 
   useEffect(() => {
-    // Attendre que l'hydratation soit terminee
-    const unsubFinishHydration = useCartStore.persist.onFinishHydration(() => {
-      setIsHydrated(true);
-    });
-
-    // Si deja hydrate, mettre a jour immediatement
-    if (useCartStore.persist.hasHydrated()) {
-      setIsHydrated(true);
-    }
-
     // Load guest info from session storage
     const stored = sessionStorage.getItem('guestCheckout');
     if (stored) {
       setGuestInfo(JSON.parse(stored));
     }
-
-    return () => {
-      unsubFinishHydration();
-    };
   }, []);
 
   const formatPrice = (cents: number) =>
