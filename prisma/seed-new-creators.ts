@@ -419,18 +419,21 @@ export async function seedNewCreators(
           create: { id: prodId, ...productData },
         });
 
-        await prisma.productImage.deleteMany({ where: { productId: prodId } });
         const imgs = productImages[prodId]?.main ?? [];
-        if (imgs.length > 0) {
-          await prisma.productImage.createMany({
-            data: imgs.slice(0, 3).map((url, pos) => ({
-              productId: prodId,
-              url,
-              alt: `${prodDef[0]} - vue ${pos + 1}`,
-              position: pos,
-            })),
-          });
-        }
+        const variantId = `var_${prodId}_default`;
+        await prisma.productVariant.upsert({
+          where: { id: variantId },
+          update: { images: imgs.slice(0, 3) },
+          create: {
+            id: variantId,
+            productId: prodId,
+            name: 'Default',
+            color: 'unique',
+            colorCode: '#000000',
+            stock: 50,
+            images: imgs.slice(0, 3),
+          },
+        });
 
         allProductIds.push(prodId);
         totalProducts++;

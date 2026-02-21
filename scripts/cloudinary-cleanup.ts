@@ -86,14 +86,6 @@ async function listAllResources(prefix: string): Promise<CloudinaryResource[]> {
 async function collectDbUrls(prisma: PrismaClient): Promise<Set<string>> {
   const urls = new Set<string>();
 
-  // ProductImage.url
-  const productImages = await prisma.productImage.findMany({
-    select: { url: true },
-  });
-  for (const img of productImages) {
-    urls.add(img.url);
-  }
-
   // ProductVariant.images (JSON array of URLs)
   const variants = await prisma.productVariant.findMany({
     select: { images: true },
