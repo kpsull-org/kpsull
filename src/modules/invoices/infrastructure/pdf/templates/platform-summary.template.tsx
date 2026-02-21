@@ -1,7 +1,12 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import type { InvoiceData } from '../../../domain/entities/invoice.entity';
+import { formatAmount, formatDate, formatPeriod } from './shared-styles';
 
+/**
+ * Platform Summary template uses its own distinct styles
+ * (dark headers, compact layout) while reusing shared formatters.
+ */
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -107,15 +112,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const formatAmount = (centimes: number): string =>
-  `${(centimes / 100).toFixed(2)} \u20AC`;
-
-const formatDate = (date: Date): string =>
-  new Intl.DateTimeFormat('fr-FR').format(date);
-
-const formatPeriod = (date: Date): string =>
-  new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date);
-
 interface Props {
   data: InvoiceData;
   subscriptionTotal?: number;
@@ -156,7 +152,7 @@ export const PlatformSummaryTemplate: React.FC<Props> = ({ data, subscriptionTot
         <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
           <Text style={styles.colType}>{item.description.startsWith('Commission') ? 'Commission' : 'Abonnement'}</Text>
           <Text style={styles.colCreator}>{item.description}</Text>
-          <Text style={styles.colPeriod}>{item.quantity > 0 ? '' : ''}</Text>
+          <Text style={styles.colPeriod} />
           <Text style={styles.colAmount}>{formatAmount(item.totalPrice)}</Text>
         </View>
       ))}

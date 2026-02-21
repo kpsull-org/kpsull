@@ -26,6 +26,7 @@ import {
   type CarrierSelection,
   type RelayPoint,
 } from '@/lib/schemas/checkout.schema';
+import { formatPrice } from '@/lib/utils/format';
 
 /**
  * Carrier Selection Page
@@ -81,8 +82,11 @@ export default function CarrierPage() {
     };
   }, [router]);
 
-  const formatPrice = (cents: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+  useEffect(() => {
+    if (isHydrated && items.length === 0) {
+      router.push('/cart');
+    }
+  }, [isHydrated, items.length, router]);
 
   const handleContinue = () => {
     if (!selectedCarrier) {
@@ -120,8 +124,7 @@ export default function CarrierPage() {
     );
   }
 
-  if (items.length === 0) {
-    router.push('/cart');
+  if (isHydrated && items.length === 0) {
     return null;
   }
 

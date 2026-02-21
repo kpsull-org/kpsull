@@ -2,6 +2,7 @@
 
 import { Check, MapPin, Truck, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils/format';
 import type { CarrierSelection } from '@/lib/schemas/checkout.schema';
 
 /** Available shipping carriers with pricing */
@@ -50,9 +51,6 @@ interface CarrierSelectorProps {
   selectedCarrier: CarrierSelection | null;
   onChange: (carrier: CarrierSelection) => void;
 }
-
-const formatPrice = (cents: number) =>
-  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 
 /**
  * CarrierSelector
