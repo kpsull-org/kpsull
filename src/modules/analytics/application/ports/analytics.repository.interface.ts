@@ -141,10 +141,14 @@ export interface AdminPlatformStats {
   totalCreators: number;
   /** Previous period creator count for comparison */
   previousCreators: number;
-  /** Total platform revenue in cents */
+  /** True platform revenue (subscriptions + commissions) in cents */
   totalPlatformRevenue: number;
   /** Previous period platform revenue for comparison */
   previousPlatformRevenue: number;
+  /** Revenue from subscriptions only in cents */
+  subscriptionRevenue: number;
+  /** Revenue from commissions only in cents */
+  commissionRevenue: number;
   /** Total number of orders across the platform */
   totalOrders: number;
   /** Previous period orders for comparison */

@@ -30,6 +30,8 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
       previousNewCreators,
       currentRevenue,
       previousRevenue,
+      subscriptionRevenueAgg,
+      commissionRevenueAgg,
       totalOrders,
       previousOrders,
     ] = await Promise.all([
@@ -49,21 +51,31 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
       this.prisma.user.count({
         where: { role: 'CREATOR', createdAt: { gte: prevStart, lte: prevEndOfDay } },
       }),
-      // Revenue in current period (sum of totalAmount for paid orders)
-      this.prisma.order.aggregate({
-        _sum: { totalAmount: true },
+      // Platform revenue in current period (PlatformTransaction CAPTURED)
+      this.prisma.platformTransaction.aggregate({
+        _sum: { amount: true },
         where: {
+          status: 'CAPTURED',
           createdAt: { gte: start, lte: endOfDay },
-          status: { in: [...PAID_STATUSES] },
         },
       }),
-      // Revenue in previous period
-      this.prisma.order.aggregate({
-        _sum: { totalAmount: true },
+      // Platform revenue in previous period
+      this.prisma.platformTransaction.aggregate({
+        _sum: { amount: true },
         where: {
+          status: 'CAPTURED',
           createdAt: { gte: prevStart, lte: prevEndOfDay },
-          status: { in: [...PAID_STATUSES] },
         },
+      }),
+      // Subscription revenue all-time CAPTURED
+      this.prisma.platformTransaction.aggregate({
+        _sum: { amount: true },
+        where: { status: 'CAPTURED', type: 'SUBSCRIPTION' },
+      }),
+      // Commission revenue all-time CAPTURED
+      this.prisma.platformTransaction.aggregate({
+        _sum: { amount: true },
+        where: { status: 'CAPTURED', type: 'COMMISSION' },
       }),
       // Orders in current period
       this.prisma.order.count({
@@ -78,8 +90,10 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
     return {
       totalCreators,
       previousCreators,
-      totalPlatformRevenue: currentRevenue._sum.totalAmount ?? 0,
-      previousPlatformRevenue: previousRevenue._sum.totalAmount ?? 0,
+      totalPlatformRevenue: currentRevenue._sum.amount ?? 0,
+      previousPlatformRevenue: previousRevenue._sum.amount ?? 0,
+      subscriptionRevenue: subscriptionRevenueAgg._sum.amount ?? 0,
+      commissionRevenue: commissionRevenueAgg._sum.amount ?? 0,
       totalOrders,
       previousOrders,
       newCreators,
@@ -91,20 +105,20 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
     const yearStart = new Date(year, 0, 1);
     const yearEnd = new Date(year + 1, 0, 1);
 
-    const orders = await this.prisma.order.findMany({
+    const transactions = await this.prisma.platformTransaction.findMany({
       where: {
-        createdAt: { gte: yearStart, lt: yearEnd },
-        status: { in: [...PAID_STATUSES] },
+        status: 'CAPTURED',
+        period: { gte: yearStart, lt: yearEnd },
       },
-      select: { createdAt: true, totalAmount: true },
+      select: { period: true, amount: true },
     });
 
     const monthlyRevenueCents: Record<number, number> = {};
     for (let m = 0; m < 12; m++) monthlyRevenueCents[m] = 0;
-    for (const order of orders) {
-      const monthIndex = order.createdAt.getMonth();
+    for (const tx of transactions) {
+      const monthIndex = tx.period.getMonth();
       monthlyRevenueCents[monthIndex] =
-        (monthlyRevenueCents[monthIndex] ?? 0) + order.totalAmount;
+        (monthlyRevenueCents[monthIndex] ?? 0) + tx.amount;
     }
 
     return Array.from({ length: 12 }, (_, i) => ({

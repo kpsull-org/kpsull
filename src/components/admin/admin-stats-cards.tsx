@@ -13,6 +13,10 @@ export interface AdminStatsData {
   totalPlatformRevenue: number;
   /** Percentage change in revenue vs previous period */
   revenueChange?: number;
+  /** Revenue from subscriptions only in cents */
+  subscriptionRevenue?: number;
+  /** Revenue from commissions only in cents */
+  commissionRevenue?: number;
   /** Total number of orders across the platform */
   totalOrders: number;
   /** Percentage change in orders vs previous period */
@@ -96,6 +100,8 @@ export function AdminStatsCards({
     creatorsChange,
     totalPlatformRevenue,
     revenueChange,
+    subscriptionRevenue,
+    commissionRevenue,
     totalOrders,
     ordersChange,
     newCreators,
@@ -117,13 +123,25 @@ export function AdminStatsCards({
         comparisonLabel="vs periode precedente"
       />
 
-      <StatCard
-        title="CA plateforme"
-        value={formatCurrency(totalPlatformRevenue, currency)}
-        icon={DollarSign}
-        percentageChange={revenueChange}
-        comparisonLabel="vs periode precedente"
-      />
+      <div className="flex flex-col gap-2">
+        <StatCard
+          title="CA plateforme"
+          value={formatCurrency(totalPlatformRevenue, currency)}
+          icon={DollarSign}
+          percentageChange={revenueChange}
+          comparisonLabel="vs periode precedente"
+        />
+        {(subscriptionRevenue !== undefined || commissionRevenue !== undefined) && (
+          <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground space-y-0.5">
+            {subscriptionRevenue !== undefined && (
+              <p>Abonnements&nbsp;: {formatCurrency(subscriptionRevenue, currency)}</p>
+            )}
+            {commissionRevenue !== undefined && (
+              <p>Commissions&nbsp;: {formatCurrency(commissionRevenue, currency)}</p>
+            )}
+          </div>
+        )}
+      </div>
 
       <StatCard
         title="Commandes totales"

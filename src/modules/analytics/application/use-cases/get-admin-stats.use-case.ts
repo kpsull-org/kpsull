@@ -12,10 +12,14 @@ export interface GetAdminStatsOutput {
   totalCreators: number;
   /** Percentage change in creators vs previous period */
   creatorsChange: number;
-  /** Total platform revenue in cents */
+  /** True platform revenue (subscriptions + commissions) in cents */
   totalPlatformRevenue: number;
   /** Percentage change in revenue vs previous period */
   revenueChange: number;
+  /** Revenue from subscriptions only in cents */
+  subscriptionRevenue: number;
+  /** Revenue from commissions only in cents */
+  commissionRevenue: number;
   /** Total number of orders across the platform */
   totalOrders: number;
   /** Percentage change in orders vs previous period */
@@ -94,6 +98,8 @@ export class GetAdminStatsUseCase
         creatorsChange,
         totalPlatformRevenue: stats.totalPlatformRevenue,
         revenueChange,
+        subscriptionRevenue: stats.subscriptionRevenue,
+        commissionRevenue: stats.commissionRevenue,
         totalOrders: stats.totalOrders,
         ordersChange,
         newCreators: stats.newCreators,

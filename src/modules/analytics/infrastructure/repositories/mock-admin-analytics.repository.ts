@@ -14,6 +14,8 @@ const DEFAULT_STATS: AdminPlatformStats = {
   previousCreators: 125,
   totalPlatformRevenue: 18750000,
   previousPlatformRevenue: 15200000,
+  subscriptionRevenue: 12500000,
+  commissionRevenue: 6250000,
   totalOrders: 2145,
   previousOrders: 1890,
   newCreators: 24,
@@ -27,8 +29,10 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
   LAST_7_DAYS: {
     totalCreators: 142,
     previousCreators: 138,
-    totalPlatformRevenue: 4850000, // 48,500 EUR
+    totalPlatformRevenue: 4850000,
     previousPlatformRevenue: 4200000,
+    subscriptionRevenue: 3200000,
+    commissionRevenue: 1650000,
     totalOrders: 523,
     previousOrders: 478,
     newCreators: 8,
@@ -37,8 +41,10 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
   LAST_30_DAYS: {
     totalCreators: 142,
     previousCreators: 125,
-    totalPlatformRevenue: 18750000, // 187,500 EUR
+    totalPlatformRevenue: 18750000,
     previousPlatformRevenue: 15200000,
+    subscriptionRevenue: 12500000,
+    commissionRevenue: 6250000,
     totalOrders: 2145,
     previousOrders: 1890,
     newCreators: 24,
@@ -47,8 +53,10 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
   LAST_90_DAYS: {
     totalCreators: 142,
     previousCreators: 98,
-    totalPlatformRevenue: 52300000, // 523,000 EUR
+    totalPlatformRevenue: 52300000,
     previousPlatformRevenue: 38500000,
+    subscriptionRevenue: 35000000,
+    commissionRevenue: 17300000,
     totalOrders: 6420,
     previousOrders: 4850,
     newCreators: 65,
@@ -57,8 +65,10 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
   LAST_365_DAYS: {
     totalCreators: 142,
     previousCreators: 45,
-    totalPlatformRevenue: 198500000, // 1,985,000 EUR
+    totalPlatformRevenue: 198500000,
     previousPlatformRevenue: 125000000,
+    subscriptionRevenue: 132000000,
+    commissionRevenue: 66500000,
     totalOrders: 24500,
     previousOrders: 15800,
     newCreators: 142,

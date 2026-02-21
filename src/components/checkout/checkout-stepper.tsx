@@ -1,8 +1,8 @@
 'use client';
 
-import { Check, MapPin, CreditCard, Package } from 'lucide-react';
+import { Check, MapPin, CreditCard, Package, Truck } from 'lucide-react';
 
-type CheckoutStep = 'auth' | 'shipping' | 'payment' | 'confirmation';
+type CheckoutStep = 'auth' | 'shipping' | 'carrier' | 'payment' | 'confirmation';
 
 interface CheckoutStepperProps {
   currentStep: CheckoutStep;
@@ -15,6 +15,7 @@ interface CheckoutStepperProps {
 
 const steps: { key: CheckoutStep; label: string; icon: React.ReactNode }[] = [
   { key: 'shipping', label: 'Livraison', icon: <MapPin className="h-5 w-5" /> },
+  { key: 'carrier', label: 'Transporteur', icon: <Truck className="h-5 w-5" /> },
   { key: 'payment', label: 'Paiement', icon: <CreditCard className="h-5 w-5" /> },
   { key: 'confirmation', label: 'Confirmation', icon: <Package className="h-5 w-5" /> },
 ];
@@ -87,12 +88,6 @@ export function CheckoutStepper({ currentStep, user }: CheckoutStepperProps) {
         </div>
       )}
 
-      {/* Content area - will be filled by child routes */}
-      <div className="max-w-2xl mx-auto">
-        <p className="text-center text-muted-foreground font-sans">
-          Cette etape sera implementee dans la Story 7-4 (Adresse de livraison)
-        </p>
-      </div>
     </div>
   );
 }

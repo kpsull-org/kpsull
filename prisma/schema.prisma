@@ -91,6 +91,29 @@ enum StyleStatus {
   REJECTED
 }
 
+enum PlatformTransactionType {
+  SUBSCRIPTION  // revenu d'abonnement créateur
+  COMMISSION    // commission sur une vente
+}
+
+enum PlatformTransactionStatus {
+  CAPTURED  // revenu encaissé
+  REFUNDED  // remboursé
+}
+
+enum InvoiceType {
+  CREATOR_SUBSCRIPTION  // facture abonnement pour créateur
+  CLIENT_ORDER          // facture commande pour client
+  PLATFORM_SUMMARY      // récapitulatif mensuel commissions Kpsull
+}
+
+enum InvoiceStatus {
+  DRAFT     // générée mais pas envoyée
+  ISSUED    // émise
+  PAID      // payée
+  CANCELLED // annulée
+}
+
 // ============================================
 // USER & AUTH (Auth.js compatible)
 // ============================================
@@ -138,6 +161,11 @@ model User {
 
   // Shopping cart
   cart Cart?
+
+  // Platform revenue tracking
+  platformTransactionsAsCreator PlatformTransaction[] @relation("CreatorPlatformTransactions")
+  creatorInvoices               Invoice[]             @relation("CreatorInvoices")
+  clientInvoices                Invoice[]             @relation("ClientInvoices")
 
   @@index([email])
   @@index([role])
@@ -259,6 +287,8 @@ model Subscription {
   // Grace period for failed payments
   gracePeriodStart     DateTime?
 
+  platformTransactions PlatformTransaction[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -352,9 +382,11 @@ model Order {
   shippedAt             DateTime?
   deliveredAt           DateTime?
 
-  items          OrderItem[]
-  returnRequests ReturnRequest[]
-  disputes       Dispute[]
+  items                OrderItem[]
+  returnRequests       ReturnRequest[]
+  disputes             Dispute[]
+  platformTransactions PlatformTransaction[]
+  invoices             Invoice[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -699,4 +731,67 @@ model NotificationPreference {
   @@unique([userId, type])
   @@index([userId])
   @@map("notification_preferences")
+}
+
+// ============================================
+// PLATFORM REVENUE TRACKING
+// ============================================
+
+model PlatformTransaction {
+  id             String                    @id @default(cuid())
+  type           PlatformTransactionType
+  status         PlatformTransactionStatus @default(CAPTURED)
+  amount         Int                       // en centimes
+  creatorId      String
+  creator        User                      @relation("CreatorPlatformTransactions", fields: [creatorId], references: [id])
+  orderId        String?                   // null si SUBSCRIPTION
+  order          Order?                    @relation(fields: [orderId], references: [id])
+  subscriptionId String?                   // null si COMMISSION
+  subscription   Subscription?             @relation(fields: [subscriptionId], references: [id])
+  stripeEventId  String?                   @unique // idempotence webhook
+  period         DateTime                  // mois de référence (1er du mois)
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@index([creatorId])
+  @@index([type])
+  @@index([period])
+  @@index([status])
+  @@map("platform_transactions")
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      String        @unique  // ex: INV-2025-001 (séquentiel)
+  type        InvoiceType
+  status      InvoiceStatus @default(DRAFT)
+  amount      Int           // montant HT en centimes
+  taxAmount   Int           @default(0)  // TVA en centimes
+  totalAmount Int           // montant TTC en centimes
+
+  // Destinataire - un seul des deux sera renseigné
+  creatorId String?
+  creator   User?   @relation("CreatorInvoices", fields: [creatorId], references: [id])
+  clientId  String?
+  client    User?   @relation("ClientInvoices", fields: [clientId], references: [id])
+
+  // Références
+  orderId String? // pour CLIENT_ORDER
+  order   Order?  @relation(fields: [orderId], references: [id])
+  period  DateTime? // pour PLATFORM_SUMMARY et CREATOR_SUBSCRIPTION (mois)
+
+  // PDF
+  pdfUrl String? // URL stockage du PDF généré
+
+  issuedAt  DateTime?
+  dueAt     DateTime?
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([creatorId])
+  @@index([clientId])
+  @@index([type])
+  @@index([period])
+  @@map("invoices")
 }
