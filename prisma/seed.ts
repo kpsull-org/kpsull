@@ -35,6 +35,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import * as fs from 'fs';
+import { execFileSync } from 'child_process';
 
 const connectionString =
   process.env.DATABASE_URL ||
@@ -57,18 +58,65 @@ function daysFromNow(n: number): Date {
   return new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 }
 
+/**
+ * Génère les images via Gemini si GOOGLE_AI_API_KEY est défini et que le JSON n'existe pas.
+ * En production, cela génère les vraies images Cloudinary automatiquement lors du seed.
+ */
+async function ensureSeedImages(): Promise<void> {
+  const jsonPath = './prisma/seed-assets/product-images.json';
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+
+  if (fs.existsSync(jsonPath)) {
+    console.log('✅ Images seed déjà générées (cache trouvé)\n');
+    return;
+  }
+
+  if (!apiKey) {
+    console.log('⚠️  GOOGLE_AI_API_KEY absent - images fallback Unsplash utilisées\n');
+    return;
+  }
+
+  console.log('📸 Génération des images seed via Gemini (première exécution)...');
+  console.log('   ⏳ ~22 minutes pour 200 images (6.5s × 200 appels Gemini)\n');
+
+  execFileSync('bun', ['prisma/scripts/upload-seed-images.ts'], {
+    stdio: 'inherit',
+    env: process.env,
+  });
+
+  console.log('\n✅ Images générées et uploadées sur Cloudinary\n');
+}
+
 /** Charge les images seed générées par prisma/scripts/upload-seed-images.ts */
-function loadSeedImages(): Record<string, { main: string[]; variants: Record<string, string[]> }> {
+function loadSeedImages(): {
+  products: Record<string, { main: string[]; variants: Record<string, string[]> }>;
+  collections: Record<string, string>;
+} {
   try {
     const raw = fs.readFileSync('./prisma/seed-assets/product-images.json', 'utf-8');
-    return JSON.parse(raw) as Record<string, { main: string[]; variants: Record<string, string[]> }>;
+    const parsed = JSON.parse(raw) as unknown;
+    // Support nouveau format (avec wrapper products/collections)
+    if (parsed && typeof parsed === 'object' && 'products' in parsed) {
+      return parsed as {
+        products: Record<string, { main: string[]; variants: Record<string, string[]> }>;
+        collections: Record<string, string>;
+      };
+    }
+    // Support ancien format (pas de wrapper)
+    return {
+      products: parsed as Record<string, { main: string[]; variants: Record<string, string[]> }>,
+      collections: {},
+    };
   } catch {
-    return {}; // Fallback: URLs Unsplash hardcodées dans les données
+    return { products: {}, collections: {} };
   }
 }
 
 async function main() {
   console.log('🌱 Seeding Kpsull marketplace database...\n');
+
+  // Génère les images Gemini si GOOGLE_AI_API_KEY dispo et JSON absent
+  await ensureSeedImages();
 
   // Hash password once for all users
   const hashedPassword = await bcrypt.hash('password123', 10);
@@ -372,7 +420,88 @@ async function main() {
     create: { id: 'proj_marc_accessories', creatorId: marc.id, name: 'Accessoires Vintage', description: "Montres, ceintures et accessoires d'epoque restaures." },
   });
 
-  console.log('✅ Projects created (6 collections)');
+  // Jose: 3ème collection
+  const projJoseEssentiels = await prisma.project.upsert({
+    where: { id: 'proj_jose_essentiels' },
+    update: {},
+    create: { id: 'proj_jose_essentiels', creatorId: jose.id, name: 'Capsule Essentiels', description: 'Les basiques du vestiaire streetwear revisités avec soin.' },
+  });
+
+  // Sophie: 2 nouvelles collections
+  const projSophieTerre = await prisma.project.upsert({
+    where: { id: 'proj_sophie_terre' },
+    update: {},
+    create: { id: 'proj_sophie_terre', creatorId: sophie.id, name: 'Collection Terre', description: 'Grès, argile et émaux naturels — matières brutes façonnées au tour.' },
+  });
+  await prisma.project.upsert({
+    where: { id: 'proj_sophie_quotidien' },
+    update: {},
+    create: { id: 'proj_sophie_quotidien', creatorId: sophie.id, name: 'Objets du Quotidien', description: 'Tasses, bols et carafes pour embellir le quotidien.' },
+  });
+
+  // Lucas: 2 nouvelles collections
+  const projLucasCapsule = await prisma.project.upsert({
+    where: { id: 'proj_lucas_capsule' },
+    update: {},
+    create: { id: 'proj_lucas_capsule', creatorId: lucas.id, name: 'Capsule Graphique', description: 'Édition capsule de pièces streetwear aux prints exclusifs.' },
+  });
+  await prisma.project.upsert({
+    where: { id: 'proj_lucas_limited' },
+    update: {},
+    create: { id: 'proj_lucas_limited', creatorId: lucas.id, name: 'Éditions Limitées', description: 'Collaborations et pièces en série limitée numérotées.' },
+  });
+
+  // Claire: 2 nouvelles collections
+  await prisma.project.upsert({
+    where: { id: 'proj_claire_annees80' },
+    update: {},
+    create: { id: 'proj_claire_annees80', creatorId: claire.id, name: 'Années 80', description: "Power dressing, épaulettes et couleurs pop — l'esprit eighties revisité." },
+  });
+  await prisma.project.upsert({
+    where: { id: 'proj_claire_rares' },
+    update: {},
+    create: { id: 'proj_claire_rares', creatorId: claire.id, name: 'Pièces Rares', description: 'Sélection ultra-confidentielle de trouvailles exceptionnelles.' },
+  });
+
+  // Marc: 2 nouvelles collections
+  await prisma.project.upsert({
+    where: { id: 'proj_marc_montres' },
+    update: {},
+    create: { id: 'proj_marc_montres', creatorId: marc.id, name: 'Montres & Bijoux', description: "Montres mécaniques et bijoux d'époque entièrement restaurés." },
+  });
+  const projMarcMaroquinerie = await prisma.project.upsert({
+    where: { id: 'proj_marc_maroquinerie' },
+    update: {},
+    create: { id: 'proj_marc_maroquinerie', creatorId: marc.id, name: 'Maroquinerie Fine', description: 'Pochettes, portefeuilles et ceintures en cuir végétal patiné.' },
+  });
+
+  // Mise à jour des coverImages depuis le JSON seed
+  const seedImagesForProjects = loadSeedImages();
+  const projectCoverImages: Record<string, string> = {
+    'proj_jose_streetwear':   seedImagesForProjects.collections['proj_jose_streetwear'] ?? '',
+    'proj_jose_accessoires':  seedImagesForProjects.collections['proj_jose_accessoires'] ?? '',
+    'proj_jose_essentiels':   seedImagesForProjects.collections['proj_jose_essentiels'] ?? '',
+    'proj_sophie_ceramique':  seedImagesForProjects.collections['proj_sophie_ceramique'] ?? '',
+    'proj_sophie_terre':      seedImagesForProjects.collections['proj_sophie_terre'] ?? '',
+    'proj_sophie_quotidien':  seedImagesForProjects.collections['proj_sophie_quotidien'] ?? '',
+    'proj_lucas_design':      seedImagesForProjects.collections['proj_lucas_design'] ?? '',
+    'proj_lucas_capsule':     seedImagesForProjects.collections['proj_lucas_capsule'] ?? '',
+    'proj_lucas_limited':     seedImagesForProjects.collections['proj_lucas_limited'] ?? '',
+    'proj_claire_vintage':    seedImagesForProjects.collections['proj_claire_vintage'] ?? '',
+    'proj_claire_annees80':   seedImagesForProjects.collections['proj_claire_annees80'] ?? '',
+    'proj_claire_rares':      seedImagesForProjects.collections['proj_claire_rares'] ?? '',
+    'proj_marc_accessories':  seedImagesForProjects.collections['proj_marc_accessories'] ?? '',
+    'proj_marc_montres':      seedImagesForProjects.collections['proj_marc_montres'] ?? '',
+    'proj_marc_maroquinerie': seedImagesForProjects.collections['proj_marc_maroquinerie'] ?? '',
+  };
+
+  for (const [projId, coverImage] of Object.entries(projectCoverImages)) {
+    if (coverImage) {
+      await prisma.project.update({ where: { id: projId }, data: { coverImage } });
+    }
+  }
+
+  console.log('✅ Projects created (16 collections) with cover images');
 
   // ============================================
   // SYSTEM STYLES
@@ -381,22 +510,54 @@ async function main() {
   console.log('\n🎨 Creating system styles...');
 
   const systemStylesData = [
-    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers' },
-    { name: 'Vintage', description: 'Pieces retro et secondes mains revisitees' },
-    { name: 'Ceramique', description: 'Artisanat ceramique, poterie et creations en argile' },
-    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre' },
-    { name: 'Boheme', description: 'Esprit libre, matieres naturelles, imprimés ethniques' },
-    { name: 'Sportswear', description: 'Vetements techniques et confortables pour le sport' },
-    { name: 'Luxe', description: 'Matieres nobles, finitions haut de gamme, editions limitees' },
-    { name: 'Art', description: 'Creations artistiques uniques, editions limitees signees' },
+    {
+      name: 'Streetwear',
+      description: 'Mode urbaine, oversize, graphic tees, sneakers - inspiré de la culture de rue parisienne',
+      imageUrl: 'https://image.pollinations.ai/prompt/streetwear%20fashion%20editorial%20flat%20lay%20concrete%20urban%20aesthetic%20moody%20dark%20KPSULL%20brand?model=flux&width=800&height=600&nologo=true&seed=1001',
+    },
+    {
+      name: 'Vintage',
+      description: 'Pièces rétro et secondes mains revisitées - sélection chinée avec soin',
+      imageUrl: 'https://image.pollinations.ai/prompt/vintage%20fashion%20curated%20wardrobe%20soft%20light%20romantic%20editorial%20aesthetic%20flea%20market%20Paris?model=flux&width=800&height=600&nologo=true&seed=1002',
+    },
+    {
+      name: 'Céramique',
+      description: 'Artisanat céramique, poterie et créations en argile - pièces uniques faites main',
+      imageUrl: 'https://image.pollinations.ai/prompt/artisan%20ceramics%20pottery%20stoneware%20wabi-sabi%20natural%20studio%20light%20oak%20table%20handcrafted?model=flux&width=800&height=600&nologo=true&seed=1003',
+    },
+    {
+      name: 'Minimaliste',
+      description: 'Design épuré, lignes nettes, palette neutre - essentiels intemporels',
+      imageUrl: 'https://image.pollinations.ai/prompt/minimalist%20fashion%20white%20studio%20clean%20lines%20neutral%20palette%20editorial%20product%20photography?model=flux&width=800&height=600&nologo=true&seed=1004',
+    },
+    {
+      name: 'Bohème',
+      description: 'Esprit libre, matières naturelles, imprimés ethniques - mode sans frontières',
+      imageUrl: 'https://image.pollinations.ai/prompt/bohemian%20lifestyle%20fashion%20natural%20fabrics%20earthy%20tones%20editorial%20free%20spirit%20aesthetic?model=flux&width=800&height=600&nologo=true&seed=1005',
+    },
+    {
+      name: 'Sportswear',
+      description: 'Vêtements techniques et confortables pour le sport - performance et style',
+      imageUrl: 'https://image.pollinations.ai/prompt/athletic%20sportswear%20performance%20fashion%20studio%20photography%20clean%20white%20background%20modern?model=flux&width=800&height=600&nologo=true&seed=1006',
+    },
+    {
+      name: 'Luxe',
+      description: 'Matières nobles, finitions haut de gamme, éditions limitées - artisanat d\'exception',
+      imageUrl: 'https://image.pollinations.ai/prompt/luxury%20fashion%20editorial%20gold%20marble%20neutral%20tones%20haute%20couture%20elegant%20aesthetic?model=flux&width=800&height=600&nologo=true&seed=1007',
+    },
+    {
+      name: 'Art',
+      description: 'Créations artistiques uniques, éditions limitées signées - quand la mode devient art',
+      imageUrl: 'https://image.pollinations.ai/prompt/art%20gallery%20fashion%20prints%20limited%20edition%20editorial%20photography%20artistic%20aesthetic%20signed?model=flux&width=800&height=600&nologo=true&seed=1008',
+    },
   ];
 
   const styleMap: Record<string, string> = {};
   for (const style of systemStylesData) {
     const s = await prisma.style.upsert({
       where: { name: style.name },
-      update: {},
-      create: { name: style.name, description: style.description, isCustom: false, creatorId: null },
+      update: { description: style.description, imageUrl: style.imageUrl },
+      create: { name: style.name, description: style.description, imageUrl: style.imageUrl, isCustom: false, creatorId: null },
       select: { id: true, name: true },
     });
     styleMap[style.name] = s.id;
@@ -1347,24 +1508,16 @@ async function main() {
 
   console.log('\n🎨 Creating system styles...');
 
-  const systemStyles = [
-    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers' },
-    { name: 'Vintage', description: 'Pieces retro et secondes mains revisitees' },
-    { name: 'Ceramique', description: 'Artisanat ceramique, poterie et creations en argile' },
-    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre' },
-    { name: 'Boheme', description: 'Esprit libre, matieres naturelles, imprimés ethniques' },
-    { name: 'Sportswear', description: 'Vetements techniques et confortables pour le sport' },
-    { name: 'Luxe', description: 'Matieres nobles, finitions haut de gamme, editions limitees' },
-    { name: 'Art', description: 'Creations artistiques uniques, editions limitees signees' },
-  ];
+  const systemStyles = systemStylesData; // Réutilise les styles définis plus haut (avec imageUrl)
 
   for (const style of systemStyles) {
     await prisma.style.upsert({
       where: { name: style.name },
-      update: {},
+      update: { description: style.description, imageUrl: style.imageUrl },
       create: {
         name: style.name,
         description: style.description,
+        imageUrl: style.imageUrl,
         isCustom: false,
         creatorId: null,
       },
@@ -1792,10 +1945,11 @@ async function main() {
   console.log('\n🆕 Creating 10 new products with color variants...');
 
   const seedImages = loadSeedImages();
+  const seedProductImages = seedImages.products;
 
-  // Helper: récupère les images d'une variante depuis seed-assets ou fallback Unsplash
+  // Helper: récupère les images d'une variante depuis seed-assets ou fallback
   function getVariantImages(productId: string, variantId: string, fallbackUrls: string[]): string[] {
-    const productEntry = seedImages[productId];
+    const productEntry = seedProductImages[productId];
     if (productEntry?.variants?.[variantId]?.length) {
       return productEntry.variants[variantId] ?? fallbackUrls;
     }
@@ -1803,7 +1957,7 @@ async function main() {
   }
 
   function getMainImages(productId: string, fallbackUrls: string[]): string[] {
-    const productEntry = seedImages[productId];
+    const productEntry = seedProductImages[productId];
     if (productEntry?.main?.length) {
       return productEntry.main;
     }
@@ -2013,48 +2167,143 @@ async function main() {
     },
   ];
 
+  // ── Nouveaux produits Jose Essentiels ────────────────────────────────────
+  const newProductsJoseEssentiels = [
+    {
+      id: 'prod_new_pantalon_velours',
+      name: 'Pantalon Jogging Velours',
+      description: "Jogger en velours côtelé stretch, taille élastique avec cordon, poches latérales. Confort luxueux.",
+      price: 6900,
+      creatorId: jose.id,
+      projectId: projJoseEssentiels.id,
+      category: 'Pantalon',
+      gender: 'Unisexe',
+      materials: '80% Coton, 15% Polyester, 5% Elasthane — velours',
+      fit: 'Regular',
+      season: 'Automne-Hiver',
+      madeIn: 'France',
+      careInstructions: "Lavage 30° à l'envers",
+      certifications: 'OEKO-TEX',
+      weight: 260,
+    },
+  ];
+
+  // ── Nouveaux produits Sophie Terre ──────────────────────────────────────
+  const newProductsSophie = [
+    {
+      id: 'prod_new_mug_artisanal',
+      name: 'Mug Artisanal Collection',
+      description: 'Mug en grès tourné main, 350ml, anse confortable. Chaque pièce est unique, légères variations d\'émail.',
+      price: 2800,
+      creatorId: sophie.id,
+      projectId: projSophieTerre.id,
+      category: 'Mug',
+      materials: 'Grès artisanal, émail',
+      madeIn: 'France',
+      careInstructions: 'Lavage main recommandé',
+    },
+  ];
+
+  // ── Nouveaux produits Marc Maroquinerie ─────────────────────────────────
+  const newProductsMarcMaroq = [
+    {
+      id: 'prod_new_pochette_cuir',
+      name: 'Pochette Cuir Vintage',
+      description: 'Pochette zippée en cuir végétal tanné, doublure coton, fermeture laiton vieilli. Pièce artisanale.',
+      price: 8500,
+      creatorId: marc.id,
+      projectId: projMarcMaroquinerie.id,
+      category: 'Maroquinerie',
+      gender: 'Unisexe',
+      materials: 'Cuir végétal tanné, doublure coton, laiton',
+      madeIn: 'France',
+      careInstructions: 'Crème nourrissante cuir',
+    },
+  ];
+
+  // ── Nouveaux produits Lucas Capsule ─────────────────────────────────────
+  const newProductsLucasCapsule = [
+    {
+      id: 'prod_new_bomber_capsule',
+      name: 'Bomber Graphique Capsule',
+      description: 'Bomber oversize capsule collection, col imprimé à la main, intérieur satiné. Édition limitée.',
+      price: 11900,
+      creatorId: lucas.id,
+      projectId: projLucasCapsule.id,
+      category: 'Veste',
+      gender: 'Unisexe',
+      materials: '100% Polyester satiné, imprimé main',
+      fit: 'Oversize',
+      season: 'Automne-Hiver',
+      madeIn: 'France',
+      careInstructions: 'Nettoyage à sec',
+      weight: 380,
+    },
+  ];
+
   const allNewProducts = [
     ...newProductsJose,
     ...newProductsLucas,
     ...newProductsClaire,
     ...newProductsMarc,
+    ...newProductsJoseEssentiels,
+    ...newProductsSophie,
+    ...newProductsMarcMaroq,
+    ...newProductsLucasCapsule,
   ];
 
   for (const product of allNewProducts) {
+    const p = product as {
+      id: string;
+      creatorId: string;
+      projectId: string;
+      name: string;
+      description: string;
+      price: number;
+      category: string;
+      gender?: string;
+      materials?: string;
+      fit?: string;
+      season?: string;
+      madeIn?: string;
+      careInstructions?: string;
+      certifications?: string;
+      weight?: number;
+    };
     await prisma.product.upsert({
-      where: { id: product.id },
+      where: { id: p.id },
       update: {
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        category: product.category,
-        gender: product.gender,
-        materials: product.materials,
-        fit: product.fit,
-        season: product.season,
-        madeIn: product.madeIn,
-        careInstructions: product.careInstructions,
-        certifications: (product as { certifications?: string }).certifications ?? null,
-        weight: (product as { weight?: number }).weight ?? null,
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        category: p.category,
+        gender: p.gender ?? null,
+        materials: p.materials ?? null,
+        fit: p.fit ?? null,
+        season: p.season ?? null,
+        madeIn: p.madeIn ?? null,
+        careInstructions: p.careInstructions ?? null,
+        certifications: p.certifications ?? null,
+        weight: p.weight ?? null,
       },
       create: {
-        id: product.id,
-        creatorId: product.creatorId,
-        projectId: product.projectId,
-        name: product.name,
-        description: product.description,
-        price: product.price,
+        id: p.id,
+        creatorId: p.creatorId,
+        projectId: p.projectId,
+        name: p.name,
+        description: p.description,
+        price: p.price,
         status: ProductStatus.PUBLISHED,
         publishedAt: daysAgo(5),
-        category: product.category,
-        gender: product.gender,
-        materials: product.materials,
-        fit: product.fit,
-        season: product.season,
-        madeIn: product.madeIn,
-        careInstructions: product.careInstructions,
-        certifications: (product as { certifications?: string }).certifications ?? null,
-        weight: (product as { weight?: number }).weight ?? null,
+        category: p.category,
+        gender: p.gender ?? null,
+        materials: p.materials ?? null,
+        fit: p.fit ?? null,
+        season: p.season ?? null,
+        madeIn: p.madeIn ?? null,
+        careInstructions: p.careInstructions ?? null,
+        certifications: p.certifications ?? null,
+        weight: p.weight ?? null,
       },
     });
   }
@@ -2114,6 +2363,22 @@ async function main() {
     'prod_new_legging_sport': getMainImages('prod_new_legging_sport', [
       'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800&h=800&fit=crop',
     ]).map((url, position) => ({ url, alt: `Legging Sport - Vue principale`, position })),
+
+    'prod_new_pantalon_velours': getMainImages('prod_new_pantalon_velours', [
+      'https://fallback.placeholder.com/800x800',
+    ]).map((url, position) => ({ url, alt: `Pantalon Velours - ${position === 0 ? 'Vue principale' : 'Détail velours'}`, position })),
+
+    'prod_new_mug_artisanal': getMainImages('prod_new_mug_artisanal', [
+      'https://fallback.placeholder.com/800x800',
+    ]).map((url, position) => ({ url, alt: `Mug Artisanal - Vue principale`, position })),
+
+    'prod_new_pochette_cuir': getMainImages('prod_new_pochette_cuir', [
+      'https://fallback.placeholder.com/800x800',
+    ]).map((url, position) => ({ url, alt: `Pochette Cuir - Vue principale`, position })),
+
+    'prod_new_bomber_capsule': getMainImages('prod_new_bomber_capsule', [
+      'https://fallback.placeholder.com/800x800',
+    ]).map((url, position) => ({ url, alt: `Bomber Capsule - ${position === 0 ? 'Vue face' : position === 1 ? 'Vue dos' : 'Lifestyle'}`, position })),
   };
 
   await prisma.productImage.deleteMany({
@@ -2141,6 +2406,8 @@ async function main() {
     'prod_new_longline_tee':    [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
     'prod_new_sweat_zip':       [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
     'prod_new_legging_sport':   [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
+    'prod_new_pantalon_velours': [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }, { size: 'XXL' }],
+    'prod_new_bomber_capsule':   [{ size: 'XS' }, { size: 'S' }, { size: 'M' }, { size: 'L' }, { size: 'XL' }],
   };
 
   for (const [productId, sizes] of Object.entries(NEW_PRODUCT_SIZES)) {
@@ -2237,6 +2504,33 @@ async function main() {
       { id: 'var_new_legging_marine', name: 'Marine', color: 'Marine', colorCode: '#1B2A4A', stock: [6, 11, 14, 10, 5], fallbackImages: ['https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&h=800&fit=crop'] },
       { id: 'var_new_legging_rose',   name: 'Rose',   color: 'Rose',   colorCode: '#f8bbd9', stock: [5,  9, 12,  8, 4], fallbackImages: ['https://images.unsplash.com/photo-1494436261687-24a14bc27e69?w=800&h=800&fit=crop'] },
     ],
+
+    // ── Pantalon Velours (XS S M L XL XXL) — Jose Essentiels ───────────────
+    'prod_new_pantalon_velours': [
+      { id: 'var_new_velours_noir',     name: 'Noir',     color: 'Noir',     colorCode: '#1a1a1a', stock: [5, 9, 12, 9, 5, 2], fallbackImages: [] },
+      { id: 'var_new_velours_bordeaux', name: 'Bordeaux', color: 'Bordeaux', colorCode: '#6d1e3e', stock: [4, 7, 10, 7, 4, 2], fallbackImages: [] },
+    ],
+
+    // ── Mug Artisanal (pas de taille) — Sophie Terre ───────────────────────
+    'prod_new_mug_artisanal': [
+      { id: 'var_new_mug_gris',  name: 'Gris Perle',   color: 'Gris Perle',   colorCode: '#b0b7c3', stock: [8], fallbackImages: [] },
+      { id: 'var_new_mug_bleu',  name: 'Bleu Ardoise', color: 'Bleu Ardoise', colorCode: '#546e7a', stock: [6], fallbackImages: [] },
+      { id: 'var_new_mug_sable', name: 'Sable',        color: 'Sable',        colorCode: '#c4a882', stock: [7], fallbackImages: [] },
+    ],
+
+    // ── Pochette Cuir (pas de taille) — Marc Maroquinerie ──────────────────
+    'prod_new_pochette_cuir': [
+      { id: 'var_new_pochette_naturel', name: 'Naturel', color: 'Naturel', colorCode: '#c4a882', stock: [4], fallbackImages: [] },
+      { id: 'var_new_pochette_noir',    name: 'Noir',    color: 'Noir',    colorCode: '#1a1a1a', stock: [5], fallbackImages: [] },
+      { id: 'var_new_pochette_cognac',  name: 'Cognac',  color: 'Cognac',  colorCode: '#8b4513', stock: [3], fallbackImages: [] },
+    ],
+
+    // ── Bomber Capsule (XS S M L XL) — Lucas Capsule ───────────────────────
+    'prod_new_bomber_capsule': [
+      { id: 'var_new_bomber_noir_caps',  name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', stock: [3, 5, 7, 5, 3], fallbackImages: [] },
+      { id: 'var_new_bomber_ecru_caps',  name: 'Écru', color: 'Écru', colorCode: '#f5f0e8', stock: [3, 4, 6, 4, 2], fallbackImages: [] },
+      { id: 'var_new_bomber_kaki_caps',  name: 'Kaki', color: 'Kaki', colorCode: '#7d7c5e', stock: [2, 4, 5, 4, 2], fallbackImages: [] },
+    ],
   };
 
   // Cleanup des variantes/SKUs existants pour les nouveaux produits
@@ -2276,7 +2570,7 @@ async function main() {
     }
   }
 
-  console.log(`✅ ${allNewProducts.length} new products created (Jose:2, Lucas:4, Claire:3, Marc:2)`);
+  console.log(`✅ ${allNewProducts.length} new products created (Jose:3, Lucas:5, Claire:3, Marc:3, Sophie:1)`);
   console.log(`✅ ${newImageCount} product images created for new products`);
   console.log(`✅ ${newVariantCount} new variants created, ${newSkuCount} new SKUs created`);
 
