@@ -18,10 +18,12 @@ import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
 import { CartSummary } from '@/components/checkout/cart-summary';
 import {
   ShippingAddressSchema,
+  CarrierSelectionSchema,
   OrderConfirmationSchema,
   parseSessionStorage,
   storeSessionStorage,
   type ShippingAddress,
+  type CarrierSelection,
 } from '@/lib/schemas/checkout.schema';
 
 /**
@@ -42,6 +44,7 @@ export default function PaymentPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
+  const [selectedCarrier, setSelectedCarrier] = useState<CarrierSelection | null>(null);
 
   const items = useCartStore((state) => state.items);
   const getTotal = useCartStore((state) => state.getTotal);
@@ -58,14 +61,21 @@ export default function PaymentPage() {
       setIsHydrated(true);
     }
 
-    // Load shipping address with Zod validation (FIX-1.2)
+    // Load shipping address with Zod validation
     const result = parseSessionStorage('shippingAddress', ShippingAddressSchema);
     if (result.success) {
       setShippingAddress(result.data);
     } else if (result.error) {
-      // Invalid data detected - redirect to shipping
       console.warn('Invalid shipping address in sessionStorage:', result.error.issues);
       router.push('/checkout/shipping');
+    }
+
+    // Load selected carrier
+    const carrierResult = parseSessionStorage('selectedCarrier', CarrierSelectionSchema);
+    if (carrierResult.success) {
+      setSelectedCarrier(carrierResult.data);
+    } else if (carrierResult.error) {
+      router.push('/checkout/carrier');
     }
 
     return () => {
@@ -97,12 +107,13 @@ export default function PaymentPage() {
       // Generate order ID (in production, comes from server)
       const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
 
-      // Store order confirmation with Zod validation (FIX-1.2)
+      // Store order confirmation with Zod validation
       const orderData = {
         orderId,
         items: items,
         total: getTotal(),
         shippingAddress: shippingAddress!,
+        selectedCarrier: selectedCarrier ?? undefined,
         paidAt: new Date().toISOString(),
       };
 
@@ -117,6 +128,7 @@ export default function PaymentPage() {
       // Clear checkout session data
       sessionStorage.removeItem('guestCheckout');
       sessionStorage.removeItem('shippingAddress');
+      sessionStorage.removeItem('selectedCarrier');
 
       // Navigate to confirmation
       router.push(`/checkout/confirmation?order=${orderId}`);
@@ -148,7 +160,7 @@ export default function PaymentPage() {
     <div className="container py-8">
       {/* Back link */}
       <Button variant="ghost" asChild className="mb-6">
-        <Link href="/checkout/shipping">
+        <Link href="/checkout/carrier">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Retour
         </Link>
@@ -211,23 +223,41 @@ export default function PaymentPage() {
                 </div>
 
                 {/* Shipping address summary */}
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-2">Adresse de livraison</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {shippingAddress.firstName} {shippingAddress.lastName}
-                    <br />
-                    {shippingAddress.street}
-                    {shippingAddress.streetComplement && (
-                      <>
-                        <br />
-                        {shippingAddress.streetComplement}
-                      </>
-                    )}
-                    <br />
-                    {shippingAddress.postalCode} {shippingAddress.city}
-                    <br />
-                    {shippingAddress.country}
-                  </p>
+                <div className="p-4 border rounded-lg space-y-3">
+                  {selectedCarrier && (
+                    <div>
+                      <h4 className="font-medium mb-1">Transporteur</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedCarrier.carrierName} — {selectedCarrier.estimatedDays}
+                        {' '}({formatPrice(selectedCarrier.price)} de frais de port)
+                      </p>
+                      {selectedCarrier.relayPoint && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Point relais : {selectedCarrier.relayPoint.name},{' '}
+                          {selectedCarrier.relayPoint.address},{' '}
+                          {selectedCarrier.relayPoint.postalCode} {selectedCarrier.relayPoint.city}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="font-medium mb-1">Adresse de livraison</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {shippingAddress.firstName} {shippingAddress.lastName}
+                      <br />
+                      {shippingAddress.street}
+                      {shippingAddress.streetComplement && (
+                        <>
+                          <br />
+                          {shippingAddress.streetComplement}
+                        </>
+                      )}
+                      <br />
+                      {shippingAddress.postalCode} {shippingAddress.city}
+                      <br />
+                      {shippingAddress.country}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
 
@@ -241,7 +271,7 @@ export default function PaymentPage() {
                   {isLoading ? (
                     'Traitement en cours...'
                   ) : (
-                    <>Payer {formatPrice(getTotal())}</>
+                    <>Payer {formatPrice(getTotal() + (selectedCarrier?.price ?? 0))}</>
                   )}
                 </Button>
 
@@ -255,7 +285,11 @@ export default function PaymentPage() {
 
         {/* Order summary */}
         <div className="lg:col-span-1">
-          <CartSummary subtotal={getTotal()} formatPrice={formatPrice} />
+          <CartSummary
+            subtotal={getTotal()}
+            shippingEstimate={selectedCarrier?.price}
+            formatPrice={formatPrice}
+          />
         </div>
       </div>
     </div>

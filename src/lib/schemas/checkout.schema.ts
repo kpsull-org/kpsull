@@ -51,6 +51,34 @@ export const CartItemSchema = z.object({
 export type CartItem = z.infer<typeof CartItemSchema>;
 
 /**
+ * Relay point (point relais) schema
+ */
+export const RelayPointSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  postalCode: z.string().regex(/^\d{5}$/),
+  openingHours: z.string().optional(),
+});
+
+export type RelayPoint = z.infer<typeof RelayPointSchema>;
+
+/**
+ * Carrier selection schema for shipping method choice
+ */
+export const CarrierSelectionSchema = z.object({
+  carrier: z.enum(['mondial-relay', 'chronopost', 'chronopost-pickup', 'chronopost-shop2shop', 'relais-colis']),
+  carrierName: z.string().min(1),
+  price: z.number().nonnegative(),
+  estimatedDays: z.string().min(1),
+  /** Point relais sélectionné (Mondial Relay / Relais Colis uniquement) */
+  relayPoint: RelayPointSchema.optional(),
+});
+
+export type CarrierSelection = z.infer<typeof CarrierSelectionSchema>;
+
+/**
  * Order confirmation schema stored after successful payment
  */
 export const OrderConfirmationSchema = z.object({
@@ -58,6 +86,7 @@ export const OrderConfirmationSchema = z.object({
   items: z.array(CartItemSchema).min(1),
   total: z.number().int().nonnegative(),
   shippingAddress: ShippingAddressSchema,
+  selectedCarrier: CarrierSelectionSchema.optional(),
   paidAt: z.string().datetime({ message: 'Date de paiement invalide' }),
 });
 

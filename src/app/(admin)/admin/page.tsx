@@ -123,6 +123,8 @@ export default async function AdminDashboardPage({
             creatorsChange: stats.creatorsChange,
             totalPlatformRevenue: stats.totalPlatformRevenue,
             revenueChange: stats.revenueChange,
+            subscriptionRevenue: stats.subscriptionRevenue,
+            commissionRevenue: stats.commissionRevenue,
             totalOrders: stats.totalOrders,
             ordersChange: stats.ordersChange,
             newCreators: stats.newCreators,

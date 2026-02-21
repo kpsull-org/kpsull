@@ -74,8 +74,8 @@ export default function ShippingPage() {
     // Store shipping address for payment step
     sessionStorage.setItem('shippingAddress', JSON.stringify(address));
 
-    // Navigate to payment step
-    router.push('/checkout/payment');
+    // Navigate to carrier selection step
+    router.push('/checkout/carrier');
   };
 
   // Attendre l'hydratation avant de rendre
