@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
+import { getRoleRedirectUrl } from '@/lib/utils/auth-redirect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +17,7 @@ interface CredentialsFormProps {
   callbackUrl?: string;
 }
 
-export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProps) {
+export function CredentialsForm({ mode, callbackUrl: _callbackUrl = '/' }: CredentialsFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,8 +103,9 @@ export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProp
         } else if (data.requiresVerification) {
           router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
         } else {
-          router.push(callbackUrl);
           router.refresh();
+          const session = await getSession();
+          router.push(getRoleRedirectUrl(session?.user?.role));
         }
       } else {
         // Login validation
@@ -131,8 +133,9 @@ export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProp
           return;
         }
 
-        router.push(callbackUrl);
         router.refresh();
+        const session = await getSession();
+        router.push(getRoleRedirectUrl(session?.user?.role));
       }
     } catch {
       setError('Une erreur est survenue. Veuillez reessayer.');

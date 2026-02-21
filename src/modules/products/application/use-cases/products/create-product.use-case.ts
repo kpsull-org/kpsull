@@ -1,6 +1,7 @@
 import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
 import { Product } from '../../../domain/entities/product.entity';
+import { ProductVariant } from '../../../domain/entities/product-variant.entity';
 import { Money } from '../../../domain/value-objects/money.vo';
 import { ProductRepository } from '../../ports/product.repository.interface';
 import { ProductStatusValue } from '../../../domain/value-objects/product-status.vo';
@@ -26,7 +27,8 @@ export interface CreateProductOutput {
 /**
  * Use Case: Create Product
  *
- * Creates a new product in DRAFT status.
+ * Creates a new product in DRAFT status with a single default variant.
+ * Every product has at least one variant — there is no "base product" concept.
  * The product must be published separately to be visible.
  * DRAFT products don't count towards the subscription limit.
  */
@@ -57,6 +59,21 @@ export class CreateProductUseCase implements UseCase<CreateProductInput, CreateP
 
     // Persist the product
     await this.productRepository.save(product);
+
+    // Auto-create a default variant — every product starts with one variant.
+    // The default variant uses color "unique" to signal it's transparent to the UI
+    // (no color selector shown if it's the only variant).
+    const defaultVariantResult = ProductVariant.create({
+      productId: product.idString,
+      name: input.name,
+      stock: 0,
+      color: 'unique',
+      colorCode: '#000000',
+    });
+
+    if (defaultVariantResult.isSuccess) {
+      await this.productRepository.saveVariant(defaultVariantResult.value);
+    }
 
     return Result.ok({
       id: product.idString,

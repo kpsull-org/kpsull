@@ -2,7 +2,6 @@ import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
 import { Product } from '../../../domain/entities/product.entity';
 import { Project } from '../../../domain/entities/project.entity';
-import { ProductImage } from '../../../domain/entities/product-image.entity';
 
 export interface ProjectProductsRepository {
   findPublishedProjectById(id: string): Promise<Project | null>;
@@ -15,7 +14,9 @@ export interface ProjectProductsRepository {
     }
   ): Promise<{ products: Product[]; total: number }>;
 
-  findMainImagesByProductIds(productIds: string[]): Promise<ProductImage[]>;
+  findFirstVariantImagesByProductIds(
+    productIds: string[]
+  ): Promise<{ productId: string; url: string }[]>;
 }
 
 export interface ListProductsByProjectInput {
@@ -54,6 +55,7 @@ export interface ListProductsByProjectOutput {
  * Lists products of a specific project with pagination.
  * Only returns PUBLISHED products from PUBLISHED projects.
  * Does not expose sensitive data like creatorId.
+ * Main image is the first image of the first variant.
  */
 export class ListProductsByProjectUseCase implements UseCase<ListProductsByProjectInput, ListProductsByProjectOutput> {
   constructor(private readonly repository: ProjectProductsRepository) {}
@@ -84,14 +86,14 @@ export class ListProductsByProjectUseCase implements UseCase<ListProductsByProje
       }
     );
 
-    // Get main images for all products
+    // Get first variant image for all products
     const imageMap = new Map<string, string>();
     if (products.length > 0) {
       const productIds = products.map((p) => p.idString);
-      const mainImages = await this.repository.findMainImagesByProductIds(productIds);
+      const firstImages = await this.repository.findFirstVariantImagesByProductIds(productIds);
 
-      for (const image of mainImages) {
-        imageMap.set(image.productId, image.url.url);
+      for (const { productId, url } of firstImages) {
+        imageMap.set(productId, url);
       }
     }
 

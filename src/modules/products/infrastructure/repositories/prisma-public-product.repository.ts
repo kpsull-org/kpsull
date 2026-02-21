@@ -1,11 +1,14 @@
 import { Prisma, PrismaClient, ProductStatus as PrismaProductStatus } from '@prisma/client';
 import { PublicProductListRepository } from '../../application/use-cases/public/list-public-products.use-case';
 import { PublicProductRepository } from '../../application/use-cases/public/get-public-product.use-case';
+import { ProjectProductsRepository } from '../../application/use-cases/public/list-products-by-project.use-case';
 import { Product } from '../../domain/entities/product.entity';
-import { ProductImage } from '../../domain/entities/product-image.entity';
 import { ProductVariant } from '../../domain/entities/product-variant.entity';
+import { Project } from '../../domain/entities/project.entity';
 
-export class PrismaPublicProductRepository implements PublicProductListRepository, PublicProductRepository {
+export class PrismaPublicProductRepository
+  implements PublicProductListRepository, PublicProductRepository, ProjectProductsRepository
+{
   constructor(private readonly prisma: PrismaClient) {}
 
   async findPublishedByCreatorSlugWithPagination(
@@ -17,7 +20,6 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
       take: number;
     }
   ): Promise<{ products: Product[]; total: number }> {
-    // First, find the creator by their page slug
     const creatorPage = await this.prisma.creatorPage.findUnique({
       where: { slug: creatorSlug },
       select: { creatorId: true },
@@ -60,24 +62,34 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
     return { products, total };
   }
 
-  async findMainImagesByProductIds(productIds: string[]): Promise<ProductImage[]> {
+  async findFirstVariantImagesByProductIds(
+    productIds: string[]
+  ): Promise<{ productId: string; url: string }[]> {
     if (productIds.length === 0) {
       return [];
     }
 
-    const images = await this.prisma.productImage.findMany({
-      where: {
-        productId: { in: productIds },
-        position: 0, // Main image
-      },
+    const variants = await this.prisma.productVariant.findMany({
+      where: { productId: { in: productIds } },
+      orderBy: { createdAt: 'asc' },
+      select: { productId: true, images: true },
     });
 
-    return images
-      .map((img) => this.toDomainImage(img))
-      .filter((img): img is ProductImage => img !== null);
+    const result: { productId: string; url: string }[] = [];
+    const seen = new Set<string>();
+    for (const v of variants) {
+      if (!seen.has(v.productId)) {
+        const images = Array.isArray(v.images) ? (v.images as string[]) : [];
+        if (images.length > 0) {
+          result.push({ productId: v.productId, url: images[0]! });
+        }
+        seen.add(v.productId);
+      }
+    }
+
+    return result;
   }
 
-  // PublicProductRepository methods
   async findPublishedById(id: string): Promise<Product | null> {
     const prismaProduct = await this.prisma.product.findFirst({
       where: {
@@ -104,15 +116,54 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
       .filter((v): v is ProductVariant => v !== null);
   }
 
-  async findImagesByProductId(productId: string): Promise<ProductImage[]> {
-    const images = await this.prisma.productImage.findMany({
-      where: { productId },
-      orderBy: { position: 'asc' },
+  async findPublishedProjectById(id: string): Promise<Project | null> {
+    const prismaProject = await this.prisma.project.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true } } },
     });
 
-    return images
-      .map((img) => this.toDomainImage(img))
-      .filter((img): img is ProductImage => img !== null);
+    if (!prismaProject) {
+      return null;
+    }
+
+    const result = Project.reconstitute({
+      id: prismaProject.id,
+      creatorId: prismaProject.creatorId,
+      name: prismaProject.name,
+      description: prismaProject.description ?? undefined,
+      coverImage: prismaProject.coverImage ?? undefined,
+      productCount: prismaProject._count.products,
+      createdAt: prismaProject.createdAt,
+      updatedAt: prismaProject.updatedAt,
+    });
+
+    return result.isSuccess ? result.value : null;
+  }
+
+  async findPublishedProductsByProjectIdWithPagination(
+    projectId: string,
+    options: { skip: number; take: number }
+  ): Promise<{ products: Product[]; total: number }> {
+    const where: Prisma.ProductWhereInput = {
+      projectId,
+      status: 'PUBLISHED' as PrismaProductStatus,
+    };
+
+    const [prismaProducts, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        orderBy: { publishedAt: 'desc' },
+        skip: options.skip,
+        take: options.take,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    const products = prismaProducts
+      .map((p) => this.toDomainProduct(p))
+      .filter((p): p is Product => p !== null);
+
+    return { products, total };
   }
 
   private toDomainProduct(prismaProduct: Prisma.ProductGetPayload<object>): Product | null {
@@ -133,20 +184,6 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
     return result.isSuccess ? result.value : null;
   }
 
-  private toDomainImage(prismaImage: Prisma.ProductImageGetPayload<object>): ProductImage | null {
-    const result = ProductImage.reconstitute({
-      id: prismaImage.id,
-      productId: prismaImage.productId,
-      url: prismaImage.url,
-      urlType: 'product',
-      alt: prismaImage.alt,
-      position: prismaImage.position,
-      createdAt: prismaImage.createdAt,
-    });
-
-    return result.isSuccess ? result.value : null;
-  }
-
   private toDomainVariant(
     prismaVariant: Prisma.ProductVariantGetPayload<object>
   ): ProductVariant | null {
@@ -157,6 +194,9 @@ export class PrismaPublicProductRepository implements PublicProductListRepositor
       priceOverrideAmount: prismaVariant.priceOverride ?? undefined,
       priceOverrideCurrency: prismaVariant.priceOverride ? 'EUR' : undefined,
       stock: prismaVariant.stock,
+      color: prismaVariant.color ?? undefined,
+      colorCode: prismaVariant.colorCode ?? undefined,
+      images: Array.isArray(prismaVariant.images) ? (prismaVariant.images as string[]) : [],
       createdAt: prismaVariant.createdAt,
       updatedAt: prismaVariant.updatedAt,
     });

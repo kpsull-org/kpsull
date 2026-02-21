@@ -41,7 +41,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <GoogleSignInButton mode="signin" callbackUrl="/" />
+      <GoogleSignInButton mode="signin" callbackUrl="/auth/redirect" />
     </AuthCard>
   );
 }

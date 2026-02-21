@@ -24,6 +24,10 @@ export class UpsertSkuUseCase implements UseCase<UpsertSkuInput, SkuOutput> {
       return Result.fail("Le produit n'existe pas");
     }
 
+    if (!input.variantId) {
+      return Result.fail('Le variantId est requis');
+    }
+
     const existingSkus = await this.skuRepository.findByProductId(input.productId);
 
     const existing = existingSkus.find(

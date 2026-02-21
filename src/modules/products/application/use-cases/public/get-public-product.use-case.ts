@@ -2,12 +2,10 @@ import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
 import { Product } from '../../../domain/entities/product.entity';
 import { ProductVariant } from '../../../domain/entities/product-variant.entity';
-import { ProductImage } from '../../../domain/entities/product-image.entity';
 
 export interface PublicProductRepository {
   findPublishedById(id: string): Promise<Product | null>;
   findVariantsByProductId(productId: string): Promise<ProductVariant[]>;
-  findImagesByProductId(productId: string): Promise<ProductImage[]>;
 }
 
 export interface GetPublicProductInput {
@@ -17,16 +15,12 @@ export interface GetPublicProductInput {
 export interface PublicVariantOutput {
   id: string;
   name: string;
+  color?: string;
+  colorCode?: string;
   priceOverride?: number;
   stock: number;
   isAvailable: boolean;
-}
-
-export interface PublicImageOutput {
-  id: string;
-  url: string;
-  alt: string;
-  position: number;
+  images: string[];
 }
 
 export interface GetPublicProductOutput {
@@ -38,7 +32,7 @@ export interface GetPublicProductOutput {
   projectId?: string;
   mainImageUrl?: string;
   variants: PublicVariantOutput[];
-  images: PublicImageOutput[];
+  images: string[];
   publishedAt?: Date;
 }
 
@@ -48,6 +42,7 @@ export interface GetPublicProductOutput {
  * Retrieves a published product with its variants and images for public display.
  * Only returns PUBLISHED products.
  * Does not expose sensitive data like creatorId.
+ * Images are now stored at the variant level.
  */
 export class GetPublicProductUseCase implements UseCase<GetPublicProductInput, GetPublicProductOutput> {
   constructor(private readonly productRepository: PublicProductRepository) {}
@@ -67,37 +62,26 @@ export class GetPublicProductUseCase implements UseCase<GetPublicProductInput, G
       return Result.fail('Produit non trouve');
     }
 
-    // Fetch variants and images in parallel
-    const [variants, images] = await Promise.all([
-      this.productRepository.findVariantsByProductId(productId),
-      this.productRepository.findImagesByProductId(productId),
-    ]);
+    // Fetch variants
+    const variants = await this.productRepository.findVariantsByProductId(productId);
 
     // Filter only available variants (stock > 0)
     const availableVariants = variants.filter((v) => v.isAvailable);
 
-    // Sort images by position
-    const sortedImages = [...images].sort((a, b) => a.position - b.position);
-
-    // Get main image URL (position 0)
-    const mainImage = sortedImages.find((img) => img.position === 0);
-    const mainImageUrl = mainImage?.url.url;
+    // Flatten all images from all variants
+    const allImages = variants.flatMap((v) => v.images);
+    const mainImageUrl = allImages[0];
 
     // Map variants to public DTOs
     const variantDtos: PublicVariantOutput[] = availableVariants.map((variant) => ({
       id: variant.idString,
       name: variant.name,
+      color: variant.color,
+      colorCode: variant.colorCode,
       priceOverride: variant.priceOverride?.displayAmount,
       stock: variant.stock,
       isAvailable: variant.isAvailable,
-    }));
-
-    // Map images to public DTOs
-    const imageDtos: PublicImageOutput[] = sortedImages.map((image) => ({
-      id: image.idString,
-      url: image.url.url,
-      alt: image.alt,
-      position: image.position,
+      images: variant.images,
     }));
 
     // Build public product response (without creatorId)
@@ -110,7 +94,7 @@ export class GetPublicProductUseCase implements UseCase<GetPublicProductInput, G
       projectId: product.projectId,
       mainImageUrl,
       variants: variantDtos,
-      images: imageDtos,
+      images: allImages,
       publishedAt: product.publishedAt,
     };
 

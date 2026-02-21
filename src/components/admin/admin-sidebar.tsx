@@ -7,6 +7,7 @@ import {
   Users,
   Shield,
   DollarSign,
+  Palette,
 } from 'lucide-react';
 import { AppSidebar, type SidebarItem } from '@/components/shared/app-sidebar';
 
@@ -16,6 +17,7 @@ const sidebarItems: SidebarItem[] = [
   { label: 'Createurs', href: '/admin/creators', icon: Store },
   { label: 'Clients', href: '/admin/clients', icon: Users },
   { label: 'Moderation', href: '/admin/moderation', icon: Shield },
+  { label: 'Styles', href: '/admin/styles', icon: Palette },
   { label: 'Revenus', href: '/admin/revenue', icon: DollarSign },
 ];
 

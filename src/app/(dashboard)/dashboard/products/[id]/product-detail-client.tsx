@@ -15,6 +15,7 @@ interface StyleOption {
   id: string;
   name: string;
   isCustom: boolean;
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
 }
 
 interface InitialFormValues {
@@ -42,7 +43,6 @@ interface ProductDetailClientProps {
   initialVariants: DashboardVariant[];
   initialSizes: SizeEntry[];
   initialSkus: SkuOutput[];
-  initialProductImages: Array<{ id: string; url: string }>;
 }
 
 export function ProductDetailClient({
@@ -53,7 +53,6 @@ export function ProductDetailClient({
   initialVariants,
   initialSizes,
   initialSkus,
-  initialProductImages,
 }: ProductDetailClientProps) {
   const [liveGender, setLiveGender] = useState(initialFormValues.gender ?? '');
   const [liveCategory, setLiveCategory] = useState(initialFormValues.category ?? '');
@@ -74,7 +73,6 @@ export function ProductDetailClient({
         initialVariants={initialVariants}
         initialSizes={initialSizes}
         initialSkus={initialSkus}
-        initialProductImages={initialProductImages}
         category={liveCategory || undefined}
         gender={liveGender || undefined}
       />

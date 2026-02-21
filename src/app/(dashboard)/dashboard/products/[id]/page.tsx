@@ -13,7 +13,6 @@ import { ListVariantsUseCase } from '@/modules/products/application/use-cases/va
 import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
 import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
 import { PrismaVariantRepository } from '@/modules/products/infrastructure/repositories/prisma-variant.repository';
-import { PrismaProductImageRepository } from '@/modules/products/infrastructure/repositories/prisma-product-image.repository';
 import type { SkuOutput } from '../actions';
 
 export const metadata: Metadata = {
@@ -41,14 +40,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   const productRepo = new PrismaProductRepository(prisma);
   const projectRepo = new PrismaProjectRepository(prisma);
   const variantRepo = new PrismaVariantRepository(prisma);
-  const imageRepo = new PrismaProductImageRepository(prisma);
-
-  const [productResult, collectionsResult, variantsResult, images, productExtra, styles, rawSkus] =
+  const [productResult, collectionsResult, variantsResult, productExtra, styles, rawSkus] =
     await Promise.all([
       new GetProductDetailUseCase(productRepo).execute({ productId: id, creatorId: session.user.id }),
       new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id }),
       new ListVariantsUseCase(variantRepo, productRepo).execute({ productId: id }),
-      imageRepo.findByProductId(id),
       prisma.product.findUnique({
         where: { id },
         select: {
@@ -67,10 +63,14 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       }),
       prisma.style.findMany({
         where: {
-          OR: [{ creatorId: null }, { creatorId: session.user.id }],
+          OR: [
+            { isCustom: false, status: 'APPROVED' },
+            { isCustom: true, creatorId: session.user.id, status: 'PENDING_APPROVAL' },
+            { isCustom: true, creatorId: session.user.id, status: 'APPROVED' },
+          ],
         },
         orderBy: { name: 'asc' },
-        select: { id: true, name: true, isCustom: true },
+        select: { id: true, name: true, isCustom: true, status: true },
       }),
       prisma.productSku.findMany({
         where: { productId: id },
@@ -92,13 +92,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     color: v.color,
     colorCode: v.colorCode,
     images: v.images,
-  }));
-
-  const imageData = images.map((img) => ({
-    id: img.idString,
-    url: img.url.url,
-    alt: img.alt,
-    position: img.position,
   }));
 
   const initialSizes = parseSizes(productExtra?.sizes);
@@ -169,7 +162,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         initialVariants={variants}
         initialSizes={initialSizes}
         initialSkus={initialSkus}
-        initialProductImages={imageData}
       />
     </div>
   );

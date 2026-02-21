@@ -19,15 +19,16 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "prisma db seed",
-    "db:reset": "prisma migrate reset",
+    "db:seed": "bun run prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force && bun run prisma/seed.ts",
     "db:local:push": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma db push",
     "db:local:studio": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma studio",
-    "db:local:seed": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db prisma db seed",
+    "db:local:seed": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db bun run prisma/seed.ts",
     "dev:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next dev --webpack",
     "build:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next build --webpack",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "seed:images": "bun prisma/scripts/upload-seed-images.ts"
   },
   "overrides": {
     "hono": "^4.11.9",

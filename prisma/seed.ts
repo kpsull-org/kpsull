@@ -1,15 +1,22 @@
 /**
- * Prisma Seed - Donnees de developpement pour Kpsull Marketplace
+ * Prisma Seed - Données de développement pour Kpsull Marketplace
  *
- * Cree:
+ * Crée:
  * - 1 admin (admin@kpsull.fr)
- * - 20 createurs (5 originaux + 15 via seed-new-creators.ts)
- * - 20 clients avec profils complets
- * - ~475 produits repartis entre les createurs
- * - ~100+ commandes avec differents statuts
- * - Pages, sections, images, subscriptions, onboardings
+ * - 3 créateurs : Hugo Tessier, Léa Fontaine, Kais Benali
+ * - 5 clients avec profils complets
+ * - 18 produits (3 créateurs × 2 collections × 3 produits)
+ * - Variantes et SKUs (images dans variantes, variantId non-null)
+ * - 8 commandes de test
+ * - Pages, sections, styles, notifications, paniers
  *
  * Tous les comptes utilisent le mot de passe: password123
+ *
+ * IMPORTANT: Ce seed utilise le nouveau modèle de données :
+ *   - Les images sont dans ProductVariant.images (Json)
+ *   - Pas de ProductImage
+ *   - variantId dans ProductSku est toujours non-null
+ *   - La variante "défaut" a color: "unique", colorCode: "#000000"
  */
 
 import {
@@ -30,10 +37,11 @@ import {
   ModerationStatus,
   ModerationActionType,
 } from '@prisma/client';
-import { seedNewCreators } from './seed-new-creators';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
+import * as fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 
 const connectionString =
   process.env.DATABASE_URL ||
@@ -46,22 +54,72 @@ const prisma = new PrismaClient({ adapter });
 // HELPERS
 // ============================================
 
-/** Date N days ago */
 function daysAgo(n: number): Date {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
 }
 
-/** Date N days from now */
 function daysFromNow(n: number): Date {
   return new Date(Date.now() + n * 24 * 60 * 60 * 1000);
 }
 
-async function main() {
-  console.log('🌱 Seeding Kpsull marketplace database...\n');
+async function ensureSeedImages(): Promise<void> {
+  const jsonPath = './prisma/seed-assets/product-images.json';
 
-  // Hash password once for all users
+  if (fs.existsSync(jsonPath)) {
+    console.log('Images seed deja generees (cache trouve)\n');
+    return;
+  }
+
+  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    console.log('Variables Cloudinary absentes - seed sans images\n');
+    return;
+  }
+
+  console.log('Generation des images seed (premiere execution)...');
+  console.log('   ~30s avec Picsum (fallback gratuit) | quelques minutes avec Unsplash\n');
+
+  execFileSync('bun', ['prisma/scripts/upload-seed-images.ts'], {
+    stdio: 'inherit',
+  });
+
+  console.log('\nImages generees et uploadees sur Cloudinary\n');
+}
+
+interface SeedImagesOutput {
+  products: Record<string, { variants: Record<string, string[]> }>;
+  collections: Record<string, string>;
+}
+
+function loadSeedImages(): SeedImagesOutput {
+  try {
+    const raw = fs.readFileSync('./prisma/seed-assets/product-images.json', 'utf-8');
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed && typeof parsed === 'object' && 'products' in parsed) {
+      return parsed as SeedImagesOutput;
+    }
+    return { products: {}, collections: {} };
+  } catch {
+    return { products: {}, collections: {} };
+  }
+}
+
+function getVariantImages(
+  seedImages: SeedImagesOutput,
+  productId: string,
+  variantId: string,
+): string[] {
+  return seedImages.products[productId]?.variants[variantId] ?? [];
+}
+
+async function main() {
+  console.log('Seeding Kpsull marketplace database...\n');
+
+  await ensureSeedImages();
+
   const hashedPassword = await bcrypt.hash('password123', 10);
-  console.log('🔐 Password hashed for all accounts (password123)\n');
+  console.log('Password hashed for all accounts (password123)\n');
+
+  const seedImages = loadSeedImages();
 
   // ============================================
   // ADMIN
@@ -84,114 +142,74 @@ async function main() {
       country: 'France',
     },
   });
-  console.log('✅ Admin:', admin.email);
+  console.log('Admin:', admin.email);
 
   // ============================================
   // CREATORS
   // ============================================
 
-  const jose = await prisma.user.upsert({
-    where: { email: 'jose.lecreateur@kpsull.fr' },
+  const hugo = await prisma.user.upsert({
+    where: { email: 'hugo.tessier@kpsull.fr' },
     update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
     create: {
-      email: 'jose.lecreateur@kpsull.fr',
-      name: 'Jose Le Createur',
+      email: 'hugo.tessier@kpsull.fr',
+      name: 'Hugo Tessier',
       role: Role.CREATOR,
       accountTypeChosen: true,
       wantsToBeCreator: true,
       emailVerified: new Date(),
       hashedPassword,
       phone: '+33612345678',
-      address: '42 rue de la Mode',
+      address: '12 rue Oberkampf',
       city: 'Paris',
-      postalCode: '75003',
+      postalCode: '75011',
       country: 'France',
     },
   });
-  console.log('✅ Creator:', jose.email, '(STUDIO)');
+  console.log('Creator:', hugo.email, '(streetwear urbain)');
 
-  const sophie = await prisma.user.upsert({
-    where: { email: 'sophie.artisan@kpsull.fr' },
+  const lea = await prisma.user.upsert({
+    where: { email: 'lea.fontaine@kpsull.fr' },
     update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
     create: {
-      email: 'sophie.artisan@kpsull.fr',
-      name: 'Sophie Artisan',
+      email: 'lea.fontaine@kpsull.fr',
+      name: 'Lea Fontaine',
       role: Role.CREATOR,
       accountTypeChosen: true,
       wantsToBeCreator: true,
       emailVerified: new Date(),
       hashedPassword,
       phone: '+33623456789',
-      address: '8 rue des Potiers',
-      city: 'Vallauris',
-      postalCode: '06220',
+      address: '7 rue du Vieux-Port',
+      city: 'Marseille',
+      postalCode: '13002',
       country: 'France',
     },
   });
-  console.log('✅ Creator:', sophie.email, '(ATELIER)');
+  console.log('Creator:', lea.email, '(mode artisanale)');
 
-  const lucas = await prisma.user.upsert({
-    where: { email: 'lucas.design@kpsull.fr' },
+  const kais = await prisma.user.upsert({
+    where: { email: 'kais.benali@kpsull.fr' },
     update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
     create: {
-      email: 'lucas.design@kpsull.fr',
-      name: 'Lucas Design',
+      email: 'kais.benali@kpsull.fr',
+      name: 'Kais Benali',
       role: Role.CREATOR,
       accountTypeChosen: true,
       wantsToBeCreator: true,
       emailVerified: new Date(),
       hashedPassword,
       phone: '+33634567890',
-      address: '15 rue du Design',
-      city: 'Bordeaux',
-      postalCode: '33000',
-      country: 'France',
-    },
-  });
-  console.log('✅ Creator:', lucas.email, '(STUDIO)');
-
-  const claire = await prisma.user.upsert({
-    where: { email: 'claire.mode@kpsull.fr' },
-    update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
-    create: {
-      email: 'claire.mode@kpsull.fr',
-      name: 'Claire Mode',
-      role: Role.CREATOR,
-      accountTypeChosen: true,
-      wantsToBeCreator: true,
-      emailVerified: new Date(),
-      hashedPassword,
-      phone: '+33645678901',
-      address: '22 rue Vintage',
+      address: '34 avenue Jean-Jaures',
       city: 'Lyon',
-      postalCode: '69002',
+      postalCode: '69007',
       country: 'France',
     },
   });
-  console.log('✅ Creator:', claire.email, '(ESSENTIEL)');
-
-  const marc = await prisma.user.upsert({
-    where: { email: 'marc.vintage@kpsull.fr' },
-    update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
-    create: {
-      email: 'marc.vintage@kpsull.fr',
-      name: 'Marc Vintage',
-      role: Role.CREATOR,
-      accountTypeChosen: true,
-      wantsToBeCreator: true,
-      emailVerified: new Date(),
-      hashedPassword,
-      phone: '+33656789012',
-      address: '5 passage des Antiquaires',
-      city: 'Marseille',
-      postalCode: '13001',
-      country: 'France',
-    },
-  });
-  console.log('✅ Creator:', marc.email, '(ESSENTIEL)');
+  console.log('Creator:', kais.email, '(sport & outdoor)');
 
   // ============================================
-  // CLIENTS (20)
+  // CLIENTS (5)
   // ============================================
 
   const clientsData = [
@@ -200,21 +218,6 @@ async function main() {
     { email: 'camille.moreau@example.com', name: 'Camille Moreau', phone: '+33633333333', city: 'Marseille', postalCode: '13001', address: '5 cours Julien' },
     { email: 'david.petit@example.com', name: 'David Petit', phone: '+33644444444', city: 'Bordeaux', postalCode: '33000', address: '18 rue Sainte-Catherine' },
     { email: 'emma.garcia@example.com', name: 'Emma Garcia', phone: '+33655555555', city: 'Toulouse', postalCode: '31000', address: '7 place du Capitole' },
-    { email: 'felix.roux@example.com', name: 'Felix Roux', phone: '+33666666666', city: 'Nantes', postalCode: '44000', address: '33 quai de la Fosse' },
-    { email: 'lea.martin@example.com', name: 'Lea Martin', phone: '+33677777777', city: 'Strasbourg', postalCode: '67000', address: '10 place Kleber' },
-    { email: 'hugo.durand@example.com', name: 'Hugo Durand', phone: '+33688888888', city: 'Lille', postalCode: '59000', address: '22 rue de Bethune' },
-    { email: 'manon.girard@example.com', name: 'Manon Girard', phone: '+33699999999', city: 'Montpellier', postalCode: '34000', address: '14 place de la Comedie' },
-    { email: 'nathan.fournier@example.com', name: 'Nathan Fournier', phone: '+33610101010', city: 'Rennes', postalCode: '35000', address: '6 rue Le Bastard' },
-    { email: 'oceane.lambert@example.com', name: 'Oceane Lambert', phone: '+33620202020', city: 'Nice', postalCode: '06000', address: '25 promenade des Anglais' },
-    { email: 'paul.mercier@example.com', name: 'Paul Mercier', phone: '+33630303030', city: 'Grenoble', postalCode: '38000', address: '3 place Grenette' },
-    { email: 'romane.bonnet@example.com', name: 'Romane Bonnet', phone: '+33640404040', city: 'Dijon', postalCode: '21000', address: '12 rue de la Liberte' },
-    { email: 'samuel.blanc@example.com', name: 'Samuel Blanc', phone: '+33650505050', city: 'Rouen', postalCode: '76000', address: '8 rue du Gros-Horloge' },
-    { email: 'tessa.guerin@example.com', name: 'Tessa Guerin', phone: '+33660606060', city: 'Reims', postalCode: '51100', address: "20 place Drouet-d'Erlon" },
-    { email: 'ulysse.faure@example.com', name: 'Ulysse Faure', phone: '+33670707070', city: 'Tours', postalCode: '37000', address: '11 rue Nationale' },
-    { email: 'victoire.robin@example.com', name: 'Victoire Robin', phone: '+33680808080', city: 'Angers', postalCode: '49000', address: '9 boulevard Foch' },
-    { email: 'william.morel@example.com', name: 'William Morel', phone: '+33690909090', city: 'Brest', postalCode: '29200', address: '17 rue de Siam' },
-    { email: 'yasmine.perrin@example.com', name: 'Yasmine Perrin', phone: '+33611121314', city: 'Metz', postalCode: '57000', address: '4 place Saint-Louis' },
-    { email: 'zoe.chevalier@example.com', name: 'Zoe Chevalier', phone: '+33615161718', city: 'Aix-en-Provence', postalCode: '13100', address: '30 cours Mirabeau' },
   ];
 
   const clients: Awaited<ReturnType<typeof prisma.user.upsert>>[] = [];
@@ -238,31 +241,21 @@ async function main() {
     });
     clients.push(client);
   }
-  console.log(`✅ ${clients.length} clients created`);
+  console.log(`${clients.length} clients created`);
 
-  // Type assertion to avoid "possibly undefined" errors
-  const [
-    alice, bob, camille, david, emma, felix, lea, hugo,
-    manon, nathan, oceane, paul, romane, samuel, tessa,
-    ulysse, victoire, william, yasmine, zoe,
-  ] = clients as [
-    typeof clients[0], typeof clients[0], typeof clients[0], typeof clients[0],
-    typeof clients[0], typeof clients[0], typeof clients[0], typeof clients[0],
-    typeof clients[0], typeof clients[0], typeof clients[0], typeof clients[0],
-    typeof clients[0], typeof clients[0], typeof clients[0], typeof clients[0],
-    typeof clients[0], typeof clients[0], typeof clients[0], typeof clients[0],
+  const [alice, bob, camille, david, emma] = clients as [
+    typeof clients[0], typeof clients[0], typeof clients[0],
+    typeof clients[0], typeof clients[0],
   ];
 
   // ============================================
-  // CREATOR ONBOARDING (all completed)
+  // CREATOR ONBOARDING
   // ============================================
 
   const creatorsOnboarding = [
-    { userId: jose.id, brandName: 'KPSULL Officiel', siret: '12345678901234', address: '42 rue de la Mode, 75003 Paris', stripeAccountId: 'acct_demo_jose' },
-    { userId: sophie.id, brandName: 'Sophie Ceramique', siret: '23456789012345', address: '8 rue des Potiers, 06220 Vallauris', stripeAccountId: 'acct_demo_sophie' },
-    { userId: lucas.id, brandName: 'Lucas Design Studio', siret: '34567890123456', address: '15 rue du Design, 33000 Bordeaux', stripeAccountId: 'acct_demo_lucas' },
-    { userId: claire.id, brandName: 'Claire Vintage', siret: '45678901234567', address: '22 rue Vintage, 69002 Lyon', stripeAccountId: 'acct_demo_claire' },
-    { userId: marc.id, brandName: 'Marc Accessories', siret: '56789012345678', address: '5 passage des Antiquaires, 13001 Marseille', stripeAccountId: 'acct_demo_marc' },
+    { userId: hugo.id, brandName: 'Hugo Tessier Studio', siret: '11111111111111', address: '12 rue Oberkampf, 75011 Paris', stripeAccountId: 'acct_demo_hugo' },
+    { userId: lea.id, brandName: 'Lea Fontaine Atelier', siret: '22222222222222', address: '7 rue du Vieux-Port, 13002 Marseille', stripeAccountId: 'acct_demo_lea' },
+    { userId: kais.id, brandName: 'Kais Benali Sport', siret: '33333333333333', address: '34 avenue Jean-Jaures, 69007 Lyon', stripeAccountId: 'acct_demo_kais' },
   ];
 
   for (const co of creatorsOnboarding) {
@@ -284,18 +277,16 @@ async function main() {
       },
     });
   }
-  console.log('✅ Creator onboardings created (5 creators, all COMPLETED)');
+  console.log('Creator onboardings created (3 creators, all COMPLETED)');
 
   // ============================================
   // SUBSCRIPTIONS
   // ============================================
 
   const subscriptionsData = [
-    { userId: jose.id, creatorId: jose.id, plan: Plan.STUDIO, interval: 'year', productsUsed: 8, pinnedProductsUsed: 3, commissionRate: 0.04, subId: 'sub_demo_jose', cusId: 'cus_demo_jose', priceId: 'price_demo_studio_yearly' },
-    { userId: sophie.id, creatorId: sophie.id, plan: Plan.ATELIER, interval: 'year', productsUsed: 5, pinnedProductsUsed: 2, commissionRate: 0.03, subId: 'sub_demo_sophie', cusId: 'cus_demo_sophie', priceId: 'price_demo_atelier_yearly' },
-    { userId: lucas.id, creatorId: lucas.id, plan: Plan.STUDIO, interval: 'month', productsUsed: 5, pinnedProductsUsed: 2, commissionRate: 0.04, subId: 'sub_demo_lucas', cusId: 'cus_demo_lucas', priceId: 'price_demo_studio_monthly' },
-    { userId: claire.id, creatorId: claire.id, plan: Plan.ESSENTIEL, interval: 'month', productsUsed: 4, pinnedProductsUsed: 1, commissionRate: 0.05, subId: 'sub_demo_claire', cusId: 'cus_demo_claire', priceId: 'price_demo_essentiel_monthly' },
-    { userId: marc.id, creatorId: marc.id, plan: Plan.ESSENTIEL, interval: 'month', productsUsed: 3, pinnedProductsUsed: 1, commissionRate: 0.05, subId: 'sub_demo_marc', cusId: 'cus_demo_marc', priceId: 'price_demo_essentiel_monthly' },
+    { userId: hugo.id, creatorId: hugo.id, plan: Plan.STUDIO, interval: 'year', productsUsed: 6, pinnedProductsUsed: 2, commissionRate: 0.04, subId: 'sub_demo_hugo', cusId: 'cus_demo_hugo', priceId: 'price_demo_studio_yearly' },
+    { userId: lea.id, creatorId: lea.id, plan: Plan.ATELIER, interval: 'year', productsUsed: 6, pinnedProductsUsed: 2, commissionRate: 0.03, subId: 'sub_demo_lea', cusId: 'cus_demo_lea', priceId: 'price_demo_atelier_yearly' },
+    { userId: kais.id, creatorId: kais.id, plan: Plan.STUDIO, interval: 'month', productsUsed: 6, pinnedProductsUsed: 2, commissionRate: 0.04, subId: 'sub_demo_kais', cusId: 'cus_demo_kais', priceId: 'price_demo_studio_monthly' },
   ];
 
   for (const sub of subscriptionsData) {
@@ -319,431 +310,295 @@ async function main() {
       },
     });
   }
-  console.log('✅ Subscriptions created (5 creators)');
+  console.log('Subscriptions created (3 creators)');
 
   // ============================================
   // PROJECTS (Collections)
   // ============================================
 
-  const projJoseStreet = await prisma.project.upsert({
-    where: { id: 'proj_jose_streetwear' },
+  const projHugoUrban = await prisma.project.upsert({
+    where: { id: 'proj_hugo_urban_core' },
     update: {},
-    create: { id: 'proj_jose_streetwear', creatorId: jose.id, name: 'Streetwear 2026', description: 'Collection streetwear urbaine, coupes modernes et tissus techniques.' },
+    create: { id: 'proj_hugo_urban_core', creatorId: hugo.id, name: 'Urban Core', description: 'Collection streetwear urbaine, coupes modernes et silhouettes affirmees.' },
   });
 
-  const projJoseAccess = await prisma.project.upsert({
-    where: { id: 'proj_jose_accessoires' },
+  const projHugoMono = await prisma.project.upsert({
+    where: { id: 'proj_hugo_mono' },
     update: {},
-    create: { id: 'proj_jose_accessoires', creatorId: jose.id, name: 'Accessoires', description: 'Bonnets, casquettes et sacs faits main.' },
+    create: { id: 'proj_hugo_mono', creatorId: hugo.id, name: 'Monochrome', description: 'Palette neutre, lignes epurees — l essentiel revisited.' },
   });
 
-  const projSophie = await prisma.project.upsert({
-    where: { id: 'proj_sophie_ceramique' },
+  const projLeaMatiere = await prisma.project.upsert({
+    where: { id: 'proj_lea_matiere' },
     update: {},
-    create: { id: 'proj_sophie_ceramique', creatorId: sophie.id, name: 'Ceramique Artisanale', description: 'Pieces uniques en gres et porcelaine, tournees et emaillees a la main.' },
+    create: { id: 'proj_lea_matiere', creatorId: lea.id, name: 'Matiere Premiere', description: 'Lin, coton naturel et matieres brutes facon a la main.' },
   });
 
-  const projLucas = await prisma.project.upsert({
-    where: { id: 'proj_lucas_design' },
+  const projLeaEpure = await prisma.project.upsert({
+    where: { id: 'proj_lea_epure' },
     update: {},
-    create: { id: 'proj_lucas_design', creatorId: lucas.id, name: 'Streetwear Design', description: 'Vetements streetwear avec prints graphiques originaux.' },
+    create: { id: 'proj_lea_epure', creatorId: lea.id, name: 'Epure', description: 'Silhouettes minimalistes, pieces uniques pour femmes.' },
   });
 
-  const projClaire = await prisma.project.upsert({
-    where: { id: 'proj_claire_vintage' },
+  const projKaisTrail = await prisma.project.upsert({
+    where: { id: 'proj_kais_trail' },
     update: {},
-    create: { id: 'proj_claire_vintage', creatorId: claire.id, name: 'Mode Vintage', description: 'Pieces vintage chinees et restaurees avec soin.' },
+    create: { id: 'proj_kais_trail', creatorId: kais.id, name: 'Trail Ready', description: 'Vetements techniques pour le trail et l outdoor exigeant.' },
   });
 
-  const projMarc = await prisma.project.upsert({
-    where: { id: 'proj_marc_accessories' },
+  const projKaisEveryday = await prisma.project.upsert({
+    where: { id: 'proj_kais_everyday' },
     update: {},
-    create: { id: 'proj_marc_accessories', creatorId: marc.id, name: 'Accessoires Vintage', description: "Montres, ceintures et accessoires d'epoque restaures." },
+    create: { id: 'proj_kais_everyday', creatorId: kais.id, name: 'Everyday Active', description: 'Sportswear quotidien — du sport a la ville sans compromis.' },
   });
 
-  console.log('✅ Projects created (6 collections)');
+  // Mise a jour des coverImages depuis le JSON seed
+  const projectCoverImages: Record<string, string> = {
+    'proj_hugo_urban_core': seedImages.collections['proj_hugo_urban_core'] ?? '',
+    'proj_hugo_mono': seedImages.collections['proj_hugo_mono'] ?? '',
+    'proj_lea_matiere': seedImages.collections['proj_lea_matiere'] ?? '',
+    'proj_lea_epure': seedImages.collections['proj_lea_epure'] ?? '',
+    'proj_kais_trail': seedImages.collections['proj_kais_trail'] ?? '',
+    'proj_kais_everyday': seedImages.collections['proj_kais_everyday'] ?? '',
+  };
+
+  for (const [projId, coverImage] of Object.entries(projectCoverImages)) {
+    if (coverImage) {
+      await prisma.project.update({ where: { id: projId }, data: { coverImage } });
+    }
+  }
+
+  console.log('Projects created (6 collections) with cover images');
 
   // ============================================
-  // PRODUCTS
+  // SYSTEM STYLES
   // ============================================
 
-  // --- Jose: 8 products streetwear ---
-  const joseProductsData = [
-    {
-      id: 'prod_jose_hoodie_noir', creatorId: jose.id, projectId: projJoseStreet.id,
-      name: 'Hoodie Oversize Noir', description: 'Hoodie oversize en coton bio 350g, coupe ample et capuche doublee.',
-      price: 8900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(25),
-      category: 'Sweat à capuche', gender: 'Homme', materials: '100% Coton Bio 350g',
-      fit: 'Oversize', season: 'Automne-Hiver', madeIn: 'France',
-      careInstructions: "Lavage 30° à l'envers", certifications: 'OEKO-TEX', weight: 350,
-    },
-    {
-      id: 'prod_jose_tshirt_graphic', creatorId: jose.id, projectId: projJoseStreet.id,
-      name: 'T-shirt Graphique "Antidote"', description: 'T-shirt en coton epais avec serigraphie "Antidote" sur le dos.',
-      price: 4500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22),
-      category: 'T-shirt', gender: 'Unisexe', materials: '100% Coton Bio 180g',
-      fit: 'Regular', season: 'Printemps-Été', madeIn: 'France',
-      careInstructions: 'Lavage 30°', certifications: 'OEKO-TEX,GOTS Bio', weight: 180,
-    },
-    {
-      id: 'prod_jose_pantalon_cargo', creatorId: jose.id, projectId: projJoseStreet.id,
-      name: 'Pantalon Cargo Kaki', description: 'Cargo coupe droite avec 6 poches, tissu ripstop.',
-      price: 7500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20),
-      category: 'Pantalon', gender: 'Homme', materials: '100% Coton Ripstop',
-      fit: 'Regular', season: 'Printemps-Été', madeIn: 'Portugal',
-      careInstructions: 'Lavage 40°', weight: 280,
-    },
-    {
-      id: 'prod_jose_bomber', creatorId: jose.id, projectId: projJoseStreet.id,
-      name: 'Bomber Matelasse', description: 'Bomber leger matelasse, zip YKK, doublure satin.',
-      price: 12500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18),
-      category: 'Veste', gender: 'Unisexe', materials: 'Coque Polyester 100%, Matelassage Polyester recyclé',
-      fit: 'Regular', season: 'Automne-Hiver', madeIn: 'France',
-      careInstructions: 'Nettoyage à sec', weight: 450,
-    },
-    {
-      id: 'prod_jose_bonnet', creatorId: jose.id, projectId: projJoseAccess.id,
-      name: 'Bonnet Laine Merinos', description: 'Bonnet tricote en laine merinos, taille unique.',
-      price: 3500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15),
-      category: 'Accessoire', gender: 'Unisexe', materials: '100% Laine Mérinos',
-      fit: 'Taille unique', season: 'Automne-Hiver', madeIn: 'France',
-      careInstructions: 'Lavage main 30°', certifications: 'OEKO-TEX',
-    },
-    {
-      id: 'prod_jose_casquette', creatorId: jose.id, projectId: projJoseAccess.id,
-      name: 'Casquette Brodee KPSULL', description: 'Casquette 5 panels avec broderie logo, fermeture metal.',
-      price: 3900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12),
-      category: 'Accessoire', gender: 'Unisexe', materials: '100% Coton',
-      madeIn: 'France', careInstructions: 'Lavage à la main',
-    },
-    {
-      id: 'prod_jose_tote', creatorId: jose.id, projectId: projJoseAccess.id,
-      name: 'Tote Bag Canvas', description: 'Tote bag en toile canvas resistante, serigraphie artisanale.',
-      price: 2500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10),
-      category: 'Accessoire', gender: 'Unisexe', materials: '100% Coton Canvas 400g',
-      madeIn: 'France', careInstructions: 'Lavage machine 40°',
-    },
-    {
-      id: 'prod_jose_sweat', creatorId: jose.id, projectId: projJoseStreet.id,
-      name: 'Sweat Col Rond Gris Chine', description: 'Sweat classique col rond en molleton bio, coupe reguliere.',
-      price: 6900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(8),
-      category: 'Sweat', gender: 'Unisexe', materials: '80% Coton Bio, 20% Polyester recyclé',
-      fit: 'Regular', season: 'Automne-Hiver', madeIn: 'France',
-      careInstructions: 'Lavage 30°', certifications: 'OEKO-TEX', weight: 320,
-    },
+  console.log('\nCreating system styles...');
+
+  const systemStylesData = [
+    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers', imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&h=600&fit=crop' },
+    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop' },
+    { name: 'Sport', description: 'Vetements techniques et performants pour le sport', imageUrl: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&h=600&fit=crop' },
+    { name: 'Artisanat', description: 'Pieces faites main, matieres naturelles, savoir-faire', imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&h=600&fit=crop' },
   ];
 
-  // --- Sophie: 5 products ceramique ---
-  const sophieProductsData = [
-    {
-      id: 'prod_sophie_bol_raku', creatorId: sophie.id, projectId: projSophie.id,
-      name: 'Bol Raku Terre & Feu', description: 'Bol en gres emaille raku, piece unique aux reflets cuivres.',
-      price: 4500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(28),
-      category: 'Bol', materials: 'Grès émaillé Raku', madeIn: 'France',
-      careInstructions: 'Lavage main recommandé',
-    },
-    {
-      id: 'prod_sophie_vase_bleu', creatorId: sophie.id, projectId: projSophie.id,
-      name: 'Vase Bleu Cobalt', description: 'Vase tourne main en porcelaine, email bleu cobalt profond.',
-      price: 7800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(25),
-      category: 'Vase', materials: 'Porcelaine émail cobalt', madeIn: 'France',
-      careInstructions: 'Lavage main uniquement',
-    },
-    {
-      id: 'prod_sophie_tasse_duo', creatorId: sophie.id, projectId: projSophie.id,
-      name: 'Duo de Tasses Espresso', description: 'Deux tasses espresso en gres blanc, anse minimaliste.',
-      price: 3200, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22),
-      category: 'Tasse', materials: 'Grès blanc, émail naturel', madeIn: 'France',
-      careInstructions: 'Compatible lave-vaisselle (déconseillé)',
-    },
-    {
-      id: 'prod_sophie_assiette', creatorId: sophie.id, projectId: projSophie.id,
-      name: 'Assiette Plate Wabi-Sabi', description: 'Assiette plate en gres chamotte, bords irreguliers volontaires.',
-      price: 3800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18),
-      category: 'Assiette', materials: 'Grès chamotte', madeIn: 'France',
-      careInstructions: 'Lavage main recommandé',
-    },
-    {
-      id: 'prod_sophie_bougeoir', creatorId: sophie.id, projectId: projSophie.id,
-      name: 'Bougeoir Sculpte', description: 'Bougeoir en gres noir mat, forme organique sculptee a la main.',
-      price: 2900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14),
-      category: 'Bougeoir', materials: 'Grès noir mat', madeIn: 'France',
-      careInstructions: 'Essuyer avec chiffon humide',
-    },
-  ];
+  const styleMap: Record<string, string> = {};
+  for (const style of systemStylesData) {
+    const s = await prisma.style.upsert({
+      where: { name: style.name },
+      update: { description: style.description, imageUrl: style.imageUrl },
+      create: { name: style.name, description: style.description, imageUrl: style.imageUrl, isCustom: false, creatorId: null },
+      select: { id: true, name: true },
+    });
+    styleMap[style.name] = s.id;
+  }
 
-  // --- Lucas: 5 products streetwear design ---
-  const lucasProductsData = [
-    {
-      id: 'prod_lucas_hoodie_art', creatorId: lucas.id, projectId: projLucas.id,
-      name: 'Hoodie "Urban Canvas"', description: 'Hoodie avec print all-over graphique inspire du street art bordelais.',
-      price: 9500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20),
-      category: 'Sweat à capuche', gender: 'Unisexe', materials: '100% Coton Bio 350g',
-      fit: 'Oversize', season: 'Automne-Hiver', madeIn: 'Portugal',
-      careInstructions: "Lavage 30° à l'envers", certifications: 'OEKO-TEX', weight: 350,
-    },
-    {
-      id: 'prod_lucas_tshirt_typo', creatorId: lucas.id, projectId: projLucas.id,
-      name: 'T-shirt Typo Bold', description: 'T-shirt avec typographie bold exclusive, coton bio 180g.',
-      price: 3900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18),
-      category: 'T-shirt', gender: 'Unisexe', materials: '100% Coton Bio 180g',
-      fit: 'Regular', season: 'Toute saison', madeIn: 'Portugal',
-      careInstructions: 'Lavage 30°', certifications: 'OEKO-TEX', weight: 180,
-    },
-    {
-      id: 'prod_lucas_veste_jean', creatorId: lucas.id, projectId: projLucas.id,
-      name: 'Veste Jean Customisee', description: 'Veste en jean vintage avec patchs et broderies faites main.',
-      price: 14500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15),
-      category: 'Veste', gender: 'Unisexe', materials: '100% Coton Denim',
-      fit: 'Oversize', season: 'Printemps-Été', madeIn: 'France',
-      careInstructions: 'Lavage 30° rare',
-    },
-    {
-      id: 'prod_lucas_short_mesh', creatorId: lucas.id, projectId: projLucas.id,
-      name: 'Short Mesh Basketball', description: 'Short en mesh avec bandes laterales imprimees.',
-      price: 5500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12),
-      category: 'Short', gender: 'Homme', materials: '100% Polyester recyclé',
-      fit: 'Regular', season: 'Printemps-Été', madeIn: 'Portugal',
-      careInstructions: 'Lavage 40°', certifications: 'OEKO-TEX', weight: 150,
-    },
-    {
-      id: 'prod_lucas_sac_banane', creatorId: lucas.id, projectId: projLucas.id,
-      name: 'Sac Banane Reflectif', description: 'Sac banane en tissu reflectif 3M, zip etanche.',
-      price: 4200, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10),
-      category: 'Accessoire', gender: 'Unisexe', materials: 'Tissu Réfléchissant 3M + Polyester',
-      madeIn: 'France', careInstructions: 'Essuyage humide uniquement',
-    },
-  ];
+  console.log(`   ${systemStylesData.length} system styles created`);
 
-  // --- Claire: 4 products mode vintage ---
-  const claireProductsData = [
-    {
-      id: 'prod_claire_robe_70s', creatorId: claire.id, projectId: projClaire.id,
-      name: 'Robe Boheme 70s', description: 'Robe longue fleurie style 70s, tissu fluide et ceinture macrame.',
-      price: 8500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22),
-      category: 'Robe', gender: 'Femme', materials: 'Viscose fluide imprimée',
-      fit: 'Regular', season: 'Printemps-Été', madeIn: 'France (vintage)',
-      careInstructions: 'Lavage main 30°',
-    },
-    {
-      id: 'prod_claire_blazer_xl', creatorId: claire.id, projectId: projClaire.id,
-      name: 'Blazer Oversize 90s', description: 'Blazer oversize prince-de-galles, epaulettes structurees.',
-      price: 9500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18),
-      category: 'Blazer', gender: 'Femme', materials: '55% Polyester, 45% Viscose',
-      fit: 'Oversize', season: 'Automne-Hiver', madeIn: 'France (vintage)',
-      careInstructions: 'Nettoyage à sec',
-    },
-    {
-      id: 'prod_claire_jupe_plissee', creatorId: claire.id, projectId: projClaire.id,
-      name: 'Jupe Plissee Ecossaise', description: 'Jupe plissee mi-longue en tartan ecossais authentique.',
-      price: 6500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14),
-      category: 'Jupe', gender: 'Femme', materials: '100% Laine Tartan',
-      fit: 'Regular', season: 'Automne-Hiver', madeIn: 'Écosse (vintage)',
-      careInstructions: 'Nettoyage à sec',
-    },
-    {
-      id: 'prod_claire_pull_mohair', creatorId: claire.id, projectId: projClaire.id,
-      name: 'Pull Mohair Pastel', description: 'Pull oversize en mohair italien, coloris rose poudre.',
-      price: 7800, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10),
-      category: 'Pull', gender: 'Femme', materials: '70% Mohair, 30% Soie',
-      fit: 'Oversize', season: 'Automne-Hiver', madeIn: 'Italie (vintage)',
-      careInstructions: 'Lavage main eau froide',
-    },
-  ];
+  // ============================================
+  // PRODUCTS — 18 produits (3 créateurs × 2 collections × 3 produits)
+  // ============================================
 
-  // --- Marc: 3 products accessoires vintage ---
-  const marcProductsData = [
-    {
-      id: 'prod_marc_montre_auto', creatorId: marc.id, projectId: projMarc.id,
-      name: 'Montre Automatique Restauree', description: 'Montre mecanique des annees 60 entierement restauree, bracelet cuir.',
-      price: 18500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15),
-      category: 'Montre', gender: 'Homme', materials: 'Boîtier Acier, Bracelet Cuir vachette',
-      madeIn: 'Suisse (vintage années 60)', careInstructions: 'Éviter contact eau',
-    },
-    {
-      id: 'prod_marc_ceinture_cuir', creatorId: marc.id, projectId: projMarc.id,
-      name: 'Ceinture Cuir Patine', description: 'Ceinture en cuir pleine fleur patine a la main, boucle laiton.',
-      price: 6500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12),
-      category: 'Ceinture', gender: 'Unisexe', materials: 'Cuir pleine fleur patiné',
-      madeIn: 'France (vintage)', careInstructions: 'Crème protectrice cuir',
-    },
-    {
-      id: 'prod_marc_lunettes_retro', creatorId: marc.id, projectId: projMarc.id,
-      name: 'Lunettes Retro Ecaille', description: 'Monture retro en acetate ecaille, verres solaires polarises.',
-      price: 12000, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(8),
-      category: 'Lunettes', gender: 'Unisexe', materials: 'Monture Acétate, Verres polycarbonate polarisés',
-      madeIn: 'France (vintage années 70)', careInstructions: 'Chiffon microfibre',
-    },
-  ];
+  type ProductData = {
+    id: string;
+    creatorId: string;
+    projectId: string;
+    name: string;
+    description: string;
+    price: number;
+    status: ProductStatus;
+    publishedAt: Date;
+    category?: string;
+    gender?: string;
+    materials?: string;
+    fit?: string;
+    season?: string;
+    madeIn?: string;
+    careInstructions?: string;
+    certifications?: string;
+    weight?: number;
+  };
 
-  const allProducts = [
-    ...joseProductsData, ...sophieProductsData, ...lucasProductsData,
-    ...claireProductsData, ...marcProductsData,
+  const allProducts: ProductData[] = [
+    // ── HUGO TESSIER — Urban Core ─────────────────────────────────────────
+    { id: 'prod_hugo_tshirt', creatorId: hugo.id, projectId: projHugoUrban.id, name: 'T-shirt Oversized', description: 'T-shirt oversize en coton bio 220g, coupe ample et tombante. Le basique ultime du streetwear.', price: 4900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20), category: 'T-shirt', gender: 'Unisexe', materials: '100% Coton Bio 220g', fit: 'Oversize', season: 'Toute saison', madeIn: 'France', careInstructions: 'Lavage 30 degres', certifications: 'OEKO-TEX,GOTS Bio', weight: 220 },
+    { id: 'prod_hugo_hoodie', creatorId: hugo.id, projectId: projHugoUrban.id, name: 'Hoodie Urbain', description: 'Hoodie oversize 350g molleton brosse interieur, poche kangourou double. Confort maximal.', price: 7900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(18), category: 'Sweat a capuche', gender: 'Unisexe', materials: '80% Coton Bio, 20% Polyester recycle, 350g', fit: 'Oversize', season: 'Automne-Hiver', madeIn: 'France', careInstructions: 'Lavage 30 degres a l envers', certifications: 'OEKO-TEX', weight: 350 },
+    { id: 'prod_hugo_jogger', creatorId: hugo.id, projectId: projHugoUrban.id, name: 'Jogger Cargo', description: 'Jogger cargo en coton ripstop, 6 poches fonctionnelles, taille elastique ajustable.', price: 6500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(15), category: 'Pantalon', gender: 'Homme', materials: '100% Coton Ripstop', fit: 'Regular', season: 'Toute saison', madeIn: 'Portugal', careInstructions: 'Lavage 40 degres', weight: 280 },
+    // ── HUGO TESSIER — Monochrome ─────────────────────────────────────────
+    { id: 'prod_hugo_polo', creatorId: hugo.id, projectId: projHugoMono.id, name: 'Polo Piquet', description: 'Polo en coton piquet bio, col bord-cotes, boutons nacre. Elegance decontractee.', price: 5500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12), category: 'Polo', gender: 'Homme', materials: '100% Coton Piquet Bio', fit: 'Regular', season: 'Printemps-Ete', madeIn: 'France', careInstructions: 'Lavage 30 degres', certifications: 'OEKO-TEX', weight: 200 },
+    { id: 'prod_hugo_sweat', creatorId: hugo.id, projectId: projHugoMono.id, name: 'Sweat Col Rond', description: 'Sweat col rond en molleton bio ecru, coupe reguliere. L essentiel du dressing minimaliste.', price: 6900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(10), category: 'Sweat', gender: 'Unisexe', materials: '80% Coton Bio, 20% Polyester recycle, 300g', fit: 'Regular', season: 'Automne-Hiver', madeIn: 'France', careInstructions: 'Lavage 30 degres', certifications: 'OEKO-TEX', weight: 300 },
+    { id: 'prod_hugo_short', creatorId: hugo.id, projectId: projHugoMono.id, name: 'Short Technique', description: 'Short technique en polyester recycle, coupe droite, poche zippee laterale.', price: 4500, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(8), category: 'Short', gender: 'Homme', materials: '100% Polyester recycle', fit: 'Regular', season: 'Printemps-Ete', madeIn: 'Portugal', careInstructions: 'Lavage 40 degres', certifications: 'OEKO-TEX', weight: 150 },
+    // ── LEA FONTAINE — Matiere Premiere ──────────────────────────────────
+    { id: 'prod_lea_veste', creatorId: lea.id, projectId: projLeaMatiere.id, name: 'Veste en Lin', description: 'Veste en lin naturel tisse main, coupe structuree, doublure legere. Piece artisanale unique.', price: 14900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(22), category: 'Veste', gender: 'Femme', materials: '100% Lin naturel', fit: 'Regular', season: 'Printemps-Ete', madeIn: 'France', careInstructions: 'Lavage main 30 degres', certifications: 'OEKO-TEX', weight: 280 },
+    { id: 'prod_lea_pantalon', creatorId: lea.id, projectId: projLeaMatiere.id, name: 'Pantalon Large', description: 'Pantalon a jambes larges en crepe, taille haute, coupe fluide et elegante.', price: 11900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(19), category: 'Pantalon', gender: 'Femme', materials: '70% Viscose, 30% Lin', fit: 'Wide', season: 'Printemps-Ete', madeIn: 'France', careInstructions: 'Lavage main 30 degres', weight: 180 },
+    { id: 'prod_lea_chemise', creatorId: lea.id, projectId: projLeaMatiere.id, name: 'Chemise Oversize', description: 'Chemise oversize en lin blanc lavee, col classique, manches retroussables. Piece signature.', price: 8900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(16), category: 'Chemise', gender: 'Femme', materials: '100% Lin lave', fit: 'Oversize', season: 'Toute saison', madeIn: 'France', careInstructions: 'Lavage 40 degres', certifications: 'OEKO-TEX', weight: 160 },
+    // ── LEA FONTAINE — Epure ─────────────────────────────────────────────
+    { id: 'prod_lea_robe', creatorId: lea.id, projectId: projLeaEpure.id, name: 'Robe Longue', description: 'Robe longue en viscose fluide, col rond, manches courtes. Disponible en Terracotta et Ecru.', price: 13900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14), category: 'Robe', gender: 'Femme', materials: '100% Viscose', fit: 'Regular', season: 'Printemps-Ete', madeIn: 'France', careInstructions: 'Lavage main 30 degres', weight: 200 },
+    { id: 'prod_lea_top', creatorId: lea.id, projectId: projLeaEpure.id, name: 'Top Asymetrique', description: 'Top asymetrique noir en jersey stretch, bretelle unique, decollete geometrique. Piece editoriale.', price: 6900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(11), category: 'Top', gender: 'Femme', materials: '95% Coton, 5% Elasthane', fit: 'Slim', season: 'Toute saison', madeIn: 'France', careInstructions: 'Lavage 30 degres', certifications: 'OEKO-TEX', weight: 140 },
+    { id: 'prod_lea_manteau', creatorId: lea.id, projectId: projLeaEpure.id, name: 'Manteau Court', description: 'Manteau court en laine camel double face, coupe droite structuree. Investissement intemporel.', price: 24900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(9), category: 'Manteau', gender: 'Femme', materials: '60% Laine, 40% Polyester', fit: 'Regular', season: 'Automne-Hiver', madeIn: 'France', careInstructions: 'Nettoyage a sec', weight: 600 },
+    // ── KAIS BENALI — Trail Ready ─────────────────────────────────────────
+    { id: 'prod_kais_veste', creatorId: kais.id, projectId: projKaisTrail.id, name: 'Veste Technique', description: 'Veste coupe-vent technique 3 couches, impermeabilisation DWR, coutures thermo-collees.', price: 18900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(20), category: 'Veste', gender: 'Homme', materials: '100% Polyester technique 3 couches', fit: 'Regular', season: 'Automne-Hiver', madeIn: 'Portugal', careInstructions: 'Lavage 30 degres sans assouplissant', certifications: 'OEKO-TEX', weight: 380 },
+    { id: 'prod_kais_legging', creatorId: kais.id, projectId: projKaisTrail.id, name: 'Legging Running', description: 'Legging running taille haute en tissu compressif 4 directions, poche zippee, couture plate.', price: 6900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(17), category: 'Legging', gender: 'Homme', materials: '78% Polyester recycle, 22% Elasthane', fit: 'Slim', season: 'Toute saison', madeIn: 'Portugal', careInstructions: 'Lavage 30 degres', certifications: 'OEKO-TEX', weight: 180 },
+    { id: 'prod_kais_debardeur', creatorId: kais.id, projectId: projKaisTrail.id, name: 'Debardeur Mesh', description: 'Debardeur en mesh technique ultra-ventile, coupe ajustee, serigraphie minimaliste.', price: 3900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(14), category: 'Debardeur', gender: 'Homme', materials: '100% Polyester mesh recycle', fit: 'Slim', season: 'Printemps-Ete', madeIn: 'Portugal', careInstructions: 'Lavage 40 degres', certifications: 'OEKO-TEX', weight: 90 },
+    // ── KAIS BENALI — Everyday Active ─────────────────────────────────────
+    { id: 'prod_kais_sweat', creatorId: kais.id, projectId: projKaisEveryday.id, name: 'Sweat Zippe', description: 'Sweat zippe en molleton technique 300g, col montant, zip YKK double curseur.', price: 7900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(12), category: 'Sweat', gender: 'Unisexe', materials: '80% Coton Bio, 20% Polyester recycle, 300g', fit: 'Regular', season: 'Automne-Hiver', madeIn: 'Portugal', careInstructions: 'Lavage 30 degres', certifications: 'OEKO-TEX', weight: 300 },
+    { id: 'prod_kais_short', creatorId: kais.id, projectId: projKaisEveryday.id, name: 'Short Sport', description: 'Short sport 7 pouces en polyester technique leger, interieur filet integre, elastique ajustable.', price: 4900, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(9), category: 'Short', gender: 'Homme', materials: '100% Polyester recycle leger', fit: 'Regular', season: 'Printemps-Ete', madeIn: 'Portugal', careInstructions: 'Lavage 40 degres', certifications: 'OEKO-TEX', weight: 140 },
+    { id: 'prod_kais_brassiere', creatorId: kais.id, projectId: projKaisEveryday.id, name: 'Brassiere Sport', description: 'Brassiere sport maintien medium, bretelles reglables, tissu compressif anti-transpiration.', price: 4200, status: ProductStatus.PUBLISHED, publishedAt: daysAgo(7), category: 'Brassiere', gender: 'Femme', materials: '80% Polyester recycle, 20% Elasthane', fit: 'Slim', season: 'Toute saison', madeIn: 'Portugal', careInstructions: 'Lavage 30 degres', certifications: 'OEKO-TEX', weight: 100 },
   ];
 
   for (const product of allProducts) {
     await prisma.product.upsert({
       where: { id: product.id },
-      update: {
-        category: product.category,
-        gender: (product as { gender?: string }).gender ?? null,
-        materials: (product as { materials?: string }).materials ?? null,
-        fit: (product as { fit?: string }).fit ?? null,
-        season: (product as { season?: string }).season ?? null,
-        madeIn: (product as { madeIn?: string }).madeIn ?? null,
-        careInstructions: (product as { careInstructions?: string }).careInstructions ?? null,
-        certifications: (product as { certifications?: string }).certifications ?? null,
-        weight: (product as { weight?: number }).weight ?? null,
-      },
+      update: { name: product.name, description: product.description, price: product.price },
       create: product,
     });
   }
-  console.log(`✅ ${allProducts.length} products created/updated with metadata (Jose:8, Sophie:5, Lucas:5, Claire:4, Marc:3)`);
+  console.log(`${allProducts.length} products created (Hugo:6, Lea:6, Kais:6)`);
 
   // ============================================
-  // PRODUCT IMAGES
+  // PRODUCT VARIANTS & SKUS (nouveau modele)
   // ============================================
 
-  const PRODUCT_IMAGES: Record<string, { url: string; alt: string; position: number }[]> = {
-    // ─── JOSE - Streetwear ───────────────────────────────────────────────
-    'prod_jose_hoodie_noir': [
-      { url: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&h=800&fit=crop', alt: 'Hoodie Oversize Noir - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop', alt: 'Hoodie Oversize Noir - Vue dos', position: 1 },
-      { url: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=800&h=800&fit=crop', alt: 'Hoodie Oversize Noir - Détail capuche', position: 2 },
-    ],
-    'prod_jose_tshirt_graphic': [
-      { url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop', alt: 'T-shirt Graphique Antidote - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1503341338985-95661e5a8f6e?w=800&h=800&fit=crop', alt: 'T-shirt Graphique Antidote - Vue dos', position: 1 },
-    ],
-    'prod_jose_pantalon_cargo': [
-      { url: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&h=800&fit=crop', alt: 'Pantalon Cargo Kaki - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&h=800&fit=crop', alt: 'Pantalon Cargo Kaki - Détail poches', position: 1 },
-    ],
-    'prod_jose_bomber': [
-      { url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop', alt: 'Bomber Matelassé - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1553143820-6bb68bc34679?w=800&h=800&fit=crop', alt: 'Bomber Matelassé - Vue détail', position: 1 },
-    ],
-    'prod_jose_bonnet': [
-      { url: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=800&h=800&fit=crop', alt: 'Bonnet Laine Merinos - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1510598155534-9b4a5da5c9e5?w=800&h=800&fit=crop', alt: 'Bonnet Laine Merinos - Porté', position: 1 },
-    ],
-    'prod_jose_casquette': [
-      { url: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&h=800&fit=crop', alt: 'Casquette Brodée KPSULL - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&h=800&fit=crop', alt: 'Casquette Brodée KPSULL - Portée', position: 1 },
-    ],
-    'prod_jose_tote': [
-      { url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=800&fit=crop', alt: 'Tote Bag Canvas - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&h=800&fit=crop', alt: 'Tote Bag Canvas - Détail', position: 1 },
-    ],
-    'prod_jose_sweat': [
-      { url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop', alt: 'Sweat Col Rond Gris Chiné - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&h=800&fit=crop', alt: 'Sweat Col Rond Gris Chiné - Vue dos', position: 1 },
-    ],
+  console.log('\nCreating product variants and SKUs...');
 
-    // ─── SOPHIE - Céramique ──────────────────────────────────────────────
-    'prod_sophie_bol_raku': [
-      { url: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&h=800&fit=crop', alt: 'Bol Raku Terre & Feu - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1603903631918-a8c8a40e4c25?w=800&h=800&fit=crop', alt: 'Bol Raku Terre & Feu - Vue de dessus', position: 1 },
-      { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=800&fit=crop', alt: 'Bol Raku Terre & Feu - Détail émaillage', position: 2 },
-    ],
-    'prod_sophie_vase_bleu': [
-      { url: 'https://images.unsplash.com/photo-1612196808214-b7c07b51e12b?w=800&h=800&fit=crop', alt: 'Vase Bleu Cobalt - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=800&h=800&fit=crop', alt: 'Vase Bleu Cobalt - Détail émail', position: 1 },
-    ],
-    'prod_sophie_tasse_duo': [
-      { url: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&h=800&fit=crop', alt: 'Duo de Tasses Espresso - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=800&fit=crop', alt: 'Duo de Tasses Espresso - Mise en scène', position: 1 },
-    ],
-    'prod_sophie_assiette': [
-      { url: 'https://images.unsplash.com/photo-1588951291046-c66b4f9875e5?w=800&h=800&fit=crop', alt: 'Assiette Plate Wabi-Sabi - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1601699165292-b3b1acd6472c?w=800&h=800&fit=crop', alt: 'Assiette Plate Wabi-Sabi - Détail bords', position: 1 },
-    ],
-    'prod_sophie_bougeoir': [
-      { url: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800&h=800&fit=crop', alt: 'Bougeoir Sculpté - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1603905830888-36f4f0bf9a96?w=800&h=800&fit=crop', alt: 'Bougeoir Sculpté - Avec bougie', position: 1 },
-    ],
+  // Cleanup complet
+  await prisma.productSku.deleteMany({ where: { productId: { in: allProducts.map((p) => p.id) } } });
+  await prisma.productVariant.deleteMany({ where: { productId: { in: allProducts.map((p) => p.id) } } });
 
-    // ─── LUCAS - Streetwear Design ───────────────────────────────────────
-    'prod_lucas_hoodie_art': [
-      { url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&h=800&fit=crop', alt: 'Hoodie Urban Canvas - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&h=800&fit=crop', alt: 'Hoodie Urban Canvas - Détail print', position: 1 },
-      { url: 'https://images.unsplash.com/photo-1516478177764-9fe5bd7e9717?w=800&h=800&fit=crop', alt: 'Hoodie Urban Canvas - Porté', position: 2 },
-    ],
-    'prod_lucas_tshirt_typo': [
-      { url: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop', alt: 'T-shirt Typo Bold - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&h=800&fit=crop', alt: 'T-shirt Typo Bold - Vue dos', position: 1 },
-    ],
-    'prod_lucas_veste_jean': [
-      { url: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=800&fit=crop', alt: 'Veste Jean Customisée - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1582142306909-195724d33ffc?w=800&h=800&fit=crop', alt: 'Veste Jean Customisée - Détail patches', position: 1 },
-    ],
-    'prod_lucas_short_mesh': [
-      { url: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&h=800&fit=crop', alt: 'Short Mesh Basketball - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1562183241-b937e95585b6?w=800&h=800&fit=crop', alt: 'Short Mesh Basketball - Vue détail', position: 1 },
-    ],
-    'prod_lucas_sac_banane': [
-      { url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=800&fit=crop', alt: 'Sac Banane Réflectif - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1491637639811-60e2756cc1c7?w=800&h=800&fit=crop', alt: 'Sac Banane Réflectif - Porté', position: 1 },
-    ],
+  type SizeDef = { size: string | null; stock: number };
+  type VariantDef = { id: string; name: string; color: string; colorCode: string; sizes: SizeDef[] };
+  type ProductVariantConfig = { productId: string; variants: VariantDef[] };
 
-    // ─── CLAIRE - Mode Vintage ───────────────────────────────────────────
-    'prod_claire_robe_70s': [
-      { url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=800&fit=crop', alt: 'Robe Bohème 70s - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&h=800&fit=crop', alt: 'Robe Bohème 70s - Vue fleurie', position: 1 },
-      { url: 'https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=800&h=800&fit=crop', alt: 'Robe Bohème 70s - Vue de détail', position: 2 },
-    ],
-    'prod_claire_blazer_xl': [
-      { url: 'https://images.unsplash.com/photo-1562184552-9f081a2ce676?w=800&h=800&fit=crop', alt: 'Blazer Oversize 90s - Vue face', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop', alt: 'Blazer Oversize 90s - Vue dos', position: 1 },
-    ],
-    'prod_claire_jupe_plissee': [
-      { url: 'https://images.unsplash.com/photo-1594035035756-5e9cd6a03781?w=800&h=800&fit=crop', alt: 'Jupe Plissée Écossaise - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1583496661160-fb5218afa9a1?w=800&h=800&fit=crop', alt: 'Jupe Plissée Écossaise - Détail tartan', position: 1 },
-    ],
-    'prod_claire_pull_mohair': [
-      { url: 'https://images.unsplash.com/photo-1549465220-1a629bd08dbd?w=800&h=800&fit=crop', alt: 'Pull Mohair Pastel - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=800&fit=crop', alt: 'Pull Mohair Pastel - Détail texture', position: 1 },
-    ],
+  const PRODUCT_VARIANT_CONFIGS: ProductVariantConfig[] = [
+    { productId: 'prod_hugo_tshirt', variants: [
+      { id: 'var_hugo_tshirt_default', name: 'T-shirt Oversized', color: 'unique', colorCode: '#000000', sizes: [{ size: 'XS', stock: 10 }, { size: 'S', stock: 18 }, { size: 'M', stock: 20 }, { size: 'L', stock: 15 }, { size: 'XL', stock: 8 }] },
+      { id: 'var_hugo_tshirt_blanc_casse', name: 'Blanc Casse', color: 'Blanc Casse', colorCode: '#f5f0e8', sizes: [{ size: 'XS', stock: 8 }, { size: 'S', stock: 14 }, { size: 'M', stock: 18 }, { size: 'L', stock: 12 }, { size: 'XL', stock: 5 }] },
+      { id: 'var_hugo_tshirt_noir', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 12 }, { size: 'M', stock: 15 }, { size: 'L', stock: 10 }, { size: 'XL', stock: 4 }] },
+    ]},
+    { productId: 'prod_hugo_hoodie', variants: [
+      { id: 'var_hugo_hoodie_default', name: 'Gris Chine', color: 'Gris Chine', colorCode: '#9e9e9e', sizes: [{ size: 'XS', stock: 8 }, { size: 'S', stock: 12 }, { size: 'M', stock: 15 }, { size: 'L', stock: 11 }, { size: 'XL', stock: 7 }, { size: 'XXL', stock: 3 }] },
+      { id: 'var_hugo_hoodie_noir', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', sizes: [{ size: 'XS', stock: 5 }, { size: 'S', stock: 8 }, { size: 'M', stock: 0 }, { size: 'L', stock: 0 }, { size: 'XL', stock: 4 }, { size: 'XXL', stock: 6 }] },
+    ]},
+    { productId: 'prod_hugo_jogger', variants: [
+      { id: 'var_hugo_jogger_default', name: 'Beige', color: 'Beige', colorCode: '#c8b89a', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 10 }, { size: 'M', stock: 12 }, { size: 'L', stock: 9 }, { size: 'XL', stock: 4 }] },
+    ]},
+    { productId: 'prod_hugo_polo', variants: [
+      { id: 'var_hugo_polo_default', name: 'Polo Piquet', color: 'unique', colorCode: '#000000', sizes: [{ size: 'S', stock: 12 }, { size: 'M', stock: 16 }, { size: 'L', stock: 14 }, { size: 'XL', stock: 8 }] },
+      { id: 'var_hugo_polo_blanc', name: 'Blanc', color: 'Blanc', colorCode: '#ffffff', sizes: [{ size: 'S', stock: 10 }, { size: 'M', stock: 14 }, { size: 'L', stock: 12 }, { size: 'XL', stock: 6 }] },
+    ]},
+    { productId: 'prod_hugo_sweat', variants: [
+      { id: 'var_hugo_sweat_default', name: 'Ecru', color: 'Ecru', colorCode: '#f0ebe0', sizes: [{ size: 'XS', stock: 8 }, { size: 'S', stock: 12 }, { size: 'M', stock: 14 }, { size: 'L', stock: 10 }] },
+    ]},
+    { productId: 'prod_hugo_short', variants: [
+      { id: 'var_hugo_short_default', name: 'Kaki', color: 'Kaki', colorCode: '#6b7c4a', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 10 }, { size: 'M', stock: 12 }, { size: 'L', stock: 9 }, { size: 'XL', stock: 4 }] },
+    ]},
+    { productId: 'prod_lea_veste', variants: [
+      { id: 'var_lea_veste_default', name: 'Naturel', color: 'Naturel', colorCode: '#d4c5a9', sizes: [{ size: 'XS', stock: 3 }, { size: 'S', stock: 5 }, { size: 'M', stock: 4 }, { size: 'L', stock: 2 }] },
+    ]},
+    { productId: 'prod_lea_pantalon', variants: [
+      { id: 'var_lea_pantalon_default', name: 'Sable', color: 'Sable', colorCode: '#c2a882', sizes: [{ size: '36', stock: 4 }, { size: '38', stock: 7 }, { size: '40', stock: 8 }, { size: '42', stock: 5 }, { size: '44', stock: 2 }] },
+      { id: 'var_lea_pantalon_noir', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', sizes: [{ size: '36', stock: 3 }, { size: '38', stock: 6 }, { size: '40', stock: 7 }, { size: '42', stock: 4 }, { size: '44', stock: 1 }] },
+    ]},
+    { productId: 'prod_lea_chemise', variants: [
+      { id: 'var_lea_chemise_default', name: 'Blanc Lin', color: 'Blanc Lin', colorCode: '#faf6ef', sizes: [{ size: 'XS', stock: 5 }, { size: 'S', stock: 8 }, { size: 'M', stock: 10 }, { size: 'L', stock: 7 }, { size: 'XL', stock: 3 }] },
+    ]},
+    { productId: 'prod_lea_robe', variants: [
+      { id: 'var_lea_robe_default', name: 'Terracotta', color: 'Terracotta', colorCode: '#c17a5a', sizes: [{ size: 'XS', stock: 3 }, { size: 'S', stock: 5 }, { size: 'M', stock: 6 }, { size: 'L', stock: 4 }] },
+      { id: 'var_lea_robe_ecru', name: 'Ecru', color: 'Ecru', colorCode: '#f0ebe0', sizes: [{ size: 'XS', stock: 4 }, { size: 'S', stock: 6 }, { size: 'M', stock: 7 }, { size: 'L', stock: 5 }] },
+    ]},
+    { productId: 'prod_lea_top', variants: [
+      { id: 'var_lea_top_default', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 9 }, { size: 'M', stock: 10 }, { size: 'L', stock: 7 }] },
+    ]},
+    { productId: 'prod_lea_manteau', variants: [
+      { id: 'var_lea_manteau_default', name: 'Camel', color: 'Camel', colorCode: '#c69a6a', sizes: [{ size: 'XS', stock: 2 }, { size: 'S', stock: 4 }, { size: 'M', stock: 5 }, { size: 'L', stock: 3 }] },
+    ]},
+    { productId: 'prod_kais_veste', variants: [
+      { id: 'var_kais_veste_default', name: 'Charcoal', color: 'Charcoal', colorCode: '#3d3d3d', sizes: [{ size: 'S', stock: 5 }, { size: 'M', stock: 8 }, { size: 'L', stock: 7 }, { size: 'XL', stock: 4 }] },
+      { id: 'var_kais_veste_olive', name: 'Olive', color: 'Olive', colorCode: '#6b7c4a', sizes: [{ size: 'S', stock: 4 }, { size: 'M', stock: 6 }, { size: 'L', stock: 5 }, { size: 'XL', stock: 3 }] },
+    ]},
+    { productId: 'prod_kais_legging', variants: [
+      { id: 'var_kais_legging_default', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', sizes: [{ size: 'XS', stock: 8 }, { size: 'S', stock: 14 }, { size: 'M', stock: 16 }, { size: 'L', stock: 12 }, { size: 'XL', stock: 6 }] },
+      { id: 'var_kais_legging_gris', name: 'Gris', color: 'Gris', colorCode: '#808080', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 10 }, { size: 'M', stock: 12 }, { size: 'L', stock: 9 }, { size: 'XL', stock: 4 }] },
+    ]},
+    { productId: 'prod_kais_debardeur', variants: [
+      { id: 'var_kais_debardeur_default', name: 'Blanc', color: 'Blanc', colorCode: '#ffffff', sizes: [{ size: 'XS', stock: 10 }, { size: 'S', stock: 14 }, { size: 'M', stock: 16 }, { size: 'L', stock: 12 }] },
+      { id: 'var_kais_debardeur_gris_clair', name: 'Gris Clair', color: 'Gris Clair', colorCode: '#d0d0d0', sizes: [{ size: 'XS', stock: 8 }, { size: 'S', stock: 12 }, { size: 'M', stock: 14 }, { size: 'L', stock: 10 }] },
+    ]},
+    { productId: 'prod_kais_sweat', variants: [
+      { id: 'var_kais_sweat_default', name: 'Marine', color: 'Marine', colorCode: '#1a2a4a', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 10 }, { size: 'M', stock: 12 }, { size: 'L', stock: 9 }, { size: 'XL', stock: 4 }] },
+    ]},
+    { productId: 'prod_kais_short', variants: [
+      { id: 'var_kais_short_default', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 10 }, { size: 'M', stock: 12 }, { size: 'L', stock: 9 }, { size: 'XL', stock: 4 }] },
+      { id: 'var_kais_short_marine', name: 'Bleu Marine', color: 'Bleu Marine', colorCode: '#1a2a4a', sizes: [{ size: 'XS', stock: 4 }, { size: 'S', stock: 7 }, { size: 'M', stock: 9 }, { size: 'L', stock: 6 }, { size: 'XL', stock: 3 }] },
+    ]},
+    { productId: 'prod_kais_brassiere', variants: [
+      { id: 'var_kais_brassiere_default', name: 'Noir', color: 'Noir', colorCode: '#1a1a1a', sizes: [{ size: 'XS', stock: 8 }, { size: 'S', stock: 12 }, { size: 'M', stock: 14 }, { size: 'L', stock: 10 }] },
+      { id: 'var_kais_brassiere_rose', name: 'Rose Poudre', color: 'Rose Poudre', colorCode: '#e8c4c4', sizes: [{ size: 'XS', stock: 6 }, { size: 'S', stock: 10 }, { size: 'M', stock: 12 }, { size: 'L', stock: 8 }] },
+    ]},
+  ];
 
-    // ─── MARC - Accessoires Vintage ──────────────────────────────────────
-    'prod_marc_montre_auto': [
-      { url: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&h=800&fit=crop', alt: 'Montre Automatique Restaurée - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?w=800&h=800&fit=crop', alt: 'Montre Automatique Restaurée - Détail cadran', position: 1 },
-      { url: 'https://images.unsplash.com/photo-1539874754764-5a96559165b0?w=800&h=800&fit=crop', alt: 'Montre Automatique Restaurée - Bracelet cuir', position: 2 },
-    ],
-    'prod_marc_ceinture_cuir': [
-      { url: 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=800&h=800&fit=crop', alt: 'Ceinture Cuir Patiné - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=800&h=800&fit=crop', alt: 'Ceinture Cuir Patiné - Détail boucle', position: 1 },
-    ],
-    'prod_marc_lunettes_retro': [
-      { url: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&h=800&fit=crop', alt: 'Lunettes Rétro Écaille - Vue principale', position: 0 },
-      { url: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&h=800&fit=crop', alt: 'Lunettes Rétro Écaille - Vue de profil', position: 1 },
-    ],
-  };
+  let variantCount = 0;
+  let skuCount = 0;
 
-  await prisma.productImage.deleteMany({
-    where: { productId: { in: allProducts.map((p) => p.id) } },
-  });
+  for (const config of PRODUCT_VARIANT_CONFIGS) {
+    for (const vd of config.variants) {
+      const variantImages = getVariantImages(seedImages, config.productId, vd.id);
 
-  let imageCount = 0;
-  for (const [productId, images] of Object.entries(PRODUCT_IMAGES)) {
-    for (const img of images) {
-      await prisma.productImage.create({ data: { productId, ...img } });
-      imageCount++;
+      await prisma.productVariant.upsert({
+        where: { id: vd.id },
+        update: { name: vd.name, color: vd.color, colorCode: vd.colorCode, images: variantImages },
+        create: { id: vd.id, productId: config.productId, name: vd.name, color: vd.color, colorCode: vd.colorCode, stock: 0, images: variantImages },
+      });
+      variantCount++;
+
+      for (const skuDef of vd.sizes) {
+        await prisma.productSku.create({
+          data: { productId: config.productId, variantId: vd.id, size: skuDef.size, stock: skuDef.stock },
+        });
+        skuCount++;
+      }
     }
   }
-  console.log(`✅ ${imageCount} product images created (2-3 per product)`);
+
+  console.log(`${variantCount} variants created, ${skuCount} SKUs created`);
+
+  // Link styles to products
+  const styleStreetware = styleMap['Streetwear'];
+  const styleMinimaliste = styleMap['Minimaliste'];
+  const styleSport = styleMap['Sport'];
+  const styleArtisanat = styleMap['Artisanat'];
+
+  if (styleStreetware) {
+    for (const pid of ['prod_hugo_tshirt', 'prod_hugo_hoodie', 'prod_hugo_jogger', 'prod_hugo_polo', 'prod_hugo_sweat', 'prod_hugo_short']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleStreetware } });
+    }
+  }
+  if (styleMinimaliste) {
+    for (const pid of ['prod_lea_robe', 'prod_lea_top', 'prod_lea_manteau']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleMinimaliste } });
+    }
+  }
+  if (styleArtisanat) {
+    for (const pid of ['prod_lea_veste', 'prod_lea_pantalon', 'prod_lea_chemise']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleArtisanat } });
+    }
+  }
+  if (styleSport) {
+    for (const pid of ['prod_kais_veste', 'prod_kais_legging', 'prod_kais_debardeur', 'prod_kais_sweat', 'prod_kais_short', 'prod_kais_brassiere']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleSport } });
+    }
+  }
+  console.log('   Styles linked to products');
 
   // ============================================
   // CREATOR PAGES
   // ============================================
 
   const pagesData = [
-    { creatorId: jose.id, slug: 'kpsull-officiel', title: 'KPSULL Officiel - Streetwear Artisanal', description: "Mode urbaine et accessoires faits main. L'antidote a l'uniforme." },
-    { creatorId: sophie.id, slug: 'sophie-ceramique', title: 'Sophie Ceramique - Art de la Table', description: 'Pieces uniques en ceramique, tournees et emaillees a la main.' },
-    { creatorId: lucas.id, slug: 'lucas-design-studio', title: 'Lucas Design Studio - Streetwear Graphique', description: 'Vetements streetwear avec des designs graphiques uniques.' },
-    { creatorId: claire.id, slug: 'claire-vintage', title: 'Claire Vintage - Mode Intemporelle', description: 'Selection de pieces vintage soigneusement chinees et restaurees.' },
-    { creatorId: marc.id, slug: 'marc-accessories', title: 'Marc Accessories - Le Charme du Vintage', description: 'Accessoires vintage restaures avec passion.' },
+    { creatorId: hugo.id, slug: 'hugo-tessier', title: 'Hugo Tessier - Streetwear Urbain', description: 'Mode urbaine et coupes modernes. Le streetwear parisien reinvente.' },
+    { creatorId: lea.id, slug: 'lea-fontaine', title: 'Lea Fontaine - Mode Artisanale', description: 'Pieces artisanales en matieres naturelles. Creations uniques faconnees a la main.' },
+    { creatorId: kais.id, slug: 'kais-benali', title: 'Kais Benali - Sport & Outdoor', description: 'Vetements techniques pour le sport et la vie active. Performance et style.' },
   ];
 
   const pages = [];
@@ -751,62 +606,37 @@ async function main() {
     const page = await prisma.creatorPage.upsert({
       where: { creatorId: pd.creatorId },
       update: {},
-      create: {
-        creatorId: pd.creatorId,
-        slug: pd.slug,
-        title: pd.title,
-        description: pd.description,
-        status: PageStatus.PUBLISHED,
-        publishedAt: daysAgo(30),
-      },
+      create: { creatorId: pd.creatorId, slug: pd.slug, title: pd.title, description: pd.description, status: PageStatus.PUBLISHED, publishedAt: daysAgo(30) },
     });
     pages.push(page);
   }
 
-  const [pageJose, pageSophie, pageLucas, pageClaire, pageMarc] = pages as [
-    typeof pages[0], typeof pages[0], typeof pages[0], typeof pages[0], typeof pages[0],
-  ];
-
-  console.log('✅ Creator pages created (5 pages)');
+  const [pageHugo, pageLea, pageKais] = pages as [typeof pages[0], typeof pages[0], typeof pages[0]];
+  console.log('Creator pages created (3 pages)');
 
   // ============================================
   // PAGE SECTIONS
   // ============================================
 
-  await prisma.pageSection.deleteMany({
-    where: { pageId: { in: pages.map((p) => p.id) } },
-  });
+  await prisma.pageSection.deleteMany({ where: { pageId: { in: pages.map((p) => p.id) } } });
 
-  const sectionsData = [
-    // Jose
-    { pageId: pageJose.id, type: SectionType.HERO, position: 0, title: 'KPSULL Officiel', content: JSON.stringify({ subtitle: "L'antidote a l'uniforme", backgroundImage: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1920&h=600&fit=crop', ctaText: 'Decouvrir', ctaLink: '#products' }) },
-    { pageId: pageJose.id, type: SectionType.ABOUT, position: 1, title: 'Notre histoire', content: JSON.stringify({ text: 'KPSULL est ne de la conviction que la mode peut etre unique, locale et accessible. Chaque piece est concue et fabriquee en France.', image: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=400&h=400&fit=crop' }) },
-    { pageId: pageJose.id, type: SectionType.PRODUCTS_GRID, position: 2, title: 'Nos creations', content: JSON.stringify({ columns: 3, limit: 9 }) },
-    { pageId: pageJose.id, type: SectionType.CONTACT, position: 3, title: 'Contact', content: JSON.stringify({ email: 'jose.lecreateur@kpsull.fr', instagram: '@kpsull', showForm: true }) },
-    // Sophie
-    { pageId: pageSophie.id, type: SectionType.HERO, position: 0, title: 'Sophie Ceramique', content: JSON.stringify({ subtitle: "L'art du feu et de la terre", backgroundImage: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=1920&h=600&fit=crop', ctaText: 'Explorer', ctaLink: '#products' }) },
-    { pageId: pageSophie.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Mes creations', content: JSON.stringify({ columns: 3, limit: 6 }) },
-    // Lucas
-    { pageId: pageLucas.id, type: SectionType.HERO, position: 0, title: 'Lucas Design Studio', content: JSON.stringify({ subtitle: 'Le streetwear comme une toile', backgroundImage: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=1920&h=600&fit=crop', ctaText: 'Voir la collection', ctaLink: '#products' }) },
-    { pageId: pageLucas.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'La collection', content: JSON.stringify({ columns: 3, limit: 6 }) },
-    // Claire
-    { pageId: pageClaire.id, type: SectionType.HERO, position: 0, title: 'Claire Vintage', content: JSON.stringify({ subtitle: 'La mode qui traverse le temps', backgroundImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&h=600&fit=crop', ctaText: 'Chiner', ctaLink: '#products' }) },
-    { pageId: pageClaire.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Pieces chinees', content: JSON.stringify({ columns: 2, limit: 4 }) },
-    // Marc
-    { pageId: pageMarc.id, type: SectionType.HERO, position: 0, title: 'Marc Accessories', content: JSON.stringify({ subtitle: "Le charme des accessoires d'antan", backgroundImage: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=1920&h=600&fit=crop', ctaText: 'Decouvrir', ctaLink: '#products' }) },
-    { pageId: pageMarc.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Mes trouvailles', content: JSON.stringify({ columns: 3, limit: 3 }) },
-  ];
-
-  await prisma.pageSection.createMany({ data: sectionsData });
-  console.log('✅ Page sections created (12 sections)');
+  await prisma.pageSection.createMany({ data: [
+    { pageId: pageHugo.id, type: SectionType.HERO, position: 0, title: 'Hugo Tessier', content: JSON.stringify({ subtitle: 'Le streetwear parisien reinvente', backgroundImage: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1920&h=600&fit=crop', ctaText: 'Decouvrir', ctaLink: '#products' }) },
+    { pageId: pageHugo.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Nos creations', content: JSON.stringify({ columns: 3, limit: 6 }) },
+    { pageId: pageLea.id, type: SectionType.HERO, position: 0, title: 'Lea Fontaine', content: JSON.stringify({ subtitle: 'Pieces artisanales en matieres naturelles', backgroundImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=600&fit=crop', ctaText: 'Explorer', ctaLink: '#products' }) },
+    { pageId: pageLea.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Mes creations', content: JSON.stringify({ columns: 3, limit: 6 }) },
+    { pageId: pageKais.id, type: SectionType.HERO, position: 0, title: 'Kais Benali', content: JSON.stringify({ subtitle: 'Performance et style pour l actif moderne', backgroundImage: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=1920&h=600&fit=crop', ctaText: 'Voir la collection', ctaLink: '#products' }) },
+    { pageId: pageKais.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'La collection', content: JSON.stringify({ columns: 3, limit: 6 }) },
+  ]});
+  console.log('Page sections created (6 sections)');
 
   // ============================================
-  // ORDERS - Clean slate
+  // ORDERS
   // ============================================
 
   await prisma.orderItem.deleteMany({});
   await prisma.order.deleteMany({});
-  console.log('🧹 Existing orders cleared');
+  console.log('Existing orders cleared');
 
   let orderCounter = 0;
   function nextOrderNumber(): string {
@@ -814,12 +644,13 @@ async function main() {
     return `ORD-2026-${String(orderCounter).padStart(4, '0')}`;
   }
 
-  // Helper to create an order and its items
+  type OrderItemInput = { productId: string; productName: string; quantity: number; price: number };
+
   async function createOrder(data: {
     creatorId: string;
     customer: typeof clients[0];
     status: OrderStatus;
-    items: { productId: string; productName: string; quantity: number; price: number }[];
+    items: OrderItemInput[];
     trackingNumber?: string;
     carrier?: string;
     shippedAt?: Date;
@@ -860,1094 +691,94 @@ async function main() {
     return order;
   }
 
-  // ============================================
-  // JOSE ORDERS (15)
-  // ============================================
-
-  console.log('\n📦 Creating Jose orders...');
-
-  // Jose Order 1: DELIVERED - Alice bought hoodie + tshirt
-  const orderJose1 = await createOrder({
-    creatorId: jose.id, customer: alice, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_jose_hoodie_noir', productName: 'Hoodie Oversize Noir', quantity: 1, price: 8900 },
-      { productId: 'prod_jose_tshirt_graphic', productName: 'T-shirt Graphique "Antidote"', quantity: 1, price: 4500 },
-    ],
-    trackingNumber: 'COL2026001001', carrier: 'colissimo', shippedAt: daysAgo(20), deliveredAt: daysAgo(17), createdAt: daysAgo(22),
-  });
-
-  // Jose Order 2: DELIVERED - Bob bought cargo + bonnet
-  await createOrder({
-    creatorId: jose.id, customer: bob, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_jose_pantalon_cargo', productName: 'Pantalon Cargo Kaki', quantity: 1, price: 7500 },
-      { productId: 'prod_jose_bonnet', productName: 'Bonnet Laine Merinos', quantity: 1, price: 3500 },
-    ],
-    trackingNumber: 'COL2026001002', carrier: 'colissimo', shippedAt: daysAgo(18), deliveredAt: daysAgo(15), createdAt: daysAgo(20),
-  });
-
-  // Jose Order 3: DELIVERED - Lea bought bomber
-  const orderJose3 = await createOrder({
-    creatorId: jose.id, customer: lea, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_jose_bomber', productName: 'Bomber Matelasse', quantity: 1, price: 12500 },
-    ],
-    trackingNumber: 'CHR2026005001', carrier: 'chronopost', shippedAt: daysAgo(15), deliveredAt: daysAgo(13), createdAt: daysAgo(17),
-  });
-
-  // Jose Order 4: DELIVERED - Hugo bought sweat + casquette
-  await createOrder({
-    creatorId: jose.id, customer: hugo, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_jose_sweat', productName: 'Sweat Col Rond Gris Chine', quantity: 1, price: 6900 },
-      { productId: 'prod_jose_casquette', productName: 'Casquette Brodee KPSULL', quantity: 1, price: 3900 },
-    ],
-    trackingNumber: 'COL2026001003', carrier: 'colissimo', shippedAt: daysAgo(12), deliveredAt: daysAgo(9), createdAt: daysAgo(14),
-  });
-
-  // Jose Order 5: DELIVERED - Manon bought tshirt x2 + tote
-  await createOrder({
-    creatorId: jose.id, customer: manon, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_jose_tshirt_graphic', productName: 'T-shirt Graphique "Antidote"', quantity: 2, price: 4500 },
-      { productId: 'prod_jose_tote', productName: 'Tote Bag Canvas', quantity: 1, price: 2500 },
-    ],
-    trackingNumber: 'COL2026001004', carrier: 'colissimo', shippedAt: daysAgo(10), deliveredAt: daysAgo(7), createdAt: daysAgo(12),
-  });
-
-  // Jose Order 6: SHIPPED - Camille bought hoodie + cargo
-  await createOrder({
-    creatorId: jose.id, customer: camille, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_jose_hoodie_noir', productName: 'Hoodie Oversize Noir', quantity: 1, price: 8900 },
-      { productId: 'prod_jose_pantalon_cargo', productName: 'Pantalon Cargo Kaki', quantity: 1, price: 7500 },
-    ],
-    trackingNumber: 'CHR2026005002', carrier: 'chronopost', shippedAt: daysAgo(2), createdAt: daysAgo(5),
-  });
-
-  // Jose Order 7: SHIPPED - Nathan bought bomber + tote
-  await createOrder({
-    creatorId: jose.id, customer: nathan, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_jose_bomber', productName: 'Bomber Matelasse', quantity: 1, price: 12500 },
-      { productId: 'prod_jose_tote', productName: 'Tote Bag Canvas', quantity: 1, price: 2500 },
-    ],
-    trackingNumber: 'COL2026001005', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(3),
-  });
-
-  // Jose Order 8: SHIPPED - Oceane bought sweat
-  await createOrder({
-    creatorId: jose.id, customer: oceane, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_jose_sweat', productName: 'Sweat Col Rond Gris Chine', quantity: 1, price: 6900 },
-    ],
-    trackingNumber: 'COL2026001006', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(2),
-  });
-
-  // Jose Order 9: PAID - Emma bought hoodie + bonnet
-  await createOrder({
-    creatorId: jose.id, customer: emma, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_jose_hoodie_noir', productName: 'Hoodie Oversize Noir', quantity: 1, price: 8900 },
-      { productId: 'prod_jose_bonnet', productName: 'Bonnet Laine Merinos', quantity: 1, price: 3500 },
-    ],
-    createdAt: daysAgo(1),
-  });
-
-  // Jose Order 10: PAID - David bought tshirt + casquette
-  await createOrder({
-    creatorId: jose.id, customer: david, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_jose_tshirt_graphic', productName: 'T-shirt Graphique "Antidote"', quantity: 1, price: 4500 },
-      { productId: 'prod_jose_casquette', productName: 'Casquette Brodee KPSULL', quantity: 1, price: 3900 },
-    ],
-    createdAt: daysAgo(0),
-  });
-
-  // Jose Order 11: PAID - Felix bought cargo
-  await createOrder({
-    creatorId: jose.id, customer: felix, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_jose_pantalon_cargo', productName: 'Pantalon Cargo Kaki', quantity: 1, price: 7500 },
-    ],
-    createdAt: daysAgo(0),
-  });
-
-  // Jose Order 12: PENDING - Paul just placed order
-  await createOrder({
-    creatorId: jose.id, customer: paul, status: OrderStatus.PENDING,
-    items: [
-      { productId: 'prod_jose_bomber', productName: 'Bomber Matelasse', quantity: 1, price: 12500 },
-      { productId: 'prod_jose_bonnet', productName: 'Bonnet Laine Merinos', quantity: 1, price: 3500 },
-    ],
-    createdAt: new Date(),
-  });
-
-  // Jose Order 13: PENDING - Romane just placed order
-  await createOrder({
-    creatorId: jose.id, customer: romane, status: OrderStatus.PENDING,
-    items: [
-      { productId: 'prod_jose_sweat', productName: 'Sweat Col Rond Gris Chine', quantity: 1, price: 6900 },
-      { productId: 'prod_jose_tote', productName: 'Tote Bag Canvas', quantity: 1, price: 2500 },
-    ],
-    createdAt: new Date(),
-  });
-
-  // Jose Order 14: CANCELED - Samuel canceled
-  await createOrder({
-    creatorId: jose.id, customer: samuel, status: OrderStatus.CANCELED,
-    items: [
-      { productId: 'prod_jose_hoodie_noir', productName: 'Hoodie Oversize Noir', quantity: 1, price: 8900 },
-    ],
-    createdAt: daysAgo(8),
-  });
-
-  // Jose Order 15: DISPUTE_OPENED - Tessa dispute
-  const orderJose15 = await createOrder({
-    creatorId: jose.id, customer: tessa, status: OrderStatus.DISPUTE_OPENED,
-    items: [
-      { productId: 'prod_jose_tshirt_graphic', productName: 'T-shirt Graphique "Antidote"', quantity: 1, price: 4500 },
-      { productId: 'prod_jose_casquette', productName: 'Casquette Brodee KPSULL', quantity: 1, price: 3900 },
-    ],
-    trackingNumber: 'COL2026001007', carrier: 'colissimo', shippedAt: daysAgo(10), deliveredAt: daysAgo(7), createdAt: daysAgo(12),
-  });
-
-  console.log('   ✅ 15 orders for Jose');
-
-  // ============================================
-  // SOPHIE ORDERS (10)
-  // ============================================
-
-  console.log('📦 Creating Sophie orders...');
-
-  // Sophie Order 1: DELIVERED - Alice bought bol raku + vase
-  const orderSophie1 = await createOrder({
-    creatorId: sophie.id, customer: alice, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_sophie_bol_raku', productName: 'Bol Raku Terre & Feu', quantity: 1, price: 4500 },
-      { productId: 'prod_sophie_vase_bleu', productName: 'Vase Bleu Cobalt', quantity: 1, price: 7800 },
-    ],
-    trackingNumber: 'COL2026002001', carrier: 'colissimo', shippedAt: daysAgo(18), deliveredAt: daysAgo(15), createdAt: daysAgo(20),
-  });
-
-  // Sophie Order 2: DELIVERED - Camille bought tasses duo x2
-  const orderSophie2 = await createOrder({
-    creatorId: sophie.id, customer: camille, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_sophie_tasse_duo', productName: 'Duo de Tasses Espresso', quantity: 2, price: 3200 },
-    ],
-    trackingNumber: 'COL2026002002', carrier: 'colissimo', shippedAt: daysAgo(15), deliveredAt: daysAgo(12), createdAt: daysAgo(17),
-  });
-
-  // Sophie Order 3: DELIVERED - Manon bought assiette + bougeoir
-  await createOrder({
-    creatorId: sophie.id, customer: manon, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_sophie_assiette', productName: 'Assiette Plate Wabi-Sabi', quantity: 1, price: 3800 },
-      { productId: 'prod_sophie_bougeoir', productName: 'Bougeoir Sculpte', quantity: 1, price: 2900 },
-    ],
-    trackingNumber: 'COL2026002003', carrier: 'colissimo', shippedAt: daysAgo(12), deliveredAt: daysAgo(9), createdAt: daysAgo(14),
-  });
-
-  // Sophie Order 4: DELIVERED - Ulysse bought vase
-  await createOrder({
-    creatorId: sophie.id, customer: ulysse, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_sophie_vase_bleu', productName: 'Vase Bleu Cobalt', quantity: 1, price: 7800 },
-    ],
-    trackingNumber: 'COL2026002004', carrier: 'colissimo', shippedAt: daysAgo(10), deliveredAt: daysAgo(7), createdAt: daysAgo(12),
-  });
-
-  // Sophie Order 5: SHIPPED - Victoire bought bol + assiette x2
-  await createOrder({
-    creatorId: sophie.id, customer: victoire, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_sophie_bol_raku', productName: 'Bol Raku Terre & Feu', quantity: 1, price: 4500 },
-      { productId: 'prod_sophie_assiette', productName: 'Assiette Plate Wabi-Sabi', quantity: 2, price: 3800 },
-    ],
-    trackingNumber: 'COL2026002005', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(3),
-  });
-
-  // Sophie Order 6: SHIPPED - Yasmine bought bougeoir x2
-  await createOrder({
-    creatorId: sophie.id, customer: yasmine, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_sophie_bougeoir', productName: 'Bougeoir Sculpte', quantity: 2, price: 2900 },
-    ],
-    trackingNumber: 'COL2026002006', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(2),
-  });
-
-  // Sophie Order 7: PAID - Zoe bought tasses + vase
-  await createOrder({
-    creatorId: sophie.id, customer: zoe, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_sophie_tasse_duo', productName: 'Duo de Tasses Espresso', quantity: 1, price: 3200 },
-      { productId: 'prod_sophie_vase_bleu', productName: 'Vase Bleu Cobalt', quantity: 1, price: 7800 },
-    ],
-    createdAt: daysAgo(0),
-  });
-
-  // Sophie Order 8: PAID - William bought bol raku
-  await createOrder({
-    creatorId: sophie.id, customer: william, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_sophie_bol_raku', productName: 'Bol Raku Terre & Feu', quantity: 1, price: 4500 },
-    ],
-    createdAt: daysAgo(0),
-  });
-
-  // Sophie Order 9: PENDING - Bob just placed order
-  await createOrder({
-    creatorId: sophie.id, customer: bob, status: OrderStatus.PENDING,
-    items: [
-      { productId: 'prod_sophie_assiette', productName: 'Assiette Plate Wabi-Sabi', quantity: 4, price: 3800 },
-    ],
-    createdAt: new Date(),
-  });
-
-  // Sophie Order 10: CANCELED - Emma canceled
-  await createOrder({
-    creatorId: sophie.id, customer: emma, status: OrderStatus.CANCELED,
-    items: [
-      { productId: 'prod_sophie_bougeoir', productName: 'Bougeoir Sculpte', quantity: 1, price: 2900 },
-    ],
-    createdAt: daysAgo(5),
-  });
-
-  console.log('   ✅ 10 orders for Sophie');
-
-  // ============================================
-  // LUCAS ORDERS (8)
-  // ============================================
-
-  console.log('📦 Creating Lucas orders...');
-
-  // Lucas Order 1: DELIVERED - David bought hoodie art
-  await createOrder({
-    creatorId: lucas.id, customer: david, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_lucas_hoodie_art', productName: 'Hoodie "Urban Canvas"', quantity: 1, price: 9500 },
-    ],
-    trackingNumber: 'COL2026003001', carrier: 'colissimo', shippedAt: daysAgo(14), deliveredAt: daysAgo(11), createdAt: daysAgo(16),
-  });
-
-  // Lucas Order 2: DELIVERED - Nathan bought tshirt typo + sac banane
-  await createOrder({
-    creatorId: lucas.id, customer: nathan, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_lucas_tshirt_typo', productName: 'T-shirt Typo Bold', quantity: 1, price: 3900 },
-      { productId: 'prod_lucas_sac_banane', productName: 'Sac Banane Reflectif', quantity: 1, price: 4200 },
-    ],
-    trackingNumber: 'COL2026003002', carrier: 'colissimo', shippedAt: daysAgo(12), deliveredAt: daysAgo(9), createdAt: daysAgo(14),
-  });
-
-  // Lucas Order 3: DELIVERED - Oceane bought veste jean
-  const orderLucas3 = await createOrder({
-    creatorId: lucas.id, customer: oceane, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_lucas_veste_jean', productName: 'Veste Jean Customisee', quantity: 1, price: 14500 },
-    ],
-    trackingNumber: 'CHR2026006001', carrier: 'chronopost', shippedAt: daysAgo(8), deliveredAt: daysAgo(6), createdAt: daysAgo(10),
-  });
-
-  // Lucas Order 4: SHIPPED - Hugo bought hoodie art + short
-  await createOrder({
-    creatorId: lucas.id, customer: hugo, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_lucas_hoodie_art', productName: 'Hoodie "Urban Canvas"', quantity: 1, price: 9500 },
-      { productId: 'prod_lucas_short_mesh', productName: 'Short Mesh Basketball', quantity: 1, price: 5500 },
-    ],
-    trackingNumber: 'COL2026003003', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(3),
-  });
-
-  // Lucas Order 5: SHIPPED - Felix bought tshirt typo x2
-  await createOrder({
-    creatorId: lucas.id, customer: felix, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_lucas_tshirt_typo', productName: 'T-shirt Typo Bold', quantity: 2, price: 3900 },
-    ],
-    trackingNumber: 'COL2026003004', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(2),
-  });
-
-  // Lucas Order 6: PAID - Alice bought sac banane + short
-  await createOrder({
-    creatorId: lucas.id, customer: alice, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_lucas_sac_banane', productName: 'Sac Banane Reflectif', quantity: 1, price: 4200 },
-      { productId: 'prod_lucas_short_mesh', productName: 'Short Mesh Basketball', quantity: 1, price: 5500 },
-    ],
-    createdAt: daysAgo(0),
-  });
-
-  // Lucas Order 7: PENDING - Paul just placed order
-  await createOrder({
-    creatorId: lucas.id, customer: paul, status: OrderStatus.PENDING,
-    items: [
-      { productId: 'prod_lucas_veste_jean', productName: 'Veste Jean Customisee', quantity: 1, price: 14500 },
-    ],
-    createdAt: new Date(),
-  });
-
-  // Lucas Order 8: CANCELED - Romane canceled
-  await createOrder({
-    creatorId: lucas.id, customer: romane, status: OrderStatus.CANCELED,
-    items: [
-      { productId: 'prod_lucas_tshirt_typo', productName: 'T-shirt Typo Bold', quantity: 1, price: 3900 },
-    ],
-    createdAt: daysAgo(6),
-  });
-
-  console.log('   ✅ 8 orders for Lucas');
-
-  // ============================================
-  // CLAIRE ORDERS (5)
-  // ============================================
-
-  console.log('📦 Creating Claire orders...');
-
-  // Claire Order 1: DELIVERED - Lea bought robe 70s
-  await createOrder({
-    creatorId: claire.id, customer: lea, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_claire_robe_70s', productName: 'Robe Boheme 70s', quantity: 1, price: 8500 },
-    ],
-    trackingNumber: 'COL2026004001', carrier: 'colissimo', shippedAt: daysAgo(14), deliveredAt: daysAgo(11), createdAt: daysAgo(16),
-  });
-
-  // Claire Order 2: DELIVERED - Tessa bought blazer + jupe
-  await createOrder({
-    creatorId: claire.id, customer: tessa, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_claire_blazer_xl', productName: 'Blazer Oversize 90s', quantity: 1, price: 9500 },
-      { productId: 'prod_claire_jupe_plissee', productName: 'Jupe Plissee Ecossaise', quantity: 1, price: 6500 },
-    ],
-    trackingNumber: 'COL2026004002', carrier: 'colissimo', shippedAt: daysAgo(10), deliveredAt: daysAgo(7), createdAt: daysAgo(12),
-  });
-
-  // Claire Order 3: SHIPPED - Yasmine bought pull mohair
-  await createOrder({
-    creatorId: claire.id, customer: yasmine, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_claire_pull_mohair', productName: 'Pull Mohair Pastel', quantity: 1, price: 7800 },
-    ],
-    trackingNumber: 'COL2026004003', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(3),
-  });
-
-  // Claire Order 4: PAID - Victoire bought robe + blazer
-  await createOrder({
-    creatorId: claire.id, customer: victoire, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_claire_robe_70s', productName: 'Robe Boheme 70s', quantity: 1, price: 8500 },
-      { productId: 'prod_claire_blazer_xl', productName: 'Blazer Oversize 90s', quantity: 1, price: 9500 },
-    ],
-    createdAt: daysAgo(0),
-  });
-
-  // Claire Order 5: PENDING - Zoe just placed order
-  await createOrder({
-    creatorId: claire.id, customer: zoe, status: OrderStatus.PENDING,
-    items: [
-      { productId: 'prod_claire_jupe_plissee', productName: 'Jupe Plissee Ecossaise', quantity: 1, price: 6500 },
-      { productId: 'prod_claire_pull_mohair', productName: 'Pull Mohair Pastel', quantity: 1, price: 7800 },
-    ],
-    createdAt: new Date(),
-  });
-
-  console.log('   ✅ 5 orders for Claire');
-
-  // ============================================
-  // MARC ORDERS (4)
-  // ============================================
-
-  console.log('📦 Creating Marc orders...');
-
-  // Marc Order 1: DELIVERED - William bought montre
-  await createOrder({
-    creatorId: marc.id, customer: william, status: OrderStatus.DELIVERED,
-    items: [
-      { productId: 'prod_marc_montre_auto', productName: 'Montre Automatique Restauree', quantity: 1, price: 18500 },
-    ],
-    trackingNumber: 'CHR2026007001', carrier: 'chronopost', shippedAt: daysAgo(10), deliveredAt: daysAgo(8), createdAt: daysAgo(12),
-  });
-
-  // Marc Order 2: SHIPPED - Ulysse bought ceinture + lunettes
-  await createOrder({
-    creatorId: marc.id, customer: ulysse, status: OrderStatus.SHIPPED,
-    items: [
-      { productId: 'prod_marc_ceinture_cuir', productName: 'Ceinture Cuir Patine', quantity: 1, price: 6500 },
-      { productId: 'prod_marc_lunettes_retro', productName: 'Lunettes Retro Ecaille', quantity: 1, price: 12000 },
-    ],
-    trackingNumber: 'COL2026005001', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(3),
-  });
-
-  // Marc Order 3: PAID - Samuel bought ceinture
-  await createOrder({
-    creatorId: marc.id, customer: samuel, status: OrderStatus.PAID,
-    items: [
-      { productId: 'prod_marc_ceinture_cuir', productName: 'Ceinture Cuir Patine', quantity: 1, price: 6500 },
-    ],
-    createdAt: daysAgo(0),
-  });
-
-  // Marc Order 4: PENDING - Manon just placed order
-  await createOrder({
-    creatorId: marc.id, customer: manon, status: OrderStatus.PENDING,
-    items: [
-      { productId: 'prod_marc_lunettes_retro', productName: 'Lunettes Retro Ecaille', quantity: 1, price: 12000 },
-    ],
-    createdAt: new Date(),
-  });
-
-  console.log('   ✅ 4 orders for Marc');
-
-  // ============================================
-  // SYSTEM STYLES
-  // ============================================
-
-  console.log('\n🎨 Creating system styles...');
-
-  const systemStyles = [
-    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers' },
-    { name: 'Vintage', description: 'Pieces retro et secondes mains revisitees' },
-    { name: 'Ceramique', description: 'Artisanat ceramique, poterie et creations en argile' },
-    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre' },
-    { name: 'Boheme', description: 'Esprit libre, matieres naturelles, imprimés ethniques' },
-    { name: 'Sportswear', description: 'Vetements techniques et confortables pour le sport' },
-    { name: 'Luxe', description: 'Matieres nobles, finitions haut de gamme, editions limitees' },
-    { name: 'Art', description: 'Creations artistiques uniques, editions limitees signees' },
-  ];
-
-  for (const style of systemStyles) {
-    await prisma.style.upsert({
-      where: { name: style.name },
-      update: {},
-      create: {
-        name: style.name,
-        description: style.description,
-        isCustom: false,
-        creatorId: null,
-      },
-    });
-  }
-
-  console.log(`   ✅ ${systemStyles.length} system styles created`);
-
-  // Lier les styles aux produits
-  const styleStreetware = await prisma.style.findFirst({ where: { name: 'Streetwear' } });
-  const styleVintage = await prisma.style.findFirst({ where: { name: 'Vintage' } });
-  const styleCeramique = await prisma.style.findFirst({ where: { name: 'Ceramique' } });
-
-  if (styleStreetware) {
-    const streetwearProductIds = [
-      'prod_jose_hoodie_noir', 'prod_jose_tshirt_graphic', 'prod_jose_pantalon_cargo',
-      'prod_jose_bomber', 'prod_jose_bonnet', 'prod_jose_casquette', 'prod_jose_tote',
-      'prod_jose_sweat', 'prod_lucas_hoodie_art', 'prod_lucas_tshirt_typo',
-      'prod_lucas_veste_jean', 'prod_lucas_short_mesh', 'prod_lucas_sac_banane',
-    ];
-    for (const pid of streetwearProductIds) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleStreetware.id } });
-    }
-  }
-  if (styleVintage) {
-    const vintageProductIds = [
-      'prod_claire_robe_70s', 'prod_claire_blazer_xl', 'prod_claire_jupe_plissee',
-      'prod_claire_pull_mohair', 'prod_marc_montre_auto', 'prod_marc_ceinture_cuir',
-      'prod_marc_lunettes_retro',
-    ];
-    for (const pid of vintageProductIds) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleVintage.id } });
-    }
-  }
-  if (styleCeramique) {
-    const ceramiqueProductIds = [
-      'prod_sophie_bol_raku', 'prod_sophie_vase_bleu', 'prod_sophie_tasse_duo',
-      'prod_sophie_assiette', 'prod_sophie_bougeoir',
-    ];
-    for (const pid of ceramiqueProductIds) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleCeramique.id } });
-    }
-  }
-  console.log('   ✅ Styles linked to products');
-
-  // ============================================
-  // PRODUCT VARIANTS
-  // ============================================
-
-  console.log('\n🎨 Creating product variants...');
-
-  const variantsData = [
-    // Hoodie José - 2 couleurs
-    { id: 'var_jose_hoodie_noir', productId: 'prod_jose_hoodie_noir', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 15, images: JSON.stringify(['https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&h=800&fit=crop']) },
-    { id: 'var_jose_hoodie_gris', productId: 'prod_jose_hoodie_noir', name: 'Gris Anthracite', color: 'Gris Anthracite', colorCode: '#3D3D3D', stock: 12, images: JSON.stringify(['https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop']) },
-    // T-shirt José - 3 couleurs
-    { id: 'var_jose_tshirt_blanc', productId: 'prod_jose_tshirt_graphic', name: 'Blanc', color: 'Blanc', colorCode: '#F5F5F5', stock: 20, images: JSON.stringify(['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop']) },
-    { id: 'var_jose_tshirt_noir', productId: 'prod_jose_tshirt_graphic', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 18, images: JSON.stringify(['https://images.unsplash.com/photo-1503341338985-95661e5a8f6e?w=800&h=800&fit=crop']) },
-    { id: 'var_jose_tshirt_kaki', productId: 'prod_jose_tshirt_graphic', name: 'Kaki', color: 'Kaki', colorCode: '#6B6B3A', stock: 10, images: JSON.stringify(['https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&h=800&fit=crop']) },
-    // Pantalon José - 2 couleurs
-    { id: 'var_jose_cargo_kaki', productId: 'prod_jose_pantalon_cargo', name: 'Kaki', color: 'Kaki', colorCode: '#6B6B3A', stock: 8 },
-    { id: 'var_jose_cargo_noir', productId: 'prod_jose_pantalon_cargo', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 6 },
-    // Bomber José - 2 couleurs
-    { id: 'var_jose_bomber_noir', productId: 'prod_jose_bomber', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 8 },
-    { id: 'var_jose_bomber_vert', productId: 'prod_jose_bomber', name: 'Vert Militaire', color: 'Vert Militaire', colorCode: '#4B5320', stock: 5 },
-    // Bonnet José - 3 couleurs
-    { id: 'var_jose_bonnet_noir', productId: 'prod_jose_bonnet', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 15 },
-    { id: 'var_jose_bonnet_gris', productId: 'prod_jose_bonnet', name: 'Gris Chiné', color: 'Gris Chiné', colorCode: '#9E9E9E', stock: 12 },
-    { id: 'var_jose_bonnet_camel', productId: 'prod_jose_bonnet', name: 'Camel', color: 'Camel', colorCode: '#C19A6B', stock: 10 },
-    // Casquette José - 2 couleurs
-    { id: 'var_jose_casquette_noir', productId: 'prod_jose_casquette', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 20 },
-    { id: 'var_jose_casquette_beige', productId: 'prod_jose_casquette', name: 'Beige', color: 'Beige', colorCode: '#F5F0E1', stock: 15 },
-    // Tote José - 2 couleurs
-    { id: 'var_jose_tote_naturel', productId: 'prod_jose_tote', name: 'Naturel', color: 'Naturel', colorCode: '#F5F0E1', stock: 25 },
-    { id: 'var_jose_tote_noir', productId: 'prod_jose_tote', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 20 },
-    // Sweat José - 3 couleurs
-    { id: 'var_jose_sweat_gris', productId: 'prod_jose_sweat', name: 'Gris Chiné', color: 'Gris Chiné', colorCode: '#C0C0C0', stock: 15 },
-    { id: 'var_jose_sweat_noir', productId: 'prod_jose_sweat', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 12 },
-    { id: 'var_jose_sweat_bordeaux', productId: 'prod_jose_sweat', name: 'Bordeaux', color: 'Bordeaux', colorCode: '#722F37', stock: 8 },
-    // Lucas - Hoodie - 2 couleurs
-    { id: 'var_lucas_hoodie_blanc', productId: 'prod_lucas_hoodie_art', name: 'Blanc Cassé', color: 'Blanc Cassé', colorCode: '#F0EBE3', stock: 10 },
-    { id: 'var_lucas_hoodie_noir', productId: 'prod_lucas_hoodie_art', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 8 },
-    // Lucas - T-shirt - 2 couleurs
-    { id: 'var_lucas_tshirt_blanc', productId: 'prod_lucas_tshirt_typo', name: 'Blanc', color: 'Blanc', colorCode: '#FFFFFF', stock: 20 },
-    { id: 'var_lucas_tshirt_noir', productId: 'prod_lucas_tshirt_typo', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 18 },
-    // Lucas - Short mesh - 2 couleurs
-    { id: 'var_lucas_short_noir', productId: 'prod_lucas_short_mesh', name: 'Noir', color: 'Noir', colorCode: '#1A1A1A', stock: 12 },
-    { id: 'var_lucas_short_blanc', productId: 'prod_lucas_short_mesh', name: 'Blanc', color: 'Blanc', colorCode: '#FFFFFF', stock: 10 },
-  ];
-
-  for (const v of variantsData) {
-    const existing = await prisma.productVariant.findFirst({ where: { id: v.id } });
-    if (!existing) {
-      await prisma.productVariant.create({
-        data: {
-          id: v.id,
-          productId: v.productId,
-          name: v.name,
-          color: v.color,
-          colorCode: v.colorCode,
-          stock: v.stock,
-          images: v.images ?? JSON.stringify([]),
-        },
-      });
-    }
-  }
-  console.log(`   ✅ ${variantsData.length} product variants created`);
-
-  // ============================================
-  // PRODUCT SKUS
-  // ============================================
-
-  console.log('\n📦 Creating product SKUs...');
-
-  // Helper to create SKUs with upsert
-  async function upsertSku(id: string, productId: string, variantId: string | null, size: string | null, stock: number) {
-    try {
-      await prisma.productSku.upsert({
-        where: { productId_variantId_size: { productId, variantId: variantId ?? '', size: size ?? '' } },
-        update: { stock },
-        create: { id, productId, variantId, size, stock },
-      });
-    } catch {
-      // Fallback if unique constraint differs
-      const existing = await prisma.productSku.findFirst({ where: { id } });
-      if (!existing) {
-        await prisma.productSku.create({ data: { id, productId, variantId, size, stock } });
-      }
-    }
-  }
-
-  // Hoodies José (XS:2, S:4, M:6, L:5, XL:3)
-  for (const [varId, suffix] of [['var_jose_hoodie_noir', 'hoodie_noir'], ['var_jose_hoodie_gris', 'hoodie_gris']] as [string, string][]) {
-    await upsertSku(`sku_jose_${suffix}_XS`, 'prod_jose_hoodie_noir', varId, 'XS', 2);
-    await upsertSku(`sku_jose_${suffix}_S`, 'prod_jose_hoodie_noir', varId, 'S', 4);
-    await upsertSku(`sku_jose_${suffix}_M`, 'prod_jose_hoodie_noir', varId, 'M', 6);
-    await upsertSku(`sku_jose_${suffix}_L`, 'prod_jose_hoodie_noir', varId, 'L', 5);
-    await upsertSku(`sku_jose_${suffix}_XL`, 'prod_jose_hoodie_noir', varId, 'XL', 3);
-  }
-  // T-shirts José (XS:3, S:5, M:7, L:6, XL:4)
-  for (const [varId, suffix] of [['var_jose_tshirt_blanc', 'tshirt_blanc'], ['var_jose_tshirt_noir', 'tshirt_noir'], ['var_jose_tshirt_kaki', 'tshirt_kaki']] as [string, string][]) {
-    await upsertSku(`sku_jose_${suffix}_XS`, 'prod_jose_tshirt_graphic', varId, 'XS', 3);
-    await upsertSku(`sku_jose_${suffix}_S`, 'prod_jose_tshirt_graphic', varId, 'S', 5);
-    await upsertSku(`sku_jose_${suffix}_M`, 'prod_jose_tshirt_graphic', varId, 'M', 7);
-    await upsertSku(`sku_jose_${suffix}_L`, 'prod_jose_tshirt_graphic', varId, 'L', 6);
-    await upsertSku(`sku_jose_${suffix}_XL`, 'prod_jose_tshirt_graphic', varId, 'XL', 4);
-  }
-  // Pantalons José (S:2, M:3, L:2, XL:1)
-  for (const [varId, suffix] of [['var_jose_cargo_kaki', 'cargo_kaki'], ['var_jose_cargo_noir', 'cargo_noir']] as [string, string][]) {
-    await upsertSku(`sku_jose_${suffix}_S`, 'prod_jose_pantalon_cargo', varId, 'S', 2);
-    await upsertSku(`sku_jose_${suffix}_M`, 'prod_jose_pantalon_cargo', varId, 'M', 3);
-    await upsertSku(`sku_jose_${suffix}_L`, 'prod_jose_pantalon_cargo', varId, 'L', 2);
-    await upsertSku(`sku_jose_${suffix}_XL`, 'prod_jose_pantalon_cargo', varId, 'XL', 1);
-  }
-  // Bombers José (XS:1, S:2, M:3, L:2, XL:1)
-  for (const [varId, suffix] of [['var_jose_bomber_noir', 'bomber_noir'], ['var_jose_bomber_vert', 'bomber_vert']] as [string, string][]) {
-    await upsertSku(`sku_jose_${suffix}_XS`, 'prod_jose_bomber', varId, 'XS', 1);
-    await upsertSku(`sku_jose_${suffix}_S`, 'prod_jose_bomber', varId, 'S', 2);
-    await upsertSku(`sku_jose_${suffix}_M`, 'prod_jose_bomber', varId, 'M', 3);
-    await upsertSku(`sku_jose_${suffix}_L`, 'prod_jose_bomber', varId, 'L', 2);
-    await upsertSku(`sku_jose_${suffix}_XL`, 'prod_jose_bomber', varId, 'XL', 1);
-  }
-  // Bonnets José - Taille unique
-  await upsertSku('sku_jose_bonnet_noir_TU', 'prod_jose_bonnet', 'var_jose_bonnet_noir', 'TU', 15);
-  await upsertSku('sku_jose_bonnet_gris_TU', 'prod_jose_bonnet', 'var_jose_bonnet_gris', 'TU', 12);
-  await upsertSku('sku_jose_bonnet_camel_TU', 'prod_jose_bonnet', 'var_jose_bonnet_camel', 'TU', 10);
-  // Casquettes José - Taille unique
-  await upsertSku('sku_jose_casquette_noir_TU', 'prod_jose_casquette', 'var_jose_casquette_noir', 'TU', 20);
-  await upsertSku('sku_jose_casquette_beige_TU', 'prod_jose_casquette', 'var_jose_casquette_beige', 'TU', 15);
-  // Totes José - Taille unique
-  await upsertSku('sku_jose_tote_naturel_TU', 'prod_jose_tote', 'var_jose_tote_naturel', 'TU', 25);
-  await upsertSku('sku_jose_tote_noir_TU', 'prod_jose_tote', 'var_jose_tote_noir', 'TU', 20);
-  // Sweats José (XS:2, S:4, M:6, L:5, XL:3)
-  for (const [varId, suffix] of [['var_jose_sweat_gris', 'sweat_gris'], ['var_jose_sweat_noir', 'sweat_noir'], ['var_jose_sweat_bordeaux', 'sweat_bordeaux']] as [string, string][]) {
-    await upsertSku(`sku_jose_${suffix}_XS`, 'prod_jose_sweat', varId, 'XS', 2);
-    await upsertSku(`sku_jose_${suffix}_S`, 'prod_jose_sweat', varId, 'S', 4);
-    await upsertSku(`sku_jose_${suffix}_M`, 'prod_jose_sweat', varId, 'M', 6);
-    await upsertSku(`sku_jose_${suffix}_L`, 'prod_jose_sweat', varId, 'L', 5);
-    await upsertSku(`sku_jose_${suffix}_XL`, 'prod_jose_sweat', varId, 'XL', 3);
-  }
-  // Hoodies Lucas (XS:2, S:4, M:6, L:5, XL:3)
-  for (const [varId, suffix] of [['var_lucas_hoodie_blanc', 'hoodie_blanc'], ['var_lucas_hoodie_noir', 'hoodie_noir']] as [string, string][]) {
-    await upsertSku(`sku_lucas_${suffix}_XS`, 'prod_lucas_hoodie_art', varId, 'XS', 2);
-    await upsertSku(`sku_lucas_${suffix}_S`, 'prod_lucas_hoodie_art', varId, 'S', 4);
-    await upsertSku(`sku_lucas_${suffix}_M`, 'prod_lucas_hoodie_art', varId, 'M', 6);
-    await upsertSku(`sku_lucas_${suffix}_L`, 'prod_lucas_hoodie_art', varId, 'L', 5);
-    await upsertSku(`sku_lucas_${suffix}_XL`, 'prod_lucas_hoodie_art', varId, 'XL', 3);
-  }
-  // T-shirts Lucas (XS:3, S:5, M:7, L:6, XL:4)
-  for (const [varId, suffix] of [['var_lucas_tshirt_blanc', 'tshirt_blanc'], ['var_lucas_tshirt_noir', 'tshirt_noir']] as [string, string][]) {
-    await upsertSku(`sku_lucas_${suffix}_XS`, 'prod_lucas_tshirt_typo', varId, 'XS', 3);
-    await upsertSku(`sku_lucas_${suffix}_S`, 'prod_lucas_tshirt_typo', varId, 'S', 5);
-    await upsertSku(`sku_lucas_${suffix}_M`, 'prod_lucas_tshirt_typo', varId, 'M', 7);
-    await upsertSku(`sku_lucas_${suffix}_L`, 'prod_lucas_tshirt_typo', varId, 'L', 6);
-    await upsertSku(`sku_lucas_${suffix}_XL`, 'prod_lucas_tshirt_typo', varId, 'XL', 4);
-  }
-  // Shorts Lucas (XS:2, S:3, M:4, L:3, XL:2)
-  for (const [varId, suffix] of [['var_lucas_short_noir', 'short_noir'], ['var_lucas_short_blanc', 'short_blanc']] as [string, string][]) {
-    await upsertSku(`sku_lucas_${suffix}_XS`, 'prod_lucas_short_mesh', varId, 'XS', 2);
-    await upsertSku(`sku_lucas_${suffix}_S`, 'prod_lucas_short_mesh', varId, 'S', 3);
-    await upsertSku(`sku_lucas_${suffix}_M`, 'prod_lucas_short_mesh', varId, 'M', 4);
-    await upsertSku(`sku_lucas_${suffix}_L`, 'prod_lucas_short_mesh', varId, 'L', 3);
-    await upsertSku(`sku_lucas_${suffix}_XL`, 'prod_lucas_short_mesh', varId, 'XL', 2);
-  }
-  // Céramiques Sophie - 1 SKU sans variant par produit
-  await upsertSku('sku_sophie_bol_raku', 'prod_sophie_bol_raku', null, null, 3);
-  await upsertSku('sku_sophie_vase_bleu', 'prod_sophie_vase_bleu', null, null, 3);
-  await upsertSku('sku_sophie_tasse_duo', 'prod_sophie_tasse_duo', null, null, 4);
-  await upsertSku('sku_sophie_assiette', 'prod_sophie_assiette', null, null, 5);
-  await upsertSku('sku_sophie_bougeoir', 'prod_sophie_bougeoir', null, null, 4);
-  // Pièces vintage Claire - stock=1
-  await upsertSku('sku_claire_robe_70s', 'prod_claire_robe_70s', null, null, 1);
-  await upsertSku('sku_claire_blazer_xl', 'prod_claire_blazer_xl', null, null, 1);
-  await upsertSku('sku_claire_jupe_plissee', 'prod_claire_jupe_plissee', null, null, 1);
-  await upsertSku('sku_claire_pull_mohair', 'prod_claire_pull_mohair', null, null, 1);
-  // Pièces vintage Marc - stock=1
-  await upsertSku('sku_marc_montre', 'prod_marc_montre_auto', null, null, 1);
-  await upsertSku('sku_marc_ceinture', 'prod_marc_ceinture_cuir', null, null, 1);
-  await upsertSku('sku_marc_lunettes', 'prod_marc_lunettes_retro', null, null, 1);
-
-  console.log('   ✅ Product SKUs created');
+  const orderHugo1 = await createOrder({ creatorId: hugo.id, customer: alice!, status: OrderStatus.DELIVERED, items: [{ productId: 'prod_hugo_tshirt', productName: 'T-shirt Oversized', quantity: 1, price: 4900 }, { productId: 'prod_hugo_hoodie', productName: 'Hoodie Urbain', quantity: 1, price: 7900 }], trackingNumber: 'COL2026001001', carrier: 'colissimo', shippedAt: daysAgo(18), deliveredAt: daysAgo(15), createdAt: daysAgo(20) });
+  await createOrder({ creatorId: hugo.id, customer: bob!, status: OrderStatus.SHIPPED, items: [{ productId: 'prod_hugo_jogger', productName: 'Jogger Cargo', quantity: 1, price: 6500 }], trackingNumber: 'COL2026001002', carrier: 'colissimo', shippedAt: daysAgo(2), createdAt: daysAgo(4) });
+  await createOrder({ creatorId: hugo.id, customer: camille!, status: OrderStatus.PAID, items: [{ productId: 'prod_hugo_polo', productName: 'Polo Piquet', quantity: 1, price: 5500 }, { productId: 'prod_hugo_short', productName: 'Short Technique', quantity: 1, price: 4500 }], createdAt: daysAgo(1) });
+  console.log('   3 orders for Hugo');
+
+  const orderLea1 = await createOrder({ creatorId: lea.id, customer: alice!, status: OrderStatus.DELIVERED, items: [{ productId: 'prod_lea_veste', productName: 'Veste en Lin', quantity: 1, price: 14900 }], trackingNumber: 'COL2026002001', carrier: 'colissimo', shippedAt: daysAgo(14), deliveredAt: daysAgo(11), createdAt: daysAgo(16) });
+  await createOrder({ creatorId: lea.id, customer: david!, status: OrderStatus.SHIPPED, items: [{ productId: 'prod_lea_robe', productName: 'Robe Longue', quantity: 1, price: 13900 }, { productId: 'prod_lea_top', productName: 'Top Asymetrique', quantity: 1, price: 6900 }], trackingNumber: 'COL2026002002', carrier: 'colissimo', shippedAt: daysAgo(1), createdAt: daysAgo(3) });
+  await createOrder({ creatorId: lea.id, customer: emma!, status: OrderStatus.PENDING, items: [{ productId: 'prod_lea_manteau', productName: 'Manteau Court', quantity: 1, price: 24900 }], createdAt: new Date() });
+  console.log('   3 orders for Lea');
+
+  const orderKais1 = await createOrder({ creatorId: kais.id, customer: bob!, status: OrderStatus.DELIVERED, items: [{ productId: 'prod_kais_veste', productName: 'Veste Technique', quantity: 1, price: 18900 }, { productId: 'prod_kais_legging', productName: 'Legging Running', quantity: 1, price: 6900 }], trackingNumber: 'COL2026003001', carrier: 'colissimo', shippedAt: daysAgo(10), deliveredAt: daysAgo(7), createdAt: daysAgo(12) });
+  await createOrder({ creatorId: kais.id, customer: camille!, status: OrderStatus.PAID, items: [{ productId: 'prod_kais_brassiere', productName: 'Brassiere Sport', quantity: 1, price: 4200 }, { productId: 'prod_kais_short', productName: 'Short Sport', quantity: 1, price: 4900 }], createdAt: daysAgo(1) });
+  console.log('   2 orders for Kais');
 
   // ============================================
   // NOTIFICATION PREFERENCES
   // ============================================
 
-  console.log('\n🔔 Creating notification preferences...');
+  const clientNotifTypes = ['ORDER_CONFIRMED', 'ORDER_SHIPPED', 'ORDER_DELIVERED', 'ORDER_CANCELLED', 'REFUND_PROCESSED', 'RETURN_APPROVED', 'RETURN_REJECTED', 'DISPUTE_UPDATE'];
+  const creatorNotifTypes = ['ORDER_RECEIVED', 'ORDER_PAID', 'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED', 'REVIEW_RECEIVED', 'SUBSCRIPTION_RENEWED', 'SUBSCRIPTION_EXPIRING', 'PAYMENT_FAILED', 'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED'];
 
-  const clientNotifTypes = [
-    'ORDER_CONFIRMED', 'ORDER_SHIPPED', 'ORDER_DELIVERED', 'ORDER_CANCELLED',
-    'REFUND_PROCESSED', 'RETURN_APPROVED', 'RETURN_REJECTED', 'DISPUTE_UPDATE',
-  ];
-  const creatorNotifTypes = [
-    'ORDER_RECEIVED', 'ORDER_PAID', 'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED',
-    'REVIEW_RECEIVED', 'SUBSCRIPTION_RENEWED', 'SUBSCRIPTION_EXPIRING',
-    'PAYMENT_FAILED', 'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED',
-  ];
-
-  const allClientUsers = [admin, ...clients];
-  for (const user of allClientUsers) {
+  for (const user of [admin, ...clients]) {
     for (const type of clientNotifTypes) {
-      await prisma.notificationPreference.upsert({
-        where: { userId_type: { userId: user.id, type } },
-        update: {},
-        create: { userId: user.id, type, email: true, inApp: true },
-      });
+      await prisma.notificationPreference.upsert({ where: { userId_type: { userId: user.id, type } }, update: {}, create: { userId: user.id, type, email: true, inApp: true } });
     }
   }
-  const creatorUsers = [jose, sophie, lucas, claire, marc];
-  for (const creator of creatorUsers) {
+  for (const creator of [hugo, lea, kais]) {
     for (const type of creatorNotifTypes) {
-      await prisma.notificationPreference.upsert({
-        where: { userId_type: { userId: creator.id, type } },
-        update: {},
-        create: { userId: creator.id, type, email: true, inApp: true },
-      });
+      await prisma.notificationPreference.upsert({ where: { userId_type: { userId: creator.id, type } }, update: {}, create: { userId: creator.id, type, email: true, inApp: true } });
     }
   }
-  console.log('   ✅ Notification preferences created for all users');
+  console.log('\nNotification preferences created');
 
   // ============================================
   // CARTS
   // ============================================
 
-  console.log('\n🛒 Creating carts...');
-
-  const cartsData = [
-    {
-      userId: alice.id,
-      items: JSON.stringify([{
-        id: 'cart_item_alice_1',
-        productId: 'prod_jose_hoodie_noir',
-        variantId: 'var_jose_hoodie_noir',
-        name: 'Hoodie Oversize Noir',
-        price: 8900,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=800&h=800&fit=crop',
-        variantInfo: { type: 'Couleur', value: 'Noir' },
-        creatorSlug: 'kpsull-officiel',
-      }]),
-    },
-    {
-      userId: bob.id,
-      items: JSON.stringify([
-        {
-          id: 'cart_item_bob_1',
-          productId: 'prod_sophie_bol_raku',
-          variantId: null,
-          name: 'Bol Raku Terre & Feu',
-          price: 4500,
-          quantity: 1,
-          image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&h=800&fit=crop',
-          variantInfo: null,
-          creatorSlug: 'sophie-ceramique',
-        },
-        {
-          id: 'cart_item_bob_2',
-          productId: 'prod_sophie_vase_bleu',
-          variantId: null,
-          name: 'Vase Bleu Cobalt',
-          price: 7800,
-          quantity: 1,
-          image: 'https://images.unsplash.com/photo-1612196808214-b7c07b51e12b?w=800&h=800&fit=crop',
-          variantInfo: null,
-          creatorSlug: 'sophie-ceramique',
-        },
-      ]),
-    },
-    {
-      userId: david.id,
-      items: JSON.stringify([{
-        id: 'cart_item_david_1',
-        productId: 'prod_lucas_hoodie_art',
-        variantId: 'var_lucas_hoodie_noir',
-        name: 'Hoodie "Urban Canvas"',
-        price: 9500,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&h=800&fit=crop',
-        variantInfo: { type: 'Couleur', value: 'Noir' },
-        creatorSlug: 'lucas-design-studio',
-      }]),
-    },
-    {
-      userId: emma.id,
-      items: JSON.stringify([{
-        id: 'cart_item_emma_1',
-        productId: 'prod_claire_robe_70s',
-        variantId: null,
-        name: 'Robe Boheme 70s',
-        price: 8500,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=800&fit=crop',
-        variantInfo: null,
-        creatorSlug: 'claire-vintage',
-      }]),
-    },
-    {
-      userId: felix.id,
-      items: JSON.stringify([{
-        id: 'cart_item_felix_1',
-        productId: 'prod_marc_montre_auto',
-        variantId: null,
-        name: 'Montre Automatique Restauree',
-        price: 18500,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&h=800&fit=crop',
-        variantInfo: null,
-        creatorSlug: 'marc-accessories',
-      }]),
-    },
-  ];
-
-  for (const cart of cartsData) {
-    await prisma.cart.upsert({
-      where: { userId: cart.userId },
-      update: { items: cart.items },
-      create: { userId: cart.userId, items: cart.items },
-    });
-  }
-  console.log(`   ✅ ${cartsData.length} carts created`);
+  await prisma.cart.upsert({ where: { userId: alice!.id }, update: { items: JSON.stringify([{ id: 'cart_alice_1', productId: 'prod_hugo_tshirt', variantId: 'var_hugo_tshirt_noir', name: 'T-shirt Oversized', price: 4900, quantity: 1, image: 'https://picsum.photos/seed/hugotshirt/200/200', variantInfo: { type: 'Couleur', value: 'Noir' }, creatorSlug: 'hugo-tessier' }]) }, create: { userId: alice!.id, items: JSON.stringify([{ id: 'cart_alice_1', productId: 'prod_hugo_tshirt', variantId: 'var_hugo_tshirt_noir', name: 'T-shirt Oversized', price: 4900, quantity: 1, image: 'https://picsum.photos/seed/hugotshirt/200/200', variantInfo: { type: 'Couleur', value: 'Noir' }, creatorSlug: 'hugo-tessier' }]) } });
+  await prisma.cart.upsert({ where: { userId: bob!.id }, update: { items: JSON.stringify([{ id: 'cart_bob_1', productId: 'prod_lea_pantalon', variantId: 'var_lea_pantalon_default', name: 'Pantalon Large', price: 11900, quantity: 1, image: 'https://picsum.photos/seed/leapantalon/200/200', variantInfo: { type: 'Couleur', value: 'Sable' }, creatorSlug: 'lea-fontaine' }]) }, create: { userId: bob!.id, items: JSON.stringify([{ id: 'cart_bob_1', productId: 'prod_lea_pantalon', variantId: 'var_lea_pantalon_default', name: 'Pantalon Large', price: 11900, quantity: 1, image: 'https://picsum.photos/seed/leapantalon/200/200', variantInfo: { type: 'Couleur', value: 'Sable' }, creatorSlug: 'lea-fontaine' }]) } });
+  console.log('Carts created (2)');
 
   // ============================================
   // RETURN REQUESTS
   // ============================================
 
-  console.log('\n↩️  Creating return requests...');
-
-  // orderJose1 (Alice, Hoodie): APPROVED, CHANGED_MIND
-  await prisma.returnRequest.create({
-    data: {
-      orderId: orderJose1.id,
-      customerId: alice.id,
-      creatorId: jose.id,
-      reason: ReturnReason.CHANGED_MIND,
-      status: ReturnStatus.APPROVED,
-      deliveredAt: daysAgo(17),
-      approvedAt: daysAgo(14),
-    },
-  });
-
-  // orderJose3 (Lea, Bomber): REQUESTED, NOT_AS_DESCRIBED
-  await prisma.returnRequest.create({
-    data: {
-      orderId: orderJose3.id,
-      customerId: lea.id,
-      creatorId: jose.id,
-      reason: ReturnReason.NOT_AS_DESCRIBED,
-      status: ReturnStatus.REQUESTED,
-      deliveredAt: daysAgo(13),
-    },
-  });
-
-  // orderSophie1 (Alice, Bol+Vase): REFUNDED, DEFECTIVE
-  await prisma.returnRequest.create({
-    data: {
-      orderId: orderSophie1.id,
-      customerId: alice.id,
-      creatorId: sophie.id,
-      reason: ReturnReason.DEFECTIVE,
-      status: ReturnStatus.REFUNDED,
-      deliveredAt: daysAgo(15),
-      approvedAt: daysAgo(12),
-      refundedAt: daysAgo(8),
-    },
-  });
-
-  // orderLucas3 (Oceane, Veste Jean): SHIPPED_BACK, NOT_AS_DESCRIBED
-  await prisma.returnRequest.create({
-    data: {
-      orderId: orderLucas3.id,
-      customerId: oceane.id,
-      creatorId: lucas.id,
-      reason: ReturnReason.NOT_AS_DESCRIBED,
-      status: ReturnStatus.SHIPPED_BACK,
-      deliveredAt: daysAgo(6),
-      approvedAt: daysAgo(4),
-      shippedAt: daysAgo(2),
-    },
-  });
-
-  console.log('   ✅ 4 return requests created');
+  await prisma.returnRequest.create({ data: { orderId: orderHugo1.id, customerId: alice!.id, creatorId: hugo.id, reason: ReturnReason.CHANGED_MIND, status: ReturnStatus.APPROVED, deliveredAt: daysAgo(15), approvedAt: daysAgo(12) } });
+  await prisma.returnRequest.create({ data: { orderId: orderLea1.id, customerId: alice!.id, creatorId: lea.id, reason: ReturnReason.NOT_AS_DESCRIBED, status: ReturnStatus.REQUESTED, deliveredAt: daysAgo(11) } });
+  console.log('Return requests created (2)');
 
   // ============================================
   // DISPUTES
   // ============================================
 
-  console.log('\n⚖️  Creating disputes...');
-
-  // orderJose15 (Tessa) - OPEN, NOT_RECEIVED
-  await prisma.dispute.create({
-    data: {
-      orderId: orderJose15.id,
-      customerId: tessa.id,
-      creatorId: jose.id,
-      type: DisputeType.NOT_RECEIVED,
-      description: "La commande est marquée comme livrée mais je n'ai rien reçu. Mon voisin n'a pas vu de colis non plus.",
-      status: DisputeStatus.OPEN,
-      createdAt: daysAgo(5),
-    },
-  });
-
-  // orderSophie2 (Camille, Tasses) - RESOLVED, DAMAGED
-  await prisma.dispute.create({
-    data: {
-      orderId: orderSophie2.id,
-      customerId: camille.id,
-      creatorId: sophie.id,
-      type: DisputeType.DAMAGED,
-      description: "Une des tasses est arrivée cassée malgré l'emballage.",
-      status: DisputeStatus.RESOLVED,
-      resolution: 'Remboursement partiel de 50% accepté par les deux parties.',
-      resolvedAt: daysAgo(5),
-      createdAt: daysAgo(12),
-    },
-  });
-
-  console.log('   ✅ 2 disputes created');
+  await prisma.dispute.create({ data: { orderId: orderKais1.id, customerId: bob!.id, creatorId: kais.id, type: DisputeType.DAMAGED, description: 'La veste technique est arrivee avec une couture dechiree sur le coude droit.', status: DisputeStatus.OPEN, createdAt: daysAgo(5) } });
+  console.log('Dispute created (1)');
 
   // ============================================
   // FLAGGED CONTENT
   // ============================================
 
-  console.log('\n🚩 Creating flagged content...');
+  await prisma.flaggedContent.create({ data: { contentId: 'prod_hugo_hoodie', contentType: 'PRODUCT', contentTitle: 'Hoodie Urbain', contentDescription: 'Hoodie oversize 350g molleton brosse interieur.', creatorId: hugo.id, flaggedBy: alice!.id, flagReason: FlagReason.MISLEADING_DESCRIPTION, flagDetails: 'La description mentionne "fait en France" mais etiquette indique Portugal.', status: ModerationStatus.PENDING, flaggedAt: daysAgo(3) } });
 
-  await prisma.flaggedContent.create({
-    data: {
-      contentId: 'prod_lucas_veste_jean',
-      contentType: 'PRODUCT',
-      contentTitle: 'Veste Jean Customisée',
-      contentDescription: 'Veste en jean vintage avec patchs et broderies faites main.',
-      contentImageUrl: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400',
-      creatorId: lucas.id,
-      flaggedBy: alice.id,
-      flagReason: FlagReason.MISLEADING_DESCRIPTION,
-      flagDetails: 'La description mentionne "vintage" mais le produit semble neuf.',
-      status: ModerationStatus.PENDING,
-      flaggedAt: daysAgo(3),
-    },
-  });
+  const flagVeste = await prisma.flaggedContent.create({ data: { contentId: 'prod_kais_veste', contentType: 'PRODUCT', contentTitle: 'Veste Technique', contentDescription: 'Veste coupe-vent technique 3 couches.', contentImageUrl: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400', creatorId: kais.id, flaggedBy: david!.id, flagReason: FlagReason.MISLEADING_DESCRIPTION, flagDetails: 'Impermeabilite annoncee non verifiable.', status: ModerationStatus.APPROVED, moderatorId: admin.id, moderatorNote: 'Caracteristiques techniques verifiees. Signalement non fonde.', flaggedAt: daysAgo(10), moderatedAt: daysAgo(7) } });
 
-  await prisma.flaggedContent.create({
-    data: {
-      contentId: 'prod_marc_montre_auto',
-      contentType: 'PRODUCT',
-      contentTitle: 'Montre Automatique Restaurée',
-      contentDescription: 'Montre mécanique des années 60 restaurée.',
-      contentImageUrl: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400',
-      creatorId: marc.id,
-      flaggedBy: bob.id,
-      flagReason: FlagReason.COUNTERFEIT,
-      flagDetails: "La référence du mouvement ne correspond pas à une montre authentique des années 60.",
-      status: ModerationStatus.APPROVED,
-      moderatorId: admin.id,
-      moderatorNote: "Vérifié avec l'expert horlogerie. Pièce authentique confirmée.",
-      flaggedAt: daysAgo(15),
-      moderatedAt: daysAgo(10),
-    },
-  });
+  await prisma.moderationActionRecord.create({ data: { flaggedContentId: flagVeste.id, action: ModerationActionType.APPROVE, moderatorId: admin.id, note: 'Caracteristiques techniques confirmees. Signalement rejete.', createdAt: daysAgo(7) } });
 
-  await prisma.flaggedContent.create({
-    data: {
-      contentId: 'prod_jose_tshirt_graphic',
-      contentType: 'PRODUCT',
-      contentTitle: 'T-shirt Graphique "Antidote"',
-      contentDescription: 'T-shirt avec sérigraphie.',
-      creatorId: jose.id,
-      flaggedBy: camille.id,
-      flagReason: FlagReason.INAPPROPRIATE_CONTENT,
-      flagDetails: 'Le design "Antidote" pourrait être perçu comme une référence aux drogues.',
-      status: ModerationStatus.HIDDEN,
-      moderatorId: admin.id,
-      moderatorNote: 'Design ambigu. Demande au créateur de modifier la description.',
-      flaggedAt: daysAgo(20),
-      moderatedAt: daysAgo(18),
-    },
-  });
-
-  console.log('   ✅ 3 flagged content entries created');
-
-  // ============================================
-  // MODERATION ACTION RECORDS
-  // ============================================
-
-  console.log('\n🔨 Creating moderation action records...');
-
-  const flaggedMontre = await prisma.flaggedContent.findFirst({
-    where: { contentId: 'prod_marc_montre_auto', contentType: 'PRODUCT' },
-  });
-  if (flaggedMontre) {
-    await prisma.moderationActionRecord.create({
-      data: {
-        flaggedContentId: flaggedMontre.id,
-        action: ModerationActionType.APPROVE,
-        moderatorId: admin.id,
-        note: 'Pièce authentique vérifiée par expert horlogerie. Signalement non fondé.',
-        createdAt: daysAgo(10),
-      },
-    });
-  }
-
-  const flaggedTshirt = await prisma.flaggedContent.findFirst({
-    where: { contentId: 'prod_jose_tshirt_graphic', contentType: 'PRODUCT' },
-  });
-  if (flaggedTshirt) {
-    await prisma.moderationActionRecord.create({
-      data: {
-        flaggedContentId: flaggedTshirt.id,
-        action: ModerationActionType.HIDE,
-        moderatorId: admin.id,
-        note: 'Contenu temporairement masqué en attente de modification par le créateur.',
-        createdAt: daysAgo(18),
-      },
-    });
-  }
-
-  console.log('   ✅ Moderation action records created');
-
-  // ============================================
-  // CREATOR SUSPENSION
-  // ============================================
-
-  console.log('\n🔒 Creating creator suspension...');
-
-  await prisma.creatorSuspension.create({
-    data: {
-      creatorId: marc.id,
-      suspendedBy: admin.id,
-      reason: 'Vente de produits ne correspondant pas à la description. 3 plaintes clients consécutives.',
-      suspendedAt: daysAgo(60),
-      reactivatedAt: daysAgo(50),
-      reactivatedBy: admin.id,
-      reactivationReason: "Le créateur a mis à jour ses fiches produits et s'est engagé à améliorer ses descriptions.",
-    },
-  });
-
-  console.log('   ✅ Creator suspension created (Marc - reactivated after 10 days)');
-
-  // ============================================
-  // NEW CREATORS (modular seed)
-  // ============================================
-
-  console.log('\n🚀 Seeding new creators (15 additional)...');
-
-  const {
-    users: newCreators,
-    totalProducts: newProducts,
-    totalOrders: newOrders,
-  } = await seedNewCreators(prisma, hashedPassword, admin, clients, daysAgo, daysFromNow);
-
-  console.log(`   ✅ ${newCreators.length} new creators seeded with ${newProducts} products and ${newOrders} orders`);
+  console.log('Flagged content created (2) + moderation action (1)');
 
   // ============================================
   // SUMMARY
   // ============================================
 
-  const totalOrders = orderCounter + newOrders;
-
-  console.log('\n🎉 Seed completed!\n');
-  console.log('📊 Summary:');
+  console.log('\nSeed completed!\n');
+  console.log('Summary:');
   console.log('   ──────────────────────────────────────────');
-  console.log('   Admin:');
-  console.log('     - admin@kpsull.fr (ADMIN)');
+  console.log('   Admin: admin@kpsull.fr');
   console.log('   ──────────────────────────────────────────');
-  console.log('   Creators (original 5):');
-  console.log('     - jose.lecreateur@kpsull.fr (STUDIO)     -> /kpsull-officiel       | 8 products | 15 orders');
-  console.log('     - sophie.artisan@kpsull.fr (ATELIER)     -> /sophie-ceramique      | 5 products | 10 orders');
-  console.log('     - lucas.design@kpsull.fr (STUDIO)        -> /lucas-design-studio   | 5 products | 8 orders');
-  console.log('     - claire.mode@kpsull.fr (ESSENTIEL)      -> /claire-vintage        | 4 products | 5 orders');
-  console.log('     - marc.vintage@kpsull.fr (ESSENTIEL)     -> /marc-accessories      | 3 products | 4 orders');
-  console.log(`   + ${newCreators.length} new creators (bijoux, maroquinerie, sport, enfants, etc.)`);
-  console.log(`   = 20 créateurs total`);
+  console.log('   Creators (3):');
+  console.log('     - hugo.tessier@kpsull.fr  -> /hugo-tessier  | 6 produits | 3 commandes');
+  console.log('     - lea.fontaine@kpsull.fr   -> /lea-fontaine  | 6 produits | 3 commandes');
+  console.log('     - kais.benali@kpsull.fr    -> /kais-benali   | 6 produits | 2 commandes');
   console.log('   ──────────────────────────────────────────');
-  console.log(`   Clients: 20`);
-  console.log(`   Products: ${allProducts.length + newProducts} total (${allProducts.length} original + ${newProducts} new)`);
-  console.log(`   Orders: ${totalOrders} total`);
-  console.log(`   Product Variants: ${variantsData.length} (original creators)`);
-  console.log('   Product SKUs: created (tailles S/M/L/XL pour vetements, TU pour accessoires, unique pour ceramique/vintage)');
-  console.log('   Notification Preferences: all users (client: 8 types, creator: 10 types)');
-  console.log('   Carts: 5 (alice, bob, david, emma, felix)');
-  console.log('   Return Requests: 4');
-  console.log('   Disputes: 2');
-  console.log('   Flagged Content: 3');
-  console.log('   Moderation Actions: 2');
-  console.log('   Creator Suspensions: 1 (Marc)');
+  console.log(`   Clients: 5 (alice, bob, camille, david, emma)`);
+  console.log(`   Products: 18 (Hugo:6, Lea:6, Kais:6)`);
+  console.log(`   Orders: ${orderCounter} total`);
+  console.log(`   Variants: ${variantCount} (images dans variants.images JSON)`);
+  console.log(`   SKUs: ${skuCount} (variantId toujours non-null)`);
+  console.log('   Carts: 2 | Returns: 2 | Disputes: 1 | Flagged: 2');
   console.log('   ──────────────────────────────────────────');
   console.log('   All accounts password: password123');
   console.log('   ──────────────────────────────────────────');
@@ -1955,7 +786,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e);
+    console.error('Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {

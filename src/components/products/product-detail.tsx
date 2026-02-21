@@ -9,13 +9,6 @@ import { formatPrice } from '@/lib/utils/format';
 import { ProductGallery } from './product-gallery';
 import { AddToCartButton } from './add-to-cart-button';
 
-interface ProductImage {
-  id: string;
-  url: string;
-  alt: string;
-  position: number;
-}
-
 interface ProductVariant {
   id: string;
   name: string;
@@ -31,7 +24,7 @@ interface ProductDetailProps {
     description?: string;
     price: number;
     mainImageUrl?: string;
-    images: ProductImage[];
+    images: string[];
     variants: ProductVariant[];
   };
   creatorSlug: string;

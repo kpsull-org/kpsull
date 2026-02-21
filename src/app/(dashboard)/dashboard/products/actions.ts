@@ -13,12 +13,8 @@ import { UnpublishProductUseCase } from '@/modules/products/application/use-case
 import { CreateVariantUseCase } from '@/modules/products/application/use-cases/variants/create-variant.use-case';
 import { UpdateVariantUseCase } from '@/modules/products/application/use-cases/variants/update-variant.use-case';
 import { DeleteVariantUseCase } from '@/modules/products/application/use-cases/variants/delete-variant.use-case';
-import { UploadProductImageUseCase } from '@/modules/products/application/use-cases/images/upload-product-image.use-case';
-import { DeleteProductImageUseCase } from '@/modules/products/application/use-cases/images/delete-product-image.use-case';
-import { ReorderProductImagesUseCase } from '@/modules/products/application/use-cases/images/reorder-product-images.use-case';
 import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
 import { PrismaVariantRepository } from '@/modules/products/infrastructure/repositories/prisma-variant.repository';
-import { PrismaProductImageRepository } from '@/modules/products/infrastructure/repositories/prisma-product-image.repository';
 import { PrismaSkuRepository } from '@/modules/products/infrastructure/repositories/prisma-sku.repository';
 import { NoopSubscriptionService } from '@/modules/products/infrastructure/services/noop-subscription.service';
 import { CloudinaryImageUploadService } from '@/modules/products/infrastructure/services/cloudinary-image-upload.service';
@@ -29,7 +25,6 @@ export type { SkuOutput };
 
 const productRepository = new PrismaProductRepository(prisma);
 const variantRepository = new PrismaVariantRepository(prisma);
-const productImageRepository = new PrismaProductImageRepository(prisma);
 const skuRepository = new PrismaSkuRepository(prisma);
 const subscriptionService = new NoopSubscriptionService();
 const imageUploadService = new CloudinaryImageUploadService();
@@ -40,10 +35,16 @@ export interface ActionResult {
   id?: string;
 }
 
+const priceSchema = z
+  .number()
+  .positive('Le prix doit etre positif')
+  .refine((v) => Math.round(v * 100) === v * 100, 'Prix invalide')
+  .transform((v) => Math.round(v * 100) / 100);
+
 const createProductSchema = z.object({
   name: z.string().min(1, 'Le nom du produit est requis'),
   description: z.string().optional(),
-  price: z.number().positive('Le prix doit etre positif'),
+  price: priceSchema,
   projectId: z.string().optional(),
 });
 
@@ -57,26 +58,26 @@ const sizeEntrySchema = z.object({
 
 const updateProductSchema = z.object({
   name: z.string().min(1, 'Le nom du produit est requis').optional(),
-  description: z.string().optional(),
-  price: z.number().positive('Le prix doit etre positif').optional(),
+  description: z.string().nullable().optional(),
+  price: priceSchema.optional(),
   projectId: z.string().nullable().optional(),
   styleId: z.string().nullable().optional(),
   sizes: z.array(sizeEntrySchema).optional(),
-  category: z.string().optional(),
-  gender: z.string().optional(),
-  materials: z.string().optional(),
-  fit: z.string().optional(),
-  season: z.string().optional(),
-  madeIn: z.string().optional(),
-  careInstructions: z.string().optional(),
-  certifications: z.string().optional(),
-  weight: z.number().int().optional(),
+  category: z.string().nullable().optional(),
+  gender: z.string().nullable().optional(),
+  materials: z.string().nullable().optional(),
+  fit: z.string().nullable().optional(),
+  season: z.string().nullable().optional(),
+  madeIn: z.string().nullable().optional(),
+  careInstructions: z.string().nullable().optional(),
+  certifications: z.string().nullable().optional(),
+  weight: z.number().int().nullable().optional(),
 });
 
 const createVariantSchema = z.object({
   productId: z.string().min(1, "L'ID du produit est requis"),
   name: z.string().min(1, 'Le nom de la variante est requis'),
-  priceOverride: z.number().positive('Le prix doit etre positif').optional(),
+  priceOverride: priceSchema.optional(),
   stock: z.number().int().min(0, 'Le stock ne peut pas etre negatif'),
   color: z.string().optional(),
   colorCode: z.string().optional(),
@@ -84,7 +85,7 @@ const createVariantSchema = z.object({
 
 const updateVariantSchema = z.object({
   name: z.string().min(1, 'Le nom de la variante est requis').optional(),
-  priceOverride: z.number().positive('Le prix doit etre positif').optional(),
+  priceOverride: priceSchema.optional(),
   removePriceOverride: z.boolean().optional(),
   stock: z.number().int().min(0, 'Le stock ne peut pas etre negatif').optional(),
   color: z.string().optional(),
@@ -194,6 +195,21 @@ export async function updateProduct(
     }
   }
 
+  // Validate styleId: style must exist and not be REJECTED
+  let forceDraft = false;
+  if (styleId !== undefined && styleId !== null) {
+    const styleRecord = await prisma.style.findUnique({
+      where: { id: styleId },
+      select: { status: true },
+    });
+    if (!styleRecord || styleRecord.status === 'REJECTED') {
+      return { success: false, error: 'Le style sélectionné est invalide ou a été refusé' };
+    }
+    if (styleRecord.status === 'PENDING_APPROVAL') {
+      forceDraft = true;
+    }
+  }
+
   // Single atomic update combining core and extra fields
   await prisma.product.update({
     where: { id: productId },
@@ -203,6 +219,7 @@ export async function updateProduct(
       ...(price !== undefined && { price: Math.round(price * 100) }),
       ...(projectId !== undefined && { projectId }),
       ...(styleId !== undefined && { styleId }),
+      ...(forceDraft && { status: 'DRAFT' }),
       ...(sizes !== undefined && { sizes }),
       ...(category !== undefined && { category }),
       ...(gender !== undefined && { gender }),
@@ -229,7 +246,6 @@ export async function deleteProduct(productId: string): Promise<ActionResult> {
 
   const deleteProductUseCase = new DeleteProductUseCase(
     productRepository,
-    productImageRepository,
     variantRepository,
     imageUploadService
   );
@@ -404,85 +420,6 @@ export async function deleteVariant(variantId: string, productId: string): Promi
 
   const deleteVariantUseCase = new DeleteVariantUseCase(variantRepository, imageUploadService);
   const result = await deleteVariantUseCase.execute({ id: variantId });
-
-  if (result.isFailure) {
-    return { success: false, error: result.error! };
-  }
-
-  revalidatePath(`/dashboard/products/${productId}`);
-
-  return { success: true };
-}
-
-// ─── Image Actions ─────────────────────────────────────────────────
-
-export async function uploadProductImage(
-  productId: string,
-  formData: FormData
-): Promise<ActionResult & { url?: string }> {
-  const { error } = await requireCreatorAuth();
-  if (error) return { success: false, error };
-
-  const file = formData.get('file') as File | null;
-  if (!file) {
-    return { success: false, error: 'Aucun fichier selectionne' };
-  }
-
-  const alt = (formData.get('alt') as string) ?? '';
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const uploadUseCase = new UploadProductImageUseCase(
-    imageUploadService,
-    productImageRepository,
-    productRepository
-  );
-  const result = await uploadUseCase.execute({
-    productId,
-    file: buffer,
-    filename: file.name,
-    alt,
-  });
-
-  if (result.isFailure) {
-    return { success: false, error: result.error! };
-  }
-
-  revalidatePath(`/dashboard/products/${productId}`);
-
-  return { success: true, id: result.value.id, url: result.value.url };
-}
-
-export async function deleteProductImage(
-  imageId: string,
-  productId: string
-): Promise<ActionResult> {
-  const { error } = await requireCreatorAuth();
-  if (error) return { success: false, error };
-
-  const deleteImageUseCase = new DeleteProductImageUseCase(
-    imageUploadService,
-    productImageRepository
-  );
-  const result = await deleteImageUseCase.execute({ imageId });
-
-  if (result.isFailure) {
-    return { success: false, error: result.error! };
-  }
-
-  revalidatePath(`/dashboard/products/${productId}`);
-
-  return { success: true };
-}
-
-export async function reorderProductImages(
-  productId: string,
-  imageIds: string[]
-): Promise<ActionResult> {
-  const { error } = await requireCreatorAuth();
-  if (error) return { success: false, error };
-
-  const reorderUseCase = new ReorderProductImagesUseCase(productImageRepository);
-  const result = await reorderUseCase.execute({ productId, imageIds });
 
   if (result.isFailure) {
     return { success: false, error: result.error! };

@@ -25,7 +25,10 @@ export type NotificationTypeValue =
   | 'SUBSCRIPTION_EXPIRING'
   | 'PAYMENT_FAILED'
   | 'ACCOUNT_SUSPENDED'
-  | 'ACCOUNT_REACTIVATED';
+  | 'ACCOUNT_REACTIVATED'
+  // Style moderation
+  | 'STYLE_APPROVED'
+  | 'STYLE_REJECTED';
 
 interface NotificationTypeProps {
   value: NotificationTypeValue;
@@ -41,6 +44,7 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
     'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED', 'REVIEW_RECEIVED',
     'SUBSCRIPTION_RENEWED', 'SUBSCRIPTION_EXPIRING', 'PAYMENT_FAILED',
     'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED',
+    'STYLE_APPROVED', 'STYLE_REJECTED',
   ];
 
   private static readonly MANDATORY_TYPES: NotificationTypeValue[] = [
@@ -51,6 +55,7 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
     'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED',
     'SUBSCRIPTION_RENEWED', 'PAYMENT_FAILED',
     'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED',
+    'STYLE_APPROVED', 'STYLE_REJECTED',
   ];
 
   private constructor(props: NotificationTypeProps) {

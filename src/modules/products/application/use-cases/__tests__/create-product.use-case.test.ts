@@ -106,5 +106,21 @@ describe('CreateProductUseCase', () => {
       expect(result.value.id).toBeDefined();
       expect(result.value.id.length).toBeGreaterThan(0);
     });
+
+    it('should auto-create a default variant on product creation', async () => {
+      const result = await useCase.execute({
+        creatorId: 'creator-123',
+        name: 'Mon Produit',
+        price: 29.99,
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(mockRepo.savedVariants).toHaveLength(1);
+      expect(mockRepo.savedVariants[0]?.name).toBe('Mon Produit');
+      expect(mockRepo.savedVariants[0]?.productId).toBe(result.value.id);
+      expect(mockRepo.savedVariants[0]?.stock).toBe(0);
+      expect(mockRepo.savedVariants[0]?.color).toBe('unique');
+      expect(mockRepo.savedVariants[0]?.colorCode).toBe('#000000');
+    });
   });
 });

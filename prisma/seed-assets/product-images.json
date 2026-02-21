@@ -1,0 +1,156 @@
+{
+  "products": {
+    "prod_hugo_tshirt": {
+      "variants": {
+        "var_hugo_tshirt_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684770/kpsull-seed/hugo-tshirt-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684771/kpsull-seed/hugo-tshirt-default-2.jpg"
+        ]
+      }
+    },
+    "prod_hugo_hoodie": {
+      "variants": {
+        "var_hugo_hoodie_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684772/kpsull-seed/hugo-hoodie-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684773/kpsull-seed/hugo-hoodie-default-2.jpg"
+        ]
+      }
+    },
+    "prod_hugo_jogger": {
+      "variants": {
+        "var_hugo_jogger_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684774/kpsull-seed/hugo-jogger-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684776/kpsull-seed/hugo-jogger-default-2.jpg"
+        ]
+      }
+    },
+    "prod_hugo_polo": {
+      "variants": {
+        "var_hugo_polo_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684777/kpsull-seed/hugo-polo-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684778/kpsull-seed/hugo-polo-default-2.jpg"
+        ]
+      }
+    },
+    "prod_hugo_sweat": {
+      "variants": {
+        "var_hugo_sweat_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684780/kpsull-seed/hugo-sweat-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684781/kpsull-seed/hugo-sweat-default-2.jpg"
+        ]
+      }
+    },
+    "prod_hugo_short": {
+      "variants": {
+        "var_hugo_short_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684783/kpsull-seed/hugo-short-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684784/kpsull-seed/hugo-short-default-2.jpg"
+        ]
+      }
+    },
+    "prod_lea_veste": {
+      "variants": {
+        "var_lea_veste_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684785/kpsull-seed/lea-veste-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684786/kpsull-seed/lea-veste-default-2.jpg"
+        ]
+      }
+    },
+    "prod_lea_pantalon": {
+      "variants": {
+        "var_lea_pantalon_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684787/kpsull-seed/lea-pantalon-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684788/kpsull-seed/lea-pantalon-default-2.jpg"
+        ]
+      }
+    },
+    "prod_lea_chemise": {
+      "variants": {
+        "var_lea_chemise_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684789/kpsull-seed/lea-chemise-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684790/kpsull-seed/lea-chemise-default-2.jpg"
+        ]
+      }
+    },
+    "prod_lea_robe": {
+      "variants": {
+        "var_lea_robe_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684791/kpsull-seed/lea-robe-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684792/kpsull-seed/lea-robe-default-2.jpg"
+        ]
+      }
+    },
+    "prod_lea_top": {
+      "variants": {
+        "var_lea_top_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684793/kpsull-seed/lea-top-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684794/kpsull-seed/lea-top-default-2.jpg"
+        ]
+      }
+    },
+    "prod_lea_manteau": {
+      "variants": {
+        "var_lea_manteau_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684795/kpsull-seed/lea-manteau-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684796/kpsull-seed/lea-manteau-default-2.jpg"
+        ]
+      }
+    },
+    "prod_kais_veste": {
+      "variants": {
+        "var_kais_veste_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684797/kpsull-seed/kais-veste-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684798/kpsull-seed/kais-veste-default-2.jpg"
+        ]
+      }
+    },
+    "prod_kais_legging": {
+      "variants": {
+        "var_kais_legging_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684799/kpsull-seed/kais-legging-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684801/kpsull-seed/kais-legging-default-2.jpg"
+        ]
+      }
+    },
+    "prod_kais_debardeur": {
+      "variants": {
+        "var_kais_debardeur_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684802/kpsull-seed/kais-debardeur-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684803/kpsull-seed/kais-debardeur-default-2.jpg"
+        ]
+      }
+    },
+    "prod_kais_sweat": {
+      "variants": {
+        "var_kais_sweat_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684804/kpsull-seed/kais-sweat-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684805/kpsull-seed/kais-sweat-default-2.jpg"
+        ]
+      }
+    },
+    "prod_kais_short": {
+      "variants": {
+        "var_kais_short_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684806/kpsull-seed/kais-short-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684807/kpsull-seed/kais-short-default-2.jpg"
+        ]
+      }
+    },
+    "prod_kais_brassiere": {
+      "variants": {
+        "var_kais_brassiere_default": [
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684808/kpsull-seed/kais-brassiere-default-1.jpg",
+          "https://res.cloudinary.com/damucxy2t/image/upload/v1771684809/kpsull-seed/kais-brassiere-default-2.jpg"
+        ]
+      }
+    }
+  },
+  "collections": {
+    "proj_hugo_urban_core": "https://res.cloudinary.com/damucxy2t/image/upload/v1771684810/kpsull-seed/collection-hugo-urban-core.jpg",
+    "proj_hugo_mono": "https://res.cloudinary.com/damucxy2t/image/upload/v1771684811/kpsull-seed/collection-hugo-monochrome.jpg",
+    "proj_lea_matiere": "https://res.cloudinary.com/damucxy2t/image/upload/v1771684812/kpsull-seed/collection-lea-matiere-premiere.jpg",
+    "proj_lea_epure": "https://res.cloudinary.com/damucxy2t/image/upload/v1771684813/kpsull-seed/collection-lea-epure.jpg",
+    "proj_kais_trail": "https://res.cloudinary.com/damucxy2t/image/upload/v1771684815/kpsull-seed/collection-kais-trail-ready.jpg",
+    "proj_kais_everyday": "https://res.cloudinary.com/damucxy2t/image/upload/v1771684816/kpsull-seed/collection-kais-everyday-active.jpg"
+  }
+}
