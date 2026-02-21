@@ -79,7 +79,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         <div className="flex gap-2 overflow-x-auto pb-2">
           {images.map((url, index) => (
             <button
-              key={index}
+              key={url}
               onClick={() => setSelectedIndex(index)}
               className={`relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-colors ${
                 index === selectedIndex

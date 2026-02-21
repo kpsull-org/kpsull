@@ -39,7 +39,7 @@ describe('GetPublicProductUseCase', () => {
     priceOverride?: Money
   ) => {
     return ProductVariant.reconstitute({
-      id: 'variant-' + Math.random(),
+      id: `variant-${productId}-${stock}`,
       productId,
       name: 'Taille M',
       priceOverrideAmount: priceOverride?.amount,

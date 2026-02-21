@@ -24,8 +24,8 @@
  */
 
 import { config } from 'dotenv';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 config({ path: '.env.local' });
 
@@ -108,7 +108,7 @@ const COLLECTION_IMAGE_SPECS: CollectionImageSpec[] = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getPicsumUrl(label: string, width = 800, height = 800): string {
-  const seed = label.replace(/[^a-z0-9]/gi, '').toLowerCase();
+  const seed = label.replaceAll(/[^a-z0-9]/gi, '').toLowerCase();
   return `https://picsum.photos/seed/${seed}/${width}/${height}`;
 }
 
@@ -294,9 +294,7 @@ async function main(): Promise<void> {
         finalUrls.push(finalUrl);
       }
 
-      if (!output.products[spec.productId]) {
-        output.products[spec.productId] = { variants: {} };
-      }
+      output.products[spec.productId] ??= { variants: {} };
       output.products[spec.productId]!.variants[spec.variantId] = finalUrls;
 
       console.log(`OK (${finalUrls.length} images)`);

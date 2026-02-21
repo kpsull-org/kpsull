@@ -455,8 +455,8 @@ export async function seedNewCreators(
       const isShipped = status === OrderStatus.SHIPPED;
 
       // Use first available product image for order item, fallback to empty string
-      const firstCollKey = def.collections[0]!.id.replace(`proj_${def.slug.replace(/-/g, '_')}_`, '');
-      const firstProdId = `prod_${def.slug.replace(/-/g, '_')}_${firstCollKey}_0`;
+      const firstCollKey = def.collections[0]!.id.replace(`proj_${def.slug.replaceAll('-', '_')}_`, '');
+      const firstProdId = `prod_${def.slug.replaceAll('-', '_')}_${firstCollKey}_0`;
       const orderItemImage = productImages[firstProdId]?.main?.[0] ?? '';
 
       await prisma.order.create({

@@ -818,8 +818,10 @@ export function ProductDashboard({
           >
             <div
               role="dialog"
+              aria-modal="true"
               className="bg-background border rounded-xl p-5 w-[480px] max-h-[80vh] overflow-y-auto shadow-xl space-y-3"
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
             >
               <p className="text-sm font-medium">Ajouter une taille</p>
 
@@ -995,8 +997,10 @@ export function ProductDashboard({
           >
             <div
               role="dialog"
+              aria-modal="true"
               className="bg-background border rounded-xl p-5 w-80 shadow-xl space-y-4"
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
             >
               <p className="text-sm font-medium">Nouvelle couleur</p>
 

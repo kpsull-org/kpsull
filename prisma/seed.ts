@@ -40,8 +40,8 @@ import {
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
-import * as fs from 'fs';
-import { execFileSync } from 'child_process';
+import * as fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 
 const connectionString =
   process.env.DATABASE_URL ||
@@ -80,7 +80,7 @@ async function ensureSeedImages(): Promise<void> {
 
   execFileSync('bun', ['prisma/scripts/upload-seed-images.ts'], {
     stdio: 'inherit',
-    env: process.env,
+    env: { ...process.env, PATH: '/usr/local/bin:/usr/bin:/bin' },
   });
 
   console.log('\nImages generees et uploadees sur Cloudinary\n');
@@ -752,10 +752,9 @@ async function main() {
   // FLAGGED CONTENT
   // ============================================
 
-  const flagHoodie = await prisma.flaggedContent.create({ data: { contentId: 'prod_hugo_hoodie', contentType: 'PRODUCT', contentTitle: 'Hoodie Urbain', contentDescription: 'Hoodie oversize 350g molleton brosse interieur.', creatorId: hugo.id, flaggedBy: alice!.id, flagReason: FlagReason.MISLEADING_DESCRIPTION, flagDetails: 'La description mentionne "fait en France" mais etiquette indique Portugal.', status: ModerationStatus.PENDING, flaggedAt: daysAgo(3) } });
+  await prisma.flaggedContent.create({ data: { contentId: 'prod_hugo_hoodie', contentType: 'PRODUCT', contentTitle: 'Hoodie Urbain', contentDescription: 'Hoodie oversize 350g molleton brosse interieur.', creatorId: hugo.id, flaggedBy: alice!.id, flagReason: FlagReason.MISLEADING_DESCRIPTION, flagDetails: 'La description mentionne "fait en France" mais etiquette indique Portugal.', status: ModerationStatus.PENDING, flaggedAt: daysAgo(3) } });
 
   const flagVeste = await prisma.flaggedContent.create({ data: { contentId: 'prod_kais_veste', contentType: 'PRODUCT', contentTitle: 'Veste Technique', contentDescription: 'Veste coupe-vent technique 3 couches.', contentImageUrl: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400', creatorId: kais.id, flaggedBy: david!.id, flagReason: FlagReason.MISLEADING_DESCRIPTION, flagDetails: 'Impermeabilite annoncee non verifiable.', status: ModerationStatus.APPROVED, moderatorId: admin.id, moderatorNote: 'Caracteristiques techniques verifiees. Signalement non fonde.', flaggedAt: daysAgo(10), moderatedAt: daysAgo(7) } });
-  void flagHoodie; // suppress unused warning
 
   await prisma.moderationActionRecord.create({ data: { flaggedContentId: flagVeste.id, action: ModerationActionType.APPROVE, moderatorId: admin.id, note: 'Caracteristiques techniques confirmees. Signalement rejete.', createdAt: daysAgo(7) } });
 
