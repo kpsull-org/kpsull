@@ -280,7 +280,7 @@ export function ProductForm({ mode, productId, initialValues, collections, style
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       triggerSave();
-    }, 1500);
+    }, 800);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
