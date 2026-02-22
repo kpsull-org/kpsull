@@ -93,6 +93,37 @@ const updateVariantSchema = z.object({
   removeColor: z.boolean().optional(),
 });
 
+// ─── Validation helpers ────────────────────────────────────────────
+
+function validateProductName(name: string | undefined): string | null {
+  if (name === undefined) return null;
+  if (!name.trim()) return 'Le nom du produit est requis';
+  if (name.length > 200) return 'Le nom ne peut pas dépasser 200 caractères';
+  return null;
+}
+
+function validateProductPrice(price: number | undefined): string | null {
+  if (price === undefined) return null;
+  const moneyResult = Money.create(price);
+  return moneyResult.isFailure ? (moneyResult.error ?? 'Prix invalide') : null;
+}
+
+async function validateAndResolveStyleId(
+  styleId: string | null | undefined,
+): Promise<{ error: string | null; forceDraft: boolean }> {
+  if (styleId === undefined || styleId === null) {
+    return { error: null, forceDraft: false };
+  }
+  const styleRecord = await prisma.style.findUnique({
+    where: { id: styleId },
+    select: { status: true },
+  });
+  if (!styleRecord || styleRecord.status === 'REJECTED') {
+    return { error: 'Le style sélectionné est invalide ou a été refusé', forceDraft: false };
+  }
+  return { error: null, forceDraft: styleRecord.status === 'PENDING_APPROVAL' };
+}
+
 // ─── Auth helper ───────────────────────────────────────────────────
 
 async function requireCreatorAuth() {
@@ -178,37 +209,16 @@ export async function updateProduct(
     return { success: false, error: "Vous n'etes pas autorise a modifier ce produit" };
   }
 
-  // Validate business rules inline (mirrors use case / entity logic)
-  if (name !== undefined) {
-    if (!name.trim()) {
-      return { success: false, error: 'Le nom du produit est requis' };
-    }
-    if (name.length > 200) {
-      return { success: false, error: 'Le nom ne peut pas dépasser 200 caractères' };
-    }
-  }
+  // Validate business rules
+  const nameError = validateProductName(name);
+  if (nameError) return { success: false, error: nameError };
 
-  if (price !== undefined) {
-    const moneyResult = Money.create(price);
-    if (moneyResult.isFailure) {
-      return { success: false, error: moneyResult.error! };
-    }
-  }
+  const priceError = validateProductPrice(price);
+  if (priceError) return { success: false, error: priceError };
 
   // Validate styleId: style must exist and not be REJECTED
-  let forceDraft = false;
-  if (styleId !== undefined && styleId !== null) {
-    const styleRecord = await prisma.style.findUnique({
-      where: { id: styleId },
-      select: { status: true },
-    });
-    if (!styleRecord || styleRecord.status === 'REJECTED') {
-      return { success: false, error: 'Le style sélectionné est invalide ou a été refusé' };
-    }
-    if (styleRecord.status === 'PENDING_APPROVAL') {
-      forceDraft = true;
-    }
-  }
+  const { error: styleError, forceDraft } = await validateAndResolveStyleId(styleId);
+  if (styleError) return { success: false, error: styleError };
 
   // Single atomic update combining core and extra fields
   await prisma.product.update({
