@@ -341,11 +341,11 @@ export function ProductDashboard({
       });
       return newMap;
     });
-    // Auto-save after 1.5s of inactivity
+    // Auto-save after 0.8s of inactivity
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       saveSkusRef.current();
-    }, 1500);
+    }, 800);
   }
 
   // ── Save stocks ──────────────────────────────────────────────────────────────

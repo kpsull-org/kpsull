@@ -4,9 +4,8 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/client';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { ListProjectsUseCase } from '@/modules/products/application/use-cases/projects/list-projects.use-case';
-import { PrismaProjectRepository } from '@/modules/products/infrastructure/repositories/prisma-project.repository';
-import { NewProductPageClient } from './new-product-page-client';
+import { CreateProductUseCase } from '@/modules/products/application/use-cases/products/create-product.use-case';
+import { PrismaProductRepository } from '@/modules/products/infrastructure/repositories/prisma-product.repository';
 
 export const metadata: Metadata = {
   title: 'Nouveau produit | Kpsull',
@@ -24,41 +23,37 @@ export default async function NewProductPage() {
     redirect('/mon-compte');
   }
 
-  const projectRepo = new PrismaProjectRepository(prisma);
-  const [collectionsResult, styles] = await Promise.all([
-    new ListProjectsUseCase(projectRepo).execute({ creatorId: session.user.id }),
-    prisma.style.findMany({
-      where: {
-        OR: [
-          { isCustom: false, status: 'APPROVED' },
-          { isCustom: true, creatorId: session.user.id, status: 'PENDING_APPROVAL' },
-          { isCustom: true, creatorId: session.user.id, status: 'APPROVED' },
-        ],
-      },
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true, isCustom: true, status: true },
-    }),
-  ]);
+  const productRepository = new PrismaProductRepository(prisma);
+  const createProductUseCase = new CreateProductUseCase(productRepository);
 
-  const collections = (collectionsResult.value?.projects ?? []).map((p) => ({ id: p.id, name: p.name }));
+  const result = await createProductUseCase.execute({
+    creatorId: session.user.id,
+    name: 'Nouveau produit',
+    price: 0.01,
+  });
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/dashboard/products"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour aux produits
-        </Link>
-        <h1 className="text-2xl font-bold tracking-tight">Nouveau produit</h1>
-        <p className="text-muted-foreground">
-          Creez un nouveau produit. Il sera en brouillon jusqu&apos;a sa publication.
-        </p>
+  if (result.isFailure) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link
+            href="/dashboard/products"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour aux produits
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Nouveau produit</h1>
+        </div>
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3">
+          <p className="text-sm font-medium text-destructive">
+            Une erreur est survenue lors de la creation du produit.
+          </p>
+          <p className="text-xs text-destructive/70 mt-1">{result.error}</p>
+        </div>
       </div>
+    );
+  }
 
-      <NewProductPageClient collections={collections} styles={styles} />
-    </div>
-  );
+  redirect(`/dashboard/products/${result.value.id}`);
 }
