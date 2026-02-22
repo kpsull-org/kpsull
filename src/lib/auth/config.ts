@@ -18,6 +18,31 @@ import { authConfigEdge } from './config.edge';
 // Soft refresh interval: reload user data from DB every 15 minutes
 const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in ms
 
+type DbUserFields = {
+  role: string;
+  accountTypeChosen: boolean;
+  wantsToBeCreator: boolean;
+  emailVerified: Date | null;
+};
+
+function applyDbUserToToken(token: Record<string, unknown>, dbUser: DbUserFields): void {
+  token.role = dbUser.role;
+  token.accountTypeChosen = dbUser.accountTypeChosen;
+  token.wantsToBeCreator = dbUser.wantsToBeCreator;
+  token.emailVerified = dbUser.emailVerified ? dbUser.emailVerified.toISOString() : null;
+}
+
+async function loadUserFromDb(userId: string): Promise<DbUserFields | null> {
+  try {
+    return await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, accountTypeChosen: true, wantsToBeCreator: true, emailVerified: true },
+    });
+  } catch {
+    return null;
+  }
+}
+
 export const authConfig: NextAuthConfig = {
   ...authConfigEdge,
   providers: [
@@ -119,18 +144,10 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id;
         // For OAuth users, PrismaAdapter doesn't return custom fields (role, etc.)
         // Always do a DB lookup to get the full user data
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: user.id as string },
-            select: { role: true, accountTypeChosen: true, wantsToBeCreator: true, emailVerified: true },
-          });
-          if (dbUser) {
-            token.role = dbUser.role;
-            token.accountTypeChosen = dbUser.accountTypeChosen;
-            token.wantsToBeCreator = dbUser.wantsToBeCreator;
-            token.emailVerified = dbUser.emailVerified ? dbUser.emailVerified.toISOString() : null;
-          }
-        } catch {
+        const dbUser = await loadUserFromDb(user.id as string);
+        if (dbUser) {
+          applyDbUserToToken(token, dbUser);
+        } else {
           // Fallback to user object (credentials provider includes these)
           token.role = user.role ?? 'CLIENT';
           token.accountTypeChosen = user.accountTypeChosen ?? false;
@@ -147,20 +164,11 @@ export const authConfig: NextAuthConfig = {
         Date.now() - (token.refreshedAt as number) > REFRESH_INTERVAL;
 
       if (shouldRefresh && token.id) {
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: token.id as string },
-            select: { role: true, accountTypeChosen: true, wantsToBeCreator: true, emailVerified: true },
-          });
-          if (dbUser) {
-            token.role = dbUser.role;
-            token.accountTypeChosen = dbUser.accountTypeChosen;
-            token.wantsToBeCreator = dbUser.wantsToBeCreator;
-            token.emailVerified = dbUser.emailVerified ? dbUser.emailVerified.toISOString() : null;
-          }
-        } catch {
-          // DB unavailable: keep existing token data
+        const dbUser = await loadUserFromDb(token.id as string);
+        if (dbUser) {
+          applyDbUserToToken(token, dbUser);
         }
+        // DB unavailable: keep existing token data
         token.refreshedAt = Date.now();
       }
 
