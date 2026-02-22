@@ -195,34 +195,47 @@ async function uploadToCloudinary(sourceUrl: string, label: string): Promise<str
   return result.secure_url;
 }
 
+async function pickValidatedUrls(
+  candidates: string[],
+  query: string,
+  geminiKey: string | undefined,
+  maxCount: number,
+): Promise<string[]> {
+  const urls: string[] = [];
+  for (const url of candidates) {
+    if (urls.length >= maxCount) break;
+    if (geminiKey) {
+      const valid = await validateWithGemini(url, query, geminiKey);
+      if (valid) urls.push(url);
+    } else {
+      urls.push(url);
+    }
+  }
+  return urls;
+}
+
+function fillWithPicsum(urls: string[], label: string, count: number): string[] {
+  const result = [...urls];
+  let picsumIdx = result.length;
+  while (result.length < count) {
+    const suffix = picsumIdx === 0 ? '' : `-${picsumIdx}`;
+    result.push(getPicsumUrl(`${label}${suffix}`));
+    picsumIdx++;
+  }
+  return result;
+}
+
 async function resolveVariantImages(spec: VariantImageSpec): Promise<string[]> {
   const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
   const geminiKey = process.env.GOOGLE_AI_API_KEY;
-  const urls: string[] = [];
+  let urls: string[] = [];
 
   if (unsplashKey) {
     const candidates = await searchUnsplash(spec.query, spec.count);
-
-    for (const url of candidates) {
-      if (urls.length >= spec.count) break;
-
-      if (geminiKey) {
-        const valid = await validateWithGemini(url, spec.query, geminiKey);
-        if (valid) urls.push(url);
-      } else {
-        urls.push(url);
-      }
-    }
+    urls = await pickValidatedUrls(candidates, spec.query, geminiKey, spec.count);
   }
 
-  let picsumIdx = 0;
-  while (urls.length < spec.count) {
-    const suffix = picsumIdx === 0 ? '' : `-${picsumIdx}`;
-    urls.push(getPicsumUrl(`${spec.label}${suffix}`));
-    picsumIdx++;
-  }
-
-  return urls;
+  return fillWithPicsum(urls, spec.label, spec.count);
 }
 
 async function resolveCollectionImage(spec: CollectionImageSpec): Promise<string> {
@@ -247,16 +260,7 @@ async function resolveCollectionImage(spec: CollectionImageSpec): Promise<string
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-async function main(): Promise<void> {
-  if (
-    !process.env.CLOUDINARY_CLOUD_NAME ||
-    !process.env.CLOUDINARY_API_KEY ||
-    !process.env.CLOUDINARY_API_SECRET
-  ) {
-    console.error('CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY et CLOUDINARY_API_SECRET sont requis.');
-    process.exit(1);
-  }
-
+function logModeInfo(): void {
   const hasUnsplash = Boolean(process.env.UNSPLASH_ACCESS_KEY);
   const hasGemini = Boolean(process.env.GOOGLE_AI_API_KEY);
 
@@ -274,14 +278,15 @@ async function main(): Promise<void> {
   console.log(`\n${totalVariants} variantes x images + ${totalCollections} collections`);
   console.log(`Estim ~${estimatedCalls} appels Unsplash (limite: 50/heure)`);
   console.log('Estimation temps: ~30s (picsum) | ~2-5min (Unsplash)\n');
+}
 
-  const output: SeedImagesOutput = { products: {}, collections: {} };
-  let processed = 0;
-  const total = totalVariants + totalCollections;
-
+async function processVariantSpecs(
+  output: SeedImagesOutput,
+  progressRef: { processed: number; total: number },
+): Promise<void> {
   for (const spec of VARIANT_IMAGE_SPECS) {
-    processed++;
-    process.stdout.write(`[${processed}/${total}] ${spec.label} (${spec.count} img)... `);
+    progressRef.processed++;
+    process.stdout.write(`[${progressRef.processed}/${progressRef.total}] ${spec.label} (${spec.count} img)... `);
 
     try {
       const sourceUrls = await resolveVariantImages(spec);
@@ -303,10 +308,15 @@ async function main(): Promise<void> {
       console.log(`ERREUR: ${message}`);
     }
   }
+}
 
+async function processCollectionSpecs(
+  output: SeedImagesOutput,
+  progressRef: { processed: number; total: number },
+): Promise<void> {
   for (const spec of COLLECTION_IMAGE_SPECS) {
-    processed++;
-    process.stdout.write(`[${processed}/${total}] ${spec.label}... `);
+    progressRef.processed++;
+    process.stdout.write(`[${progressRef.processed}/${progressRef.total}] ${spec.label}... `);
 
     try {
       const sourceUrl = await resolveCollectionImage(spec);
@@ -318,14 +328,40 @@ async function main(): Promise<void> {
       console.log(`ERREUR: ${message}`);
     }
   }
+}
 
+function saveOutput(output: SeedImagesOutput): string {
   const outputDir = path.resolve('./prisma/seed-assets');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
-
   const outputPath = path.join(outputDir, 'product-images.json');
   fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
+  return outputPath;
+}
+
+async function main(): Promise<void> {
+  if (
+    !process.env.CLOUDINARY_CLOUD_NAME ||
+    !process.env.CLOUDINARY_API_KEY ||
+    !process.env.CLOUDINARY_API_SECRET
+  ) {
+    console.error('CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY et CLOUDINARY_API_SECRET sont requis.');
+    process.exit(1);
+  }
+
+  logModeInfo();
+
+  const output: SeedImagesOutput = { products: {}, collections: {} };
+  const progressRef = {
+    processed: 0,
+    total: VARIANT_IMAGE_SPECS.length + COLLECTION_IMAGE_SPECS.length,
+  };
+
+  await processVariantSpecs(output, progressRef);
+  await processCollectionSpecs(output, progressRef);
+
+  const outputPath = saveOutput(output);
 
   const productsCount = Object.keys(output.products).length;
   const collectionsCount = Object.keys(output.collections).length;
