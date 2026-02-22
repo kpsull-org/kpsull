@@ -36,13 +36,13 @@ interface InitialFormValues {
 }
 
 interface ProductDetailClientProps {
-  productId: string;
-  initialFormValues: InitialFormValues;
-  collections: CollectionOption[];
-  styles: StyleOption[];
-  initialVariants: DashboardVariant[];
-  initialSizes: SizeEntry[];
-  initialSkus: SkuOutput[];
+  readonly productId: string;
+  readonly initialFormValues: InitialFormValues;
+  readonly collections: CollectionOption[];
+  readonly styles: StyleOption[];
+  readonly initialVariants: DashboardVariant[];
+  readonly initialSizes: SizeEntry[];
+  readonly initialSkus: SkuOutput[];
 }
 
 export function ProductDetailClient({

@@ -22,8 +22,8 @@ interface StyleOption {
 }
 
 interface NewProductPageClientProps {
-  collections: CollectionOption[];
-  styles: StyleOption[];
+  readonly collections: CollectionOption[];
+  readonly styles: StyleOption[];
 }
 
 export function NewProductPageClient({ collections, styles }: NewProductPageClientProps) {
@@ -62,7 +62,7 @@ export function NewProductPageClient({ collections, styles }: NewProductPageClie
                 'Creer des variantes de couleur',
                 'Gerer les stocks par taille et variante',
               ].map((item, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span className="h-5 w-5 rounded-full border border-primary/40 flex items-center justify-center text-[10px] text-primary font-bold shrink-0">
                     {i + 1}
                   </span>

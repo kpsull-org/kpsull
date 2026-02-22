@@ -42,9 +42,9 @@ function getMockRelayPoints(postalCode: string): RelayPoint[] {
 }
 
 interface RelayPointSelectorProps {
-  carrierName: string;
-  selectedRelayPoint: RelayPoint | null;
-  onSelect: (point: RelayPoint) => void;
+  readonly carrierName: string;
+  readonly selectedRelayPoint: RelayPoint | null;
+  readonly onSelect: (point: RelayPoint) => void;
 }
 
 /**

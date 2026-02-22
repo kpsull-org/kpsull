@@ -48,8 +48,8 @@ const CARRIER_ICONS = {
 } as const;
 
 interface CarrierSelectorProps {
-  selectedCarrier: CarrierSelection | null;
-  onChange: (carrier: CarrierSelection) => void;
+  readonly selectedCarrier: CarrierSelection | null;
+  readonly onChange: (carrier: CarrierSelection) => void;
 }
 
 /**
@@ -65,20 +65,27 @@ export function CarrierSelector({ selectedCarrier, onChange }: CarrierSelectorPr
         const Icon = CARRIER_ICONS[carrier.carrier];
         const isSelected = selectedCarrier?.carrier === carrier.carrier;
 
+        const inputId = `carrier-${carrier.carrier}`;
         return (
-          <button
+          <label
             key={carrier.carrier}
-            type="button"
-            role="radio"
-            aria-checked={isSelected}
-            onClick={() => onChange(carrier)}
+            htmlFor={inputId}
             className={cn(
-              'w-full flex items-center gap-4 p-4 rounded-lg border-2 text-left transition-all',
+              'w-full flex items-center gap-4 p-4 rounded-lg border-2 text-left transition-all cursor-pointer',
               isSelected
                 ? 'border-primary bg-primary/5 shadow-sm'
                 : 'border-border hover:border-primary/40 hover:bg-muted/30'
             )}
           >
+            <input
+              type="radio"
+              id={inputId}
+              name="carrier"
+              value={carrier.carrier}
+              checked={isSelected}
+              onChange={() => onChange(carrier)}
+              className="sr-only"
+            />
             <div
               className={cn(
                 'flex h-10 w-10 items-center justify-center rounded-full border-2 flex-shrink-0 transition-colors',
@@ -103,7 +110,7 @@ export function CarrierSelector({ selectedCarrier, onChange }: CarrierSelectorPr
               <p className="font-bold font-sans">{formatPrice(carrier.price)}</p>
               <p className="text-xs text-muted-foreground font-sans">frais de port</p>
             </div>
-          </button>
+          </label>
         );
       })}
     </div>

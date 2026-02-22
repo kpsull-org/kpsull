@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 };
 
 interface ClientsPageProps {
-  searchParams: Promise<{
-    page?: string;
-    search?: string;
+  readonly searchParams: Promise<{
+    readonly page?: string;
+    readonly search?: string;
   }>;
 }
 

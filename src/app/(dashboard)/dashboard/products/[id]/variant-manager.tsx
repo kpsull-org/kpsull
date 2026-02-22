@@ -23,16 +23,16 @@ interface Variant {
 }
 
 interface VariantManagerProps {
-  productId: string;
-  variants: Variant[];
+  readonly productId: string;
+  readonly variants: Variant[];
 }
 
 interface ColorPickerProps {
-  colorName: string;
-  colorCode: string;
-  onColorNameChange: (v: string) => void;
-  onColorCodeChange: (v: string) => void;
-  idPrefix: string;
+  readonly colorName: string;
+  readonly colorCode: string;
+  readonly onColorNameChange: (v: string) => void;
+  readonly onColorCodeChange: (v: string) => void;
+  readonly idPrefix: string;
 }
 
 function ColorPicker({ colorName, colorCode, onColorNameChange, onColorCodeChange, idPrefix }: ColorPickerProps) {
@@ -91,10 +91,10 @@ function ColorPicker({ colorName, colorCode, onColorNameChange, onColorCodeChang
 }
 
 interface VariantImageSlotProps {
-  variantId: string;
-  productId: string;
-  images: string[];
-  isLoading?: boolean;
+  readonly variantId: string;
+  readonly productId: string;
+  readonly images: string[];
+  readonly isLoading?: boolean;
 }
 
 function VariantImageSlot({ variantId, productId, images, isLoading }: VariantImageSlotProps) {
@@ -137,37 +137,38 @@ function VariantImageSlot({ variantId, productId, images, isLoading }: VariantIm
   }
 
   return (
-    <div
-      className="relative h-14 w-14 shrink-0 rounded-lg border-2 border-dashed border-muted-foreground/30 overflow-hidden cursor-pointer hover:border-muted-foreground/60 transition-colors group"
-      onClick={() => !uploading && fileInputRef.current?.click()}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!uploading) fileInputRef.current?.click(); } }}
-      title={firstImage ? 'Changer la photo' : 'Ajouter une photo'}
-    >
-      {firstImage ? (
-        <>
-          <img src={firstImage} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center"
-              aria-label="Supprimer la photo"
-            >
-              <X className="h-3 w-3" />
-            </button>
+    <div className="relative h-14 w-14 shrink-0 rounded-lg border-2 border-dashed border-muted-foreground/30 overflow-hidden hover:border-muted-foreground/60 transition-colors group">
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full cursor-pointer"
+        onClick={() => !uploading && fileInputRef.current?.click()}
+        title={firstImage ? 'Changer la photo' : 'Ajouter une photo'}
+        aria-label={firstImage ? 'Changer la photo' : 'Ajouter une photo'}
+      >
+        {firstImage ? (
+          <>
+            <img src={firstImage} alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full h-5 w-5 flex items-center justify-center"
+                aria-label="Supprimer la photo"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="h-full w-full flex items-center justify-center text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+            {uploading ? (
+              <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/50 border-t-transparent animate-spin" />
+            ) : (
+              <ImagePlus className="h-5 w-5" />
+            )}
           </div>
-        </>
-      ) : (
-        <div className="h-full w-full flex items-center justify-center text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-          {uploading ? (
-            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/50 border-t-transparent animate-spin" />
-          ) : (
-            <ImagePlus className="h-5 w-5" />
-          )}
-        </div>
-      )}
+        )}
+      </button>
       <input
         ref={fileInputRef}
         type="file"

@@ -85,29 +85,29 @@ interface StyleOption {
 }
 
 interface ProductFormProps {
-  mode: 'create' | 'edit';
-  productId?: string;
-  initialValues?: {
-    name: string;
-    description?: string;
-    price: number;
-    projectId?: string;
-    styleId?: string;
-    category?: string;
-    gender?: string;
-    materials?: string;
-    fit?: string;
-    season?: string;
-    madeIn?: string;
-    careInstructions?: string;
-    certifications?: string;
-    weight?: number;
+  readonly mode: 'create' | 'edit';
+  readonly productId?: string;
+  readonly initialValues?: {
+    readonly name: string;
+    readonly description?: string;
+    readonly price: number;
+    readonly projectId?: string;
+    readonly styleId?: string;
+    readonly category?: string;
+    readonly gender?: string;
+    readonly materials?: string;
+    readonly fit?: string;
+    readonly season?: string;
+    readonly madeIn?: string;
+    readonly careInstructions?: string;
+    readonly certifications?: string;
+    readonly weight?: number;
   };
-  collections: CollectionOption[];
-  styles?: StyleOption[];
-  onCreated?: (id: string) => void;
-  onGenderChange?: (value: string) => void;
-  onCategoryChange?: (value: string) => void;
+  readonly collections: CollectionOption[];
+  readonly styles?: StyleOption[];
+  readonly onCreated?: (id: string) => void;
+  readonly onGenderChange?: (value: string) => void;
+  readonly onCategoryChange?: (value: string) => void;
 }
 
 function SectionTitle({ label }: { readonly label: string }) {

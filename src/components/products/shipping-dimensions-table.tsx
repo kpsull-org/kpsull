@@ -4,9 +4,9 @@ import { Input } from '@/components/ui/input';
 import type { SizeEntry } from '@/lib/utils/parse-sizes';
 
 interface ShippingDimensionsTableProps {
-  sizes: SizeEntry[];
-  onChange: (idx: number, field: 'weight' | 'width' | 'height' | 'length', value: string) => void;
-  onBlur?: () => void;
+  readonly sizes: SizeEntry[];
+  readonly onChange: (idx: number, field: 'weight' | 'width' | 'height' | 'length', value: string) => void;
+  readonly onBlur?: () => void;
 }
 
 export function ShippingDimensionsTable({ sizes, onChange, onBlur }: ShippingDimensionsTableProps) {

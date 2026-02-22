@@ -9,8 +9,8 @@ import { ImagePlus, ImageIcon, AlertCircle, Info } from 'lucide-react';
 import { compressImage, formatFileSize } from '@/lib/utils/image-compression';
 
 interface CollectionCoverUploadProps {
-  collectionId: string;
-  currentCoverImage: string | null;
+  readonly collectionId: string;
+  readonly currentCoverImage: string | null;
 }
 
 interface UploadState {
@@ -139,19 +139,17 @@ export function CollectionCoverUpload({
           </div>
         ) : (
           <div className="space-y-3">
-            <div
-              className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+            <button
+              type="button"
+              className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors w-full"
               onClick={handleUpload}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleUpload(); }}
             >
               <ImageIcon className="h-12 w-12 mb-3 opacity-30" />
               <p className="text-sm font-medium text-muted-foreground">
                 Cliquez pour ajouter une image de couverture
               </p>
               <p className="text-xs text-muted-foreground/60 mt-1">JPG, PNG ou WebP · Format paysage recommande</p>
-            </div>
+            </button>
             <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30 p-3">
               <div className="flex gap-2.5">
                 <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />

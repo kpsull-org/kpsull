@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 };
 
 interface OrdersPageProps {
-  searchParams: Promise<{
-    page?: string;
-    search?: string;
-    status?: string;
+  readonly searchParams: Promise<{
+    readonly page?: string;
+    readonly search?: string;
+    readonly status?: string;
   }>;
 }
 

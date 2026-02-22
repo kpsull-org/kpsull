@@ -13,8 +13,8 @@ import Link from 'next/link';
 import { loginSchema, registerSchema } from '@/lib/schemas/auth.schema';
 
 interface CredentialsFormProps {
-  mode: 'login' | 'signup';
-  callbackUrl?: string;
+  readonly mode: 'login' | 'signup';
+  readonly callbackUrl?: string;
 }
 
 export function CredentialsForm({ mode, callbackUrl: _callbackUrl = '/' }: CredentialsFormProps) {

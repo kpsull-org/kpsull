@@ -149,7 +149,7 @@ export const PlatformSummaryTemplate: React.FC<Props> = ({ data, subscriptionTot
         <Text style={styles.colAmount}>Montant HT</Text>
       </View>
       {data.items.map((item, index) => (
-        <View key={index} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+        <View key={item.description} style={index % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
           <Text style={styles.colType}>{item.description.startsWith('Commission') ? 'Commission' : 'Abonnement'}</Text>
           <Text style={styles.colCreator}>{item.description}</Text>
           <Text style={styles.colPeriod} />

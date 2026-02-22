@@ -13,8 +13,8 @@ import type { SizeEntry } from '@/lib/utils/parse-sizes';
 export type { SizeEntry };
 
 interface SizeManagerProps {
-  productId: string;
-  initialSizes: SizeEntry[];
+  readonly productId: string;
+  readonly initialSizes: SizeEntry[];
 }
 
 const COMMON_SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique'];
@@ -163,7 +163,7 @@ export function SizeManager({ productId, initialSizes }: SizeManagerProps) {
           <div className="flex flex-wrap gap-2 py-1">
             {sizes.map((entry, index) =>
               editingIndex === index ? (
-                <div key={index} className="flex items-center gap-1">
+                <div key={entry.size || `new-${index}`} className="flex items-center gap-1">
                   <Input
                     autoFocus
                     value={entry.size}
@@ -177,18 +177,15 @@ export function SizeManager({ productId, initialSizes }: SizeManagerProps) {
                   />
                 </div>
               ) : (
-                <div
-                  key={index}
-                  className="group flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1.5 text-sm font-medium cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => setEditingIndex(index)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') setEditingIndex(index);
-                  }}
-                  aria-label={`Modifier la taille ${entry.size}`}
-                >
-                  <span>{entry.size || <span className="text-muted-foreground italic">sans nom</span>}</span>
+                <div key={entry.size || `new-${index}`} className="group flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors">
+                  <button
+                    type="button"
+                    className="cursor-pointer"
+                    onClick={() => setEditingIndex(index)}
+                    aria-label={`Modifier la taille ${entry.size}`}
+                  >
+                    {entry.size || <span className="text-muted-foreground italic">sans nom</span>}
+                  </button>
                   <button
                     type="button"
                     onClick={(e) => {

@@ -55,11 +55,11 @@ const STATUS_BADGE_VARIANTS: Record<
 // ─── RejectDialog ────────────────────────────────────────────────────────────
 
 interface RejectDialogProps {
-  styleId: string;
-  styleName: string;
-  onConfirm: (styleId: string, reason: string) => Promise<void>;
-  onCancel: () => void;
-  isPending: boolean;
+  readonly styleId: string;
+  readonly styleName: string;
+  readonly onConfirm: (styleId: string, reason: string) => Promise<void>;
+  readonly onCancel: () => void;
+  readonly isPending: boolean;
 }
 
 function RejectDialog({ styleId, styleName, onConfirm, onCancel, isPending }: RejectDialogProps) {
@@ -144,9 +144,9 @@ function RejectDialog({ styleId, styleName, onConfirm, onCancel, isPending }: Re
 // ─── StyleCard ───────────────────────────────────────────────────────────────
 
 interface StyleCardProps {
-  style: StyleWithCreator;
-  onApprove: (styleId: string) => Promise<void>;
-  onReject: (styleId: string, reason: string) => Promise<void>;
+  readonly style: StyleWithCreator;
+  readonly onApprove: (styleId: string) => Promise<void>;
+  readonly onReject: (styleId: string, reason: string) => Promise<void>;
 }
 
 function StyleCard({ style, onApprove, onReject }: StyleCardProps) {
@@ -265,11 +265,11 @@ function StyleCard({ style, onApprove, onReject }: StyleCardProps) {
 // ─── HistorySection ──────────────────────────────────────────────────────────
 
 interface HistorySectionProps {
-  data: PaginatedStyles;
-  isLoading: boolean;
-  onPageChange: (page: number) => void;
-  statusFilter: StyleStatus | 'ALL';
-  onStatusFilterChange: (status: StyleStatus | 'ALL') => void;
+  readonly data: PaginatedStyles;
+  readonly isLoading: boolean;
+  readonly onPageChange: (page: number) => void;
+  readonly statusFilter: StyleStatus | 'ALL';
+  readonly onStatusFilterChange: (status: StyleStatus | 'ALL') => void;
 }
 
 function HistorySection({

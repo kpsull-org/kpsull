@@ -111,20 +111,11 @@ function getVariantImages(
   return seedImages.products[productId]?.variants[variantId] ?? [];
 }
 
-async function main() {
-  console.log('Seeding Kpsull marketplace database...\n');
+// ============================================
+// SEED SECTION HELPERS
+// ============================================
 
-  await ensureSeedImages();
-
-  const hashedPassword = await bcrypt.hash('password123', 10);
-  console.log('Password hashed for all accounts (password123)\n');
-
-  const seedImages = loadSeedImages();
-
-  // ============================================
-  // ADMIN
-  // ============================================
-
+async function seedAdmin(hashedPassword: string) {
   const admin = await prisma.user.upsert({
     where: { email: 'admin@kpsull.fr' },
     update: { role: Role.ADMIN, hashedPassword },
@@ -143,11 +134,10 @@ async function main() {
     },
   });
   console.log('Admin:', admin.email);
+  return admin;
+}
 
-  // ============================================
-  // CREATORS
-  // ============================================
-
+async function seedCreators(hashedPassword: string) {
   const hugo = await prisma.user.upsert({
     where: { email: 'hugo.tessier@kpsull.fr' },
     update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
@@ -207,6 +197,115 @@ async function main() {
     },
   });
   console.log('Creator:', kais.email, '(sport & outdoor)');
+
+  return { hugo, lea, kais };
+}
+
+type SizeDef = { size: string | null; stock: number };
+type VariantDef = { id: string; name: string; color: string; colorCode: string; sizes: SizeDef[] };
+type ProductVariantConfig = { productId: string; variants: VariantDef[] };
+
+async function seedVariantsAndSkus(
+  seedImages: SeedImagesOutput,
+  configs: ProductVariantConfig[],
+): Promise<{ variantCount: number; skuCount: number }> {
+  let variantCount = 0;
+  let skuCount = 0;
+
+  for (const config of configs) {
+    for (const vd of config.variants) {
+      const variantImages = getVariantImages(seedImages, config.productId, vd.id);
+
+      await prisma.productVariant.upsert({
+        where: { id: vd.id },
+        update: { name: vd.name, color: vd.color, colorCode: vd.colorCode, images: variantImages },
+        create: { id: vd.id, productId: config.productId, name: vd.name, color: vd.color, colorCode: vd.colorCode, stock: 0, images: variantImages },
+      });
+      variantCount++;
+
+      for (const skuDef of vd.sizes) {
+        await prisma.productSku.create({
+          data: { productId: config.productId, variantId: vd.id, size: skuDef.size, stock: skuDef.stock },
+        });
+        skuCount++;
+      }
+    }
+  }
+
+  return { variantCount, skuCount };
+}
+
+async function seedStyleLinks(styleMap: Record<string, string>): Promise<void> {
+  const styleStreetware = styleMap['Streetwear'];
+  const styleMinimaliste = styleMap['Minimaliste'];
+  const styleSport = styleMap['Sport'];
+  const styleArtisanat = styleMap['Artisanat'];
+
+  if (styleStreetware) {
+    for (const pid of ['prod_hugo_tshirt', 'prod_hugo_hoodie', 'prod_hugo_jogger', 'prod_hugo_polo', 'prod_hugo_sweat', 'prod_hugo_short']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleStreetware } });
+    }
+  }
+  if (styleMinimaliste) {
+    for (const pid of ['prod_lea_robe', 'prod_lea_top', 'prod_lea_manteau']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleMinimaliste } });
+    }
+  }
+  if (styleArtisanat) {
+    for (const pid of ['prod_lea_veste', 'prod_lea_pantalon', 'prod_lea_chemise']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleArtisanat } });
+    }
+  }
+  if (styleSport) {
+    for (const pid of ['prod_kais_veste', 'prod_kais_legging', 'prod_kais_debardeur', 'prod_kais_sweat', 'prod_kais_short', 'prod_kais_brassiere']) {
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleSport } });
+    }
+  }
+  console.log('   Styles linked to products');
+}
+
+async function seedNotificationPreferences(
+  admin: { id: string },
+  clients: { id: string }[],
+  creators: { id: string }[],
+): Promise<void> {
+  const clientNotifTypes = ['ORDER_CONFIRMED', 'ORDER_SHIPPED', 'ORDER_DELIVERED', 'ORDER_CANCELLED', 'REFUND_PROCESSED', 'RETURN_APPROVED', 'RETURN_REJECTED', 'DISPUTE_UPDATE'];
+  const creatorNotifTypes = ['ORDER_RECEIVED', 'ORDER_PAID', 'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED', 'REVIEW_RECEIVED', 'SUBSCRIPTION_RENEWED', 'SUBSCRIPTION_EXPIRING', 'PAYMENT_FAILED', 'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED'];
+
+  for (const user of [admin, ...clients]) {
+    for (const type of clientNotifTypes) {
+      await prisma.notificationPreference.upsert({ where: { userId_type: { userId: user.id, type } }, update: {}, create: { userId: user.id, type, email: true, inApp: true } });
+    }
+  }
+  for (const creator of creators) {
+    for (const type of creatorNotifTypes) {
+      await prisma.notificationPreference.upsert({ where: { userId_type: { userId: creator.id, type } }, update: {}, create: { userId: creator.id, type, email: true, inApp: true } });
+    }
+  }
+  console.log('\nNotification preferences created');
+}
+
+async function main() {
+  console.log('Seeding Kpsull marketplace database...\n');
+
+  await ensureSeedImages();
+
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  console.log('Password hashed for all accounts (password123)\n');
+
+  const seedImages = loadSeedImages();
+
+  // ============================================
+  // ADMIN
+  // ============================================
+
+  const admin = await seedAdmin(hashedPassword);
+
+  // ============================================
+  // CREATORS
+  // ============================================
+
+  const { hugo, lea, kais } = await seedCreators(hashedPassword);
 
   // ============================================
   // CLIENTS (5)
@@ -466,10 +565,6 @@ async function main() {
   await prisma.productSku.deleteMany({ where: { productId: { in: allProducts.map((p) => p.id) } } });
   await prisma.productVariant.deleteMany({ where: { productId: { in: allProducts.map((p) => p.id) } } });
 
-  type SizeDef = { size: string | null; stock: number };
-  type VariantDef = { id: string; name: string; color: string; colorCode: string; sizes: SizeDef[] };
-  type ProductVariantConfig = { productId: string; variants: VariantDef[] };
-
   const PRODUCT_VARIANT_CONFIGS: ProductVariantConfig[] = [
     { productId: 'prod_hugo_tshirt', variants: [
       { id: 'var_hugo_tshirt_default', name: 'T-shirt Oversized', color: 'unique', colorCode: '#000000', sizes: [{ size: 'XS', stock: 10 }, { size: 'S', stock: 18 }, { size: 'M', stock: 20 }, { size: 'L', stock: 15 }, { size: 'XL', stock: 8 }] },
@@ -538,58 +633,11 @@ async function main() {
     ]},
   ];
 
-  let variantCount = 0;
-  let skuCount = 0;
-
-  for (const config of PRODUCT_VARIANT_CONFIGS) {
-    for (const vd of config.variants) {
-      const variantImages = getVariantImages(seedImages, config.productId, vd.id);
-
-      await prisma.productVariant.upsert({
-        where: { id: vd.id },
-        update: { name: vd.name, color: vd.color, colorCode: vd.colorCode, images: variantImages },
-        create: { id: vd.id, productId: config.productId, name: vd.name, color: vd.color, colorCode: vd.colorCode, stock: 0, images: variantImages },
-      });
-      variantCount++;
-
-      for (const skuDef of vd.sizes) {
-        await prisma.productSku.create({
-          data: { productId: config.productId, variantId: vd.id, size: skuDef.size, stock: skuDef.stock },
-        });
-        skuCount++;
-      }
-    }
-  }
-
+  const { variantCount, skuCount } = await seedVariantsAndSkus(seedImages, PRODUCT_VARIANT_CONFIGS);
   console.log(`${variantCount} variants created, ${skuCount} SKUs created`);
 
   // Link styles to products
-  const styleStreetware = styleMap['Streetwear'];
-  const styleMinimaliste = styleMap['Minimaliste'];
-  const styleSport = styleMap['Sport'];
-  const styleArtisanat = styleMap['Artisanat'];
-
-  if (styleStreetware) {
-    for (const pid of ['prod_hugo_tshirt', 'prod_hugo_hoodie', 'prod_hugo_jogger', 'prod_hugo_polo', 'prod_hugo_sweat', 'prod_hugo_short']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleStreetware } });
-    }
-  }
-  if (styleMinimaliste) {
-    for (const pid of ['prod_lea_robe', 'prod_lea_top', 'prod_lea_manteau']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleMinimaliste } });
-    }
-  }
-  if (styleArtisanat) {
-    for (const pid of ['prod_lea_veste', 'prod_lea_pantalon', 'prod_lea_chemise']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleArtisanat } });
-    }
-  }
-  if (styleSport) {
-    for (const pid of ['prod_kais_veste', 'prod_kais_legging', 'prod_kais_debardeur', 'prod_kais_sweat', 'prod_kais_short', 'prod_kais_brassiere']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleSport } });
-    }
-  }
-  console.log('   Styles linked to products');
+  await seedStyleLinks(styleMap);
 
   // ============================================
   // CREATOR PAGES
@@ -709,20 +757,7 @@ async function main() {
   // NOTIFICATION PREFERENCES
   // ============================================
 
-  const clientNotifTypes = ['ORDER_CONFIRMED', 'ORDER_SHIPPED', 'ORDER_DELIVERED', 'ORDER_CANCELLED', 'REFUND_PROCESSED', 'RETURN_APPROVED', 'RETURN_REJECTED', 'DISPUTE_UPDATE'];
-  const creatorNotifTypes = ['ORDER_RECEIVED', 'ORDER_PAID', 'RETURN_REQUEST_RECEIVED', 'DISPUTE_OPENED', 'REVIEW_RECEIVED', 'SUBSCRIPTION_RENEWED', 'SUBSCRIPTION_EXPIRING', 'PAYMENT_FAILED', 'ACCOUNT_SUSPENDED', 'ACCOUNT_REACTIVATED'];
-
-  for (const user of [admin, ...clients]) {
-    for (const type of clientNotifTypes) {
-      await prisma.notificationPreference.upsert({ where: { userId_type: { userId: user.id, type } }, update: {}, create: { userId: user.id, type, email: true, inApp: true } });
-    }
-  }
-  for (const creator of [hugo, lea, kais]) {
-    for (const type of creatorNotifTypes) {
-      await prisma.notificationPreference.upsert({ where: { userId_type: { userId: creator.id, type } }, update: {}, create: { userId: creator.id, type, email: true, inApp: true } });
-    }
-  }
-  console.log('\nNotification preferences created');
+  await seedNotificationPreferences(admin, clients, [hugo, lea, kais]);
 
   // ============================================
   // CARTS
