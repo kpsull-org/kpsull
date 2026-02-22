@@ -110,7 +110,7 @@ interface ProductFormProps {
   onCategoryChange?: (value: string) => void;
 }
 
-function SectionTitle({ label }: { label: string }) {
+function SectionTitle({ label }: { readonly label: string }) {
   return (
     <div className="flex items-center gap-2 pb-1 border-b border-border/60">
       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -124,8 +124,8 @@ function CertificationSelect({
   value,
   onChange,
 }: {
-  value: string[];
-  onChange: (certs: string[]) => void;
+  readonly value: string[];
+  readonly onChange: (certs: string[]) => void;
 }) {
   const [search, setSearch] = useState('');
 
@@ -437,7 +437,11 @@ export function ProductForm({ mode, productId, initialValues, collections, style
         </CardTitle>
         {mode === 'edit' && (
           <span className="text-xs text-muted-foreground">
-            {isPending ? 'Enregistrement...' : savedInfo ? '✓ Enregistré' : ''}
+            {(() => {
+              if (isPending) return 'Enregistrement...';
+              if (savedInfo) return '✓ Enregistré';
+              return '';
+            })()}
           </span>
         )}
       </CardHeader>

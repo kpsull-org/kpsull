@@ -80,9 +80,11 @@ export function OrdersPageClient({
         </div>
 
         <p className="text-sm text-muted-foreground">
-          {total === 0
-            ? 'Aucune commande'
-            : `${startItem}-${endItem} sur ${total} commande${total > 1 ? 's' : ''}`}
+          {(() => {
+            if (total === 0) return 'Aucune commande';
+            const plural = total > 1 ? 's' : '';
+            return `${startItem}-${endItem} sur ${total} commande${plural}`;
+          })()}
         </p>
       </div>
 

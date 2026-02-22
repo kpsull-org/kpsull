@@ -42,12 +42,12 @@ export interface DashboardVariant {
 }
 
 interface ProductDashboardProps {
-  productId: string;
-  initialVariants: DashboardVariant[];
-  initialSizes: SizeEntry[];
-  initialSkus: SkuOutput[];
-  category?: string;
-  gender?: string;
+  readonly productId: string;
+  readonly initialVariants: DashboardVariant[];
+  readonly initialSizes: SizeEntry[];
+  readonly initialSkus: SkuOutput[];
+  readonly category?: string;
+  readonly gender?: string;
 }
 
 // ─── Category & Gender → Size group mapping ───────────────────────────────────
@@ -137,11 +137,11 @@ function buildMatrix(skus: SkuOutput[]): Map<string, SkuCell> {
 // ─── VariantImageStrip ────────────────────────────────────────────────────────
 
 interface VariantImageStripProps {
-  variantId: string;
-  productId: string;
-  images: string[];
-  onAdd: (url: string) => void;
-  onRemove: (url: string) => void;
+  readonly variantId: string;
+  readonly productId: string;
+  readonly images: string[];
+  readonly onAdd: (url: string) => void;
+  readonly onRemove: (url: string) => void;
 }
 
 function VariantImageStrip({ variantId, productId, images, onAdd, onRemove }: VariantImageStripProps) {
@@ -171,8 +171,8 @@ function VariantImageStrip({ variantId, productId, images, onAdd, onRemove }: Va
 
   return (
     <div className="flex items-center gap-1 flex-wrap">
-      {images.slice(0, 4).map((url, i) => (
-        <div key={i} className="relative group/img h-10 w-10 rounded border overflow-hidden shrink-0">
+      {images.slice(0, 4).map((url) => (
+        <div key={url} className="relative group/img h-10 w-10 rounded border overflow-hidden shrink-0">
           <img src={url} alt="" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/50 transition-colors flex items-center justify-center">
             <button
@@ -226,26 +226,19 @@ function VariantImageStrip({ variantId, productId, images, onAdd, onRemove }: Va
 
 // ─── InlineColorPicker ────────────────────────────────────────────────────────
 
-function InlineColorPicker({ color, onChange }: { color: string; onChange: (c: string) => void }) {
-  const pickerRef = useRef<HTMLInputElement>(null);
+function InlineColorPicker({ color, onChange }: { readonly color: string; readonly onChange: (c: string) => void }) {
   return (
     <div className="relative h-5 w-5 shrink-0" title="Cliquer pour changer la couleur">
-      <div
-        role="button"
-        tabIndex={0}
-        className="h-full w-full rounded-full border-2 border-white ring-1 ring-border hover:ring-primary/60 transition-all cursor-pointer"
-        style={{ backgroundColor: color }}
-        onClick={() => pickerRef.current?.click()}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') pickerRef.current?.click(); }}
-      />
       <input
         type="color"
-        ref={pickerRef}
         value={color}
         onChange={(e) => onChange(e.target.value)}
         className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-        aria-hidden="true"
-        tabIndex={-1}
+        aria-label="Changer la couleur"
+      />
+      <div
+        className="h-full w-full rounded-full border-2 border-white ring-1 ring-border hover:ring-primary/60 transition-all cursor-pointer pointer-events-none"
+        style={{ backgroundColor: color }}
       />
     </div>
   );
@@ -630,18 +623,16 @@ export function ProductDashboard({
                             className="h-7 w-14 text-sm text-center font-semibold"
                           />
                         ) : (
-                          <span
+                          <button
+                            type="button"
                             className="inline-flex items-center justify-center rounded-full border bg-muted/50 px-2.5 py-1 text-sm font-semibold cursor-pointer hover:bg-muted transition-colors"
                             onClick={() => {
                               setEditingSizeIdx(idx);
                               setEditSizeName(size);
                             }}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setEditingSizeIdx(idx); setEditSizeName(size); } }}
                           >
                             {size}
-                          </span>
+                          </button>
                         )}
                         <button
                           type="button"
@@ -722,19 +713,17 @@ export function ProductDashboard({
                             className="font-medium text-sm border-b-2 border-primary bg-transparent outline-none w-full min-w-0"
                           />
                         ) : (
-                          <span
-                            className="font-medium text-sm truncate cursor-text select-none border-b-2 border-transparent"
+                          <button
+                            type="button"
+                            className="font-medium text-sm truncate cursor-text select-none border-b-2 border-transparent text-left"
                             onClick={() => {
                               setEditingNameVariantId(v.id);
                               setEditingNameValue(v.name);
                             }}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setEditingNameVariantId(v.id); setEditingNameValue(v.name); } }}
                             title="Cliquer pour modifier le nom"
                           >
                             {v.name}
-                          </span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -809,15 +798,15 @@ export function ProductDashboard({
 
         {/* ── Modal: Ajouter une taille ──────────────────────────────────── */}
         {addingSizeOpen && (
-          <div
-            role="button"
-            tabIndex={0}
-            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          <button
+            type="button"
+            aria-label="Fermer"
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 w-full cursor-default"
             onClick={() => { setAddingSizeOpen(false); setNewSizeInput(''); }}
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSizeOpen(false); setNewSizeInput(''); } }}
           >
-            <div
-              role="dialog"
+            <dialog
+              open
               aria-modal="true"
               className="bg-background border rounded-xl p-5 w-[480px] max-h-[80vh] overflow-y-auto shadow-xl space-y-3"
               onClick={(e) => e.stopPropagation()}
@@ -946,8 +935,8 @@ export function ProductDashboard({
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </div>
-          </div>
+            </dialog>
+          </button>
         )}
 
         {/* ── Shipping dimensions ────────────────────────────────────────── */}
@@ -988,15 +977,15 @@ export function ProductDashboard({
 
         {/* ── Modal: Ajouter une couleur ─────────────────────────────────── */}
         {addingVariant && (
-          <div
-            role="button"
-            tabIndex={0}
-            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          <button
+            type="button"
+            aria-label="Fermer"
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 w-full cursor-default"
             onClick={() => { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); }}
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); } }}
           >
-            <div
-              role="dialog"
+            <dialog
+              open
               aria-modal="true"
               className="bg-background border rounded-xl p-5 w-80 shadow-xl space-y-4"
               onClick={(e) => e.stopPropagation()}
@@ -1007,14 +996,6 @@ export function ProductDashboard({
               {/* Circle picker + nom */}
               <div className="flex items-center gap-3">
                 <div className="relative h-10 w-10 shrink-0 cursor-pointer" title="Choisir une couleur">
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="h-full w-full rounded-full border-2 border-white ring-2 ring-border hover:ring-primary/60 transition-all"
-                    style={{ backgroundColor: newVarColorCode }}
-                    onClick={() => newColorPickerRef.current?.click()}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') newColorPickerRef.current?.click(); }}
-                  />
                   <input
                     type="color"
                     ref={newColorPickerRef}
@@ -1027,8 +1008,11 @@ export function ProductDashboard({
                       if (preset && (!newVarName || PRESET_COLORS.some(p => p.name === newVarName))) setNewVarName(preset.name);
                     }}
                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                    aria-hidden="true"
-                    tabIndex={-1}
+                    aria-label="Choisir une couleur"
+                  />
+                  <div
+                    className="h-full w-full rounded-full border-2 border-white ring-2 ring-border hover:ring-primary/60 transition-all pointer-events-none"
+                    style={{ backgroundColor: newVarColorCode }}
                   />
                 </div>
                 <Input
@@ -1079,8 +1063,8 @@ export function ProductDashboard({
                   <X className="h-3.5 w-3.5" /> Annuler
                 </Button>
               </div>
-            </div>
-          </div>
+            </dialog>
+          </button>
         )}
 
         {/* ── Footer: auto-save status ───────────────────────────────────── */}

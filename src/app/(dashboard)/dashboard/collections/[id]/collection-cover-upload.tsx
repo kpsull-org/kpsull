@@ -83,11 +83,11 @@ export function CollectionCoverUpload({
         </CardTitle>
         <Button onClick={handleUpload} disabled={isLoading} size="sm" className="gap-2">
           <ImagePlus className="h-4 w-4" />
-          {uploadState.isCompressing
-            ? 'Optimisation...'
-            : currentCoverImage
-              ? 'Changer'
-              : 'Ajouter'}
+          {(() => {
+            if (uploadState.isCompressing) return 'Optimisation...';
+            if (currentCoverImage) return 'Changer';
+            return 'Ajouter';
+          })()}
         </Button>
         <input
           ref={fileInputRef}

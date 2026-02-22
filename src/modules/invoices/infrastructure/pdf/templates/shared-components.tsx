@@ -23,8 +23,8 @@ export const PdfIssuerBrand: React.FC<{ data: InvoiceData }> = ({ data }) => (
 /** Rows of the items table (one row per line item) */
 export const PdfItemRows: React.FC<{ items: InvoiceLineItem[] }> = ({ items }) => (
   <>
-    {items.map((item, index) => (
-      <View key={index} style={styles.tableRow}>
+    {items.map((item) => (
+      <View key={item.description} style={styles.tableRow}>
         <Text style={styles.colDescription}>{item.description}</Text>
         <Text style={styles.colQty}>{item.quantity}</Text>
         <Text style={styles.colPrice}>{formatAmount(item.unitPrice)}</Text>
@@ -59,7 +59,10 @@ export const PdfLegalFooter: React.FC<{
 }> = ({ data, defaultPaymentConditions }) => (
   <View style={styles.footer}>
     <Text>
-      {`${data.issuer.name} — SIRET ${data.issuer.siret}${data.issuer.vatNumber ? ` — N° TVA ${data.issuer.vatNumber}` : ''} — ${data.issuer.email}`}
+      {(() => {
+        const vatPart = data.issuer.vatNumber ? ` — N° TVA ${data.issuer.vatNumber}` : '';
+        return `${data.issuer.name} — SIRET ${data.issuer.siret}${vatPart} — ${data.issuer.email}`;
+      })()}
     </Text>
     <Text style={{ marginTop: 3 }}>
       {`Conditions de règlement : ${data.paymentConditions ?? defaultPaymentConditions} — Pas d'escompte pour paiement anticipé`}

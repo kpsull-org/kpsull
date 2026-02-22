@@ -46,7 +46,7 @@ export default function CGUPage() {
             Pour accéder à certaines fonctionnalités de la plateforme (achat, favoris, suivi de commandes), la création d&apos;un compte est requise. L&apos;inscription est réservée aux personnes physiques majeures (18 ans et plus).
           </p>
           <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed text-gray-800 mt-4">
-            Lors de l&apos;inscription, vous vous engagez à fournir des informations exactes, complètes et à jour. Vos identifiants de connexion sont strictement personnels et confidentiels : vous êtes seul responsable de leur utilisation et de la sécurité de votre compte. Toute utilisation frauduleuse de votre compte doit être signalée immédiatement à{" "}
+            Lors de l&apos;inscription, vous vous engagez à fournir des informations exactes, complètes et à jour. Vos identifiants de connexion sont strictement personnels et confidentiels : vous êtes seul responsable de leur utilisation et de la sécurité de votre compte. Toute utilisation frauduleuse de votre compte doit être signalée immédiatement à{' '}
             <a
               href="mailto:CONTACT@KPSULL.COM"
               className="underline hover:no-underline"
@@ -119,14 +119,14 @@ export default function CGUPage() {
             KPSULL collecte uniquement les données personnelles strictement nécessaires au fonctionnement du service (nom, adresse email, adresse postale pour la livraison). Ces données ne sont pas vendues à des tiers.
           </p>
           <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed text-gray-800 mt-4">
-            Le traitement de vos données est conforme au Règlement Général sur la Protection des Données (RGPD). Pour toute demande relative à vos données personnelles (accès, rectification, suppression), veuillez consulter nos{" "}
+            Le traitement de vos données est conforme au Règlement Général sur la Protection des Données (RGPD). Pour toute demande relative à vos données personnelles (accès, rectification, suppression), veuillez consulter nos{' '}
             <a
               href="/mentions-legales"
               className="underline hover:no-underline"
             >
               Mentions Légales
-            </a>{" "}
-            ou nous contacter à{" "}
+            </a>{' '}
+            ou nous contacter à{' '}
             <a
               href="mailto:CONTACT@KPSULL.COM"
               className="underline hover:no-underline"
@@ -166,7 +166,7 @@ export default function CGUPage() {
             Les présentes CGU sont soumises au droit français. En cas de litige non résolu à l&apos;amiable, le Tribunal de Commerce de Caen sera seul compétent.
           </p>
           <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed text-gray-800 mt-4">
-            Pour toute question ou réclamation :{" "}
+            Pour toute question ou réclamation :{' '}
             <a
               href="mailto:CONTACT@KPSULL.COM"
               className="underline hover:no-underline"

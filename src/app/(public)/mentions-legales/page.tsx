@@ -32,7 +32,7 @@ export default function MentionsLegalesPage() {
               <span className="font-semibold">Siège social :</span> 666 KPSULLSTREET, 14000 CAEN, France
             </li>
             <li>
-              <span className="font-semibold">Email :</span>{" "}
+              <span className="font-semibold">Email :</span>{' '}
               <a
                 href="mailto:CONTACT@KPSULL.COM"
                 className="underline hover:no-underline"
@@ -90,7 +90,7 @@ export default function MentionsLegalesPage() {
               <span className="font-semibold">Finalités :</span> gestion des comptes utilisateurs, traitement des commandes, envoi de newsletters et communications commerciales.
             </li>
             <li>
-              <span className="font-semibold">Droits :</span> conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d&apos;un droit d&apos;accès, de rectification, d&apos;effacement, de limitation et de portabilité de vos données personnelles. Pour exercer ces droits, contactez-nous à{" "}
+              <span className="font-semibold">Droits :</span> conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d&apos;un droit d&apos;accès, de rectification, d&apos;effacement, de limitation et de portabilité de vos données personnelles. Pour exercer ces droits, contactez-nous à{' '}
               <a
                 href="mailto:CONTACT@KPSULL.COM"
                 className="underline hover:no-underline"
@@ -125,7 +125,7 @@ export default function MentionsLegalesPage() {
             6. CONTACT
           </h2>
           <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed text-gray-800">
-            Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à l&apos;adresse suivante :{" "}
+            Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à l&apos;adresse suivante :{' '}
             <a
               href="mailto:CONTACT@KPSULL.COM"
               className="underline hover:no-underline"

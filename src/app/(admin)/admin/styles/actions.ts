@@ -43,7 +43,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 async function requireAdmin(): Promise<{ success: false; error: string } | null> {
   const session = await auth();
-  if (!session?.user || session.user.role !== 'ADMIN') {
+  if (!session?.user || session?.user.role !== 'ADMIN') {
     return { success: false as const, error: 'Non autorisé' };
   }
   return null;

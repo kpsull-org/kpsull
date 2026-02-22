@@ -337,7 +337,9 @@ async function main(): Promise<void> {
   console.log(`Fichier: ${outputPath}`);
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error('Erreur fatale:', err);
   process.exit(1);
-});
+}

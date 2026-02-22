@@ -80,9 +80,11 @@ export function ClientsPageClient({
 
       {/* Summary */}
       <p className="text-sm text-muted-foreground">
-        {searchQuery
-          ? `${total} client${total !== 1 ? 's' : ''} trouve${total !== 1 ? 's' : ''}`
-          : `${total} client${total !== 1 ? 's' : ''}`}
+        {(() => {
+          const plural = total !== 1 ? 's' : '';
+          if (searchQuery) return `${total} client${plural} trouve${plural}`;
+          return `${total} client${plural}`;
+        })()}
       </p>
 
       {/* Table */}

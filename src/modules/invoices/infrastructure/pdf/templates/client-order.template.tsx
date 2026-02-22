@@ -62,7 +62,10 @@ export const ClientOrderTemplate: React.FC<Props> = ({ data }) => (
           <Text style={styles.sectionTitle}>Adresse de livraison</Text>
           {data.shippingCarrier && (
             <Text style={{ fontFamily: 'Helvetica-Bold', marginBottom: 4 }}>
-              {`Transporteur : ${data.shippingCarrier}${data.shippingTrackingNumber ? ` — Suivi : ${data.shippingTrackingNumber}` : ''}`}
+              {(() => {
+                const trackingPart = data.shippingTrackingNumber ? ` — Suivi : ${data.shippingTrackingNumber}` : '';
+                return `Transporteur : ${data.shippingCarrier}${trackingPart}`;
+              })()}
             </Text>
           )}
           {data.shippingAddress && (
