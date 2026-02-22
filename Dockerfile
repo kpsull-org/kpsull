@@ -36,7 +36,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN apt-get update && apt-get install -y --no-install-recommends openssl wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl wget ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system --gid 1001 appgroup
 RUN useradd --system --uid 1001 --gid appgroup --no-create-home appuser
 
