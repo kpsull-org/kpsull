@@ -279,12 +279,247 @@ const NEW_CREATORS: CreatorDef[] = [
   },
 ];
 
+// ─── HELPERS FOR seedNewCreators ─────────────────────────────────────────────
+
+interface SeedCreatorsContext {
+  prisma: PrismaClient;
+  hashedPassword: string;
+  allClients: Array<{
+    id: string;
+    email: string;
+    name: string | null;
+    address: string | null;
+    city: string | null;
+    postalCode: string | null;
+  }>;
+  daysAgo: (n: number) => Date;
+  daysFromNow: (n: number) => Date;
+  productImages: Record<string, { main: string[] }>;
+  collectionCovers: Record<string, string>;
+}
+
+function getCommissionRate(plan: Plan): number {
+  if (plan === Plan.ATELIER) return 0.03;
+  if (plan === Plan.STUDIO) return 0.04;
+  return 0.05;
+}
+
+function buildTrackingNumber(slug: string, orderIndex: number): string {
+  return `COL2026${slug.slice(0, 4).toUpperCase()}${String(orderIndex).padStart(3, '0')}`;
+}
+
+function getShippedAt(
+  isDelivered: boolean,
+  isShipped: boolean,
+  orderIndex: number,
+  daysAgoFn: (n: number) => Date,
+): Date | null {
+  if (isDelivered) return daysAgoFn(10 - (orderIndex % 5));
+  if (isShipped) return daysAgoFn(2);
+  return null;
+}
+
+async function seedCreatorEntity(
+  def: CreatorDef,
+  ctx: SeedCreatorsContext,
+): Promise<{ id: string; email: string }> {
+  const { prisma, hashedPassword, daysAgo, daysFromNow, collectionCovers } = ctx;
+
+  const user = await prisma.user.upsert({
+    where: { email: def.email },
+    update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
+    create: {
+      email: def.email, name: def.name, role: Role.CREATOR,
+      accountTypeChosen: true, wantsToBeCreator: true,
+      emailVerified: new Date(), hashedPassword,
+      phone: def.phone, address: def.address, city: def.city,
+      postalCode: def.postalCode, country: 'France',
+    },
+  });
+
+  await prisma.creatorOnboarding.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: {
+      userId: user.id,
+      currentStep: OnboardingStep.COMPLETED,
+      professionalInfoCompleted: true, siretVerified: true, stripeOnboarded: true,
+      dashboardTourCompleted: true,
+      brandName: def.brandName, siret: def.siret,
+      professionalAddress: `${def.address}, ${def.postalCode} ${def.city}`,
+      stripeAccountId: def.stripeId,
+      completedAt: daysAgo(45),
+    },
+  });
+
+  await prisma.subscription.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: {
+      userId: user.id, creatorId: user.id, plan: def.plan,
+      status: SubscriptionStatus.ACTIVE, billingInterval: 'year',
+      currentPeriodStart: daysAgo(45), currentPeriodEnd: daysFromNow(320),
+      commissionRate: getCommissionRate(def.plan),
+      stripeSubscriptionId: `sub_demo_${def.slug}`,
+      stripeCustomerId: `cus_demo_${def.slug}`,
+      stripePriceId: `price_demo_${def.plan.toLowerCase()}_yearly`,
+      productsUsed: def.collections.reduce((s, c) => s + c.products.length, 0),
+    },
+  });
+
+  const page = await prisma.creatorPage.upsert({
+    where: { creatorId: user.id },
+    update: {},
+    create: {
+      creatorId: user.id, slug: def.slug, title: def.pageTitle,
+      description: def.pageDesc, status: PageStatus.PUBLISHED, publishedAt: daysAgo(40),
+    },
+  });
+
+  await prisma.pageSection.deleteMany({ where: { pageId: page.id } });
+  await prisma.pageSection.createMany({
+    data: [
+      {
+        pageId: page.id, type: SectionType.HERO, position: 0, title: def.brandName, isVisible: true,
+        content: JSON.stringify({
+          subtitle: def.pageDesc.slice(0, 80),
+          backgroundImage: collectionCovers[`hero_${def.slug}`] ?? '',
+          ctaText: 'Découvrir',
+          ctaLink: '#products',
+        }),
+      },
+      {
+        pageId: page.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Nos créations', isVisible: true,
+        content: JSON.stringify({ columns: 3, limit: 12 }),
+      },
+    ],
+  });
+
+  return { id: user.id, email: user.email };
+}
+
+async function seedCreatorProducts(
+  def: CreatorDef,
+  userId: string,
+  ctx: SeedCreatorsContext,
+): Promise<string[]> {
+  const { prisma, daysAgo, productImages } = ctx;
+  const allProductIds: string[] = [];
+
+  for (const coll of def.collections) {
+    await prisma.project.upsert({
+      where: { id: coll.id },
+      update: {},
+      create: { id: coll.id, creatorId: userId, name: coll.name, description: coll.desc },
+    });
+
+    for (let i = 0; i < coll.products.length; i++) {
+      const prodDef = coll.products[i] as ProdDef;
+      const collKey = coll.id.replace(`proj_${def.slug.replaceAll('-', '_')}_`, '');
+      const prodId = `prod_${def.slug.replaceAll('-', '_')}_${collKey}_${i}`;
+      const productData = buildProduct(prodDef, i, userId, coll.id, daysAgo(30 - i));
+
+      await prisma.product.upsert({
+        where: { id: prodId },
+        update: { ...productData },
+        create: { id: prodId, ...productData },
+      });
+
+      const imgs = productImages[prodId]?.main ?? [];
+      const variantId = `var_${prodId}_default`;
+      await prisma.productVariant.upsert({
+        where: { id: variantId },
+        update: { images: imgs.slice(0, 3) },
+        create: {
+          id: variantId,
+          productId: prodId,
+          name: 'Default',
+          color: 'unique',
+          colorCode: '#000000',
+          stock: 50,
+          images: imgs.slice(0, 3),
+        },
+      });
+
+      allProductIds.push(prodId);
+    }
+  }
+
+  return allProductIds;
+}
+
+const ORDER_STATUSES: OrderStatus[] = [
+  OrderStatus.DELIVERED, OrderStatus.DELIVERED, OrderStatus.DELIVERED,
+  OrderStatus.SHIPPED, OrderStatus.SHIPPED,
+  OrderStatus.PAID, OrderStatus.PAID,
+  OrderStatus.PENDING, OrderStatus.PENDING,
+  OrderStatus.CANCELED,
+  OrderStatus.DELIVERED, OrderStatus.SHIPPED, OrderStatus.PAID, OrderStatus.DELIVERED, OrderStatus.PENDING,
+];
+
+async function seedCreatorOrders(
+  def: CreatorDef,
+  userId: string,
+  allProductIds: string[],
+  orderCounter: { value: number },
+  ctx: SeedCreatorsContext,
+): Promise<number> {
+  const { prisma, allClients, daysAgo, productImages } = ctx;
+
+  const orderCount = Math.min(15, Math.max(5, allProductIds.length));
+  const firstProd: ProdDef = def.collections[0]!.products[0]!;
+  const firstCollProductCount = def.collections[0]!.products.length;
+  const firstCollKey = def.collections[0]!.id.replace(`proj_${def.slug.replaceAll('-', '_')}_`, '');
+  const firstProdId = `prod_${def.slug.replaceAll('-', '_')}_${firstCollKey}_0`;
+  const orderItemImage = productImages[firstProdId]?.main?.[0] ?? '';
+
+  for (let o = 0; o < orderCount; o++) {
+    const client = allClients[o % allClients.length]!;
+    const status = ORDER_STATUSES[o % ORDER_STATUSES.length]!;
+    const prodId = allProductIds[o % allProductIds.length]!;
+    const collIdx = Math.floor(o / firstCollProductCount) % def.collections.length;
+    const price = def.collections[collIdx]?.products[o % 4]?.[1] ?? firstProd[1];
+    const isDelivered = status === OrderStatus.DELIVERED;
+    const isShipped = status === OrderStatus.SHIPPED;
+    const hasTracking = isDelivered || isShipped;
+
+    orderCounter.value++;
+    await prisma.order.create({
+      data: {
+        orderNumber: `ORD-2026-${String(orderCounter.value).padStart(4, '0')}`,
+        creatorId: userId, customerId: client.id,
+        customerName: client.name ?? 'Client', customerEmail: client.email,
+        status, totalAmount: price,
+        shippingStreet: client.address ?? '1 rue Test',
+        shippingCity: client.city ?? 'Paris',
+        shippingPostalCode: client.postalCode ?? '75001',
+        shippingCountry: 'France',
+        trackingNumber: hasTracking ? buildTrackingNumber(def.slug, o) : null,
+        carrier: hasTracking ? 'colissimo' : null,
+        shippedAt: getShippedAt(isDelivered, isShipped, o, daysAgo),
+        deliveredAt: isDelivered ? daysAgo(7 - (o % 4)) : null,
+        createdAt: daysAgo(14 - o),
+        items: {
+          create: [{
+            productId: prodId,
+            productName: firstProd[0],
+            quantity: 1,
+            price,
+            image: orderItemImage,
+          }],
+        },
+      },
+    });
+  }
+
+  return orderCount;
+}
+
 // ─── MAIN EXPORT FUNCTION ─────────────────────────────────────────────────────
 
 export async function seedNewCreators(
   prisma: PrismaClient,
   hashedPassword: string,
-  admin: { id: string },
   allClients: Array<{
     id: string;
     email: string;
@@ -298,200 +533,27 @@ export async function seedNewCreators(
   productImages: Record<string, { main: string[] }>,
   collectionCovers: Record<string, string>,
 ): Promise<{ users: Array<{ id: string; email: string }>; totalProducts: number; totalOrders: number }> {
-  // Suppress unused variable warning for admin - used for future admin actions
-  void admin;
+  const ctx: SeedCreatorsContext = {
+    prisma, hashedPassword, allClients, daysAgo, daysFromNow, productImages, collectionCovers,
+  };
 
   const createdUsers: Array<{ id: string; email: string }> = [];
   let totalProducts = 0;
-  let orderCounter = 10000;
   let totalOrders = 0;
-
-  function nextOrderNum(): string {
-    orderCounter++;
-    return `ORD-2026-${String(orderCounter).padStart(4, '0')}`;
-  }
-
-  const orderStatuses: OrderStatus[] = [
-    OrderStatus.DELIVERED, OrderStatus.DELIVERED, OrderStatus.DELIVERED,
-    OrderStatus.SHIPPED, OrderStatus.SHIPPED,
-    OrderStatus.PAID, OrderStatus.PAID,
-    OrderStatus.PENDING, OrderStatus.PENDING,
-    OrderStatus.CANCELED,
-    OrderStatus.DELIVERED, OrderStatus.SHIPPED, OrderStatus.PAID, OrderStatus.DELIVERED, OrderStatus.PENDING,
-  ];
+  const orderCounter = { value: 10000 };
 
   for (const def of NEW_CREATORS) {
-    // ── 1. User ──────────────────────────────────────────────────────────────
-    const user = await prisma.user.upsert({
-      where: { email: def.email },
-      update: { role: Role.CREATOR, hashedPassword, accountTypeChosen: true, wantsToBeCreator: true },
-      create: {
-        email: def.email, name: def.name, role: Role.CREATOR,
-        accountTypeChosen: true, wantsToBeCreator: true,
-        emailVerified: new Date(), hashedPassword,
-        phone: def.phone, address: def.address, city: def.city,
-        postalCode: def.postalCode, country: 'France',
-      },
-    });
-    createdUsers.push({ id: user.id, email: user.email });
+    const userInfo = await seedCreatorEntity(def, ctx);
+    createdUsers.push(userInfo);
 
-    // ── 2. Onboarding ────────────────────────────────────────────────────────
-    await prisma.creatorOnboarding.upsert({
-      where: { userId: user.id },
-      update: {},
-      create: {
-        userId: user.id,
-        currentStep: OnboardingStep.COMPLETED,
-        professionalInfoCompleted: true, siretVerified: true, stripeOnboarded: true,
-        dashboardTourCompleted: true,
-        brandName: def.brandName, siret: def.siret,
-        professionalAddress: `${def.address}, ${def.postalCode} ${def.city}`,
-        stripeAccountId: def.stripeId,
-        completedAt: daysAgo(45),
-      },
-    });
+    const allProductIds = await seedCreatorProducts(def, userInfo.id, ctx);
+    totalProducts += allProductIds.length;
 
-    // ── 3. Subscription ──────────────────────────────────────────────────────
-    const commissionRate = def.plan === Plan.ATELIER ? 0.03 : def.plan === Plan.STUDIO ? 0.04 : 0.05;
-    await prisma.subscription.upsert({
-      where: { userId: user.id },
-      update: {},
-      create: {
-        userId: user.id, creatorId: user.id, plan: def.plan,
-        status: SubscriptionStatus.ACTIVE, billingInterval: 'year',
-        currentPeriodStart: daysAgo(45), currentPeriodEnd: daysFromNow(320),
-        commissionRate,
-        stripeSubscriptionId: `sub_demo_${def.slug}`,
-        stripeCustomerId: `cus_demo_${def.slug}`,
-        stripePriceId: `price_demo_${def.plan.toLowerCase()}_yearly`,
-        productsUsed: def.collections.reduce((s, c) => s + c.products.length, 0),
-      },
-    });
-
-    // ── 4. Creator Page ──────────────────────────────────────────────────────
-    const page = await prisma.creatorPage.upsert({
-      where: { creatorId: user.id },
-      update: {},
-      create: {
-        creatorId: user.id, slug: def.slug, title: def.pageTitle,
-        description: def.pageDesc, status: PageStatus.PUBLISHED, publishedAt: daysAgo(40),
-      },
-    });
-
-    await prisma.pageSection.deleteMany({ where: { pageId: page.id } });
-    await prisma.pageSection.createMany({
-      data: [
-        {
-          pageId: page.id, type: SectionType.HERO, position: 0, title: def.brandName, isVisible: true,
-          content: JSON.stringify({
-            subtitle: def.pageDesc.slice(0, 80),
-            backgroundImage: collectionCovers[`hero_${def.slug}`] ?? '',
-            ctaText: 'Découvrir',
-            ctaLink: '#products',
-          }),
-        },
-        {
-          pageId: page.id, type: SectionType.PRODUCTS_GRID, position: 1, title: 'Nos créations', isVisible: true,
-          content: JSON.stringify({ columns: 3, limit: 12 }),
-        },
-      ],
-    });
-
-    // ── 5. Collections & Products ────────────────────────────────────────────
-    const allProductIds: string[] = [];
-
-    for (const coll of def.collections) {
-      await prisma.project.upsert({
-        where: { id: coll.id },
-        update: {},
-        create: { id: coll.id, creatorId: user.id, name: coll.name, description: coll.desc },
-      });
-
-      for (let i = 0; i < coll.products.length; i++) {
-        const prodDef = coll.products[i] as ProdDef;
-        const collKey = coll.id.replace(`proj_${def.slug.replace(/-/g, '_')}_`, '');
-        const prodId = `prod_${def.slug.replace(/-/g, '_')}_${collKey}_${i}`;
-        const productData = buildProduct(prodDef, i, user.id, coll.id, daysAgo(30 - i));
-
-        await prisma.product.upsert({
-          where: { id: prodId },
-          update: { ...productData },
-          create: { id: prodId, ...productData },
-        });
-
-        const imgs = productImages[prodId]?.main ?? [];
-        const variantId = `var_${prodId}_default`;
-        await prisma.productVariant.upsert({
-          where: { id: variantId },
-          update: { images: imgs.slice(0, 3) },
-          create: {
-            id: variantId,
-            productId: prodId,
-            name: 'Default',
-            color: 'unique',
-            colorCode: '#000000',
-            stock: 50,
-            images: imgs.slice(0, 3),
-          },
-        });
-
-        allProductIds.push(prodId);
-        totalProducts++;
-      }
-    }
-
-    // ── 6. Orders (5-15 per creator) ────────────────────────────────────────
-    const orderCount = Math.min(15, Math.max(5, allProductIds.length));
-    const firstProd: ProdDef = def.collections[0]!.products[0]!;
-    const firstCollProductCount = def.collections[0]!.products.length;
-
-    for (let o = 0; o < orderCount; o++) {
-      const client = allClients[o % allClients.length]!;
-      const status = orderStatuses[o % orderStatuses.length]!;
-      const prodId = allProductIds[o % allProductIds.length]!;
-      const collIdx = Math.floor(o / firstCollProductCount) % def.collections.length;
-      const price = def.collections[collIdx]?.products[o % 4]?.[1] ?? firstProd[1];
-      const isDelivered = status === OrderStatus.DELIVERED;
-      const isShipped = status === OrderStatus.SHIPPED;
-
-      // Use first available product image for order item, fallback to empty string
-      const firstCollKey = def.collections[0]!.id.replace(`proj_${def.slug.replaceAll('-', '_')}_`, '');
-      const firstProdId = `prod_${def.slug.replaceAll('-', '_')}_${firstCollKey}_0`;
-      const orderItemImage = productImages[firstProdId]?.main?.[0] ?? '';
-
-      await prisma.order.create({
-        data: {
-          orderNumber: nextOrderNum(),
-          creatorId: user.id, customerId: client.id,
-          customerName: client.name ?? 'Client', customerEmail: client.email,
-          status, totalAmount: price,
-          shippingStreet: client.address ?? '1 rue Test',
-          shippingCity: client.city ?? 'Paris',
-          shippingPostalCode: client.postalCode ?? '75001',
-          shippingCountry: 'France',
-          trackingNumber: (isDelivered || isShipped)
-            ? `COL2026${def.slug.slice(0, 4).toUpperCase()}${String(o).padStart(3, '0')}`
-            : null,
-          carrier: (isDelivered || isShipped) ? 'colissimo' : null,
-          shippedAt: isDelivered ? daysAgo(10 - (o % 5)) : isShipped ? daysAgo(2) : null,
-          deliveredAt: isDelivered ? daysAgo(7 - (o % 4)) : null,
-          createdAt: daysAgo(14 - o),
-          items: {
-            create: [{
-              productId: prodId,
-              productName: firstProd[0],
-              quantity: 1,
-              price,
-              image: orderItemImage,
-            }],
-          },
-        },
-      });
-      totalOrders++;
-    }
+    const ordersCreated = await seedCreatorOrders(def, userInfo.id, allProductIds, orderCounter, ctx);
+    totalOrders += ordersCreated;
   }
 
-  // ── 7. New System Styles ──────────────────────────────────────────────────
+  // ── New System Styles ──────────────────────────────────────────────────
   const newStyles = [
     { name: 'Bijoux', description: 'Bijoux artisanaux et joaillerie fine' },
     { name: 'Maroquinerie', description: 'Sacs et accessoires en cuir' },
