@@ -81,11 +81,11 @@ export function SizeManager({ productId, initialSizes }: SizeManagerProps) {
       }));
 
       const result = await updateProduct(productId, { sizes: cleanSizes });
-      if (!result.success) {
-        setError(result.error ?? 'Erreur lors de la sauvegarde');
-      } else {
+      if (result.success) {
         setSaved(true);
         router.refresh();
+      } else {
+        setError(result.error ?? 'Erreur lors de la sauvegarde');
       }
     });
   }

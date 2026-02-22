@@ -270,11 +270,11 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
         removeColor: !editColor.trim() ? true : undefined,
       });
 
-      if (!result.success) {
-        setError(result.error ?? 'Erreur lors de la mise a jour');
-      } else {
+      if (result.success) {
         setEditingId(null);
         router.refresh();
+      } else {
+        setError(result.error ?? 'Erreur lors de la mise a jour');
       }
     });
   }

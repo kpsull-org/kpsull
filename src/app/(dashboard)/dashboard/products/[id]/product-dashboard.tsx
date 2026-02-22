@@ -446,10 +446,10 @@ export function ProductDashboard({
     setError(null);
     startSizeTransition(async () => {
       const result = await updateProduct(productId, { sizes });
-      if (!result.success) {
-        setError(result.error ?? 'Erreur lors de la sauvegarde');
-      } else {
+      if (result.success) {
         router.refresh();
+      } else {
+        setError(result.error ?? 'Erreur lors de la sauvegarde');
       }
     });
   }
@@ -483,9 +483,7 @@ export function ProductDashboard({
         colorCode: newVarColorCode || undefined,
         stock: 0,
       });
-      if (!result.success) {
-        setError(result.error ?? 'Erreur lors de la création');
-      } else {
+      if (result.success) {
         const newVariantId = result.id!;
 
         // Migrate base stock to the new variant when it's the first one added
@@ -516,6 +514,8 @@ export function ProductDashboard({
         setNewVarName('');
         setNewVarColorCode('#000000');
         router.refresh();
+      } else {
+        setError(result.error ?? 'Erreur lors de la création');
       }
     });
   }
@@ -524,11 +524,11 @@ export function ProductDashboard({
     setError(null);
     startVariantTransition(async () => {
       const result = await deleteVariant(variantId, productId);
-      if (!result.success) {
-        setError(result.error ?? 'Erreur');
-      } else {
+      if (result.success) {
         setVariants((prev) => prev.filter((v) => v.id !== variantId));
         router.refresh();
+      } else {
+        setError(result.error ?? 'Erreur');
       }
     });
   }

@@ -17,7 +17,7 @@ function getMimeType(filename: string): string {
 
 function extractPublicId(url: string): string | null {
   // Cloudinary URL format: https://res.cloudinary.com/{cloud}/image/upload/v{version}/{public_id}.{ext}
-  const match = url.match(/\/image\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
+  const match = /\/image\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/.exec(url);
   return match?.[1] ?? null;
 }
 

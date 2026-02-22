@@ -51,7 +51,7 @@ test.describe('Header dropdown hover interactions', () => {
     }
 
     // The dropdown panel should remain visible (not close due to gap)
-    const dropdownPanel = page.locator('.group\\/cart .bg-white').first();
+    const dropdownPanel = page.locator(String.raw`.group\/cart .bg-white`).first();
     await expect(dropdownPanel).toBeVisible();
   });
 

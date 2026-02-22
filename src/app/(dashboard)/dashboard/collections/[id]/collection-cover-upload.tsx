@@ -59,11 +59,11 @@ export function CollectionCoverUpload({
       formData.append('file', fileToUpload);
 
       const result = await uploadCollectionCoverImage(collectionId, formData);
-      if (!result.success) {
+      if (result.success) {
+        router.refresh();
+      } else {
         setError(result.error ?? "Erreur lors de l'upload");
         setUploadState({ isCompressing: false });
-      } else {
-        router.refresh();
       }
     });
 

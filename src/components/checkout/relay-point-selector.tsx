@@ -90,7 +90,7 @@ export function RelayPointSelector({ carrierName, selectedRelayPoint, onSelect }
           maxLength={5}
           placeholder="Code postal (ex: 75001)"
           value={postalCode}
-          onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+          onChange={(e) => setPostalCode(e.target.value.replaceAll(/\D/g, '').slice(0, 5))}
           onKeyDown={handleKeyDown}
           className="font-sans"
           aria-label="Code postal pour rechercher un point relais"

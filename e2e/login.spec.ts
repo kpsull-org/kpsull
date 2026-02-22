@@ -44,8 +44,8 @@ test.describe('Login flow', () => {
     test.skip(!process.env.E2E_TEST_USER_EMAIL, 'Requires E2E_TEST_USER_EMAIL env var');
 
     await page.goto('/login');
-    await page.getByLabel(/email/i).fill(process.env.E2E_TEST_USER_EMAIL!);
-    await page.getByLabel(/mot de passe/i).fill(process.env.E2E_TEST_USER_PASSWORD!);
+    await page.getByLabel(/email/i).fill(process.env.E2E_TEST_USER_EMAIL ?? '');
+    await page.getByLabel(/mot de passe/i).fill(process.env.E2E_TEST_USER_PASSWORD ?? '');
     await page.getByRole('button', { name: /se connecter/i }).click();
     await expect(page).toHaveURL('/', { timeout: 15_000 });
   });

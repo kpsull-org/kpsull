@@ -23,7 +23,7 @@ const PAGE_SIZE = 20;
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const params = await searchParams;
-  const page = parseInt(params.page ?? '1', 10);
+  const page = Number.parseInt(params.page ?? '1', 10);
   const search = params.search ?? '';
   const statusFilter = params.status;
 

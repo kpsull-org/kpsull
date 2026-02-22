@@ -212,7 +212,7 @@ export function ProductForm({ mode, productId, initialValues, collections, style
   const [name, setName] = useState(initialValues?.name ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
   const [price, setPrice] = useState<number>(
-    initialValues ? initialValues.price / 100 : NaN
+    initialValues ? initialValues.price / 100 : Number.NaN
   );
   const [projectId, setProjectId] = useState(initialValues?.projectId ?? '');
   const [styleId, setStyleId] = useState(initialValues?.styleId ?? '');

@@ -22,7 +22,7 @@ const PAGE_SIZE = 10;
 
 export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   const params = await searchParams;
-  const page = Math.max(1, parseInt(params.page ?? '1', 10));
+  const page = Math.max(1, Number.parseInt(params.page ?? '1', 10));
   const search = params.search?.trim() ?? '';
 
   const clientRepository = new PrismaAdminClientRepository(prisma);

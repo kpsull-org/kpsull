@@ -7,8 +7,8 @@ export class InvoiceNumber {
 
   static fromString(value: string): InvoiceNumber {
     const parts = value.split('-');
-    const year = parseInt(parts[1] ?? '0');
-    const seq = parseInt(parts[2] ?? '0');
+    const year = Number.parseInt(parts[1] ?? '0');
+    const seq = Number.parseInt(parts[2] ?? '0');
     return new InvoiceNumber(year, seq);
   }
 

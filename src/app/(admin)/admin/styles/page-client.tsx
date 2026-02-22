@@ -300,7 +300,7 @@ function HistorySection({
               Historique des styles
             </CardTitle>
             <CardDescription>
-              {total} style{total !== 1 ? 's' : ''} au total
+              {total} style{total === 1 ? '' : 's'} au total
             </CardDescription>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -508,7 +508,7 @@ export function StyleModerationClient() {
             )}
           </CardTitle>
           <CardDescription>
-            {pending.length} style{pending.length !== 1 ? 's' : ''} en attente de validation
+            {pending.length} style{pending.length === 1 ? '' : 's'} en attente de validation
           </CardDescription>
         </CardHeader>
 
