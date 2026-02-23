@@ -54,6 +54,13 @@ export function FilterSidebar({
     safeParseInt(currentParams.maxPrice, priceMax),
   ]);
 
+  useEffect(() => {
+    setPriceRange([
+      safeParseInt(currentParams.minPrice, PRICE_MIN),
+      safeParseInt(currentParams.maxPrice, priceMax),
+    ]);
+  }, [currentParams.minPrice, currentParams.maxPrice, priceMax]);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateParams = useCallback(
