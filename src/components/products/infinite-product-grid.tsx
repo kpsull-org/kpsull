@@ -125,8 +125,8 @@ export function InfiniteProductGrid({
 
       {loading && (
         <div className="mt-0 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={`skeleton-product-${i}`} className="overflow-hidden">
+          {['sp-1', 'sp-2', 'sp-3', 'sp-4'].map((id) => (
+            <div key={id} className="overflow-hidden">
               <div className="aspect-square animate-pulse rounded-[15px] bg-muted" />
               <div className="space-y-2 p-4">
                 <div className="h-3 w-24 animate-pulse rounded bg-muted" />

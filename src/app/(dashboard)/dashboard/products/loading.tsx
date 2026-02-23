@@ -11,8 +11,8 @@ export default function ProductsLoading() {
       {/* Table skeleton */}
       <div className="overflow-hidden rounded-lg border">
         <div className="h-12 animate-pulse bg-muted/50" />
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={`skeleton-row-${i}`} className="flex h-16 items-center gap-4 border-t bg-card px-4">
+        {['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'].map((id) => (
+          <div key={id} className="flex h-16 items-center gap-4 border-t bg-card px-4">
             <div className="h-10 w-10 animate-pulse rounded bg-muted" />
             <div className="h-4 w-40 animate-pulse rounded bg-muted" />
             <div className="ml-auto h-6 w-16 animate-pulse rounded bg-muted" />

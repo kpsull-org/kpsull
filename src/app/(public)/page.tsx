@@ -19,9 +19,9 @@ function CategorySliderSkeleton() {
           <div className="h-9 w-64 animate-pulse rounded-full bg-gray-300 md:h-10 md:w-72 lg:h-11" />
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {['cat-1', 'cat-2', 'cat-3', 'cat-4', 'cat-5', 'cat-6'].map((id) => (
             <div
-              key={`skeleton-category-${i}`}
+              key={id}
               className="aspect-[2/1] animate-pulse rounded-2xl bg-gray-200"
             />
           ))}
@@ -37,8 +37,8 @@ function FeaturedOffersSkeleton() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 h-6 w-40 animate-pulse rounded bg-gray-300" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={`skeleton-offer-${i}`} className="overflow-hidden rounded-xl bg-white">
+          {['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8'].map((id) => (
+            <div key={id} className="overflow-hidden rounded-xl bg-white">
               <div className="aspect-square animate-pulse bg-gray-200" />
               <div className="space-y-1 px-3 py-2">
                 <div className="h-3 w-3/4 animate-pulse rounded bg-gray-200" />
@@ -58,8 +58,8 @@ function TopCreatorsSkeleton() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 h-6 w-48 animate-pulse rounded bg-gray-300" />
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={`skeleton-creator-${i}`} className="overflow-hidden rounded-xl bg-white">
+          {['cr-1', 'cr-2', 'cr-3', 'cr-4'].map((id) => (
+            <div key={id} className="overflow-hidden rounded-xl bg-white">
               <div className="aspect-square animate-pulse bg-gray-200" />
               <div className="p-4">
                 <div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
