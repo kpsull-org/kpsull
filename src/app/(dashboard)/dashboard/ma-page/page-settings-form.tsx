@@ -39,6 +39,37 @@ const SOCIAL_NETWORKS = [
   { key: 'substack', label: 'Substack', placeholder: 'https://votrecompte.substack.com', recommended: false },
 ];
 
+type SocialNetwork = (typeof SOCIAL_NETWORKS)[number];
+
+function NetworkInputList({
+  networks,
+  socialLinks,
+  onChange,
+}: {
+  networks: SocialNetwork[];
+  socialLinks: Record<string, string>;
+  onChange: (key: string, value: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {networks.map((network) => (
+        <div key={network.key} className="space-y-1.5">
+          <Label htmlFor={`social-${network.key}`} className="text-sm">
+            {network.label}
+          </Label>
+          <Input
+            id={`social-${network.key}`}
+            type="url"
+            value={socialLinks[network.key] ?? ''}
+            onChange={(e) => onChange(network.key, e.target.value)}
+            placeholder={network.placeholder}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface PageSettingsFormProps {
   readonly pageId: string;
   readonly slug: string;
@@ -515,22 +546,11 @@ export function PageSettingsForm({
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
               Recommandés pour créateurs mode
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {recommendedNetworks.map((network) => (
-                <div key={network.key} className="space-y-1.5">
-                  <Label htmlFor={`social-${network.key}`} className="text-sm">
-                    {network.label}
-                  </Label>
-                  <Input
-                    id={`social-${network.key}`}
-                    type="url"
-                    value={socialLinks[network.key] ?? ''}
-                    onChange={(e) => handleSocialChange(network.key, e.target.value)}
-                    placeholder={network.placeholder}
-                  />
-                </div>
-              ))}
-            </div>
+            <NetworkInputList
+              networks={recommendedNetworks}
+              socialLinks={socialLinks}
+              onChange={handleSocialChange}
+            />
           </div>
 
           <button
@@ -546,22 +566,11 @@ export function PageSettingsForm({
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-2">
                 Autres réseaux
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {moreNetworks.map((network) => (
-                  <div key={network.key} className="space-y-1.5">
-                    <Label htmlFor={`social-${network.key}`} className="text-sm">
-                      {network.label}
-                    </Label>
-                    <Input
-                      id={`social-${network.key}`}
-                      type="url"
-                      value={socialLinks[network.key] ?? ''}
-                      onChange={(e) => handleSocialChange(network.key, e.target.value)}
-                      placeholder={network.placeholder}
-                    />
-                  </div>
-                ))}
-              </div>
+              <NetworkInputList
+                networks={moreNetworks}
+                socialLinks={socialLinks}
+                onChange={handleSocialChange}
+              />
             </div>
           )}
         </CardContent>

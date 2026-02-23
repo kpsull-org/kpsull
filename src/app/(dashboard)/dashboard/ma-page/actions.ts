@@ -10,12 +10,39 @@ import { slugify } from '@/lib/utils/slugify';
 import { PrismaPageRepository } from '@/modules/pages/infrastructure/repositories/prisma-page.repository';
 import { UpdatePageSettingsUseCase } from '@/modules/pages/application/use-cases/update-page-settings.use-case';
 import { CreatePageUseCase } from '@/modules/pages/application/use-cases/create-page.use-case';
+import type { Session } from 'next-auth';
 
 const pageRepository = new PrismaPageRepository();
 
 export interface ActionResult {
   success: boolean;
   error?: string;
+}
+
+type PrepareResult =
+  | { success: false; error: string }
+  | { success: true; session: Session; buffer: Buffer; dataUri: string };
+
+async function prepareImageUpload(formData: FormData): Promise<PrepareResult> {
+  const session = await auth();
+  if (!session?.user?.id) redirect('/login');
+  if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
+    return { success: false, error: 'Action non autorisee' };
+  }
+
+  const file = formData.get('file') as File | null;
+  if (!file) return { success: false, error: 'Aucun fichier fourni' };
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const validationResult = validateImageFile(buffer, file.name);
+  if (validationResult.isFailure) {
+    return { success: false, error: validationResult.error! };
+  }
+
+  const base64 = buffer.toString('base64');
+  const dataUri = `data:${file.type};base64,${base64}`;
+
+  return { success: true, session, buffer, dataUri };
 }
 
 async function getOrCreatePage(userId: string) {
@@ -113,25 +140,12 @@ export async function updatePageSettings(formData: FormData): Promise<ActionResu
 export async function uploadBannerImage(
   formData: FormData
 ): Promise<ActionResult & { url?: string }> {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/login');
-  if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
-    return { success: false, error: "Action non autorisee" };
-  }
+  const prepared = await prepareImageUpload(formData);
+  if (!prepared.success) return prepared;
 
-  const file = formData.get('file') as File | null;
-  if (!file) return { success: false, error: 'Aucun fichier fourni' };
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const validationResult = validateImageFile(buffer, file.name);
-  if (validationResult.isFailure) {
-    return { success: false, error: validationResult.error! };
-  }
+  const { session, dataUri } = prepared;
 
   try {
-    const base64 = buffer.toString('base64');
-    const dataUri = `data:${file.type};base64,${base64}`;
-
     const uploadResult = await cloudinary.uploader.upload(dataUri, {
       folder: `kpsull/banners`,
       public_id: session.user.id,
@@ -165,25 +179,12 @@ export async function uploadBannerImage(
 export async function uploadAvatarImage(
   formData: FormData
 ): Promise<ActionResult & { url?: string }> {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/login');
-  if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
-    return { success: false, error: "Action non autorisee" };
-  }
+  const prepared = await prepareImageUpload(formData);
+  if (!prepared.success) return prepared;
 
-  const file = formData.get('file') as File | null;
-  if (!file) return { success: false, error: 'Aucun fichier fourni' };
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const validationResult = validateImageFile(buffer, file.name);
-  if (validationResult.isFailure) {
-    return { success: false, error: validationResult.error! };
-  }
+  const { session, dataUri } = prepared;
 
   try {
-    const base64 = buffer.toString('base64');
-    const dataUri = `data:${file.type};base64,${base64}`;
-
     const uploadResult = await cloudinary.uploader.upload(dataUri, {
       folder: `kpsull/avatars`,
       public_id: session.user.id,
