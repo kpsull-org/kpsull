@@ -35,6 +35,10 @@ export class PrismaOrderRepository implements OrderRepository {
       cancellationReason: order.cancellationReason ?? null,
       shippedAt: order.shippedAt ?? null,
       deliveredAt: order.deliveredAt ?? null,
+      shippingMode: order.shippingMode ?? null,
+      relayPointId: order.relayPointId ?? null,
+      relayPointName: order.relayPointName ?? null,
+      shippingCost: order.shippingCost ?? null,
       updatedAt: new Date(),
     };
 
@@ -222,6 +226,10 @@ export class PrismaOrderRepository implements OrderRepository {
       cancellationReason: prismaOrder.cancellationReason ?? undefined,
       shippedAt: prismaOrder.shippedAt ?? undefined,
       deliveredAt: prismaOrder.deliveredAt ?? undefined,
+      shippingMode: prismaOrder.shippingMode ?? undefined,
+      relayPointId: prismaOrder.relayPointId ?? undefined,
+      relayPointName: prismaOrder.relayPointName ?? undefined,
+      shippingCost: prismaOrder.shippingCost ?? undefined,
       createdAt: prismaOrder.createdAt,
       updatedAt: prismaOrder.updatedAt,
     });

@@ -4,6 +4,8 @@ import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { getCartAction } from '@/app/cart/actions';
+import { useCartStore } from '@/lib/stores/cart.store';
 
 interface SignOutButtonProps {
   callbackUrl?: string;
@@ -31,10 +33,16 @@ export function SignOutButton({
   className,
 }: SignOutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const replaceItems = useCartStore((s) => s.replaceItems);
 
   async function handleSignOut() {
     setIsLoading(true);
     try {
+      // Migrate DB cart to localStorage before signing out
+      const dbItems = await getCartAction();
+      if (dbItems.length > 0) {
+        replaceItems(dbItems);
+      }
       await signOut({ callbackUrl });
     } catch {
       setIsLoading(false);

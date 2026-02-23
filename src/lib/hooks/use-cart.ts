@@ -48,7 +48,11 @@ export function useCart(isAuthenticated: boolean) {
 
     saveTimeoutRef.current = setTimeout(() => {
       const currentItems = useCartStore.getState().items;
-      saveCartAction(currentItems);
+      saveCartAction(currentItems).then((result) => {
+        if (!result.success) {
+          console.error('[useCart] Échec de la sauvegarde du panier:', result.error);
+        }
+      });
     }, 500);
   }, [isAuthenticated]);
 

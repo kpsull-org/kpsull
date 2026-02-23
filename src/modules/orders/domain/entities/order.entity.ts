@@ -26,6 +26,10 @@ interface OrderProps {
   cancellationReason?: string;
   shippedAt?: Date;
   deliveredAt?: Date;
+  shippingMode?: string;
+  relayPointId?: string;
+  relayPointName?: string;
+  shippingCost?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +41,10 @@ interface CreateOrderProps {
   customerEmail: string;
   items: OrderItem[];
   shippingAddress: ShippingAddress;
+  shippingMode?: string;
+  relayPointId?: string;
+  relayPointName?: string;
+  shippingCost?: number;
 }
 
 /**
@@ -117,6 +125,22 @@ export class Order extends Entity<OrderProps> {
 
   get deliveredAt(): Date | undefined {
     return this.props.deliveredAt;
+  }
+
+  get shippingMode(): string | undefined {
+    return this.props.shippingMode;
+  }
+
+  get relayPointId(): string | undefined {
+    return this.props.relayPointId;
+  }
+
+  get relayPointName(): string | undefined {
+    return this.props.relayPointName;
+  }
+
+  get shippingCost(): number | undefined {
+    return this.props.shippingCost;
   }
 
   get createdAt(): Date {
@@ -261,6 +285,10 @@ export class Order extends Entity<OrderProps> {
         shippingAddress: props.shippingAddress,
         status: OrderStatus.pending(),
         totalAmount: Order.calculateTotal(props.items),
+        shippingMode: props.shippingMode,
+        relayPointId: props.relayPointId,
+        relayPointName: props.relayPointName,
+        shippingCost: props.shippingCost,
         createdAt: now,
         updatedAt: now,
       })
@@ -294,6 +322,10 @@ export class Order extends Entity<OrderProps> {
           cancellationReason: props.cancellationReason,
           shippedAt: props.shippedAt,
           deliveredAt: props.deliveredAt,
+          shippingMode: props.shippingMode,
+          relayPointId: props.relayPointId,
+          relayPointName: props.relayPointName,
+          shippingCost: props.shippingCost,
           createdAt: props.createdAt,
           updatedAt: props.updatedAt,
         },
