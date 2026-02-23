@@ -22,11 +22,10 @@ export async function CategorySlider() {
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
           {styles.map((style) => {
-            const slug = style.name.toLowerCase().replaceAll(/\s+/g, '-').replaceAll(/[^a-z0-9-]/g, '');
             return (
               <Link
                 key={style.name}
-                href={`/catalogue?style=${slug}`}
+                href={`/catalogue?style=${encodeURIComponent(style.name)}`}
                 className="group relative aspect-[2/1] overflow-hidden rounded-2xl"
               >
                 {style.imageUrl ? (
