@@ -81,7 +81,6 @@ export default function AboutPage() {
             <div key={member.name} className="group">
               {/* Photo */}
               <div className="mb-3 aspect-square w-full overflow-hidden bg-[#EBEBEB]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={member.photo}
                   alt={member.name}
@@ -138,7 +137,6 @@ export default function AboutPage() {
                 portent méritent de la trouver facilement.
               </p>
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://res.cloudinary.com/damucxy2t/image/upload/v1771845067/kpsull/notre-histoire.jpg"
               alt="Notre histoire KPSULL"

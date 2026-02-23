@@ -132,7 +132,7 @@ export default async function CataloguePage({
   function seededRng(seed: string) {
     let h = 2166136261;
     for (let i = 0; i < seed.length; i++) {
-      h ^= seed.charCodeAt(i);
+      h ^= seed.codePointAt(i) ?? 0;
       h = Math.imul(h, 16777619);
     }
     return () => {
