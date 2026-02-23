@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useRef, useEffect } from 'react';
+import { useState, useTransition, useRef, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -351,22 +351,22 @@ export function ProductDashboard({
   // ── Save stocks ──────────────────────────────────────────────────────────────
 
   function buildAllCells(): Array<{ variantId?: string; size?: string; stock: number }> {
-    if (!hasVariants && !hasSizes) {
-      return [{ ...getCell(undefined, undefined) }];
+    if (hasVariants && hasSizes) {
+      const result: Array<{ variantId: string; size: string; stock: number }> = [];
+      for (const v of variants) {
+        for (const { size } of sizes) {
+          result.push({ variantId: v.id, size, ...getCell(v.id, size) });
+        }
+      }
+      return result;
     }
-    if (!hasVariants) {
-      return sizes.map(({ size }) => ({ size, ...getCell(undefined, size) }));
-    }
-    if (!hasSizes) {
+    if (hasVariants) {
       return variants.map((v) => ({ variantId: v.id, ...getCell(v.id, undefined) }));
     }
-    const result: Array<{ variantId: string; size: string; stock: number }> = [];
-    for (const v of variants) {
-      for (const { size } of sizes) {
-        result.push({ variantId: v.id, size, ...getCell(v.id, size) });
-      }
+    if (hasSizes) {
+      return sizes.map(({ size }) => ({ size, ...getCell(undefined, size) }));
     }
-    return result;
+    return [{ ...getCell(undefined, undefined) }];
   }
 
   function handleSaveSkus() {
@@ -543,6 +543,18 @@ export function ProductDashboard({
     });
   }
 
+  function handleVariantImageAdd(variantId: string, url: string) {
+    setVariants((prev) =>
+      prev.map((x) => (x.id === variantId ? { ...x, images: [...x.images, url] } : x))
+    );
+  }
+
+  function handleVariantImageRemove(variantId: string, url: string) {
+    setVariants((prev) =>
+      prev.map((x) => (x.id === variantId ? { ...x, images: x.images.filter((u) => u !== url) } : x))
+    );
+  }
+
   function commitNameEdit(variantId: string) {
     const trimmed = editingNameValue.trim();
     setEditingNameVariantId(null);
@@ -557,6 +569,95 @@ export function ProductDashboard({
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  function renderSuggestedLabel(g: string | undefined, cat: string | undefined): ReactNode {
+    if (g === 'Bébé' || g === 'Enfant') {
+      return <span className="ml-1 text-muted-foreground/60">pour {g}</span>;
+    }
+    if (cat) {
+      return <span className="ml-1 text-muted-foreground/60">pour {cat}</span>;
+    }
+    return null;
+  }
+
+  function renderSizeGroupList(cat: string | undefined, gen: string | undefined): ReactNode {
+    const suggestedIds = getSuggestedGroupIds(cat, gen);
+    const suggestedGroups = SIZE_GROUPS.filter((g) => suggestedIds.includes(g.id));
+    const otherGroups = SIZE_GROUPS.filter((g) => !suggestedIds.includes(g.id));
+    const hasSuggestions = suggestedGroups.length > 0;
+
+    if (!hasSuggestions) {
+      return (
+        <>
+          <p className="text-xs font-medium text-muted-foreground">Choisir un référentiel de tailles</p>
+          {SIZE_GROUPS.map(renderSizeGroup)}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground">
+            Référentiels suggérés
+            {renderSuggestedLabel(gen, cat)}
+          </p>
+          {suggestedGroups.map(renderSizeGroup)}
+        </div>
+
+        {otherGroups.length > 0 && (
+          <details className="group/others">
+            <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1 list-none flex items-center gap-1 select-none">
+              <ChevronDown className="h-3.5 w-3.5 group-open/others:rotate-180 transition-transform" />
+              Autres référentiels
+            </summary>
+            <div className="space-y-1.5 mt-1.5">
+              {otherGroups.map(renderSizeGroup)}
+            </div>
+          </details>
+        )}
+      </>
+    );
+  }
+
+  function renderSizeGroup(group: (typeof SIZE_GROUPS)[number]) {
+    return (
+      <div key={group.id} className="border rounded-md overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setOpenSizeGroup((prev) => (prev === group.id ? null : group.id))}
+          className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+        >
+          <div>
+            <span className="font-medium">{group.label}</span>
+            {'note' in group && group.note && (
+              <span className="text-xs text-muted-foreground ml-2">{group.note}</span>
+            )}
+          </div>
+          {openSizeGroup === group.id ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+        {openSizeGroup === group.id && (
+          <div className="px-3 pb-3 flex flex-wrap gap-1.5 border-t pt-2">
+            {group.sizes.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => { addSize(s); setAddingSizeOpen(false); }}
+                disabled={alreadyAddedSizes.has(s.toLowerCase())}
+                className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const hasShippingData = sizes.some(
     (s) =>
@@ -678,20 +779,8 @@ export function ProductDashboard({
                         variantId={v.id}
                         productId={productId}
                         images={v.images}
-                        onAdd={(url) =>
-                          setVariants((prev) =>
-                            prev.map((x) =>
-                              x.id === v.id ? { ...x, images: [...x.images, url] } : x
-                            )
-                          )
-                        }
-                        onRemove={(url) =>
-                          setVariants((prev) =>
-                            prev.map((x) =>
-                              x.id === v.id ? { ...x, images: x.images.filter((u) => u !== url) } : x
-                            )
-                          )
-                        }
+                        onAdd={(url) => handleVariantImageAdd(v.id, url)}
+                        onRemove={(url) => handleVariantImageRemove(v.id, url)}
                       />
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         {v.colorCode ? (
@@ -805,8 +894,8 @@ export function ProductDashboard({
             onClick={() => { setAddingSizeOpen(false); setNewSizeInput(''); }}
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSizeOpen(false); setNewSizeInput(''); } }}
           >
-            <dialog
-              open
+            <div
+              role="dialog"
               aria-modal="true"
               className="bg-background border rounded-xl p-5 w-[480px] max-h-[80vh] overflow-y-auto shadow-xl space-y-3"
               onClick={(e) => e.stopPropagation()}
@@ -814,88 +903,7 @@ export function ProductDashboard({
             >
               <p className="text-sm font-medium">Ajouter une taille</p>
 
-              {(() => {
-                const suggestedIds = getSuggestedGroupIds(category, gender);
-                const suggestedGroups = SIZE_GROUPS.filter((g) => suggestedIds.includes(g.id));
-                const otherGroups = SIZE_GROUPS.filter((g) => !suggestedIds.includes(g.id));
-                const hasSuggestions = suggestedGroups.length > 0;
-
-                function renderGroup(group: (typeof SIZE_GROUPS)[number]) {
-                  return (
-                    <div key={group.id} className="border rounded-md overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => setOpenSizeGroup((prev) => (prev === group.id ? null : group.id))}
-                        className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
-                      >
-                        <div>
-                          <span className="font-medium">{group.label}</span>
-                          {'note' in group && group.note && (
-                            <span className="text-xs text-muted-foreground ml-2">{group.note}</span>
-                          )}
-                        </div>
-                        {openSizeGroup === group.id ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </button>
-                      {openSizeGroup === group.id && (
-                        <div className="px-3 pb-3 flex flex-wrap gap-1.5 border-t pt-2">
-                          {group.sizes.map((s) => (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => { addSize(s); setAddingSizeOpen(false); }}
-                              disabled={alreadyAddedSizes.has(s.toLowerCase())}
-                              className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                              {s}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
-                if (!hasSuggestions) {
-                  return (
-                    <>
-                      <p className="text-xs font-medium text-muted-foreground">Choisir un référentiel de tailles</p>
-                      {SIZE_GROUPS.map(renderGroup)}
-                    </>
-                  );
-                }
-
-                return (
-                  <>
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Référentiels suggérés
-                        {(gender === 'Bébé' || gender === 'Enfant') ? (
-                          <span className="ml-1 text-muted-foreground/60">pour {gender}</span>
-                        ) : category ? (
-                          <span className="ml-1 text-muted-foreground/60">pour {category}</span>
-                        ) : null}
-                      </p>
-                      {suggestedGroups.map(renderGroup)}
-                    </div>
-
-                    {otherGroups.length > 0 && (
-                      <details className="group/others">
-                        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground py-1 list-none flex items-center gap-1 select-none">
-                          <ChevronDown className="h-3.5 w-3.5 group-open/others:rotate-180 transition-transform" />
-                          Autres référentiels
-                        </summary>
-                        <div className="space-y-1.5 mt-1.5">
-                          {otherGroups.map(renderGroup)}
-                        </div>
-                      </details>
-                    )}
-                  </>
-                );
-              })()}
+              {renderSizeGroupList(category, gender)}
 
               {/* Taille personnalisée */}
               <div className="flex gap-2 pt-1">
@@ -935,7 +943,7 @@ export function ProductDashboard({
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </dialog>
+            </div>
           </button>
         )}
 
@@ -984,8 +992,8 @@ export function ProductDashboard({
             onClick={() => { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); }}
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); } }}
           >
-            <dialog
-              open
+            <div
+              role="dialog"
               aria-modal="true"
               className="bg-background border rounded-xl p-5 w-80 shadow-xl space-y-4"
               onClick={(e) => e.stopPropagation()}
@@ -1063,7 +1071,7 @@ export function ProductDashboard({
                   <X className="h-3.5 w-3.5" /> Annuler
                 </Button>
               </div>
-            </dialog>
+            </div>
           </button>
         )}
 

@@ -267,7 +267,7 @@ export function VariantManager({ productId, variants }: VariantManagerProps) {
         stock: !isNaN(stock) ? stock : undefined,
         color: editColor.trim() || undefined,
         colorCode: editColorCode.trim() || undefined,
-        removeColor: !editColor.trim() ? true : undefined,
+        removeColor: editColor.trim() ? undefined : true,
       });
 
       if (result.success) {

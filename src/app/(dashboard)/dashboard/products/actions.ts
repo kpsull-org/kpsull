@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
+import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { Money } from '@/modules/products/domain/value-objects/money.vo';
 import { CreateProductUseCase } from '@/modules/products/application/use-cases/products/create-product.use-case';
@@ -20,8 +21,7 @@ import { NoopSubscriptionService } from '@/modules/products/infrastructure/servi
 import { CloudinaryImageUploadService } from '@/modules/products/infrastructure/services/cloudinary-image-upload.service';
 import { UpsertSkuUseCase } from '@/modules/products/application/use-cases/skus/upsert-sku.use-case';
 import type { SkuOutput } from '@/modules/products/application/use-cases/skus/list-skus.use-case';
-
-export type { SkuOutput };
+export type { SkuOutput } from '@/modules/products/application/use-cases/skus/list-skus.use-case';
 
 const productRepository = new PrismaProductRepository(prisma);
 const variantRepository = new PrismaVariantRepository(prisma);
@@ -124,6 +124,56 @@ async function validateAndResolveStyleId(
   return { error: null, forceDraft: styleRecord.status === 'PENDING_APPROVAL' };
 }
 
+type UpdateProductData = {
+  name?: string;
+  description?: string | null;
+  price?: number;
+  projectId?: string | null;
+  styleId?: string | null;
+  sizes?: Array<{ size: string; weight?: number; width?: number; height?: number; length?: number }>;
+  category?: string | null;
+  gender?: string | null;
+  materials?: string | null;
+  fit?: string | null;
+  season?: string | null;
+  madeIn?: string | null;
+  careInstructions?: string | null;
+  certifications?: string | null;
+  weight?: number | null;
+  forceDraft?: boolean;
+};
+
+function buildProductUpdatePatch(data: UpdateProductData): Prisma.ProductUpdateInput {
+  const { name, description, price, projectId, styleId, sizes, category, gender, materials, fit, season, madeIn, careInstructions, certifications, weight, forceDraft } = data;
+  return {
+    ...(name !== undefined && { name: name.trim() }),
+    ...(description !== undefined && { description }),
+    ...(price !== undefined && { price: Math.round(price * 100) }),
+    ...(projectId !== undefined && { projectId }),
+    ...(styleId !== undefined && { styleId }),
+    ...(forceDraft && { status: 'DRAFT' }),
+    ...(sizes !== undefined && { sizes }),
+    ...(category !== undefined && { category }),
+    ...(gender !== undefined && { gender }),
+    ...(materials !== undefined && { materials }),
+    ...(fit !== undefined && { fit }),
+    ...(season !== undefined && { season }),
+    ...(madeIn !== undefined && { madeIn }),
+    ...(careInstructions !== undefined && { careInstructions }),
+    ...(certifications !== undefined && { certifications }),
+    ...(weight !== undefined && { weight }),
+    updatedAt: new Date(),
+  };
+}
+
+async function verifyProductOwnership(productId: string, userId: string): Promise<string | null> {
+  const existing = await prisma.product.findUnique({ where: { id: productId }, select: { creatorId: true } });
+  if (!existing || existing.creatorId !== userId) {
+    return "Vous n'etes pas autorise a modifier ce produit";
+  }
+  return null;
+}
+
 // ─── Auth helper ───────────────────────────────────────────────────
 
 async function requireCreatorAuth() {
@@ -201,47 +251,23 @@ export async function updateProduct(
     return { success: false, error: firstError?.message ?? 'Donnees invalides' };
   }
 
-  const { name, description, price, projectId, styleId, sizes, category, gender, materials, fit, season, madeIn, careInstructions, certifications, weight } = validationResult.data;
+  const validatedData = validationResult.data;
 
-  // Verify ownership
-  const existing = await prisma.product.findUnique({ where: { id: productId }, select: { creatorId: true } });
-  if (!existing || existing.creatorId !== session.user.id) {
-    return { success: false, error: "Vous n'etes pas autorise a modifier ce produit" };
-  }
+  const ownershipError = await verifyProductOwnership(productId, session.user.id);
+  if (ownershipError) return { success: false, error: ownershipError };
 
-  // Validate business rules
-  const nameError = validateProductName(name);
+  const nameError = validateProductName(validatedData.name);
   if (nameError) return { success: false, error: nameError };
 
-  const priceError = validateProductPrice(price);
+  const priceError = validateProductPrice(validatedData.price);
   if (priceError) return { success: false, error: priceError };
 
-  // Validate styleId: style must exist and not be REJECTED
-  const { error: styleError, forceDraft } = await validateAndResolveStyleId(styleId);
+  const { error: styleError, forceDraft } = await validateAndResolveStyleId(validatedData.styleId);
   if (styleError) return { success: false, error: styleError };
 
-  // Single atomic update combining core and extra fields
   await prisma.product.update({
     where: { id: productId },
-    data: {
-      ...(name !== undefined && { name: name.trim() }),
-      ...(description !== undefined && { description }),
-      ...(price !== undefined && { price: Math.round(price * 100) }),
-      ...(projectId !== undefined && { projectId }),
-      ...(styleId !== undefined && { styleId }),
-      ...(forceDraft && { status: 'DRAFT' }),
-      ...(sizes !== undefined && { sizes }),
-      ...(category !== undefined && { category }),
-      ...(gender !== undefined && { gender }),
-      ...(materials !== undefined && { materials }),
-      ...(fit !== undefined && { fit }),
-      ...(season !== undefined && { season }),
-      ...(madeIn !== undefined && { madeIn }),
-      ...(careInstructions !== undefined && { careInstructions }),
-      ...(certifications !== undefined && { certifications }),
-      ...(weight !== undefined && { weight }),
-      updatedAt: new Date(),
-    },
+    data: buildProductUpdatePatch({ ...validatedData, forceDraft }),
   });
 
   revalidatePath('/dashboard/products');
