@@ -126,10 +126,23 @@ export default async function CataloguePage({
   const minPrice = minPriceEuros * 100;
   const maxPrice = maxPriceEuros * 100;
 
-  const filteredVariants = variants.filter((v) => {
-    const price = v.priceOverride ?? v.product.price;
-    return price >= minPrice && price <= maxPrice;
-  });
+  const filteredVariants = (() => {
+    const filtered = variants.filter((v) => {
+      const price = v.priceOverride ?? v.product.price;
+      return price >= minPrice && price <= maxPrice;
+    });
+    if (sort === "price_asc") {
+      return [...filtered].sort(
+        (a, b) => (a.priceOverride ?? a.product.price) - (b.priceOverride ?? b.product.price),
+      );
+    }
+    if (sort === "price_desc") {
+      return [...filtered].sort(
+        (a, b) => (b.priceOverride ?? b.product.price) - (a.priceOverride ?? a.product.price),
+      );
+    }
+    return filtered;
+  })();
 
   const sizes = skuSizesRaw
     .map((s) => s.size)
