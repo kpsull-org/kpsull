@@ -29,6 +29,14 @@ export function InfiniteProductGrid({
   const [hasMore, setHasMore] = useState(initialPage < totalPages);
   const loaderRef = useRef<HTMLDivElement>(null);
 
+  // Reset state when search/filter props change (e.g. new search query)
+  useEffect(() => {
+    setProducts(initialProducts);
+    setPage(initialPage);
+    setHasMore(initialPage < totalPages);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, projectId]);
+
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
 
