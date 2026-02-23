@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/client';
 import { PrismaPageRepository } from '@/modules/pages/infrastructure/repositories/prisma-page.repository';
+import { slugify } from '@/lib/utils/slugify';
 import { PageSettingsForm } from './page-settings-form';
 
 export const metadata = {
@@ -9,18 +10,6 @@ export const metadata = {
 };
 
 const pageRepository = new PrismaPageRepository();
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 50);
-}
 
 export default async function MaPageDashboard() {
   const session = await auth();

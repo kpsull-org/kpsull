@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 import { cloudinary } from '@/lib/cloudinary';
 import { validateImageFile } from '@/lib/utils/file-validation';
+import { slugify } from '@/lib/utils/slugify';
 import { PrismaPageRepository } from '@/modules/pages/infrastructure/repositories/prisma-page.repository';
 import { UpdatePageSettingsUseCase } from '@/modules/pages/application/use-cases/update-page-settings.use-case';
 import { CreatePageUseCase } from '@/modules/pages/application/use-cases/create-page.use-case';
@@ -15,18 +16,6 @@ const pageRepository = new PrismaPageRepository();
 export interface ActionResult {
   success: boolean;
   error?: string;
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 50);
 }
 
 async function getOrCreatePage(userId: string) {
@@ -82,14 +71,6 @@ export async function updatePageSettings(formData: FormData): Promise<ActionResu
   const titleFont = formData.get('titleFont') as string | null;
   const titleColor = formData.get('titleColor') as string | null;
   const bannerPosition = formData.get('bannerPosition') as string | null;
-
-  // Sync User.name with the page title (same field)
-  if (title !== null) {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { name: title.trim() || null },
-    });
-  }
 
   // Parse social links from formData
   const socialLinksRaw = formData.get('socialLinks') as string | null;
