@@ -9,7 +9,7 @@ import {
   SectionSeparator,
 } from "@/components/home";
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 function CategorySliderSkeleton() {
   return (
