@@ -1,179 +1,282 @@
-"use client";
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import type { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
 import { Filter } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma/client";
+import { FilterSidebar } from "./_components/filter-sidebar";
 
-// SEO metadata will be handled by generateMetadata in a server component wrapper later
-// For now, this is a client component with static data
+export const metadata: Metadata = {
+  title: "Catalogue — KPSULL",
+  description:
+    "Découvrez les créations uniques de nos créateurs de mode locaux.",
+};
 
-const STYLE_FILTERS = [
-  "Streetstyle",
-  "Scandi",
-  "Classic",
-  "Avant-garde",
-  "Sportif",
-  "Y2K",
-];
-
-const SIZE_FILTERS = ["XS", "S", "M", "L", "XL"];
-
-// Placeholder product data
-const PLACEHOLDER_PRODUCTS = [
-  { id: 1, name: "Veste en jean oversized", price: 89, creator: "Lucas Design", imageUrl: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&h=800&fit=crop" },
-  { id: 2, name: "T-shirt basique blanc", price: 25, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=800&fit=crop" },
-  { id: 3, name: "Pantalon cargo noir", price: 75, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&h=800&fit=crop" },
-  { id: 4, name: "Robe midi fleurie", price: 120, creator: "Claire Vintage", imageUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&h=800&fit=crop" },
-  { id: 5, name: "Hoodie oversize", price: 89, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=600&h=800&fit=crop" },
-  { id: 6, name: "Pull mohair pastel", price: 95, creator: "Claire Vintage", imageUrl: "https://images.unsplash.com/photo-1549465220-1a629bd08dbd?w=600&h=800&fit=crop" },
-  { id: 7, name: "Jupe plissée écossaise", price: 80, creator: "Claire Vintage", imageUrl: "https://images.unsplash.com/photo-1594035035756-5e9cd6a03781?w=600&h=800&fit=crop" },
-  { id: 8, name: "Blouson matelassé", price: 125, creator: "Jose Le Créateur", imageUrl: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop" },
-];
-
-function FilterSection() {
-  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-
-  const toggleStyle = (style: string) => {
-    setSelectedStyles((prev) =>
-      prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style]
-    );
-  };
-
-  const toggleSize = (size: string) => {
-    setSelectedSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-    );
-  };
-
-  return (
-    <div className="space-y-6">
-      <h2 className="font-montserrat font-bold text-sm uppercase tracking-wide">
-        Filtres
-      </h2>
-
-      {/* Style Filters */}
-      <div className="space-y-3">
-        <h3 className="font-montserrat font-semibold text-sm uppercase text-muted-foreground">
-          Style
-        </h3>
-        <div className="space-y-2">
-          {STYLE_FILTERS.map((style) => (
-            <div key={style} className="flex items-center space-x-2">
-              <Checkbox
-                id={`style-${style}`}
-                checked={selectedStyles.includes(style)}
-                onCheckedChange={() => toggleStyle(style)}
-              />
-              <Label
-                htmlFor={`style-${style}`}
-                className="text-sm font-normal cursor-pointer"
-              >
-                {style}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="h-px bg-border" />
-
-      {/* Size Filters */}
-      <div className="space-y-3">
-        <h3 className="font-montserrat font-semibold text-sm uppercase text-muted-foreground">
-          Taille
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {SIZE_FILTERS.map((size) => (
-            <div key={size} className="flex items-center space-x-2">
-              <Checkbox
-                id={`size-${size}`}
-                checked={selectedSizes.includes(size)}
-                onCheckedChange={() => toggleSize(size)}
-              />
-              <Label
-                htmlFor={`size-${size}`}
-                className="text-sm font-normal cursor-pointer"
-              >
-                {size}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="h-px bg-border" />
-
-      {/* Price Range */}
-      <div className="space-y-3">
-        <h3 className="font-montserrat font-semibold text-sm uppercase text-muted-foreground">
-          Prix
-        </h3>
-        <p className="text-sm text-foreground">0EUR - 500EUR</p>
-      </div>
-    </div>
-  );
+interface CataloguePageProps {
+  searchParams: Promise<{
+    style?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    size?: string;
+    sort?: string;
+    gender?: string;
+  }>;
 }
 
-export default function CataloguePage() {
+function formatPrice(cents: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
+export default async function CataloguePage({
+  searchParams,
+}: CataloguePageProps) {
+  const params = await searchParams;
+
+  const selectedStyles = params.style ? params.style.split(",").filter(Boolean) : [];
+  const selectedSizes = params.size ? params.size.split(",").filter(Boolean) : [];
+  const selectedGenders = params.gender ? params.gender.split(",").filter(Boolean) : [];
+  // Quand seul "Unisexe" est sélectionné, on inclut Homme, Femme et Unisexe
+  const gendersForQuery =
+    selectedGenders.length === 1 && selectedGenders[0] === "Unisexe"
+      ? ["Homme", "Femme", "Unisexe"]
+      : selectedGenders;
+  const sort = params.sort ?? "newest";
+
+  // Price in euros from search params, convert to cents for DB query
+  const minPriceEuros = params.minPrice ? parseInt(params.minPrice, 10) : 0;
+
+  const [styles, skuSizesRaw, variants, maxPriceProduct] = await Promise.all([
+    prisma.style.findMany({
+      where: { status: "APPROVED", isCustom: false },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.productSku.findMany({
+      where: {
+        stock: { gt: 0 },
+        product: { status: "PUBLISHED" },
+        size: { not: null },
+      },
+      select: { size: true },
+      distinct: ["size"],
+    }),
+    prisma.productVariant.findMany({
+      where: {
+        product: {
+          status: "PUBLISHED",
+          ...(selectedStyles.length > 0
+            ? {
+                style: {
+                  name: { in: selectedStyles },
+                },
+              }
+            : {}),
+          ...(gendersForQuery.length > 0 ? { gender: { in: gendersForQuery } } : {}),
+        },
+        ...(selectedSizes.length > 0
+          ? {
+              skus: {
+                some: { size: { in: selectedSizes }, stock: { gt: 0 } },
+              },
+            }
+          : {}),
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            style: { select: { name: true } },
+            category: true,
+            gender: true,
+          },
+        },
+        skus: {
+          select: { size: true, stock: true },
+          where: { stock: { gt: 0 } },
+        },
+      },
+      orderBy:
+        sort === "price_asc"
+          ? { product: { price: "asc" } }
+          : sort === "price_desc"
+            ? { product: { price: "desc" } }
+            : { product: { publishedAt: "desc" } },
+    }),
+    prisma.product.findFirst({
+      where: { status: "PUBLISHED" },
+      orderBy: { price: "desc" },
+      select: { price: true },
+    }),
+  ]);
+
+  const dynamicMaxPrice = Math.ceil((maxPriceProduct?.price ?? 50000) / 100);
+
+  // Apply price filter after fetching dynamicMaxPrice
+  const maxPriceEuros = params.maxPrice
+    ? parseInt(params.maxPrice, 10)
+    : dynamicMaxPrice;
+  const minPrice = minPriceEuros * 100;
+  const maxPrice = maxPriceEuros * 100;
+
+  const filteredVariants = variants.filter((v) => {
+    const price = v.priceOverride ?? v.product.price;
+    return price >= minPrice && price <= maxPrice;
+  });
+
+  const sizes = skuSizesRaw
+    .map((s) => s.size)
+    .filter((s): s is string => s !== null);
+
+  const currentParams = {
+    style: params.style,
+    minPrice: params.minPrice,
+    maxPrice: params.maxPrice,
+    size: params.size,
+    sort: params.sort,
+    gender: params.gender,
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12">
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:block w-64 pr-8 border-r border-border flex-shrink-0">
-          <FilterSection />
+    <div className="min-h-screen bg-white font-[family-name:var(--font-montserrat)]">
+      <div className="flex">
+        {/* Sidebar desktop - collée à gauche, sticky */}
+        <aside className="hidden md:flex w-[210px] flex-shrink-0 flex-col sticky top-0 h-screen overflow-y-auto border-r border-black">
+          {/* Header sidebar */}
+          <div className="px-5 h-[46px] flex items-center border-b border-black">
+            <span className="text-[9px] uppercase tracking-[0.2em] font-semibold text-black/40">
+              Filtres
+            </span>
+          </div>
+          <div className="p-5 flex-1">
+            <FilterSidebar
+              styles={styles}
+              sizes={sizes}
+              priceMax={dynamicMaxPrice}
+              currentParams={currentParams}
+            />
+          </div>
         </aside>
 
-        {/* Mobile Filter Button */}
-        <div className="md:hidden mb-4">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="w-full">
-                <Filter className="w-4 h-4 mr-2" />
-                Filtres
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80">
-              <FilterSection />
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className="mb-8">
-            <h1 className="font-montserrat font-bold text-3xl md:text-5xl uppercase tracking-tight mb-2">
+        {/* Main content */}
+        <main className="flex-1 min-w-0">
+          {/* Header */}
+          <div className="px-6 h-[46px] flex items-center justify-between border-b border-black">
+            <h1 className="font-[family-name:var(--font-montserrat)] text-sm font-bold uppercase tracking-[0.15em]">
               Catalogue
             </h1>
-            <p className="text-muted-foreground font-montserrat text-sm">
-              {PLACEHOLDER_PRODUCTS.length} produits
-            </p>
+            <span className="text-[10px] uppercase tracking-[0.1em] text-black/40">
+              {filteredVariants.length} article
+              {filteredVariants.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
-          {/* Product Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {PLACEHOLDER_PRODUCTS.map((product) => (
-              <div key={product.id} className="group cursor-pointer">
-                {/* Product Image */}
-                <div className="aspect-[3/4] bg-muted rounded-[15px] mb-3 overflow-hidden transition-transform group-hover:scale-[1.02]">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
+          {/* Mobile filter button */}
+          <div className="md:hidden px-4 py-3 border-b border-black">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full border border-black/20 text-black/60 uppercase text-[10px] tracking-[0.15em] rounded-none"
+                >
+                  <Filter className="w-3 h-3 mr-2" />
+                  Filtres
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <div className="px-5 py-4 border-b border-black">
+                  <span className="text-[9px] uppercase tracking-[0.2em] font-semibold">
+                    Filtres
+                  </span>
+                </div>
+                <div className="p-5">
+                  <FilterSidebar
+                    styles={styles}
+                    sizes={sizes}
+                    priceMax={dynamicMaxPrice}
+                    currentParams={currentParams}
                   />
                 </div>
-                {/* Product Info */}
-                <h3 className="font-montserrat font-semibold text-sm uppercase mb-1">
-                  {product.name}
-                </h3>
-                <p className="font-montserrat text-xs text-muted-foreground mb-1">{product.creator}</p>
-                <p className="font-montserrat font-bold text-base">{product.price}EUR</p>
-              </div>
-            ))}
+              </SheetContent>
+            </Sheet>
           </div>
+
+          {/* Grid */}
+          {filteredVariants.length === 0 ? (
+            <div className="flex items-center justify-center py-24">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-black/30">
+                Aucun produit
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              {filteredVariants.map((variant) => {
+                const images = Array.isArray(variant.images)
+                  ? (variant.images as string[])
+                  : [];
+                const firstImage = images[0] ?? null;
+                const secondImage = images[1] ?? null;
+                const displayPrice =
+                  variant.priceOverride ?? variant.product.price;
+
+                return (
+                  <Link
+                    key={variant.id}
+                    href={`/catalogue/${variant.product.id}?variant=${variant.id}`}
+                    className="group block bg-white border-t border-black [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+3)]:border-t-0 lg:[&:nth-child(-n+4)]:border-t-0"
+                  >
+                    {/* Image carrée */}
+                    <div className="aspect-square relative overflow-hidden bg-[#F5F5F3]">
+                      {firstImage ? (
+                        <>
+                          <Image
+                            src={firstImage}
+                            alt={variant.product.name}
+                            fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            className={`object-cover transition-all duration-500 ${
+                              secondImage
+                                ? "group-hover:opacity-0"
+                                : "group-hover:scale-105"
+                            }`}
+                          />
+                          {secondImage && (
+                            <Image
+                              src={secondImage}
+                              alt={`${variant.product.name} — vue 2`}
+                              fill
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              className="absolute inset-0 object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-[#EBEBEB]" />
+                      )}
+                    </div>
+
+                    {/* Info — séparée par une bordure */}
+                    <div className="border-t border-black px-3 py-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-black truncate">
+                        {variant.product.name}
+                      </p>
+                      <p className="text-[12px] font-bold text-black mt-0.5">
+                        {formatPrice(displayPrice)}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </main>
       </div>
     </div>

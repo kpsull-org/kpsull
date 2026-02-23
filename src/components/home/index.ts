@@ -3,6 +3,6 @@ export { HeroTransition } from "./hero-transition";
 export { CategorySlider } from "./category-slider";
 export { FeaturedOffers } from "./featured-offers";
 export { TopCreators } from "./top-creators";
-export { BecomeCreatorCTA } from "./become-creator-cta";
 export { StylesGrid } from "./styles-grid";
 export { FAQSection } from "./faq-section";
+export { SectionSeparator } from "./section-separator";

@@ -236,29 +236,29 @@ async function seedVariantsAndSkus(
 }
 
 async function seedStyleLinks(styleMap: Record<string, string>): Promise<void> {
-  const styleStreetware = styleMap['Streetwear'];
-  const styleMinimaliste = styleMap['Minimaliste'];
-  const styleSport = styleMap['Sport'];
-  const styleArtisanat = styleMap['Artisanat'];
+  const styleStreetstyle = styleMap['Streetstyle'];
+  const styleScandi = styleMap['Scandi'];
+  const styleSportif = styleMap['Sportif'];
+  const styleClassic = styleMap['Classic'];
 
-  if (styleStreetware) {
+  if (styleStreetstyle) {
     for (const pid of ['prod_hugo_tshirt', 'prod_hugo_hoodie', 'prod_hugo_jogger', 'prod_hugo_polo', 'prod_hugo_sweat', 'prod_hugo_short']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleStreetware } });
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleStreetstyle } });
     }
   }
-  if (styleMinimaliste) {
+  if (styleScandi) {
     for (const pid of ['prod_lea_robe', 'prod_lea_top', 'prod_lea_manteau']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleMinimaliste } });
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleScandi } });
     }
   }
-  if (styleArtisanat) {
+  if (styleClassic) {
     for (const pid of ['prod_lea_veste', 'prod_lea_pantalon', 'prod_lea_chemise']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleArtisanat } });
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleClassic } });
     }
   }
-  if (styleSport) {
+  if (styleSportif) {
     for (const pid of ['prod_kais_veste', 'prod_kais_legging', 'prod_kais_debardeur', 'prod_kais_sweat', 'prod_kais_short', 'prod_kais_brassiere']) {
-      await prisma.product.update({ where: { id: pid }, data: { styleId: styleSport } });
+      await prisma.product.update({ where: { id: pid }, data: { styleId: styleSportif } });
     }
   }
   console.log('   Styles linked to products');
@@ -476,10 +476,12 @@ async function main() {
   console.log('\nCreating system styles...');
 
   const systemStylesData = [
-    { name: 'Streetwear', description: 'Mode urbaine, oversize, graphic tees, sneakers', imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&h=600&fit=crop' },
-    { name: 'Minimaliste', description: 'Design epure, lignes nettes, palette neutre', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop' },
-    { name: 'Sport', description: 'Vetements techniques et performants pour le sport', imageUrl: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&h=600&fit=crop' },
-    { name: 'Artisanat', description: 'Pieces faites main, matieres naturelles, savoir-faire', imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&h=600&fit=crop' },
+    { name: 'Streetstyle', description: "Un style urbain et decontracte, inspire de la culture des rues. Sneakers, hoodies oversized, et accessoires audacieux.", imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&h=600&fit=crop' },
+    { name: 'Classic', description: "L elegance intemporelle. Des coupes structurees, des matieres nobles et des couleurs sobres.", imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop' },
+    { name: 'Sportif', description: "Performance et confort au quotidien. Des pieces techniques et fonctionnelles.", imageUrl: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800&h=600&fit=crop' },
+    { name: 'Scandi', description: "La simplicite scandinave. Des lignes epurees, des tons neutres et des matieres naturelles.", imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop' },
+    { name: 'Avant-Garde', description: "Repousser les limites de la mode. Des silhouettes experimentales, des textures inattendues.", imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&h=600&fit=crop' },
+    { name: 'Y2K', description: "Le retour des annees 2000. Couleurs vibrantes, imprimes graphiques et accessoires flashy.", imageUrl: 'https://images.unsplash.com/photo-1596178060671-7a80dc8059ea?w=800&h=600&fit=crop' },
   ];
 
   const styleMap: Record<string, string> = {};

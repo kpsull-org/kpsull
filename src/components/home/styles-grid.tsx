@@ -11,7 +11,7 @@ const styles = [
 
 export function StylesGrid() {
   return (
-    <section className="bg-[#D9D9D9] px-6 py-16 md:px-12 md:py-24 lg:px-20">
+    <section className="bg-[#F2F2F2] px-6 py-16 md:px-12 md:py-24 lg:px-20">
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 flex items-center justify-between">
           <h2 className="font-[family-name:var(--font-montserrat)] font-semibold text-xl md:text-2xl lg:text-[40px]">

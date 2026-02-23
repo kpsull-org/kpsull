@@ -6,7 +6,7 @@
 
 :root {
   /* KPSULL Brand Colors */
-  --background: oklch(0.991 0.010 87.470);
+  --background: oklch(0.953 0 0); /* #F2F2F2 */
   --foreground: oklch(0 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.209 0.020 284.573);

@@ -4,8 +4,8 @@ import {
   CategorySlider,
   FeaturedOffers,
   TopCreators,
-  BecomeCreatorCTA,
   FAQSection,
+  SectionSeparator,
 } from "@/components/home";
 
 export default function HomePage() {
@@ -14,9 +14,11 @@ export default function HomePage() {
       <HeroSection />
       <HeroTransition />
       <CategorySlider />
+      <SectionSeparator />
       <FeaturedOffers />
+      <SectionSeparator />
       <TopCreators />
-      <BecomeCreatorCTA />
+      <SectionSeparator />
       <FAQSection />
     </>
   );
