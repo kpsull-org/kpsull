@@ -313,6 +313,12 @@ model CreatorPage {
   slug        String     @unique
   title       String
   description String?
+  bannerImage String?
+  tagline     String?
+  titleFont      String?
+  titleColor     String?
+  bannerPosition String?
+  socialLinks    Json?
   templateId  String?
   status      PageStatus @default(DRAFT)
   publishedAt DateTime?

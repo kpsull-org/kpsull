@@ -53,7 +53,7 @@ export default function CGUPage() {
             >
               CONTACT@KPSULL.COM
             </a>
-            .
+            {'.'}
           </p>
         </section>
 
@@ -133,7 +133,7 @@ export default function CGUPage() {
             >
               CONTACT@KPSULL.COM
             </a>
-            .
+            {'.'}
           </p>
         </section>
 

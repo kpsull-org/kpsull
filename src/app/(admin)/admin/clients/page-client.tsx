@@ -16,12 +16,12 @@ interface ClientSummary {
 }
 
 interface ClientsPageClientProps {
-  clients: ClientSummary[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  searchQuery: string;
+  readonly clients: ClientSummary[];
+  readonly total: number;
+  readonly page: number;
+  readonly pageSize: number;
+  readonly totalPages: number;
+  readonly searchQuery: string;
 }
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
@@ -81,7 +81,7 @@ export function ClientsPageClient({
       {/* Summary */}
       <p className="text-sm text-muted-foreground">
         {(() => {
-          const plural = total !== 1 ? 's' : '';
+          const plural = total === 1 ? '' : 's';
           if (searchQuery) return `${total} client${plural} trouve${plural}`;
           return `${total} client${plural}`;
         })()}

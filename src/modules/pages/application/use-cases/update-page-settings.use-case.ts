@@ -9,6 +9,12 @@ export interface UpdatePageSettingsInput {
   title?: string;
   description?: string;
   slug?: string;
+  bannerImage?: string;
+  bannerPosition?: string;
+  tagline?: string;
+  titleFont?: string;
+  titleColor?: string;
+  socialLinks?: Record<string, string>;
 }
 
 export interface UpdatePageSettingsOutput {
@@ -17,6 +23,12 @@ export interface UpdatePageSettingsOutput {
   slug: string;
   title: string;
   description?: string;
+  bannerImage?: string;
+  bannerPosition?: string;
+  tagline?: string;
+  titleFont?: string;
+  titleColor?: string;
+  socialLinks?: Record<string, string>;
   status: PageStatusValue;
 }
 
@@ -56,6 +68,12 @@ export class UpdatePageSettingsUseCase
       title: input.title,
       description: input.description,
       slug: input.slug,
+      bannerImage: input.bannerImage,
+      bannerPosition: input.bannerPosition,
+      tagline: input.tagline,
+      titleFont: input.titleFont,
+      titleColor: input.titleColor,
+      socialLinks: input.socialLinks,
     });
 
     if (updateResult.isFailure) {
@@ -71,6 +89,12 @@ export class UpdatePageSettingsUseCase
       slug: page.slug,
       title: page.title,
       description: page.description,
+      bannerImage: page.bannerImage,
+      bannerPosition: page.bannerPosition,
+      tagline: page.tagline,
+      titleFont: page.titleFont,
+      titleColor: page.titleColor,
+      socialLinks: page.socialLinks,
       status: page.status.value,
     });
   }

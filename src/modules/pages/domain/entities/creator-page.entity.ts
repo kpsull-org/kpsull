@@ -8,6 +8,12 @@ interface CreatorPageProps {
   slug: string;
   title: string;
   description?: string;
+  bannerImage?: string;
+  bannerPosition?: string;
+  tagline?: string;
+  titleFont?: string;
+  titleColor?: string;
+  socialLinks?: Record<string, string>;
   templateId?: string;
   status: PageStatus;
   sections: PageSection[];
@@ -30,6 +36,12 @@ interface ReconstituteCreatorPageProps {
   slug: string;
   title: string;
   description?: string;
+  bannerImage?: string;
+  bannerPosition?: string;
+  tagline?: string;
+  titleFont?: string;
+  titleColor?: string;
+  socialLinks?: Record<string, string>;
   templateId?: string;
   status: PageStatusValue;
   sections: Array<{
@@ -52,6 +64,12 @@ interface UpdateSettingsProps {
   title?: string;
   description?: string;
   slug?: string;
+  bannerImage?: string;
+  bannerPosition?: string;
+  tagline?: string;
+  titleFont?: string;
+  titleColor?: string;
+  socialLinks?: Record<string, string>;
 }
 
 interface AddSectionProps {
@@ -91,6 +109,30 @@ export class CreatorPage extends Entity<CreatorPageProps> {
 
   get description(): string | undefined {
     return this.props.description;
+  }
+
+  get bannerImage(): string | undefined {
+    return this.props.bannerImage;
+  }
+
+  get bannerPosition(): string | undefined {
+    return this.props.bannerPosition;
+  }
+
+  get tagline(): string | undefined {
+    return this.props.tagline;
+  }
+
+  get titleFont(): string | undefined {
+    return this.props.titleFont;
+  }
+
+  get titleColor(): string | undefined {
+    return this.props.titleColor;
+  }
+
+  get socialLinks(): Record<string, string> | undefined {
+    return this.props.socialLinks;
   }
 
   get templateId(): string | undefined {
@@ -155,22 +197,11 @@ export class CreatorPage extends Entity<CreatorPageProps> {
   }
 
   updateSettings(settings: UpdateSettingsProps): Result<void> {
-    if (settings.title !== undefined) {
-      if (!settings.title.trim()) {
-        return Result.fail('Le titre de la page est requis');
-      }
-      if (settings.title.length > 200) {
-        return Result.fail('Le titre ne peut pas depasser 200 caracteres');
-      }
-      this.props.title = settings.title.trim();
-    }
+    const titleError = this.applyTitleSetting(settings.title);
+    if (titleError) return titleError;
 
-    if (settings.description !== undefined) {
-      if (settings.description.length > 500) {
-        return Result.fail('La description ne peut pas depasser 500 caracteres');
-      }
-      this.props.description = settings.description.trim() || undefined;
-    }
+    const descriptionError = this.applyDescriptionSetting(settings.description);
+    if (descriptionError) return descriptionError;
 
     if (settings.slug !== undefined) {
       const slugValidation = this.validateSlug(settings.slug);
@@ -180,8 +211,53 @@ export class CreatorPage extends Entity<CreatorPageProps> {
       this.props.slug = settings.slug.toLowerCase().trim();
     }
 
+    if (settings.bannerImage !== undefined) {
+      this.props.bannerImage = settings.bannerImage || undefined;
+    }
+
+    if (settings.bannerPosition !== undefined) {
+      this.props.bannerPosition = settings.bannerPosition || undefined;
+    }
+
+    if (settings.tagline !== undefined) {
+      this.props.tagline = settings.tagline.trim() || undefined;
+    }
+
+    if (settings.titleFont !== undefined) {
+      this.props.titleFont = settings.titleFont.trim() || undefined;
+    }
+
+    if (settings.titleColor !== undefined) {
+      this.props.titleColor = settings.titleColor.trim() || undefined;
+    }
+
+    if (settings.socialLinks !== undefined) {
+      this.props.socialLinks = Object.keys(settings.socialLinks).length > 0 ? settings.socialLinks : undefined;
+    }
+
     this.props.updatedAt = new Date();
     return Result.ok();
+  }
+
+  private applyTitleSetting(title: string | undefined): Result<void> | null {
+    if (title === undefined) return null;
+    if (!title.trim()) {
+      return Result.fail('Le titre de la page est requis');
+    }
+    if (title.length > 200) {
+      return Result.fail('Le titre ne peut pas depasser 200 caracteres');
+    }
+    this.props.title = title.trim();
+    return null;
+  }
+
+  private applyDescriptionSetting(description: string | undefined): Result<void> | null {
+    if (description === undefined) return null;
+    if (description.length > 500) {
+      return Result.fail('La description ne peut pas depasser 500 caracteres');
+    }
+    this.props.description = description.trim() || undefined;
+    return null;
   }
 
   addSection(props: AddSectionProps): Result<PageSection> {
@@ -360,6 +436,12 @@ export class CreatorPage extends Entity<CreatorPageProps> {
           slug: props.slug,
           title: props.title,
           description: props.description,
+          bannerImage: props.bannerImage,
+          bannerPosition: props.bannerPosition,
+          tagline: props.tagline,
+          titleFont: props.titleFont,
+          titleColor: props.titleColor,
+          socialLinks: props.socialLinks,
           templateId: props.templateId,
           status: statusResult.value,
           sections,

@@ -9,8 +9,7 @@ import { updateProduct } from '../actions';
 import { ShippingDimensionsTable } from '@/components/products/shipping-dimensions-table';
 import { Plus, Save, Ruler, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import type { SizeEntry } from '@/lib/utils/parse-sizes';
-
-export type { SizeEntry };
+export type { SizeEntry } from '@/lib/utils/parse-sizes';
 
 interface SizeManagerProps {
   readonly productId: string;

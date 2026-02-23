@@ -97,7 +97,7 @@ export default function MentionsLegalesPage() {
               >
                 CONTACT@KPSULL.COM
               </a>
-              .
+              {'.'}
             </li>
             <li>
               <span className="font-semibold">Conformité :</span> le traitement de vos données est conforme au RGPD (Règlement UE 2016/679) et à la loi Informatique et Libertés du 6 janvier 1978 modifiée.
