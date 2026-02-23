@@ -81,7 +81,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const { slug, id } = await params;
 
   // Démarrer le produit et l'auth en parallèle (async-parallel — Vercel best practice 1.4)
-  const [result, session] = await Promise.all([getProductForPage(id), auth()]);
+  // auth() peut lever une erreur (token expiré/invalide) → catch gracieux pour éviter un crash
+  const [result, session] = await Promise.all([getProductForPage(id), auth().catch(() => null)]);
 
   if (result.isFailure) {
     notFound();
