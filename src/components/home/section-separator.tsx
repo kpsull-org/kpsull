@@ -1,8 +1,13 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
-export function SectionSeparator() {
+interface SectionSeparatorProps {
+  className?: string;
+}
+
+export function SectionSeparator({ className }: SectionSeparatorProps = {}) {
   return (
-    <div className="bg-[#F2F2F2] px-6 md:px-12 lg:px-20">
+    <div className={cn("bg-[#F2F2F2] px-6 md:px-12 lg:px-20", className)}>
       <div className="mx-auto max-w-7xl">
         <div className="relative h-8 overflow-hidden rounded-sm md:h-10">
           <Image

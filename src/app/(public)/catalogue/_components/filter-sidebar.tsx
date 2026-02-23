@@ -175,7 +175,7 @@ export function FilterSidebar({
         <select
           value={currentParams.sort ?? "newest"}
           onChange={handleSortChange}
-          className="w-full text-[10px] uppercase tracking-[0.1em] bg-transparent border-0 border-b border-black/10 pb-1.5 focus:outline-none focus:border-black/30 text-black/70 cursor-pointer appearance-none"
+          className="w-full text-[10px] uppercase tracking-[0.1em] bg-transparent border-0 focus:outline-none text-black/70 cursor-pointer appearance-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
