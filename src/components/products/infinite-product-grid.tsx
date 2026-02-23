@@ -34,8 +34,7 @@ export function InfiniteProductGrid({
     setProducts(initialProducts);
     setPage(initialPage);
     setHasMore(initialPage < totalPages);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, projectId]);
+  }, [search, projectId]); // intentionally omit initialProducts/initialPage/totalPages
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
