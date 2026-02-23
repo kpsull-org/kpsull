@@ -8,6 +8,17 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Créateurs — KPSULL',
   description: 'Découvrez tous les créateurs de mode indépendants sur KPSULL.',
+  openGraph: {
+    title: 'Créateurs — KPSULL',
+    description: 'Découvrez tous les créateurs de mode indépendants sur KPSULL.',
+    type: 'website',
+    siteName: 'Kpsull',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Créateurs — KPSULL',
+    description: 'Découvrez tous les créateurs de mode indépendants sur KPSULL.',
+  },
 };
 
 function formatPrice(cents: number): string {

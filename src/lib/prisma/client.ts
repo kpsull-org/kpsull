@@ -13,7 +13,16 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Reuse pool in development to avoid connection exhaustion
-const pool = globalForPrisma.pool ?? new pg.Pool({ connectionString });
+const pool = globalForPrisma.pool ?? new pg.Pool({
+  connectionString,
+  // PAS de connectionTimeoutMillis → les requêtes font la queue au lieu d'échouer.
+  // Avec un timeout, un pic de charge éjecte les utilisateurs avec une erreur 500.
+  // Sans timeout, elles attendent leur tour — légèrement plus lentes mais jamais cassées.
+  max: 20,                  // Connexions simultanées (adapter selon le plan Railway DB)
+  min: 2,                   // 2 connexions "chaudes" pour éviter la latence au premier hit
+  idleTimeoutMillis: 30000, // Libérer les connexions inactives après 30s
+  allowExitOnIdle: false,   // Maintenir le pool actif même sans trafic
+});
 const adapter = new PrismaPg(pool);
 
 export const prisma =

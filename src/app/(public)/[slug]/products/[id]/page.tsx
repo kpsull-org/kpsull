@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma/client';
@@ -10,13 +11,32 @@ interface PageProps {
   params: Promise<{ slug: string; id: string }>;
 }
 
+// Déduplique la query produit complète entre generateMetadata et la page dans le même rendu
+const getProductForPage = cache(async (id: string) => {
+  const repository = new PrismaPublicProductRepository(prisma);
+  const useCase = new GetPublicProductUseCase(repository);
+  return useCase.execute({ productId: id });
+});
+
+// Query légère pour les meta tags uniquement (server-cache-react — Vercel best practice 3.6)
+const getProductMeta = cache(async (id: string) => {
+  return prisma.product.findUnique({
+    where: { id, status: 'PUBLISHED' },
+    select: {
+      name: true,
+      description: true,
+      variants: {
+        take: 1,
+        select: { images: true },
+      },
+    },
+  });
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { id, status: 'PUBLISHED' },
-    select: { name: true, description: true },
-  });
+  const product = await getProductMeta(id);
 
   if (!product) {
     return {
@@ -24,12 +44,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  const mainImage = (product.variants[0]?.images as string[] | null)?.[0];
+
   return {
     title: `${product.name} | Kpsull`,
     description: product.description ?? `Découvrez ${product.name}`,
     openGraph: {
       title: product.name,
       description: product.description ?? undefined,
+      type: 'website',
+      siteName: 'Kpsull',
+      ...(mainImage && { images: [{ url: mainImage, width: 800, height: 800, alt: product.name }] }),
+    },
+    twitter: {
+      card: mainImage ? 'summary_large_image' : 'summary',
+      title: product.name,
+      description: product.description ?? undefined,
+      ...(mainImage && { images: [mainImage] }),
     },
   };
 }
@@ -49,10 +80,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug, id } = await params;
 
-  const repository = new PrismaPublicProductRepository(prisma);
-  const useCase = new GetPublicProductUseCase(repository);
-
-  const result = await useCase.execute({ productId: id });
+  // Démarrer le produit et l'auth en parallèle (async-parallel — Vercel best practice 1.4)
+  // auth() peut lever une erreur (token expiré/invalide) → catch gracieux pour éviter un crash
+  const [result, session] = await Promise.all([getProductForPage(id), auth().catch(() => null)]);
 
   if (result.isFailure) {
     notFound();
@@ -61,7 +91,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const product = result.value;
 
   // Check if the current user is the creator of this product
-  const session = await auth();
   let isOwnProduct = false;
 
   if (session?.user?.id) {

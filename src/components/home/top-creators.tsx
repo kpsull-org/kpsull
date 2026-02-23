@@ -1,81 +1,98 @@
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 
-export async function TopCreators() {
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+const getTopCreatorsData = unstable_cache(
+  async () => {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-  const topByRevenue = await prisma.order.groupBy({
-    by: ['creatorId'],
-    where: {
-      status: { notIn: ['CANCELED', 'REFUNDED'] },
-      createdAt: { gte: startOfMonth },
-    },
-    _sum: { totalAmount: true },
-    orderBy: { _sum: { totalAmount: 'desc' } },
-    take: 4,
-  });
+    const topByRevenue = await prisma.order.groupBy({
+      by: ['creatorId'],
+      where: {
+        status: { notIn: ['CANCELED', 'REFUNDED'] },
+        createdAt: { gte: startOfMonth },
+      },
+      _sum: { totalAmount: true },
+      orderBy: { _sum: { totalAmount: 'desc' } },
+      take: 4,
+    });
 
-  const rankedCreatorIds = topByRevenue.map((r) => r.creatorId);
+    const rankedCreatorIds = topByRevenue.map((r) => r.creatorId);
 
-  const rankedPages = rankedCreatorIds.length > 0
-    ? await prisma.creatorPage.findMany({
-        where: { creatorId: { in: rankedCreatorIds }, status: 'PUBLISHED' },
-        select: { slug: true, title: true, creatorId: true },
-      })
-    : [];
+    const rankedPages = rankedCreatorIds.length > 0
+      ? await prisma.creatorPage.findMany({
+          where: { creatorId: { in: rankedCreatorIds }, status: 'PUBLISHED' },
+          select: { slug: true, title: true, creatorId: true },
+        })
+      : [];
 
-  const rankedPagesOrdered = rankedCreatorIds
-    .map((id) => rankedPages.find((p) => p.creatorId === id))
-    .filter((p): p is NonNullable<typeof p> => p !== undefined);
+    const rankedPagesOrdered = rankedCreatorIds
+      .map((id) => rankedPages.find((p) => p.creatorId === id))
+      .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
-  const needed = 4 - rankedPagesOrdered.length;
-  const fallbackPages = needed > 0
-    ? await prisma.creatorPage.findMany({
+    const needed = 4 - rankedPagesOrdered.length;
+    const fallbackPages = needed > 0
+      ? await prisma.creatorPage.findMany({
+          where: {
+            status: 'PUBLISHED',
+            creatorId: { notIn: rankedCreatorIds },
+          },
+          orderBy: { publishedAt: 'desc' },
+          take: needed,
+          select: { slug: true, title: true, creatorId: true },
+        })
+      : [];
+
+    const creatorPages = [...rankedPagesOrdered, ...fallbackPages];
+
+    if (creatorPages.length === 0) return null;
+
+    const creatorIds = creatorPages.map((p) => p.creatorId);
+
+    // Paralléliser les 3 requêtes indépendantes (async-parallel — Vercel best practice 1.4)
+    const [onboardings, users, firstProducts] = await Promise.all([
+      prisma.creatorOnboarding.findMany({
+        where: { userId: { in: creatorIds } },
+        select: { userId: true, brandName: true },
+      }),
+      prisma.user.findMany({
+        where: { id: { in: creatorIds } },
+        select: { id: true, image: true, name: true },
+      }),
+      prisma.product.findMany({
         where: {
+          creatorId: { in: creatorIds },
           status: 'PUBLISHED',
-          creatorId: { notIn: rankedCreatorIds },
         },
         orderBy: { publishedAt: 'desc' },
-        take: needed,
-        select: { slug: true, title: true, creatorId: true },
-      })
-    : [];
+        distinct: ['creatorId'],
+        include: {
+          variants: {
+            take: 1,
+            select: { images: true },
+          },
+        },
+      }),
+    ]);
 
-  const creatorPages = [...rankedPagesOrdered, ...fallbackPages];
+    return { creatorPages, onboardings, users, firstProducts };
+  },
+  ['top-creators'],
+  { revalidate: 300, tags: ['creators'] },
+);
 
-  if (creatorPages.length === 0) return null;
+export async function TopCreators() {
+  const data = await getTopCreatorsData();
 
-  const creatorIds = creatorPages.map((p) => p.creatorId);
+  if (!data) return null;
 
-  const onboardings = await prisma.creatorOnboarding.findMany({
-    where: { userId: { in: creatorIds } },
-    select: { userId: true, brandName: true },
-  });
+  const { creatorPages, onboardings, users, firstProducts } = data;
+
   const brandByCreator = Object.fromEntries(onboardings.map((o) => [o.userId, o.brandName]));
-
-  const users = await prisma.user.findMany({
-    where: { id: { in: creatorIds } },
-    select: { id: true, image: true, name: true },
-  });
   const userById = Object.fromEntries(users.map((u) => [u.id, u]));
-
-  const firstProducts = await prisma.product.findMany({
-    where: {
-      creatorId: { in: creatorIds },
-      status: 'PUBLISHED',
-    },
-    orderBy: { publishedAt: 'desc' },
-    distinct: ['creatorId'],
-    include: {
-      variants: {
-        take: 1,
-        select: { images: true },
-      },
-    },
-  });
   const productByCreator = Object.fromEntries(firstProducts.map((p) => [p.creatorId, p]));
 
   return (
