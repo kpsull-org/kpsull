@@ -76,7 +76,7 @@ async function getOrCreatePage(userId: string) {
   });
 
   if (result.isFailure) {
-    throw new Error(result.error!);
+    throw new Error(result.error ?? 'Erreur inconnue');
   }
 
   const createdPages = await pageRepository.findByCreatorId(userId);

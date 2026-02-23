@@ -11,7 +11,9 @@ import { ImagePlus, ImageIcon, ExternalLink, AlertCircle, CheckCircle2, Info, Ca
 import { compressImage, formatFileSize } from '@/lib/utils/image-compression';
 import { updatePageSettings, uploadBannerImage, uploadAvatarImage } from './actions';
 
-const BANNER_POSITION_CLASS: Record<'top' | 'center' | 'bottom', string> = {
+type BannerPosition = 'top' | 'center' | 'bottom';
+
+const BANNER_POSITION_CLASS: Record<BannerPosition, string> = {
   top: 'object-top',
   center: 'object-center',
   bottom: 'object-bottom',
@@ -46,9 +48,9 @@ function NetworkInputList({
   socialLinks,
   onChange,
 }: {
-  networks: SocialNetwork[];
-  socialLinks: Record<string, string>;
-  onChange: (key: string, value: string) => void;
+  readonly networks: SocialNetwork[];
+  readonly socialLinks: Record<string, string>;
+  readonly onChange: (key: string, value: string) => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -71,7 +73,6 @@ function NetworkInputList({
 }
 
 interface PageSettingsFormProps {
-  readonly pageId: string;
   readonly slug: string;
   readonly title?: string;
   readonly tagline?: string;
@@ -88,6 +89,18 @@ interface UploadState {
   isCompressing: boolean;
   originalSize?: number;
   compressedSize?: number;
+}
+
+function getBannerButtonLabel(isCompressing: boolean, isBannerLoading: boolean, currentBanner: string | undefined): string {
+  if (isCompressing) return 'Optimisation...';
+  if (isBannerLoading) return 'Upload...';
+  return currentBanner ? 'Changer' : 'Ajouter';
+}
+
+function getBannerPositionLabel(pos: BannerPosition): string {
+  if (pos === 'top') return 'Haut';
+  if (pos === 'center') return 'Centre';
+  return 'Bas';
 }
 
 export function PageSettingsForm({
@@ -117,7 +130,7 @@ export function PageSettingsForm({
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(initialSocialLinks);
   const [selectedFont, setSelectedFont] = useState<TitleFontKey>((initialTitleFont as TitleFontKey) ?? 'jacquard-12');
   const [selectedColor, setSelectedColor] = useState<'white' | 'black'>((initialTitleColor as 'white' | 'black') ?? 'white');
-  const [selectedBannerPosition, setSelectedBannerPosition] = useState<'top' | 'center' | 'bottom'>((initialBannerPosition as 'top' | 'center' | 'bottom') ?? 'center');
+  const [selectedBannerPosition, setSelectedBannerPosition] = useState<BannerPosition>((initialBannerPosition as BannerPosition) ?? 'center');
   const [previewTitle, setPreviewTitle] = useState(title);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -358,7 +371,7 @@ export function PageSettingsForm({
                   ].join(' ')}
                 >
                   <span className="inline-block h-3 w-3 rounded-full border border-current bg-white" />
-                  Blanc
+                  {' '}Blanc
                 </button>
                 <button
                   type="button"
@@ -369,7 +382,7 @@ export function PageSettingsForm({
                   ].join(' ')}
                 >
                   <span className="inline-block h-3 w-3 rounded-full border border-current bg-black" />
-                  Noir
+                  {' '}Noir
                 </button>
               </div>
             </div>
@@ -448,13 +461,7 @@ export function PageSettingsForm({
               className="gap-2"
             >
               <ImagePlus className="h-4 w-4" />
-              {uploadState.isCompressing
-                ? 'Optimisation...'
-                : isBannerLoading
-                  ? 'Upload...'
-                  : currentBanner
-                    ? 'Changer'
-                    : 'Ajouter'}
+              {getBannerButtonLabel(uploadState.isCompressing, isBannerLoading, currentBanner)}
             </Button>
             <input
               ref={fileInputRef}
@@ -467,7 +474,7 @@ export function PageSettingsForm({
           <CardContent className="space-y-4">
             {/* Position du focus de la bannière */}
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground uppercase tracking-wide">Position du focus</label>
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">Position du focus</span>
               <div className="flex gap-2">
                 {(['top', 'center', 'bottom'] as const).map((pos) => (
                   <button
@@ -481,7 +488,7 @@ export function PageSettingsForm({
                         : 'border-input bg-background hover:bg-muted',
                     ].join(' ')}
                   >
-                    {pos === 'top' ? 'Haut' : pos === 'center' ? 'Centre' : 'Bas'}
+                    {getBannerPositionLabel(pos)}
                   </button>
                 ))}
               </div>

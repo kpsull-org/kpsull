@@ -244,6 +244,20 @@ function InlineColorPicker({ color, onChange }: { readonly color: string; readon
   );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function migrateBaseStocks(
+  prev: Map<string, SkuCell>,
+  variantId: string,
+  stocks: Array<{ size?: string; stock: number }>
+): Map<string, SkuCell> {
+  const newMap = new Map(prev);
+  for (const { size, stock } of stocks) {
+    newMap.set(skuKey(variantId, size), { stock });
+  }
+  return newMap;
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export function ProductDashboard({
@@ -493,13 +507,7 @@ export function ProductDashboard({
               upsertSku({ productId, variantId: newVariantId, size, stock })
             )
           );
-          setMatrix((prev) => {
-            const newMap = new Map(prev);
-            for (const { size, stock } of baseStocksToMigrate) {
-              newMap.set(skuKey(newVariantId, size), { stock });
-            }
-            return newMap;
-          });
+          setMatrix((prev) => migrateBaseStocks(prev, newVariantId, baseStocksToMigrate));
         }
 
         const newVariant: DashboardVariant = {
@@ -894,8 +902,8 @@ export function ProductDashboard({
             onClick={() => { setAddingSizeOpen(false); setNewSizeInput(''); }}
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSizeOpen(false); setNewSizeInput(''); } }}
           >
-            <div
-              role="dialog"
+            <dialog
+              open
               aria-modal="true"
               className="bg-background border rounded-xl p-5 w-[480px] max-h-[80vh] overflow-y-auto shadow-xl space-y-3"
               onClick={(e) => e.stopPropagation()}
@@ -943,7 +951,7 @@ export function ProductDashboard({
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </div>
+            </dialog>
           </button>
         )}
 
@@ -992,8 +1000,8 @@ export function ProductDashboard({
             onClick={() => { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); }}
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingVariant(false); setNewVarName(''); setNewVarColorCode('#000000'); } }}
           >
-            <div
-              role="dialog"
+            <dialog
+              open
               aria-modal="true"
               className="bg-background border rounded-xl p-5 w-80 shadow-xl space-y-4"
               onClick={(e) => e.stopPropagation()}
@@ -1071,7 +1079,7 @@ export function ProductDashboard({
                   <X className="h-3.5 w-3.5" /> Annuler
                 </Button>
               </div>
-            </div>
+            </dialog>
           </button>
         )}
 

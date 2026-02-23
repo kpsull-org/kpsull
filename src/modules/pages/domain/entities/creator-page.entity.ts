@@ -197,22 +197,11 @@ export class CreatorPage extends Entity<CreatorPageProps> {
   }
 
   updateSettings(settings: UpdateSettingsProps): Result<void> {
-    if (settings.title !== undefined) {
-      if (!settings.title.trim()) {
-        return Result.fail('Le titre de la page est requis');
-      }
-      if (settings.title.length > 200) {
-        return Result.fail('Le titre ne peut pas depasser 200 caracteres');
-      }
-      this.props.title = settings.title.trim();
-    }
+    const titleError = this.applyTitleSetting(settings.title);
+    if (titleError) return titleError;
 
-    if (settings.description !== undefined) {
-      if (settings.description.length > 500) {
-        return Result.fail('La description ne peut pas depasser 500 caracteres');
-      }
-      this.props.description = settings.description.trim() || undefined;
-    }
+    const descriptionError = this.applyDescriptionSetting(settings.description);
+    if (descriptionError) return descriptionError;
 
     if (settings.slug !== undefined) {
       const slugValidation = this.validateSlug(settings.slug);
@@ -248,6 +237,27 @@ export class CreatorPage extends Entity<CreatorPageProps> {
 
     this.props.updatedAt = new Date();
     return Result.ok();
+  }
+
+  private applyTitleSetting(title: string | undefined): Result<void> | null {
+    if (title === undefined) return null;
+    if (!title.trim()) {
+      return Result.fail('Le titre de la page est requis');
+    }
+    if (title.length > 200) {
+      return Result.fail('Le titre ne peut pas depasser 200 caracteres');
+    }
+    this.props.title = title.trim();
+    return null;
+  }
+
+  private applyDescriptionSetting(description: string | undefined): Result<void> | null {
+    if (description === undefined) return null;
+    if (description.length > 500) {
+      return Result.fail('La description ne peut pas depasser 500 caracteres');
+    }
+    this.props.description = description.trim() || undefined;
+    return null;
   }
 
   addSection(props: AddSectionProps): Result<PageSection> {

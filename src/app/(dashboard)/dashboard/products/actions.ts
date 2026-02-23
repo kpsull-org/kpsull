@@ -143,8 +143,21 @@ type UpdateProductData = {
   forceDraft?: boolean;
 };
 
+function buildMetadataPatch(data: UpdateProductData): Partial<Prisma.ProductUpdateInput> {
+  const { materials, fit, season, madeIn, careInstructions, certifications, weight } = data;
+  return {
+    ...(materials !== undefined && { materials }),
+    ...(fit !== undefined && { fit }),
+    ...(season !== undefined && { season }),
+    ...(madeIn !== undefined && { madeIn }),
+    ...(careInstructions !== undefined && { careInstructions }),
+    ...(certifications !== undefined && { certifications }),
+    ...(weight !== undefined && { weight }),
+  };
+}
+
 function buildProductUpdatePatch(data: UpdateProductData): Prisma.ProductUpdateInput {
-  const { name, description, price, projectId, styleId, sizes, category, gender, materials, fit, season, madeIn, careInstructions, certifications, weight, forceDraft } = data;
+  const { name, description, price, projectId, styleId, sizes, category, gender, forceDraft } = data;
   return {
     ...(name !== undefined && { name: name.trim() }),
     ...(description !== undefined && { description }),
@@ -155,20 +168,14 @@ function buildProductUpdatePatch(data: UpdateProductData): Prisma.ProductUpdateI
     ...(sizes !== undefined && { sizes }),
     ...(category !== undefined && { category }),
     ...(gender !== undefined && { gender }),
-    ...(materials !== undefined && { materials }),
-    ...(fit !== undefined && { fit }),
-    ...(season !== undefined && { season }),
-    ...(madeIn !== undefined && { madeIn }),
-    ...(careInstructions !== undefined && { careInstructions }),
-    ...(certifications !== undefined && { certifications }),
-    ...(weight !== undefined && { weight }),
+    ...buildMetadataPatch(data),
     updatedAt: new Date(),
   };
 }
 
 async function verifyProductOwnership(productId: string, userId: string): Promise<string | null> {
   const existing = await prisma.product.findUnique({ where: { id: productId }, select: { creatorId: true } });
-  if (!existing || existing.creatorId !== userId) {
+  if (existing?.creatorId !== userId) {
     return "Vous n'etes pas autorise a modifier ce produit";
   }
   return null;

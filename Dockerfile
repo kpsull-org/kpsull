@@ -60,7 +60,8 @@ COPY --from=builder --chmod=555 /app/scripts ./scripts
 RUN bun add -g prisma@7 \
     && bun add bcryptjs pg @prisma/adapter-pg cloudinary dotenv \
     && bunx prisma generate --schema prisma/schema.prisma \
-    && printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n    url: process.env.DATABASE_URL,\n  },\n};\n' \
+    && printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n' \
+       '    url: process.env.DATABASE_URL,\n  },\n};\n' \
        > prisma.config.mjs \
     && wget -q \
        "https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64" \

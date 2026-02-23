@@ -80,7 +80,6 @@ export default async function MaPageDashboard() {
       </div>
 
       <PageSettingsForm
-        pageId={page.idString}
         slug={page.slug}
         title={page.title}
         tagline={page.tagline}
