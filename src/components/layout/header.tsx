@@ -16,7 +16,7 @@ import {
 const navItems = [
   { label: "CREATEURS", href: "/catalogue" },
   { label: "A PROPOS", href: "/a-propos" },
-  { label: "SELECTION DU MOMENT", href: "/catalogue?promo=true" },
+  { label: "CATALOGUE", href: "/catalogue" },
 ];
 
 interface HeaderProps {
@@ -54,7 +54,7 @@ export function Header({ user }: HeaderProps) {
         <nav className="flex items-center gap-10">
           {navItems.map((item) => (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
               className={cn(
                 "font-[family-name:var(--font-archivo)] text-[18px] font-medium uppercase tracking-wide text-black transition-opacity hover:opacity-70"
@@ -87,8 +87,14 @@ export function Header({ user }: HeaderProps) {
               {/* Profile dropdown panel - flush with header bottom, hover bridge via ::before on button */}
               <div className="pointer-events-none absolute -left-[5px] right-0 top-full opacity-0 group-hover/profile:pointer-events-auto group-hover/profile:opacity-100 transition-[opacity] duration-200">
                 <div className="relative -mt-[5px] bg-white pt-[5px] pb-[18px]">
-                  {/* Vertical grid lines */}
+                  {/* Vertical grid lines — left */}
                   <div className="absolute inset-y-0 left-[5px] flex gap-1">
+                    <div className="w-px bg-black" />
+                    <div className="w-px bg-black" />
+                  </div>
+
+                  {/* Vertical grid lines — right (symétrique) */}
+                  <div className="absolute inset-y-0 right-[5px] flex gap-1">
                     <div className="w-px bg-black" />
                     <div className="w-px bg-black" />
                   </div>
@@ -181,7 +187,7 @@ export function Header({ user }: HeaderProps) {
             <nav className="mt-8 flex flex-col gap-6">
               {navItems.map((item) => (
                 <Link
-                  key={item.href}
+                  key={item.label}
                   href={item.href}
                   className={cn(
                     "font-[family-name:var(--font-archivo)] font-medium text-lg text-black uppercase hover:opacity-70 transition-opacity"

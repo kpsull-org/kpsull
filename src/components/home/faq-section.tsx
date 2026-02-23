@@ -40,9 +40,9 @@ const faqItems = [
 
 export function FAQSection() {
   return (
-    <section className="bg-background px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
-      <div className="mx-auto max-w-4xl">
-        <h2 className="mb-10 text-center font-[family-name:var(--font-montserrat)] text-lg font-semibold md:text-xl lg:text-2xl">
+    <section className="bg-[#F2F2F2] px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+      <div className="mx-auto max-w-7xl">
+        <h2 className="mb-10 font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">
           FAQ
         </h2>
 
@@ -56,7 +56,7 @@ export function FAQSection() {
               <AccordionTrigger className="py-6 text-left font-[family-name:var(--font-montserrat)] text-base font-semibold md:text-lg">
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className="pb-6 font-[family-name:var(--font-montserrat)] text-base leading-relaxed text-muted-foreground">
+              <AccordionContent className="pb-6 font-[family-name:var(--font-montserrat)] text-base leading-relaxed text-foreground">
                 {item.answer}
               </AccordionContent>
             </AccordionItem>

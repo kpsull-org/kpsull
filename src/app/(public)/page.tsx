@@ -4,9 +4,11 @@ import {
   CategorySlider,
   FeaturedOffers,
   TopCreators,
-  BecomeCreatorCTA,
   FAQSection,
+  SectionSeparator,
 } from "@/components/home";
+
+export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
@@ -14,9 +16,11 @@ export default function HomePage() {
       <HeroSection />
       <HeroTransition />
       <CategorySlider />
+      <SectionSeparator />
       <FeaturedOffers />
+      <SectionSeparator />
       <TopCreators />
-      <BecomeCreatorCTA />
+      <SectionSeparator />
       <FAQSection />
     </>
   );
