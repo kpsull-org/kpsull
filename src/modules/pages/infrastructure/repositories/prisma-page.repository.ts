@@ -87,6 +87,12 @@ export class PrismaPageRepository implements PageRepository {
       slug: page.slug,
       title: page.title,
       description: page.description,
+      bannerImage: page.bannerImage ?? null,
+      bannerPosition: page.bannerPosition ?? null,
+      tagline: page.tagline ?? null,
+      titleFont: page.titleFont ?? null,
+      titleColor: page.titleColor ?? null,
+      socialLinks: page.socialLinks ? (page.socialLinks as Prisma.InputJsonValue) : Prisma.JsonNull,
       templateId: page.templateId,
       status: page.status.value,
       publishedAt: page.publishedAt,
@@ -218,6 +224,14 @@ export class PrismaPageRepository implements PageRepository {
       slug: prismaPage.slug,
       title: prismaPage.title,
       description: prismaPage.description ?? undefined,
+      bannerImage: prismaPage.bannerImage ?? undefined,
+      bannerPosition: prismaPage.bannerPosition ?? undefined,
+      tagline: prismaPage.tagline ?? undefined,
+      titleFont: prismaPage.titleFont ?? undefined,
+      titleColor: prismaPage.titleColor ?? undefined,
+      socialLinks: prismaPage.socialLinks
+        ? (prismaPage.socialLinks as Record<string, string>)
+        : undefined,
       templateId: prismaPage.templateId ?? undefined,
       status: prismaPage.status as PageStatusValue,
       sections: prismaPage.sections.map((section) => ({
