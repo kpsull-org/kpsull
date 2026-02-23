@@ -35,7 +35,7 @@ function formatPrice(cents: number): string {
 
 export default async function CataloguePage({
   searchParams,
-}: CataloguePageProps) {
+}: Readonly<CataloguePageProps>) {
   const params = await searchParams;
 
   const selectedStyles = params.style ? params.style.split(",").filter(Boolean) : [];
@@ -49,7 +49,8 @@ export default async function CataloguePage({
   const sort = params.sort ?? "newest";
 
   // Price in euros from search params, convert to cents for DB query
-  const minPriceEuros = params.minPrice ? parseInt(params.minPrice, 10) : 0;
+  const minRaw = Number.parseInt(params.minPrice ?? "", 10);
+  const minPriceEuros = params.minPrice && !Number.isNaN(minRaw) ? Math.max(0, minRaw) : 0;
 
   const [styles, skuSizesRaw, variants, maxPriceProduct] = await Promise.all([
     prisma.style.findMany({
@@ -103,12 +104,11 @@ export default async function CataloguePage({
           where: { stock: { gt: 0 } },
         },
       },
-      orderBy:
-        sort === "price_asc"
-          ? { product: { price: "asc" } }
-          : sort === "price_desc"
-            ? { product: { price: "desc" } }
-            : { product: { publishedAt: "desc" } },
+      orderBy: (() => {
+        if (sort === "price_asc") return { product: { price: "asc" as const } };
+        if (sort === "price_desc") return { product: { price: "desc" as const } };
+        return { product: { publishedAt: "desc" as const } };
+      })(),
     }),
     prisma.product.findFirst({
       where: { status: "PUBLISHED" },
@@ -120,9 +120,9 @@ export default async function CataloguePage({
   const dynamicMaxPrice = Math.ceil((maxPriceProduct?.price ?? 50000) / 100);
 
   // Apply price filter after fetching dynamicMaxPrice
-  const maxPriceEuros = params.maxPrice
-    ? parseInt(params.maxPrice, 10)
-    : dynamicMaxPrice;
+  const maxRaw = Number.parseInt(params.maxPrice ?? "", 10);
+  const maxPriceEuros =
+    params.maxPrice && !Number.isNaN(maxRaw) ? maxRaw : dynamicMaxPrice;
   const minPrice = minPriceEuros * 100;
   const maxPrice = maxPriceEuros * 100;
 
@@ -174,7 +174,7 @@ export default async function CataloguePage({
             </h1>
             <span className="text-[10px] uppercase tracking-[0.1em] text-black/40">
               {filteredVariants.length} article
-              {filteredVariants.length !== 1 ? "s" : ""}
+              {filteredVariants.length === 1 ? "" : "s"}
             </span>
           </div>
 

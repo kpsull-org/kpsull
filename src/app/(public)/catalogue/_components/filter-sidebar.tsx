@@ -34,18 +34,24 @@ const SORT_OPTIONS = [
 
 const PRICE_MIN = 0;
 
+const safeParseInt = (value: string | undefined, fallback: number): number => {
+  if (!value) return fallback;
+  const n = Number.parseInt(value, 10);
+  return Number.isNaN(n) ? fallback : n;
+};
+
 export function FilterSidebar({
   styles,
   sizes,
   priceMax,
   currentParams,
-}: FilterSidebarProps) {
+}: Readonly<FilterSidebarProps>) {
   const router = useRouter();
   const pathname = usePathname();
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
-    currentParams.minPrice ? parseInt(currentParams.minPrice, 10) : PRICE_MIN,
-    currentParams.maxPrice ? parseInt(currentParams.maxPrice, 10) : priceMax,
+    safeParseInt(currentParams.minPrice, PRICE_MIN),
+    safeParseInt(currentParams.maxPrice, priceMax),
   ]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -143,9 +149,9 @@ export function FilterSidebar({
     !!currentParams.size ||
     !!currentParams.gender ||
     (currentParams.minPrice !== undefined &&
-      parseInt(currentParams.minPrice, 10) !== PRICE_MIN) ||
+      safeParseInt(currentParams.minPrice, PRICE_MIN) !== PRICE_MIN) ||
     (currentParams.maxPrice !== undefined &&
-      parseInt(currentParams.maxPrice, 10) !== priceMax);
+      safeParseInt(currentParams.maxPrice, priceMax) !== priceMax);
 
   const clearFilters = () => {
     router.push(pathname);

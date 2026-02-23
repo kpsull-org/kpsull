@@ -22,7 +22,7 @@ export async function CategorySlider() {
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
           {styles.map((style) => {
-            const slug = style.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            const slug = style.name.toLowerCase().replaceAll(/\s+/g, '-').replaceAll(/[^a-z0-9-]/g, '');
             return (
               <Link
                 key={style.name}

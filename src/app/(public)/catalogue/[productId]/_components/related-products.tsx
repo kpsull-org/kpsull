@@ -136,7 +136,7 @@ export async function RelatedProducts({
   productId,
   creatorId,
   category,
-}: RelatedProductsProps) {
+}: Readonly<RelatedProductsProps>) {
   const products = await fetchRelatedProducts(productId, creatorId, category);
 
   if (products.length === 0) return null;

@@ -43,7 +43,7 @@ export function ProductClient({
   brandName,
   description,
   infoRows,
-}: ProductClientProps) {
+}: Readonly<ProductClientProps>) {
   const router = useRouter();
   const [currentVariantId, setCurrentVariantId] =
     useState(selectedVariantId);
@@ -108,7 +108,7 @@ export function ProductClient({
           <div className="flex border-t border-black">
             {images.map((img, idx) => (
               <button
-                key={idx}
+                key={img}
                 onClick={() => setMainImageIndex(idx)}
                 className={`w-24 aspect-square flex-shrink-0 relative overflow-hidden border-r border-black transition-opacity ${
                   idx === mainImageIndex
@@ -209,18 +209,21 @@ export function ProductClient({
                   const inStock = sku.stock > 0;
                   const isSelected = selectedSize === size;
 
+                  let sizeButtonClass: string;
+                  if (isSelected) {
+                    sizeButtonClass = "bg-black text-white border-black";
+                  } else if (inStock) {
+                    sizeButtonClass = "bg-transparent text-black/70 border-black/25 hover:border-black/60";
+                  } else {
+                    sizeButtonClass = "opacity-40 cursor-not-allowed text-black/45 border-black/15 line-through";
+                  }
+
                   return (
                     <button
                       key={size}
                       onClick={() => handleSizeSelect(size, inStock)}
                       disabled={!inStock}
-                      className={`px-3 py-1.5 text-[10px] uppercase tracking-wide border transition-all ${
-                        isSelected
-                          ? "bg-black text-white border-black"
-                          : inStock
-                            ? "bg-transparent text-black/70 border-black/25 hover:border-black/60"
-                            : "opacity-40 cursor-not-allowed text-black/45 border-black/15 line-through"
-                      }`}
+                      className={`px-3 py-1.5 text-[10px] uppercase tracking-wide border transition-all ${sizeButtonClass}`}
                     >
                       {size}
                     </button>

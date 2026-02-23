@@ -12,7 +12,7 @@ interface ProductPageProps {
 
 export async function generateMetadata({
   params,
-}: ProductPageProps): Promise<Metadata> {
+}: Readonly<ProductPageProps>): Promise<Metadata> {
   const { productId } = await params;
 
   const product = await prisma.product.findUnique({
@@ -31,7 +31,7 @@ export async function generateMetadata({
 export default async function ProductPage({
   params,
   searchParams,
-}: ProductPageProps) {
+}: Readonly<ProductPageProps>) {
   const { productId } = await params;
   const { variant: variantParam } = await searchParams;
 

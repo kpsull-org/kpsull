@@ -17,7 +17,7 @@ export function PriceRangeInput({
   value,
   onValueChange,
   className,
-}: PriceRangeInputProps) {
+}: Readonly<PriceRangeInputProps>) {
   const [minVal, maxVal] = value;
 
   const minPercent = Math.round(((minVal - min) / (max - min)) * 100);
