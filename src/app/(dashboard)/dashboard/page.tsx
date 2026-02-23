@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -8,16 +9,12 @@ import {
   Users,
   ArrowRight,
   CreditCard,
-  DollarSign,
   ShoppingBag,
-  TrendingUp,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { StatCard } from '@/components/dashboard/stat-card';
-import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
-import { GetCreatorOverviewUseCase } from '@/modules/analytics/application/use-cases';
-import { PrismaCreatorOverviewRepository } from '@/modules/analytics/infrastructure/repositories';
 import { DashboardCoachMarks } from './dashboard-coach-marks';
+import { DashboardStats } from './dashboard-stats';
+import { DashboardStatsSkeleton } from './dashboard-stats-skeleton';
 
 export const metadata: Metadata = {
   title: 'Tableau de bord | Kpsull',
@@ -26,21 +23,6 @@ export const metadata: Metadata = {
 
 interface DashboardPageProps {
   searchParams: Promise<{ welcome?: string }>;
-}
-
-/** French short month labels indexed 0..11 */
-const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-
-/**
- * Format an integer amount in cents as a French-locale EUR string.
- * Example: 123456 -> "1 234,56 EUR"
- */
-function formatCentsAsEur(cents: number): string {
-  const euros = cents / 100;
-  return new Intl.NumberFormat('fr-FR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(euros) + ' EUR';
 }
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
@@ -62,50 +44,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     }
   }
 
-  // Check if dashboard tour needs to be shown
+  const isNewCreator = params.welcome === 'true';
+  const firstName = session.user.name?.split(' ')[0] ?? 'Createur';
+
   const onboarding = await prisma.creatorOnboarding.findUnique({
     where: { userId: session.user.id },
     select: { dashboardTourCompleted: true },
   });
-  const isNewCreator = params.welcome === 'true';
+
   const showWelcomeTour = !onboarding?.dashboardTourCompleted || isNewCreator;
-
-  const firstName = session.user.name?.split(' ')[0] ?? 'Createur';
-  const currentYear = new Date().getFullYear();
-
-  // Fetch stats via use case
-  const overviewRepository = new PrismaCreatorOverviewRepository(prisma);
-  const getOverviewUseCase = new GetCreatorOverviewUseCase(overviewRepository);
-  const result = await getOverviewUseCase.execute({
-    creatorId: session.user.id,
-    year: currentYear,
-  });
-
-  if (result.isFailure) {
-    return (
-      <div className="container py-10">
-        <p className="text-destructive">Erreur: {result.error}</p>
-      </div>
-    );
-  }
-
-  const stats = result.value;
-
-  // Map monthly revenue to chart format
-  const revenueData: MonthlyRevenue[] = MONTH_LABELS.map((month, i) => {
-    const point = stats.monthlyRevenue.find((p) => p.month === i);
-    return { month, revenue: (point?.revenueCents ?? 0) / 100 };
-  });
-
-  const currentMonthIndex = new Date().getMonth();
-  const currentMonthRevenueCents =
-    stats.monthlyRevenue.find((p) => p.month === currentMonthIndex)?.revenueCents ?? 0;
 
   return (
     <div className="space-y-10">
       <DashboardCoachMarks showTour={showWelcomeTour} />
 
-      {/* Header */}
+      {/* Header — visible immédiatement */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
           Bonjour {firstName}
@@ -115,38 +68,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <section aria-label="Statistiques" data-coach-mark="stats">
-        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Commandes"
-            value={String(stats.totalOrders)}
-            icon={Package}
-          />
-          <StatCard
-            title="Chiffre d'affaires"
-            value={formatCentsAsEur(stats.totalRevenueCents)}
-            icon={DollarSign}
-          />
-          <StatCard
-            title="Clients"
-            value={String(stats.totalCustomers)}
-            icon={Users}
-          />
-          <StatCard
-            title="CA ce mois-ci"
-            value={formatCentsAsEur(currentMonthRevenueCents)}
-            icon={TrendingUp}
-          />
-        </div>
-      </section>
+      {/* Stats + Chart — streamés indépendamment */}
+      <Suspense fallback={<DashboardStatsSkeleton />}>
+        <DashboardStats creatorId={session.user.id} />
+      </Suspense>
 
-      {/* Revenue Chart */}
-      <section aria-label="Chiffre d'affaires" data-coach-mark="revenue">
-        <RevenueChart data={revenueData} year={currentYear} />
-      </section>
-
-      {/* Quick Actions */}
+      {/* Quick Actions — statique, visible immédiatement */}
       <section aria-label="Acces rapide" data-coach-mark="quick-actions">
         <h2 className="text-lg font-semibold tracking-tight mb-5">
           Acces rapide

@@ -1,19 +1,29 @@
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 
-export async function FeaturedOffers() {
-  const products = await prisma.product.findMany({
-    where: { status: 'PUBLISHED' },
-    orderBy: { publishedAt: 'desc' },
-    take: 8,
-    include: {
-      variants: {
-        take: 1,
-        select: { images: true },
+// Cache cross-request 5 min (server-cache-lru — Vercel best practice 3.3)
+const getFeaturedProducts = unstable_cache(
+  async () => {
+    return prisma.product.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { publishedAt: 'desc' },
+      take: 8,
+      include: {
+        variants: {
+          take: 1,
+          select: { images: true },
+        },
       },
-    },
-  });
+    });
+  },
+  ['featured-offers'],
+  { revalidate: 300, tags: ['products'] },
+);
+
+export async function FeaturedOffers() {
+  const products = await getFeaturedProducts();
 
   if (products.length === 0) return null;
 

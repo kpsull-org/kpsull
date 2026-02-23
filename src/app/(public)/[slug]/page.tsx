@@ -1,8 +1,16 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma/client';
+
+// Déduplique la query entre generateMetadata et la page dans le même rendu (Vercel best practice 3.6)
+const getCreatorPage = cache(async (slug: string) => {
+  return prisma.creatorPage.findFirst({
+    where: { slug, status: 'PUBLISHED' },
+  });
+});
 
 export const revalidate = 3600;
 
@@ -137,10 +145,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const page = await prisma.creatorPage.findFirst({
-    where: { slug, status: 'PUBLISHED' },
-    select: { title: true, description: true, bannerImage: true },
-  });
+  const page = await getCreatorPage(slug);
 
   if (!page) {
     return {
@@ -176,9 +181,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function PublicCreatorPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const page = await prisma.creatorPage.findFirst({
-    where: { slug, status: 'PUBLISHED' },
-  });
+  const page = await getCreatorPage(slug);
 
   if (!page) notFound();
 

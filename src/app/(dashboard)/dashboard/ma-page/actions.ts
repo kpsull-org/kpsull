@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 import { cloudinary } from '@/lib/cloudinary';
 import { validateImageFile } from '@/lib/utils/file-validation';
@@ -133,6 +133,7 @@ export async function updatePageSettings(formData: FormData): Promise<ActionResu
   revalidatePath('/dashboard/ma-page');
   revalidatePath('/dashboard');
   revalidatePath(`/${result.value.slug}`);
+  revalidateTag('creators', {}); // Invalide TopCreators sur la home
 
   return { success: true };
 }
@@ -169,6 +170,7 @@ export async function uploadBannerImage(
 
     revalidatePath('/dashboard/ma-page');
     revalidatePath(`/${page.slug}`);
+    revalidateTag('creators', {}); // Invalide TopCreators sur la home
 
     return { success: true, url: uploadResult.secure_url };
   } catch {
@@ -201,6 +203,7 @@ export async function uploadAvatarImage(
 
     revalidatePath('/dashboard/ma-page');
     revalidatePath('/dashboard');
+    revalidateTag('creators', {}); // Invalide TopCreators sur la home
 
     return { success: true, url: uploadResult.secure_url };
   } catch {

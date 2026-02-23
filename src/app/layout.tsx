@@ -26,6 +26,20 @@ export const metadata: Metadata = {
   description:
     "Une plateforme reliant createurs de mode locaux et passionnes, offrant des pieces uniques et artisanales, accessibles a vous, chaque jour.",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "KPSULL - L'antidote a l'uniforme",
+    description:
+      "Une plateforme reliant createurs de mode locaux et passionnes, offrant des pieces uniques et artisanales, accessibles a vous, chaque jour.",
+    siteName: 'Kpsull',
+    type: 'website',
+    locale: 'fr_FR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "KPSULL - L'antidote a l'uniforme",
+    description:
+      "Une plateforme reliant createurs de mode locaux et passionnes, offrant des pieces uniques et artisanales, accessibles a vous, chaque jour.",
+  },
 };
 
 export default function RootLayout({

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const checks: Record<string, 'ok' | 'error'> = {};
 
@@ -14,7 +16,12 @@ export async function GET() {
   const healthy = Object.values(checks).every((v) => v === 'ok');
 
   return NextResponse.json(
-    { status: healthy ? 'healthy' : 'degraded', checks },
+    {
+      status: healthy ? 'healthy' : 'degraded',
+      checks,
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    },
     { status: healthy ? 200 : 503 }
   );
 }

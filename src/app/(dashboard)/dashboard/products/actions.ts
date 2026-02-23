@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
@@ -302,6 +302,7 @@ export async function deleteProduct(productId: string): Promise<ActionResult> {
   }
 
   revalidatePath('/dashboard/products');
+  revalidateTag('products', {}); // Invalide FeaturedOffers sur la home
 
   return { success: true };
 }
@@ -322,6 +323,7 @@ export async function publishProduct(productId: string): Promise<ActionResult> {
 
   revalidatePath('/dashboard/products');
   revalidatePath(`/dashboard/products/${productId}`);
+  revalidateTag('products', {}); // Invalide FeaturedOffers sur la home
 
   return { success: true };
 }
@@ -342,6 +344,7 @@ export async function unpublishProduct(productId: string): Promise<ActionResult>
 
   revalidatePath('/dashboard/products');
   revalidatePath(`/dashboard/products/${productId}`);
+  revalidateTag('products', {}); // Invalide FeaturedOffers sur la home
 
   return { success: true };
 }
@@ -362,6 +365,7 @@ export async function archiveProduct(productId: string): Promise<ActionResult> {
 
   revalidatePath('/dashboard/products');
   revalidatePath(`/dashboard/products/${productId}`);
+  revalidateTag('products', {}); // Invalide FeaturedOffers sur la home
 
   return { success: true };
 }
