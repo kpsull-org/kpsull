@@ -19,7 +19,7 @@ export function HeroSection() {
         {/* Logo K in yellow/accent (Figma: 281x282px) */}
         <Logo
           size="xl"
-          className="mb-6 h-[100px] w-[100px] text-accent md:mb-8 md:h-[140px] md:w-[140px] lg:h-[160px] lg:w-[160px] xl:h-[180px] xl:w-[180px] 2xl:h-[220px] 2xl:w-[220px]"
+          className="mb-6 h-[100px] w-[100px] text-white md:mb-8 md:h-[140px] md:w-[140px] lg:h-[160px] lg:w-[160px] xl:h-[180px] xl:w-[180px] 2xl:h-[220px] 2xl:w-[220px]"
         />
 
         {/* Title (Figma: Montserrat 600, 96px, color #D6C8BD) */}

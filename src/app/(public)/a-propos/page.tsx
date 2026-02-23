@@ -1,28 +1,27 @@
 import Image from "next/image";
 import { Logo } from "@/components/brand/logo";
-import { TartanStripe } from "@/components/brand/tartan-stripe";
+import { SectionSeparator } from "@/components/home/section-separator";
 
 export const metadata = {
-  title: "A propos - KPSULL",
+  title: "À propos — KPSULL",
   description:
-    "Decouvrez l'equipe KPSULL, notre histoire et notre mission : l'antidote a l'uniforme.",
+    "Découvrez l'équipe KPSULL, notre histoire et notre mission : l'antidote à l'uniforme.",
 };
 
-const teamMembers = [
-  { name: "YUNUS", style: "VINTAGE" },
-  { name: "SARAH", style: "STREET" },
-  { name: "LUCAS", style: "MINIMALISTE" },
-  { name: "EMMA", style: "TECHWEAR" },
-  { name: "NOAH", style: "BOHEME" },
-  { name: "LEILA", style: "CLASSIC" },
-  { name: "RAYAN", style: "AVANT-GARDE" },
-  { name: "CLARA", style: "SPORTIF" },
+const teamMembers: { name: string; email: string; photo: string }[] = [
+  { name: "YUNUS", email: "yunus@kpsull.fr", photo: "https://res.cloudinary.com/damucxy2t/image/upload/v1771844757/kpsull/team/yunus.jpg" },
+  { name: "DAMIEN", email: "damien@kpsull.fr", photo: "https://res.cloudinary.com/damucxy2t/image/upload/v1771844759/kpsull/team/damien.jpg" },
+  { name: "CAROLINE", email: "caroline@kpsull.fr", photo: "https://res.cloudinary.com/damucxy2t/image/upload/v1771844760/kpsull/team/caroline.jpg" },
+  { name: "ANTHONIN", email: "anthonin@kpsull.fr", photo: "https://res.cloudinary.com/damucxy2t/image/upload/v1771844762/kpsull/team/anthonin.jpg" },
+  { name: "ELIOTT", email: "eliott@kpsull.fr", photo: "https://res.cloudinary.com/damucxy2t/image/upload/v1771844766/kpsull/team/eliott.jpg" },
+  { name: "RÉMY", email: "remy@kpsull.fr", photo: "https://res.cloudinary.com/damucxy2t/image/upload/v1771844769/kpsull/team/remy.jpg" },
+  { name: "ANTOINE", email: "antoine@kpsull.fr", photo: "https://res.cloudinary.com/damucxy2t/image/upload/v1771844349/kpsull/team/antoine.jpg" },
 ];
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen">
-      {/* Section 1: Hero -- full-screen nature image + K logo overlay */}
+    <main className="min-h-screen bg-white font-[family-name:var(--font-montserrat)]">
+      {/* ─── HERO ─── */}
       <section className="relative -mt-[98px] h-screen w-full overflow-hidden">
         <Image
           src="/images/hero-about.png"
@@ -31,138 +30,149 @@ export default function AboutPage() {
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative flex h-full items-center justify-center">
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="relative flex h-full flex-col items-center justify-center gap-6">
           <Logo
             size="xl"
-            className="h-[200px] w-[200px] text-white/90 md:h-[300px] md:w-[300px]"
+            className="h-[160px] w-[160px] text-white md:h-[220px] md:w-[220px]"
           />
-        </div>
-        <TartanStripe className="absolute bottom-0 left-0 right-0" />
-      </section>
-
-      {/* Section 2: Mission -- Figma: title + text + fashion images */}
-      <section className="bg-[#D9D9D9] px-6 py-16 md:px-12 md:py-24 lg:px-20">
-        <div className="mx-auto max-w-6xl">
-          <h1 className="mb-8 font-[family-name:var(--font-montserrat)] text-2xl font-semibold uppercase md:text-3xl lg:text-[40px] lg:leading-[1.22]">
-            L&apos;ANTIDOTE A L&apos;UNIFORME.
-          </h1>
-
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="space-y-6">
-              <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed md:text-lg">
-                KPSULL est une plateforme qui celebre la mode authentique en
-                connectant des createurs locaux passionnes avec des amateurs de
-                pieces uniques. Nous croyons que chaque vetement raconte une
-                histoire et que la mode devrait etre une expression de soi, pas
-                un uniforme.
-              </p>
-              <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed md:text-lg">
-                Notre mission est de fournir un espace ou l&apos;artisanat
-                rencontre l&apos;innovation, ou chaque piece est le reflet
-                d&apos;un savoir-faire unique et d&apos;une vision creative
-                singuliere.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="aspect-[3/4] overflow-hidden rounded-lg bg-secondary">
-                <div className="h-full w-full bg-gradient-to-br from-gray-300 to-gray-400" />
-              </div>
-              <div className="aspect-[3/4] overflow-hidden rounded-lg bg-secondary">
-                <div className="h-full w-full bg-gradient-to-br from-gray-300 to-gray-400" />
-              </div>
-            </div>
-          </div>
-          <div className="mt-16 h-px bg-black" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/80">
+            L&apos;ANTIDOTE À L&apos;UNIFORME
+          </p>
         </div>
       </section>
 
-      {/* Section 3: L'Equipe -- Figma: 4x2 grid of team photos */}
-      <section className="bg-[#D9D9D9] px-6 py-16 md:px-12 md:py-24 lg:px-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-12 font-[family-name:var(--font-montserrat)] text-xl font-semibold uppercase md:text-2xl lg:text-[40px] lg:leading-[1.22]">
-            L&apos;EQUIPE
+      {/* ─── L'ANTIDOTE À L'UNIFORME ─── */}
+      <section className="px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40">
+            L&apos;ANTIDOTE À L&apos;UNIFORME
           </h2>
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {teamMembers.map((member) => (
-              <div key={member.name} className="group">
-                <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-secondary">
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400" />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.6) 100%)",
-                    }}
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="font-[family-name:var(--font-montserrat)] text-lg font-bold uppercase text-white">
-                      {member.name}
-                    </h3>
-                    <p className="font-[family-name:var(--font-montserrat)] text-sm uppercase text-[#EFD050]">
-                      {member.style}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="text-xl font-light leading-[1.75] text-black md:text-2xl lg:text-[28px] lg:leading-[1.65]">
+            Nous en avions assez. Assez des vêtements conçus pour être
+            remplacés, des matières qui s&apos;usent à la troisième lessive, des
+            pièces standardisées qui sortent de la même chaîne de production
+            pour habiller des millions de personnes de façon identique. La mode
+            s&apos;était perdue quelque part entre la quantité et le profit,
+            laissant de côté ce qui fait sa vraie valeur&nbsp;: l&apos;intention,
+            le geste, le savoir-faire. Pourtant, une alternative existait —
+            des créateurs indépendants qui continuaient de travailler à la main,
+            avec soin et avec âme. Le problème, c&apos;est qu&apos;il était
+            presque impossible de les trouver.{" "}
+            <strong className="font-semibold">
+              KPSULL est né de ce constat
+            </strong>{" "}
+            : offrir un espace où la qualité artisanale devient enfin
+            accessible, sans compromis.
+          </p>
         </div>
       </section>
 
-      {/* Section 4: Notre Histoire -- Figma: text + images */}
-      <section className="bg-[#D9D9D9] px-6 py-16 md:px-12 md:py-24 lg:px-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-8 font-[family-name:var(--font-montserrat)] text-xl font-semibold uppercase md:text-2xl lg:text-[40px] lg:leading-[1.22]">
+      <SectionSeparator className="bg-transparent" />
+
+      {/* ─── L'ÉQUIPE ─── */}
+      <section className="px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+        <div className="mx-auto max-w-7xl">
+        <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black">
+          L&apos;ÉQUIPE
+        </h2>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+          {teamMembers.map((member) => (
+            <div key={member.name} className="group">
+              {/* Photo */}
+              <div className="mb-3 aspect-square w-full overflow-hidden bg-[#EBEBEB]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={member.photo}
+                  alt={member.name}
+                  className="h-full w-full object-cover grayscale transition-all duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                />
+              </div>
+              {/* Infos */}
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-black">
+                {member.name}
+              </p>
+              <p className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-black/40">
+                {member.email}
+              </p>
+            </div>
+          ))}
+        </div>
+        </div>
+      </section>
+
+      <SectionSeparator className="bg-transparent" />
+
+      {/* ─── NOTRE HISTOIRE ─── */}
+      <section className="px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40">
             NOTRE HISTOIRE
           </h2>
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="space-y-6">
-              <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed md:text-lg">
-                Tout a commence a Caen, en Normandie, ou un groupe de
-                passionnes de mode s&apos;est reuni autour d&apos;une vision
-                commune : rendre la mode artisanale accessible a tous.
+          <div className="grid gap-12 md:grid-cols-2 md:gap-16">
+            <div className="space-y-6 text-base leading-[1.8] text-black/80">
+              <p>
+                Tout a commencé sur les bancs de l&apos;école, autour
+                d&apos;une frustration partagée&nbsp;: bien s&apos;habiller ne
+                devrait pas être réservé à ceux qui savent chercher. Nous
+                étions étudiants, passionnés de mode, et nous constations chaque
+                jour à quel point il était difficile d&apos;accéder à des pièces
+                qui valent vraiment quelque chose — fabriquées avec soin,
+                pensées pour durer, portées avec intention.
               </p>
-              <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed md:text-lg">
-                Lasses des vetements standardises et de la fast fashion, nous
-                avons decide de creer un espace ou les createurs locaux
-                pourraient partager leur art directement avec ceux qui
-                l&apos;apprecient.
+              <p>
+                Dans le même temps, nous croisions des créateurs talentueux,
+                des artisans brillants, qui passaient la majorité de leur temps
+                non pas à créer, mais à se battre pour se rendre visibles. À
+                publier, à répondre, à gérer des algorithmes. Du temps volé à
+                leur art, pour des résultats incertains.
               </p>
-              <p className="font-[family-name:var(--font-montserrat)] text-base leading-relaxed md:text-lg">
-                KPSULL est ne de cette volonte de reconnecter la mode avec ses
-                racines artisanales. Chaque createur que nous accompagnons
-                apporte une vision unique, un savoir-faire et une histoire qui
-                se retrouvent dans chaque piece.
+              <p>
+                C&apos;est là que KPSULL a pris forme. Une plateforme pensée
+                pour que les créateurs indépendants puissent enfin se concentrer
+                sur ce qu&apos;ils font de mieux — créer — pendant que nous
+                nous occupons du reste. Les référencer, leur offrir une vitrine
+                professionnelle, les connecter directement avec des personnes
+                qui savent reconnaître la valeur d&apos;une pièce unique. Parce
+                que la mode artisanale mérite d&apos;être vue, et ceux qui la
+                portent méritent de la trouver facilement.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="aspect-[3/4] overflow-hidden rounded-lg bg-secondary">
-                <div className="h-full w-full bg-gradient-to-br from-gray-300 to-gray-400" />
-              </div>
-              <div className="aspect-[3/4] overflow-hidden rounded-lg bg-secondary">
-                <div className="h-full w-full bg-gradient-to-br from-gray-300 to-gray-400" />
-              </div>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://res.cloudinary.com/damucxy2t/image/upload/v1771845067/kpsull/notre-histoire.jpg"
+              alt="Notre histoire KPSULL"
+              className="aspect-[4/5] w-full overflow-hidden border border-black object-cover md:aspect-auto"
+            />
           </div>
         </div>
       </section>
 
-      {/* Section 5: Adresse + Carte -- Figma: address with map */}
-      <section className="bg-[#D9D9D9] px-6 py-16 md:px-12 md:py-24 lg:px-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-2 font-[family-name:var(--font-montserrat)] text-sm font-medium uppercase tracking-wider text-muted-foreground">
+      <SectionSeparator className="bg-transparent" />
+
+      {/* ─── ADRESSE ─── */}
+      <section className="px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40">
             ADRESSE
           </h2>
-          <p className="mb-8 font-[family-name:var(--font-montserrat)] text-xl font-semibold md:text-[36px]">
-            666 KPSULLSTREET, 14000 CAEN
+          <p className="mb-1 text-sm font-medium uppercase tracking-[0.15em] text-black/40">
+            MyDigitalSchool Caen
           </p>
-          <div className="aspect-video overflow-hidden rounded-xl bg-muted">
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-green-100 to-blue-100">
-              <p className="font-[family-name:var(--font-montserrat)] text-lg text-muted-foreground">
-                Carte Normandie - Caen
-              </p>
-            </div>
+          <p className="mb-10 text-2xl font-semibold uppercase tracking-tight text-black md:text-3xl lg:text-[36px]">
+            6 RUE DU RECTEUR DAURE,
+            <br />
+            14000 CAEN
+          </p>
+          <div className="aspect-video w-full overflow-hidden border border-black">
+            <iframe
+              title="Localisation KPSULL — 6 rue du recteur daure, Caen"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-0.3790%2C49.1845%2C-0.3590%2C49.1945&layer=mapnik&marker=49.1895%2C-0.3690"
+              width="100%"
+              height="100%"
+              className="h-full w-full grayscale"
+              loading="lazy"
+            />
           </div>
         </div>
       </section>

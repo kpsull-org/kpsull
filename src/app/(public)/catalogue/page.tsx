@@ -126,6 +126,59 @@ export default async function CataloguePage({
   const minPrice = minPriceEuros * 100;
   const maxPrice = maxPriceEuros * 100;
 
+  // Graine journalière : stable dans la journée, change chaque jour
+  const dailySeed = new Date().toISOString().slice(0, 10);
+
+  function seededRng(seed: string) {
+    let h = 2166136261;
+    for (let i = 0; i < seed.length; i++) {
+      h ^= seed.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return () => {
+      h ^= h << 13;
+      h ^= h >> 17;
+      h ^= h << 5;
+      return (h >>> 0) / 0x100000000;
+    };
+  }
+
+  function shuffleInterleaved<T extends { productId: string },>(items: T[], seed: string): T[] {
+    const rand = seededRng(seed);
+    // Fisher-Yates sur un tableau
+    const fyShuffle = <U,>(arr: U[]): U[] => {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        const tmp = a[i] as U;
+        a[i] = a[j] as U;
+        a[j] = tmp;
+      }
+      return a;
+    };
+
+    // Grouper par produit et mélanger l'ordre des variantes dans chaque groupe
+    const groups = new Map<string, T[]>();
+    for (const item of items) {
+      const g = groups.get(item.productId) ?? [];
+      g.push(item);
+      groups.set(item.productId, g);
+    }
+
+    // Mélanger l'ordre des groupes (produits)
+    const shuffledGroups = fyShuffle([...groups.values()].map((g) => fyShuffle(g)));
+
+    // Interleaving round-robin : 1 variante par produit à la fois
+    const result: T[] = [];
+    const maxLen = Math.max(...shuffledGroups.map((g) => g.length));
+    for (let i = 0; i < maxLen; i++) {
+      for (const group of shuffledGroups) {
+        if (i < group.length) result.push(group[i] as T);
+      }
+    }
+    return result;
+  }
+
   const filteredVariants = (() => {
     const filtered = variants.filter((v) => {
       const price = v.priceOverride ?? v.product.price;
@@ -141,7 +194,8 @@ export default async function CataloguePage({
         (a, b) => (b.priceOverride ?? b.product.price) - (a.priceOverride ?? a.product.price),
       );
     }
-    return filtered;
+    // Par défaut : ordre randomisé, interleaved par produit, stable dans la journée
+    return shuffleInterleaved(filtered, dailySeed);
   })();
 
   const sizes = skuSizesRaw
@@ -162,12 +216,6 @@ export default async function CataloguePage({
       <div className="flex">
         {/* Sidebar desktop - collée à gauche, sticky */}
         <aside className="hidden md:flex w-[210px] flex-shrink-0 flex-col sticky top-0 h-screen overflow-y-auto border-r border-black">
-          {/* Header sidebar */}
-          <div className="px-5 h-[46px] flex items-center border-b border-black">
-            <span className="text-[9px] uppercase tracking-[0.2em] font-semibold text-black/40">
-              Filtres
-            </span>
-          </div>
           <div className="p-5 flex-1">
             <FilterSidebar
               styles={styles}
@@ -180,17 +228,6 @@ export default async function CataloguePage({
 
         {/* Main content */}
         <main className="flex-1 min-w-0">
-          {/* Header */}
-          <div className="px-6 h-[46px] flex items-center justify-between border-b border-black">
-            <h1 className="font-[family-name:var(--font-montserrat)] text-sm font-bold uppercase tracking-[0.15em]">
-              Catalogue
-            </h1>
-            <span className="text-[10px] uppercase tracking-[0.1em] text-black/40">
-              {filteredVariants.length} article
-              {filteredVariants.length === 1 ? "" : "s"}
-            </span>
-          </div>
-
           {/* Mobile filter button */}
           <div className="md:hidden px-4 py-3 border-b border-black">
             <Sheet>
