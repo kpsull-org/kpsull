@@ -24,7 +24,7 @@ export async function GET(
   const { slug } = await params;
   const { searchParams } = request.nextUrl;
 
-  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+  const page = Math.max(1, Number.parseInt(searchParams.get('page') ?? '1', 10));
   const search = searchParams.get('search') ?? undefined;
   const projectId = searchParams.get('project') ?? undefined;
 

@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 export default function DashboardError({
   error,
   reset,
-}: {
+}: Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>) {
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);

@@ -7,12 +7,12 @@ import { formatPrice } from '@/lib/utils/format';
 import type { PublicProductListItem } from '@/modules/products/application/use-cases/public/list-public-products.use-case';
 
 interface InfiniteProductGridProps {
-  initialProducts: PublicProductListItem[];
-  initialPage: number;
-  totalPages: number;
-  slug: string;
-  search?: string;
-  projectId?: string;
+  readonly initialProducts: PublicProductListItem[];
+  readonly initialPage: number;
+  readonly totalPages: number;
+  readonly slug: string;
+  readonly search?: string;
+  readonly projectId?: string;
 }
 
 export function InfiniteProductGrid({
@@ -126,7 +126,7 @@ export function InfiniteProductGrid({
       {loading && (
         <div className="mt-0 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="overflow-hidden">
+            <div key={`skeleton-product-${i}`} className="overflow-hidden">
               <div className="aspect-square animate-pulse rounded-[15px] bg-muted" />
               <div className="space-y-2 p-4">
                 <div className="h-3 w-24 animate-pulse rounded bg-muted" />

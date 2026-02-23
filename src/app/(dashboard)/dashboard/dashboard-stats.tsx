@@ -17,7 +17,7 @@ function formatCentsAsEur(cents: number): string {
 }
 
 interface DashboardStatsProps {
-  creatorId: string;
+  readonly creatorId: string;
 }
 
 export async function DashboardStats({ creatorId }: DashboardStatsProps) {
