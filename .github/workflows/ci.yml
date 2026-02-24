@@ -192,6 +192,24 @@ jobs:
           exit-code: '1'
 
   # ============================================================================
+  # Dockerfile Lint (hadolint)
+  # ============================================================================
+  dockerfile-lint:
+    name: Dockerfile Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: error
+          ignore: DL3008,DL3047
+
+  # ============================================================================
   # Build
   # ============================================================================
   build:
