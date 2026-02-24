@@ -52,17 +52,14 @@ COPY --from=builder --chmod=555 /app/prisma ./prisma
 COPY --from=builder --chmod=555 /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chmod=555 /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chmod=555 /app/scripts ./scripts
+COPY --from=builder /app/prisma.config.ts ./
 
 # Install prisma CLI for migrate deploy + seed dependencies (not in standalone build)
 # Re-generate Prisma client after bun add to avoid version mismatch with installed @prisma/client
-# Create a minimal prisma config for Docker runtime (no heavy deps needed)
 # Also install cloudinary + dotenv for the cleanup script, and download supercronic for cron scheduling
 RUN bun add -g prisma@7 \
     && bun add bcryptjs pg @prisma/adapter-pg cloudinary dotenv \
     && bunx prisma generate --schema prisma/schema.prisma \
-    && printf 'export default {\n  schema: "prisma/schema.prisma",\n  datasource: {\n' \
-       '    url: process.env.DATABASE_URL,\n  },\n};\n' \
-       > prisma.config.mjs \
     && wget -q \
        "https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64" \
        -O /usr/local/bin/supercronic \
