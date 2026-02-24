@@ -2,19 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 
 interface GuestInfo {
@@ -54,13 +41,8 @@ export function CheckoutAuth() {
       newErrors.email = 'Email invalide';
     }
 
-    if (!guestInfo.firstName.trim()) {
-      newErrors.firstName = 'Prenom requis';
-    }
-
-    if (!guestInfo.lastName.trim()) {
-      newErrors.lastName = 'Nom requis';
-    }
+    if (!guestInfo.firstName.trim()) newErrors.firstName = 'Prenom requis';
+    if (!guestInfo.lastName.trim()) newErrors.lastName = 'Nom requis';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -78,121 +60,115 @@ export function CheckoutAuth() {
     router.push('/checkout/shipping');
   };
 
-  return (
-    <div className="max-w-md mx-auto space-y-6">
-      {/* Google Sign In Option */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Se connecter</CardTitle>
-          <CardDescription>
-            Connectez-vous pour retrouver vos commandes et suivre vos livraisons
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GoogleSignInButton
-            mode="signin"
-            callbackUrl="/checkout"
-          />
-        </CardContent>
-        <CardFooter className="text-xs text-muted-foreground justify-center">
-          Votre panier sera conserve apres la connexion
-        </CardFooter>
-      </Card>
+  const inputClass =
+    'w-full border border-black px-3 py-2.5 text-sm outline-none focus:ring-0 bg-white placeholder:text-black/30';
 
-      {/* Separator */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
+  return (
+    <div className="max-w-md mx-auto font-sans space-y-8">
+      {/* Google Sign In */}
+      <div className="border border-black p-6 space-y-4">
+        <div>
+          <h2 className="text-xs font-bold tracking-widest uppercase mb-1">Se connecter</h2>
+          <p className="text-xs text-black/50">
+            Retrouvez vos commandes et suivez vos livraisons
+          </p>
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Ou continuer sans compte
-          </span>
-        </div>
+        <GoogleSignInButton mode="signin" callbackUrl="/checkout" />
+        <p className="text-xs text-black/40 text-center">
+          Votre panier sera conservé après la connexion
+        </p>
       </div>
 
-      {/* Guest Checkout Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Commander en tant qu&apos;invite</CardTitle>
-          <CardDescription>
-            Pas de compte necessaire pour passer commande
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="votre@email.com"
-                className="pl-10"
-                value={guestInfo.email}
-                onChange={(e) =>
-                  setGuestInfo((prev) => ({ ...prev, email: e.target.value }))
-                }
-              />
-            </div>
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
-            )}
+      {/* Separator */}
+      <div className="flex items-center gap-4">
+        <div className="flex-1 h-px bg-black/10" />
+        <span className="text-xs uppercase tracking-widest text-black/40">Ou</span>
+        <div className="flex-1 h-px bg-black/10" />
+      </div>
+
+      {/* Guest form */}
+      <div className="border border-black p-6 space-y-5">
+        <div>
+          <h2 className="text-xs font-bold tracking-widest uppercase mb-1">
+            Commander en tant qu&apos;invité
+          </h2>
+          <p className="text-xs text-black/50">Pas de compte nécessaire pour passer commande</p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-xs font-bold tracking-widest uppercase mb-1.5"
+            >
+              Email *
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="votre@email.com"
+              value={guestInfo.email}
+              onChange={(e) => setGuestInfo((prev) => ({ ...prev, email: e.target.value }))}
+              className={inputClass}
+            />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Prenom *</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="Jean"
-                  className="pl-10"
-                  value={guestInfo.firstName}
-                  onChange={(e) =>
-                    setGuestInfo((prev) => ({ ...prev, firstName: e.target.value }))
-                  }
-                />
-              </div>
+            <div>
+              <label
+                htmlFor="firstName"
+                className="block text-xs font-bold tracking-widest uppercase mb-1.5"
+              >
+                Prénom *
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                placeholder="Jean"
+                value={guestInfo.firstName}
+                onChange={(e) => setGuestInfo((prev) => ({ ...prev, firstName: e.target.value }))}
+                className={inputClass}
+              />
               {errors.firstName && (
-                <p className="text-sm text-destructive">{errors.firstName}</p>
+                <p className="text-xs text-red-600 mt-1">{errors.firstName}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Nom *</Label>
-              <Input
+            <div>
+              <label
+                htmlFor="lastName"
+                className="block text-xs font-bold tracking-widest uppercase mb-1.5"
+              >
+                Nom *
+              </label>
+              <input
                 id="lastName"
                 type="text"
                 placeholder="Dupont"
                 value={guestInfo.lastName}
-                onChange={(e) =>
-                  setGuestInfo((prev) => ({ ...prev, lastName: e.target.value }))
-                }
+                onChange={(e) => setGuestInfo((prev) => ({ ...prev, lastName: e.target.value }))}
+                className={inputClass}
               />
               {errors.lastName && (
-                <p className="text-sm text-destructive">{errors.lastName}</p>
+                <p className="text-xs text-red-600 mt-1">{errors.lastName}</p>
               )}
             </div>
           </div>
-        </CardContent>
-        <CardFooter>
-          <Button
-            onClick={handleGuestCheckout}
-            disabled={isLoading}
-            className="w-full"
-            size="lg"
-          >
-            {isLoading ? 'Chargement...' : 'Continuer'}
-          </Button>
-        </CardFooter>
-      </Card>
+        </div>
 
-      <p className="text-xs text-center text-muted-foreground">
-        En continuant, vous acceptez nos conditions generales de vente et notre
-        politique de confidentialite.
+        <button
+          onClick={handleGuestCheckout}
+          disabled={isLoading}
+          className="w-full bg-black text-white text-xs font-bold tracking-widest uppercase py-4 hover:bg-black/90 transition-colors disabled:opacity-50"
+        >
+          {isLoading ? 'Chargement...' : 'Continuer'}
+        </button>
+      </div>
+
+      <p className="text-xs text-center text-black/40">
+        En continuant, vous acceptez nos conditions générales de vente et notre politique de
+        confidentialité.
       </p>
     </div>
   );

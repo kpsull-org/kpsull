@@ -1,18 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 export interface ShippingAddress {
   firstName: string;
@@ -62,21 +50,10 @@ export function ShippingAddressForm({
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof ShippingAddress, string>> = {};
 
-    if (!address.firstName.trim()) {
-      newErrors.firstName = 'Prenom requis';
-    }
-
-    if (!address.lastName.trim()) {
-      newErrors.lastName = 'Nom requis';
-    }
-
-    if (!address.street.trim()) {
-      newErrors.street = 'Adresse requise';
-    }
-
-    if (!address.city.trim()) {
-      newErrors.city = 'Ville requise';
-    }
+    if (!address.firstName.trim()) newErrors.firstName = 'Prénom requis';
+    if (!address.lastName.trim()) newErrors.lastName = 'Nom requis';
+    if (!address.street.trim()) newErrors.street = 'Adresse requise';
+    if (!address.city.trim()) newErrors.city = 'Ville requise';
 
     if (!address.postalCode.trim()) {
       newErrors.postalCode = 'Code postal requis';
@@ -85,7 +62,7 @@ export function ShippingAddressForm({
     }
 
     if (address.phone && !PHONE_REGEX.test(address.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Numero de telephone invalide';
+      newErrors.phone = 'Numéro de téléphone invalide';
     }
 
     setErrors(newErrors);
@@ -94,167 +71,175 @@ export function ShippingAddressForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(address);
-    }
+    if (validateForm()) onSubmit(address);
   };
 
   const updateField = (field: keyof ShippingAddress, value: string) => {
     setAddress((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
+  const inputClass =
+    'w-full border border-black px-3 py-2.5 text-sm outline-none focus:ring-0 bg-white placeholder:text-black/30 disabled:bg-black/5 disabled:text-black/40';
+  const labelClass = 'block text-xs font-bold tracking-widest uppercase mb-1.5 font-sans';
+  const errorClass = 'text-xs text-red-600 mt-1';
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Adresse de livraison
-        </CardTitle>
-        <CardDescription>
-          Entrez l&apos;adresse ou vous souhaitez recevoir votre commande
-        </CardDescription>
-      </CardHeader>
+    <div className="border border-black p-6 font-sans">
+      <h2 className="text-xs font-bold tracking-widest uppercase mb-6">
+        Adresse de livraison
+      </h2>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {/* Name fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Prenom *</Label>
-              <Input
-                id="firstName"
-                type="text"
-                placeholder="Jean"
-                value={address.firstName}
-                onChange={(e) => updateField('firstName', e.target.value)}
-              />
-              {errors.firstName && (
-                <p className="text-sm text-destructive">{errors.firstName}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Nom *</Label>
-              <Input
-                id="lastName"
-                type="text"
-                placeholder="Dupont"
-                value={address.lastName}
-                onChange={(e) => updateField('lastName', e.target.value)}
-              />
-              {errors.lastName && (
-                <p className="text-sm text-destructive">{errors.lastName}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Street address */}
-          <div className="space-y-2">
-            <Label htmlFor="street">Adresse *</Label>
-            <Input
-              id="street"
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Prénom / Nom */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="firstName" className={labelClass}>
+              Prénom *
+            </label>
+            <input
+              id="firstName"
               type="text"
-              placeholder="123 rue de la Paix"
-              value={address.street}
-              onChange={(e) => updateField('street', e.target.value)}
+              placeholder="Jean"
+              value={address.firstName}
+              onChange={(e) => updateField('firstName', e.target.value)}
+              className={inputClass}
             />
-            {errors.street && (
-              <p className="text-sm text-destructive">{errors.street}</p>
-            )}
+            {errors.firstName && <p className={errorClass}>{errors.firstName}</p>}
           </div>
 
-          {/* Street complement */}
-          <div className="space-y-2">
-            <Label htmlFor="streetComplement">
-              Complement d&apos;adresse <span className="text-muted-foreground">(optionnel)</span>
-            </Label>
-            <Input
-              id="streetComplement"
+          <div>
+            <label htmlFor="lastName" className={labelClass}>
+              Nom *
+            </label>
+            <input
+              id="lastName"
               type="text"
-              placeholder="Appartement, batiment, etage..."
-              value={address.streetComplement}
-              onChange={(e) => updateField('streetComplement', e.target.value)}
+              placeholder="Dupont"
+              value={address.lastName}
+              onChange={(e) => updateField('lastName', e.target.value)}
+              className={inputClass}
             />
+            {errors.lastName && <p className={errorClass}>{errors.lastName}</p>}
           </div>
+        </div>
 
-          {/* City and postal code */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="postalCode">Code postal *</Label>
-              <Input
-                id="postalCode"
-                type="text"
-                placeholder="75001"
-                maxLength={5}
-                value={address.postalCode}
-                onChange={(e) => updateField('postalCode', e.target.value.replace(/\D/g, ''))}
-              />
-              {errors.postalCode && (
-                <p className="text-sm text-destructive">{errors.postalCode}</p>
-              )}
-            </div>
+        {/* Adresse */}
+        <div>
+          <label htmlFor="street" className={labelClass}>
+            Adresse *
+          </label>
+          <input
+            id="street"
+            type="text"
+            placeholder="123 rue de la Paix"
+            value={address.street}
+            onChange={(e) => updateField('street', e.target.value)}
+            className={inputClass}
+          />
+          {errors.street && <p className={errorClass}>{errors.street}</p>}
+        </div>
 
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="city">Ville *</Label>
-              <Input
-                id="city"
-                type="text"
-                placeholder="Paris"
-                value={address.city}
-                onChange={(e) => updateField('city', e.target.value)}
-              />
-              {errors.city && (
-                <p className="text-sm text-destructive">{errors.city}</p>
-              )}
-            </div>
-          </div>
+        {/* Complément */}
+        <div>
+          <label htmlFor="streetComplement" className={labelClass}>
+            Complément{' '}
+            <span className="font-normal text-black/40 normal-case tracking-normal">
+              (optionnel)
+            </span>
+          </label>
+          <input
+            id="streetComplement"
+            type="text"
+            placeholder="Appartement, bâtiment, étage..."
+            value={address.streetComplement}
+            onChange={(e) => updateField('streetComplement', e.target.value)}
+            className={inputClass}
+          />
+        </div>
 
-          {/* Country (read-only for now - France only) */}
-          <div className="space-y-2">
-            <Label htmlFor="country">Pays</Label>
-            <Input
-              id="country"
+        {/* Code postal / Ville */}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="postalCode" className={labelClass}>
+              Code postal *
+            </label>
+            <input
+              id="postalCode"
               type="text"
-              value={address.country}
-              disabled
-              className="bg-muted"
+              placeholder="75001"
+              maxLength={5}
+              value={address.postalCode}
+              onChange={(e) => updateField('postalCode', e.target.value.replace(/\D/g, ''))}
+              className={inputClass}
             />
-            <p className="text-xs text-muted-foreground">
-              Livraison disponible en France metropolitaine uniquement
-            </p>
+            {errors.postalCode && <p className={errorClass}>{errors.postalCode}</p>}
           </div>
 
-          {/* Phone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">
-              Telephone <span className="text-muted-foreground">(optionnel)</span>
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="06 12 34 56 78"
-              value={address.phone}
-              onChange={(e) => updateField('phone', e.target.value)}
+          <div className="col-span-2">
+            <label htmlFor="city" className={labelClass}>
+              Ville *
+            </label>
+            <input
+              id="city"
+              type="text"
+              placeholder="Paris"
+              value={address.city}
+              onChange={(e) => updateField('city', e.target.value)}
+              className={inputClass}
             />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Pour vous contacter en cas de probleme de livraison
-            </p>
+            {errors.city && <p className={errorClass}>{errors.city}</p>}
           </div>
-        </CardContent>
+        </div>
 
-        <CardFooter>
-          <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-            {isLoading ? 'Chargement...' : 'Continuer vers le paiement'}
-          </Button>
-        </CardFooter>
+        {/* Pays (read-only) */}
+        <div>
+          <label htmlFor="country" className={labelClass}>
+            Pays
+          </label>
+          <input
+            id="country"
+            type="text"
+            value={address.country}
+            disabled
+            className={inputClass}
+          />
+          <p className="text-xs text-black/40 mt-1">
+            Livraison disponible en France métropolitaine uniquement
+          </p>
+        </div>
+
+        {/* Téléphone */}
+        <div>
+          <label htmlFor="phone" className={labelClass}>
+            Téléphone{' '}
+            <span className="font-normal text-black/40 normal-case tracking-normal">
+              (optionnel)
+            </span>
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            placeholder="06 12 34 56 78"
+            value={address.phone}
+            onChange={(e) => updateField('phone', e.target.value)}
+            className={inputClass}
+          />
+          {errors.phone && <p className={errorClass}>{errors.phone}</p>}
+          <p className="text-xs text-black/40 mt-1">
+            Pour vous contacter en cas de problème de livraison
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-black text-white text-xs font-bold tracking-widest uppercase py-4 mt-2 hover:bg-black/90 transition-colors disabled:opacity-50"
+        >
+          {isLoading ? 'Chargement...' : 'Continuer vers le transporteur'}
+        </button>
       </form>
-    </Card>
+    </div>
   );
 }

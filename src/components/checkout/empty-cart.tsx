@@ -1,22 +1,30 @@
 import Link from 'next/link';
-import { Logo } from '@/components/brand/logo';
+import { ShoppingBag } from 'lucide-react';
 
 export function EmptyCart() {
   return (
     <div className="container py-16">
-      <div className="max-w-md mx-auto text-center">
-        <div className="flex justify-center mb-6">
-          <Logo size="lg" className="text-secondary" />
+      <div className="max-w-sm mx-auto text-center space-y-6">
+        <div className="flex justify-center">
+          <div className="border border-black p-6 inline-flex">
+            <ShoppingBag className="h-12 w-12" strokeWidth={1} />
+          </div>
         </div>
 
-        <h1 className="text-2xl font-bold mb-2 font-sans">Votre panier est vide</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-wider uppercase font-sans mb-2">
+            Panier vide
+          </h1>
+          <p className="text-sm text-black/60 font-sans">
+            Parcourez les créations de nos artisans et trouvez votre bonheur
+          </p>
+        </div>
 
-        <p className="text-muted-foreground mb-8 font-sans">
-          Parcourez les creations de nos artisans et trouvez votre bonheur !
-        </p>
-
-        <Link href="/catalogue" className="text-primary underline font-sans">
-          Decouvrir les createurs
+        <Link
+          href="/catalogue"
+          className="inline-block border border-black px-8 py-3 text-xs font-bold tracking-widest uppercase font-sans hover:bg-black hover:text-white transition-colors"
+        >
+          Découvrir les créateurs
         </Link>
       </div>
     </div>

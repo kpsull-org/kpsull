@@ -3,17 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, CreditCard, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { useCartStore } from '@/lib/stores/cart.store';
 import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
@@ -117,9 +108,9 @@ export default function PaymentPage() {
   if (!isHydrated) {
     return (
       <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-muted rounded" />
-          <div className="h-96 bg-muted rounded" />
+        <div className="space-y-4">
+          <div className="h-4 w-32 bg-black/10 animate-pulse" />
+          <div className="h-96 bg-black/5 animate-pulse" />
         </div>
       </div>
     );
@@ -131,128 +122,138 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="container py-8">
-      <Button variant="ghost" asChild className="mb-6">
-        <Link href="/checkout/carrier">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+    <div className="container py-8 font-sans">
+      <div className="mb-8">
+        <Link
+          href="/checkout/carrier"
+          className="inline-flex items-center gap-2 text-xs text-black/50 hover:text-black transition-colors tracking-wide"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
           Retour
         </Link>
-      </Button>
+      </div>
 
-      <h1 className="text-3xl font-bold mb-8">Paiement</h1>
+      <h1 className="text-2xl font-bold tracking-wider uppercase mb-8">Paiement</h1>
 
-      <div className="mb-8">
+      <div className="mb-10">
         <CheckoutStepper currentStep="payment" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Informations de paiement
-              </CardTitle>
-              <CardDescription>
-                Vos informations de paiement sont securisees
-              </CardDescription>
-            </CardHeader>
+      <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="border border-black p-6">
+            <h2 className="text-xs font-bold tracking-widest uppercase mb-1">
+              Informations de paiement
+            </h2>
+            <p className="text-xs text-black/50 mb-6">
+              Vos informations de paiement sont sécurisées
+            </p>
 
-            <CardContent className="space-y-4">
-              {sessionError && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                  {sessionError.includes('authentifi') || sessionError.includes('401') ? (
+            {/* Error state */}
+            {sessionError && (
+              <div className="mb-4 p-4 border border-red-300 bg-red-50 text-xs">
+                {sessionError.includes('authentifi') || sessionError.includes('401') ? (
+                  <>
+                    <p className="font-bold mb-2">
+                      Vous devez être connecté pour finaliser votre commande.
+                    </p>
+                    <Link
+                      href="/login?callbackUrl=/checkout/shipping"
+                      className="inline-block bg-black text-white px-4 py-2 text-xs font-bold tracking-widest uppercase hover:bg-black/90 transition-colors"
+                    >
+                      Se connecter
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-2">{sessionError}</p>
+                    <Link
+                      href="/checkout/carrier"
+                      className="inline-block border border-black px-4 py-2 text-xs font-bold tracking-widest uppercase hover:bg-black hover:text-white transition-colors"
+                    >
+                      Retour
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Loading state */}
+            {isSessionLoading && (
+              <div className="space-y-3">
+                <div className="h-10 bg-black/5 animate-pulse" />
+                <div className="h-10 bg-black/5 animate-pulse" />
+                <div className="h-10 w-1/2 bg-black/5 animate-pulse" />
+              </div>
+            )}
+
+            {/* Stripe Elements */}
+            {clientSecret && orderId && !isSessionLoading && (
+              <Elements stripe={stripePromise} options={{ clientSecret, locale: 'fr' }}>
+                <CheckoutForm
+                  orderId={orderId}
+                  formatPrice={formatPrice}
+                  total={getTotal() + (selectedCarrier?.price ?? 0)}
+                />
+              </Elements>
+            )}
+
+            {/* Security badge */}
+            <div className="mt-6 flex items-start gap-3 p-4 bg-black/5">
+              <ShieldCheck className="h-4 w-4 text-kpsull-green mt-0.5 flex-shrink-0" />
+              <div className="text-xs">
+                <p className="font-bold tracking-wide">Paiement sécurisé</p>
+                <p className="text-black/50 mt-0.5">
+                  Vos informations sont chiffrées et sécurisées par Stripe. Les fonds seront
+                  libérés au vendeur 48h après livraison confirmée.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Recap livraison */}
+          <div className="border border-black/20 p-4 space-y-3 text-xs">
+            {selectedCarrier && (
+              <div>
+                <p className="font-bold uppercase tracking-wide text-[10px] text-black/40 mb-1">
+                  Transporteur
+                </p>
+                <p className="font-medium">{selectedCarrier.carrierName}</p>
+                <p className="text-black/50">{selectedCarrier.estimatedDays}</p>
+                <p className="text-black/50">{formatPrice(selectedCarrier.price)} de frais de port</p>
+                {selectedCarrier.relayPoint && (
+                  <p className="text-black/50 mt-0.5">
+                    Point relais : {selectedCarrier.relayPoint.name},{' '}
+                    {selectedCarrier.relayPoint.address},{' '}
+                    {selectedCarrier.relayPoint.postalCode} {selectedCarrier.relayPoint.city}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {shippingAddress && (
+              <div>
+                <p className="font-bold uppercase tracking-wide text-[10px] text-black/40 mb-1">
+                  Adresse de livraison
+                </p>
+                <p className="text-black/70">
+                  {shippingAddress.firstName} {shippingAddress.lastName}
+                  <br />
+                  {shippingAddress.street}
+                  {shippingAddress.streetComplement && (
                     <>
-                      <p className="font-medium mb-2">Vous devez être connecté pour finaliser votre commande.</p>
-                      <Button size="sm" asChild>
-                        <Link href={`/login?callbackUrl=/checkout/shipping`}>
-                          Se connecter
-                        </Link>
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      {sessionError}
-                      <div className="mt-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href="/checkout/carrier">Retour</Link>
-                        </Button>
-                      </div>
+                      <br />
+                      {shippingAddress.streetComplement}
                     </>
                   )}
-                </div>
-              )}
-
-              {isSessionLoading && (
-                <div className="animate-pulse space-y-3">
-                  <div className="h-10 bg-muted rounded" />
-                  <div className="h-10 bg-muted rounded" />
-                  <div className="h-10 w-1/2 bg-muted rounded" />
-                </div>
-              )}
-
-              {clientSecret && orderId && !isSessionLoading && (
-                <Elements
-                  stripe={stripePromise}
-                  options={{ clientSecret, locale: 'fr' }}
-                >
-                  <CheckoutForm
-                    orderId={orderId}
-                    formatPrice={formatPrice}
-                    total={getTotal() + (selectedCarrier?.price ?? 0)}
-                  />
-                </Elements>
-              )}
-
-              <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium">Paiement securise</p>
-                  <p className="text-muted-foreground">
-                    Vos informations sont chiffrees et securisees par Stripe.
-                    Les fonds seront liberes au vendeur 48h apres livraison confirmee.
-                  </p>
-                </div>
+                  <br />
+                  {shippingAddress.postalCode} {shippingAddress.city}
+                  <br />
+                  {shippingAddress.country}
+                </p>
               </div>
-
-              <div className="p-4 border rounded-lg space-y-3">
-                {selectedCarrier && (
-                  <div>
-                    <h4 className="font-medium mb-1">Transporteur</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedCarrier.carrierName} — {selectedCarrier.estimatedDays}
-                      {' '}({formatPrice(selectedCarrier.price)} de frais de port)
-                    </p>
-                    {selectedCarrier.relayPoint && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Point relais : {selectedCarrier.relayPoint.name},{' '}
-                        {selectedCarrier.relayPoint.address},{' '}
-                        {selectedCarrier.relayPoint.postalCode} {selectedCarrier.relayPoint.city}
-                      </p>
-                    )}
-                  </div>
-                )}
-                <div>
-                  <h4 className="font-medium mb-1">Adresse de livraison</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {shippingAddress.firstName} {shippingAddress.lastName}
-                    <br />
-                    {shippingAddress.street}
-                    {shippingAddress.streetComplement && (
-                      <>
-                        <br />
-                        {shippingAddress.streetComplement}
-                      </>
-                    )}
-                    <br />
-                    {shippingAddress.postalCode} {shippingAddress.city}
-                    <br />
-                    {shippingAddress.country}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
 
         <div className="lg:col-span-1">
@@ -305,24 +306,19 @@ function CheckoutForm({ orderId, formatPrice, total }: CheckoutFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <PaymentElement />
 
-      {errorMessage && (
-        <p className="text-sm text-destructive">{errorMessage}</p>
-      )}
+      {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
 
-      <CardFooter className="px-0 flex-col gap-4">
-        <Button
-          type="submit"
-          className="w-full"
-          size="lg"
-          disabled={!stripe || isLoading}
-        >
-          {isLoading ? 'Traitement...' : <>Payer {formatPrice(total)}</>}
-        </Button>
+      <button
+        type="submit"
+        className="w-full bg-black text-white text-xs font-bold tracking-widest uppercase py-4 hover:bg-black/90 transition-colors disabled:opacity-50 mt-2"
+        disabled={!stripe || isLoading}
+      >
+        {isLoading ? 'Traitement...' : <>Payer {formatPrice(total)}</>}
+      </button>
 
-        <p className="text-xs text-center text-muted-foreground">
-          En cliquant sur Payer, vous acceptez nos conditions generales de vente.
-        </p>
-      </CardFooter>
+      <p className="text-xs text-center text-black/40">
+        En cliquant sur Payer, vous acceptez nos conditions générales de vente.
+      </p>
     </form>
   );
 }

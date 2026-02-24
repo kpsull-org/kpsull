@@ -44,7 +44,7 @@ const CARRIER_ICONS = {
   'relais-colis': Package,
   'chronopost-pickup': MapPin,
   'chronopost-shop2shop': Package,
-  'chronopost': Truck,
+  chronopost: Truck,
 } as const;
 
 interface CarrierSelectorProps {
@@ -56,25 +56,25 @@ interface CarrierSelectorProps {
  * CarrierSelector
  *
  * Composant de sélection du transporteur pour le checkout.
- * Propose 3 transporteurs : Mondial Relay, Relais Colis, Chronopost.
+ * Propose 5 transporteurs : Mondial Relay, Relais Colis, Chronopost.
  */
 export function CarrierSelector({ selectedCarrier, onChange }: CarrierSelectorProps) {
   return (
-    <div className="space-y-3" role="radiogroup" aria-label="Choisir un transporteur">
+    <div className="space-y-2 font-sans" role="radiogroup" aria-label="Choisir un transporteur">
       {AVAILABLE_CARRIERS.map((carrier) => {
         const Icon = CARRIER_ICONS[carrier.carrier];
         const isSelected = selectedCarrier?.carrier === carrier.carrier;
-
         const inputId = `carrier-${carrier.carrier}`;
+
         return (
           <label
             key={carrier.carrier}
             htmlFor={inputId}
             className={cn(
-              'w-full flex items-center gap-4 p-4 rounded-lg border-2 text-left transition-all cursor-pointer',
+              'w-full flex items-center gap-4 p-4 cursor-pointer transition-colors border',
               isSelected
-                ? 'border-primary bg-primary/5 shadow-sm'
-                : 'border-border hover:border-primary/40 hover:bg-muted/30'
+                ? 'border-black bg-black text-white'
+                : 'border-black/20 hover:border-black bg-white text-black'
             )}
           >
             <input
@@ -86,29 +86,28 @@ export function CarrierSelector({ selectedCarrier, onChange }: CarrierSelectorPr
               onChange={() => onChange(carrier)}
               className="sr-only"
             />
+
             <div
               className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-full border-2 flex-shrink-0 transition-colors',
-                isSelected
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-muted-foreground/30 text-muted-foreground'
+                'w-8 h-8 flex items-center justify-center border flex-shrink-0',
+                isSelected ? 'border-white' : 'border-black/30'
               )}
             >
-              {isSelected ? (
-                <Check className="h-5 w-5" />
-              ) : (
-                <Icon className="h-5 w-5" />
-              )}
+              {isSelected ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="font-semibold font-sans">{carrier.carrierName}</p>
-              <p className="text-sm text-muted-foreground font-sans">{carrier.estimatedDays}</p>
+              <p className="text-sm font-bold tracking-wide">{carrier.carrierName}</p>
+              <p className={cn('text-xs mt-0.5', isSelected ? 'text-white/70' : 'text-black/50')}>
+                {carrier.estimatedDays}
+              </p>
             </div>
 
             <div className="text-right flex-shrink-0">
-              <p className="font-bold font-sans">{formatPrice(carrier.price)}</p>
-              <p className="text-xs text-muted-foreground font-sans">frais de port</p>
+              <p className="text-sm font-bold">{formatPrice(carrier.price)}</p>
+              <p className={cn('text-xs', isSelected ? 'text-white/60' : 'text-black/40')}>
+                frais de port
+              </p>
             </div>
           </label>
         );
