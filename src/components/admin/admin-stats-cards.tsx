@@ -123,7 +123,7 @@ export function AdminStatsCards({
         value={formatNumber(totalCreators)}
         icon={Users}
         percentageChange={creatorsChange}
-        comparisonLabel="vs periode precedente"
+        comparisonLabel="vs mois precedent"
       />
 
       <div className="flex flex-col gap-2">
@@ -132,7 +132,7 @@ export function AdminStatsCards({
           value={formatCurrency(totalPlatformRevenue, currency)}
           icon={DollarSign}
           percentageChange={revenueChange}
-          comparisonLabel="vs periode precedente"
+          comparisonLabel="vs mois precedent"
         />
         {(subscriptionRevenue !== undefined || commissionRevenue !== undefined || subscriptionMRR !== undefined) && (
           <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground space-y-0.5">
@@ -154,7 +154,7 @@ export function AdminStatsCards({
         value={formatNumber(totalOrders)}
         icon={ShoppingCart}
         percentageChange={ordersChange}
-        comparisonLabel="vs periode precedente"
+        comparisonLabel="vs mois precedent"
       />
 
       <StatCard
@@ -162,7 +162,7 @@ export function AdminStatsCards({
         value={formatNumber(newCreators)}
         icon={UserPlus}
         percentageChange={newCreatorsChange}
-        comparisonLabel="vs periode precedente"
+        comparisonLabel="vs mois precedent"
       />
     </div>
   );
