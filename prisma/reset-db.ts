@@ -111,12 +111,12 @@ async function resetDb(): Promise<void> {
   console.log('');
 }
 
-resetDb()
-  .catch((err) => {
-    console.error('❌ Erreur:', err);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-    await pool.end();
-  });
+try {
+  await resetDb();
+} catch (err) {
+  console.error('❌ Erreur:', err);
+  process.exit(1);
+} finally {
+  await prisma.$disconnect();
+  await pool.end();
+}

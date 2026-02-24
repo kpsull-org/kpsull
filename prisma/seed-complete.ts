@@ -66,9 +66,9 @@ function slugify(str: string): string {
   return str
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replaceAll(/[\u0300-\u036f]/g, '')
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-|-$/g, '');
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -577,8 +577,8 @@ function generateClients(): Array<{
     const prenom = isFemale ? PRENOMS_F[i % PRENOMS_F.length]! : PRENOMS_H[i % PRENOMS_H.length]!;
     const nom = NOMS_FR[(i * 7 + 3) % NOMS_FR.length]!;
     const domain = EMAIL_DOMAINS[i % EMAIL_DOMAINS.length]!;
-    const prenomClean = slugify(prenom).replace(/-/g, '');
-    const nomClean = slugify(nom).replace(/-/g, '');
+    const prenomClean = slugify(prenom).replaceAll('-', '');
+    const nomClean = slugify(nom).replaceAll('-', '');
     let email = `${prenomClean}.${nomClean}@${domain}`;
     if (used.has(email)) email = `${prenomClean}.${nomClean}${i}@${domain}`;
     used.add(email);
@@ -961,6 +961,28 @@ function pickOrderStatus(): { status: OrderStatus; daysAgoRange: [number, number
   return ORDER_STATUS_WEIGHTS[0]!;
 }
 
+type OrderItemDraft = { productId: string; productName: string; variantInfo: string; price: number; quantity: number };
+
+function buildOrderItemDraft(productId: string, creatorUserId: string): OrderItemDraft {
+  const parts = productId.split('_');
+  const colIdx = Number.parseInt(parts.at(-2)!);
+  const prodIdx = Number.parseInt(parts.at(-1)!);
+  const creatorDef = CREATORS_DATA.find((c) => `user_${c.id}` === creatorUserId);
+  const niche = creatorDef ? NICHES[creatorDef.niche] : null;
+  const tmpl = niche?.productTypes[prodIdx % niche.productTypes.length];
+  const colDef = creatorDef?.collections[colIdx % (creatorDef?.collections.length ?? 1)];
+  const price = tmpl ? randInt(tmpl.priceRange[0], tmpl.priceRange[1]) : randInt(4500, 15000);
+  const palette = niche?.colorPalette ?? PALETTES['urban']!;
+  const col = palette[randInt(0, palette.length - 1)]!;
+  return {
+    productId,
+    productName: `${tmpl?.baseName ?? 'Produit'} — ${colDef?.name ?? 'Collection'}`,
+    variantInfo: col.name,
+    price,
+    quantity: randInt(1, 2),
+  };
+}
+
 async function seedOrders(
   creators: Array<{ id: string; email: string; name: string; productIds: string[] }>,
   clients: Array<{ id: string; name: string; email: string; city: string; postalCode: string; address: string }>,
@@ -982,32 +1004,8 @@ async function seedOrders(
       const numItems = randInt(1, 3);
       const productSubset = pickN(creator.productIds, Math.min(numItems, creator.productIds.length));
 
-      let totalAmount = 0;
-      const items: Array<{ productId: string; productName: string; variantInfo: string; price: number; quantity: number }> = [];
-
-      for (const productId of productSubset) {
-        const parts = productId.split('_');
-        const colIdx = parseInt(parts[parts.length - 2]!);
-        const prodIdx = parseInt(parts[parts.length - 1]!);
-        const creatorDef = CREATORS_DATA.find((c) => `user_${c.id}` === creator.id);
-        const niche = creatorDef ? NICHES[creatorDef.niche] : null;
-        const tmpl = niche?.productTypes[prodIdx % niche.productTypes.length];
-        const colDef = creatorDef?.collections[colIdx % (creatorDef?.collections.length ?? 1)];
-
-        const price = tmpl ? randInt(tmpl.priceRange[0], tmpl.priceRange[1]) : randInt(4500, 15000);
-        const qty = randInt(1, 2);
-        const palette = niche?.colorPalette ?? PALETTES['urban']!;
-        const col = palette[randInt(0, palette.length - 1)]!;
-
-        items.push({
-          productId,
-          productName: `${tmpl?.baseName ?? 'Produit'} — ${colDef?.name ?? 'Collection'}`,
-          variantInfo: col.name,
-          price,
-          quantity: qty,
-        });
-        totalAmount += price * qty;
-      }
+      const items: OrderItemDraft[] = productSubset.map((pid) => buildOrderItemDraft(pid, creator.id));
+      const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
       const order = await prisma.order.create({
         data: {
@@ -1023,7 +1021,7 @@ async function seedOrders(
           shippingCity: client.city,
           shippingPostalCode: client.postalCode,
           shippingCountry: 'France',
-          stripePaymentIntentId: `pi_demo_${orderNumber.replace(/-/g, '_').toLowerCase()}`,
+          stripePaymentIntentId: `pi_demo_${orderNumber.replaceAll('-', '_').toLowerCase()}`,
           shippedAt: (status === OrderStatus.SHIPPED || status === OrderStatus.DELIVERED || status === OrderStatus.COMPLETED) ? new Date(orderDate.getTime() + 2 * 86400000) : null,
           deliveredAt: (status === OrderStatus.DELIVERED || status === OrderStatus.COMPLETED) ? new Date(orderDate.getTime() + 6 * 86400000) : null,
           createdAt: orderDate,
@@ -1214,12 +1212,12 @@ async function main(): Promise<void> {
   console.log('');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Erreur seed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-    await pool.end();
-  });
+try {
+  await main();
+} catch (e) {
+  console.error('❌ Erreur seed:', e);
+  process.exit(1);
+} finally {
+  await prisma.$disconnect();
+  await pool.end();
+}

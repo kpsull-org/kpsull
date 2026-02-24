@@ -405,7 +405,7 @@ function generateClients(): Array<{
     do {
       firstName = FIRST_NAMES[i % FIRST_NAMES.length]!;
       lastName = LAST_NAMES[Math.floor(i / FIRST_NAMES.length) % LAST_NAMES.length]!;
-      emailKey = `${firstName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}.${lastName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}${i > 0 ? i : ''}`;
+      emailKey = `${firstName.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '')}.${lastName.toLowerCase().normalize('NFD').replaceAll(/[\u0300-\u036f]/g, '')}${i > 0 ? i : ''}`;
     } while (used.has(emailKey));
     used.add(emailKey);
 
@@ -466,6 +466,40 @@ async function seedStyles(checkpoint: MiniCheckpoint): Promise<void> {
 
 // ─── Seed créateur ────────────────────────────────────────────────────────────
 
+function resolveCommissionRate(plan: Plan): number {
+  if (plan === Plan.ESSENTIEL) return 0.05;
+  if (plan === Plan.STUDIO) return 0.04;
+  return 0.03;
+}
+
+function resolveSubscriptionAmount(plan: Plan): number {
+  if (plan === Plan.ESSENTIEL) return 2900;
+  if (plan === Plan.STUDIO) return 7900;
+  return 9500;
+}
+
+function buildVariantId(creatorId: string, colIdx: number, prodIdx: number, colorIdx: number): string {
+  return `var_${creatorId}_${colIdx}_${prodIdx}_${colorIdx}`;
+}
+
+function calcSubscriptionPeriod(billing: { interval: 'month' | 'year'; startDate: Date }): {
+  start: Date;
+  end: Date;
+} {
+  if (billing.interval === 'year') {
+    const start = new Date(billing.startDate);
+    const end = new Date(billing.startDate);
+    end.setFullYear(end.getFullYear() + 1);
+    return { start, end };
+  }
+  const monthsElapsed = Math.floor((Date.now() - billing.startDate.getTime()) / (30 * 24 * 60 * 60 * 1000));
+  const start = new Date(billing.startDate);
+  start.setMonth(start.getMonth() + monthsElapsed);
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + 1);
+  return { start, end };
+}
+
 async function seedCreator(
   def: MiniCreatorDef,
   hashedPassword: string,
@@ -500,20 +534,7 @@ async function seedCreator(
   // 2. Subscription
   const billing = CREATOR_BILLING[def.id] ?? { interval: 'month' as const, startDate: daysAgo(90) };
   // Ne PAS muter billing.startDate — utiliser des copies pour éviter de corrompre CREATOR_BILLING
-  let subscriptionPeriodStart: Date;
-  let subscriptionPeriodEnd: Date;
-  if (billing.interval === 'year') {
-    subscriptionPeriodStart = new Date(billing.startDate);
-    subscriptionPeriodEnd = new Date(billing.startDate);
-    subscriptionPeriodEnd.setFullYear(subscriptionPeriodEnd.getFullYear() + 1);
-  } else {
-    // Période courante = mois en cours depuis la date de départ
-    const monthsElapsed = Math.floor((Date.now() - billing.startDate.getTime()) / (30 * 24 * 60 * 60 * 1000));
-    subscriptionPeriodStart = new Date(billing.startDate);
-    subscriptionPeriodStart.setMonth(subscriptionPeriodStart.getMonth() + monthsElapsed);
-    subscriptionPeriodEnd = new Date(subscriptionPeriodStart);
-    subscriptionPeriodEnd.setMonth(subscriptionPeriodEnd.getMonth() + 1);
-  }
+  const { start: subscriptionPeriodStart, end: subscriptionPeriodEnd } = calcSubscriptionPeriod(billing);
   await prisma.subscription.upsert({
     where: { userId },
     update: {},
@@ -526,7 +547,7 @@ async function seedCreator(
       billingInterval: billing.interval,
       currentPeriodStart: subscriptionPeriodStart,
       currentPeriodEnd: subscriptionPeriodEnd,
-      commissionRate: def.plan === Plan.ESSENTIEL ? 0.05 : def.plan === Plan.STUDIO ? 0.04 : 0.03,
+      commissionRate: resolveCommissionRate(def.plan),
       productsUsed: def.collections.length * def.products.length,
       stripeSubscriptionId: `sub_demo_${def.id}`,
       stripeCustomerId: `cus_demo_${def.id}`,
@@ -969,7 +990,7 @@ async function seedMissingModels(): Promise<void> {
   const COMMISSION_RATE_BY_CREATOR_USER_ID: Map<string, number> = new Map(
     MINI_CREATORS.map((c) => [
       `user_${c.id}`,
-      c.plan === Plan.ESSENTIEL ? 0.05 : c.plan === Plan.STUDIO ? 0.04 : 0.03,
+      resolveCommissionRate(c.plan),
     ]),
   );
   const paidOrders = await prisma.order.findMany({
@@ -1090,7 +1111,7 @@ async function seedMissingModels(): Promise<void> {
     });
   });
   MINI_CREATORS.forEach((creator, i) => {
-    const subAmount = creator.plan === Plan.ESSENTIEL ? 2900 : creator.plan === Plan.STUDIO ? 7900 : 9500;
+    const subAmount = resolveSubscriptionAmount(creator.plan);
     const taxAmount = Math.round(subAmount * 0.2);
     invoiceData.push({
       id: `inv_mini_${invoiceOrdersAll.length + i + 1}`,
@@ -1211,9 +1232,7 @@ async function cleanupMiniSeedData(): Promise<void> {
 
   const variantIds = MINI_CREATORS.flatMap((c) =>
     c.collections.flatMap((_, colIdx) =>
-      c.products.flatMap((_, prodIdx) =>
-        c.colors.map((_, colorIdx) => `var_${c.id}_${colIdx}_${prodIdx}_${colorIdx}`),
-      ),
+      c.products.flatMap((_, prodIdx) => c.colors.map((_, colorIdx) => buildVariantId(c.id, colIdx, prodIdx, colorIdx))),
     ),
   );
 
@@ -1368,12 +1387,12 @@ async function main(): Promise<void> {
   console.log('');
 }
 
-main()
-  .catch((err) => {
-    console.error('❌ Erreur fatale:', err);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-    await pool.end();
-  });
+try {
+  await main();
+} catch (err) {
+  console.error('❌ Erreur fatale:', err);
+  process.exit(1);
+} finally {
+  await prisma.$disconnect();
+  await pool.end();
+}
