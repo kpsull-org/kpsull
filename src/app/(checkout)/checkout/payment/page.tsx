@@ -7,6 +7,7 @@ import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCartStore } from '@/lib/stores/cart.store';
 import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
+import { getCartAction } from '@/app/cart/actions';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
 import { CartSummary } from '@/components/checkout/cart-summary';
 import {
@@ -38,6 +39,8 @@ export default function PaymentPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
   const [selectedCarrier, setSelectedCarrier] = useState<CarrierSelection | null>(null);
+  // cartChecked: true une fois qu'on a confirmé le contenu du panier (localStorage + éventuel DB)
+  const [cartChecked, setCartChecked] = useState(false);
 
   const items = useCartStore((state) => state.items);
   const getTotal = useCartStore((state) => state.getTotal);
@@ -74,6 +77,10 @@ export default function PaymentPage() {
     setIsSessionLoading(true);
     setSessionError(null);
 
+    // Les items sont envoyés en fallback si le cart DB est vide
+    // (peut arriver si saveCartAction a échoué pour une contrainte FK)
+    const currentItems = useCartStore.getState().items;
+
     fetch('/api/checkout/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -81,6 +88,7 @@ export default function PaymentPage() {
         shippingAddress,
         carrier: selectedCarrier,
         shippingMode,
+        items: currentItems,
       }),
     })
       .then(async (res) => {
@@ -105,7 +113,27 @@ export default function PaymentPage() {
       });
   }, [shippingAddress, selectedCarrier]);
 
-  if (!isHydrated) {
+  // Fallback DB : si le localStorage est vide après hydration (user authentifié dont le panier
+  // est en DB), on tente un getCartAction() avant de rediriger vers /cart.
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (items.length > 0) {
+      setCartChecked(true);
+      return;
+    }
+    // items vides : peut-être user authentifié avec panier uniquement en DB
+    getCartAction()
+      .then((dbItems) => {
+        if (dbItems.length > 0) {
+          useCartStore.getState().replaceItems(dbItems);
+        }
+      })
+      .catch(() => { /* localStorage reste vide → redirect dans le rendu */ })
+      .finally(() => setCartChecked(true));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated]);
+
+  if (!isHydrated || !cartChecked) {
     return (
       <div className="container py-8">
         <div className="space-y-4">
@@ -116,7 +144,8 @@ export default function PaymentPage() {
     );
   }
 
-  if (items.length === 0 || !shippingAddress) {
+  // Rediriger uniquement si DB + localStorage confirment tous deux un panier vide.
+  if (items.length === 0) {
     router.push('/cart');
     return null;
   }

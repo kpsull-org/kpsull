@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart } from 'lucide-react';
@@ -22,24 +22,33 @@ export function CartDropdown({ isAuthenticated }: CartDropdownProps) {
   const items = useCartStore((s) => s.items);
   const getTotal = useCartStore((s) => s.getTotal);
   const getItemCount = useCartStore((s) => s.getItemCount);
-  const replaceItems = useCartStore((s) => s.replaceItems);
   const [hydrated, setHydrated] = useState(false);
+  const hasRunRef = useRef(false);
 
-  // Hydrate cart on mount
+  // Hydrate cart on mount — runs only once via ref guard to avoid re-triggering
+  // when Zustand store functions change reference after a replaceItems call.
   useEffect(() => {
-    if (hydrated) return;
+    if (hasRunRef.current) return;
+    hasRunRef.current = true;
     setHydrated(true);
 
     if (isAuthenticated) {
-      getCartAction().then((dbItems) => {
-        if (dbItems.length > 0) {
-          replaceItems(dbItems);
-        }
-      });
+      getCartAction()
+        .then((dbItems) => {
+          if (dbItems.length > 0) {
+            useCartStore.getState().replaceItems(dbItems);
+          }
+        })
+        .catch((err: unknown) => {
+          // Erreur réseau ou token expiré : fallback localStorage
+          console.error('[CartDropdown] Impossible de charger le panier depuis la DB:', err);
+          useCartStore.persist.rehydrate();
+        });
     } else {
       useCartStore.persist.rehydrate();
     }
-  }, [isAuthenticated, hydrated, replaceItems]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const itemCount = hydrated ? getItemCount() : 0;
   const total = hydrated ? getTotal() : 0;

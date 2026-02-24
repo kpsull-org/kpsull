@@ -32,13 +32,10 @@ export default function CarrierPage() {
   const isHydrated = useCartHydration();
   const [selectedCarrier, setSelectedCarrier] = useState<CarrierSelection | null>(null);
   const [selectedRelayPoint, setSelectedRelayPoint] = useState<RelayPoint | null>(null);
+  const [shippingPostalCode, setShippingPostalCode] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
-  const isRelayCarrier =
-    selectedCarrier?.carrier === 'mondial-relay' ||
-    selectedCarrier?.carrier === 'relais-colis' ||
-    selectedCarrier?.carrier === 'chronopost-pickup' ||
-    selectedCarrier?.carrier === 'chronopost-shop2shop';
+  const isRelayCarrier = selectedCarrier?.carrier === 'mondial-relay';
 
   const items = useCartStore((state) => state.items);
   const getTotal = useCartStore((state) => state.getTotal);
@@ -50,6 +47,7 @@ export default function CarrierPage() {
       router.push('/checkout/shipping');
       return;
     }
+    setShippingPostalCode(addressResult.data.postalCode);
 
     // Restaurer le transporteur précédemment sélectionné si présent
     const carrierResult = parseSessionStorage('selectedCarrier', CarrierSelectionSchema);
@@ -153,7 +151,7 @@ export default function CarrierPage() {
             {isRelayCarrier && selectedCarrier && (
               <div className="mt-6">
                 <RelayPointSelector
-                  carrierName={selectedCarrier.carrierName}
+                  initialPostalCode={shippingPostalCode}
                   selectedRelayPoint={selectedRelayPoint}
                   onSelect={(point) => {
                     setSelectedRelayPoint(point);

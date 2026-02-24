@@ -7,12 +7,29 @@ import type { CartItem as CartStoreItem } from '@/lib/stores/cart.store';
 import { ShippingAddressSchema, CarrierSelectionSchema } from '@/lib/schemas/checkout.schema';
 
 /**
+ * Inline cart item schema for create-session body fallback.
+ * Used when the DB cart is empty (saveCartAction failed due to FK issue).
+ */
+const InlineCartItemSchema = z.object({
+  productId: z.string().min(1),
+  variantId: z.string().optional(),
+  name: z.string().min(1),
+  price: z.number().int().nonnegative(),
+  quantity: z.number().int().positive(),
+  image: z.string().optional(),
+  creatorSlug: z.string().default('unknown'),
+  variantInfo: z.object({ type: z.string(), value: z.string() }).optional(),
+});
+
+/**
  * Schema for POST /api/checkout/create-session body
  */
 const CreateSessionBodySchema = z.object({
   shippingAddress: ShippingAddressSchema,
   carrier: CarrierSelectionSchema,
   shippingMode: z.enum(['RELAY_POINT', 'HOME_DELIVERY']),
+  /** Items du store client — utilisés en fallback si le cart DB est vide */
+  items: z.array(InlineCartItemSchema).optional(),
 });
 
 /**
@@ -54,14 +71,17 @@ export async function POST(request: Request): Promise<NextResponse> {
   const { shippingAddress, carrier, shippingMode } = parsed.data;
   const shippingCostCents = carrier.price; // price est déjà en centimes
 
-  // 4. Load cart from DB
+  // 4. Load cart — DB first, body items as fallback (saveCartAction FK failure recovery)
   const cart = await prisma.cart.findUnique({ where: { userId } });
-  if (!cart) {
-    return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
-  }
+  const dbItems = cart?.items as unknown as CartStoreItem[] | undefined;
 
-  const items = cart.items as unknown as CartStoreItem[];
-  if (!Array.isArray(items) || items.length === 0) {
+  let items: CartStoreItem[];
+  if (Array.isArray(dbItems) && dbItems.length > 0) {
+    items = dbItems;
+  } else if (parsed.data.items && parsed.data.items.length > 0) {
+    // Fallback: utiliser les items envoyés par le client si le cart DB est vide
+    items = parsed.data.items as CartStoreItem[];
+  } else {
     return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
   }
 

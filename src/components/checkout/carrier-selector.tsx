@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, MapPin, Truck, Package } from 'lucide-react';
+import { Check, MapPin, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/utils/format';
 import type { CarrierSelection } from '@/lib/schemas/checkout.schema';
@@ -14,24 +14,6 @@ export const AVAILABLE_CARRIERS: CarrierSelection[] = [
     estimatedDays: '3-5 jours ouvrés (point relais)',
   },
   {
-    carrier: 'relais-colis',
-    carrierName: 'Relais Colis',
-    price: 450,
-    estimatedDays: '3-4 jours ouvrés (point relais)',
-  },
-  {
-    carrier: 'chronopost-pickup',
-    carrierName: 'Chronopost Pickup',
-    price: 550,
-    estimatedDays: 'J+2 ouvré (point relais Pickup)',
-  },
-  {
-    carrier: 'chronopost-shop2shop',
-    carrierName: 'Chronopost Shop2Shop',
-    price: 650,
-    estimatedDays: 'J+2-3 ouvrés (boutique partenaire)',
-  },
-  {
     carrier: 'chronopost',
     carrierName: 'Chronopost Express',
     price: 890,
@@ -41,9 +23,6 @@ export const AVAILABLE_CARRIERS: CarrierSelection[] = [
 
 const CARRIER_ICONS = {
   'mondial-relay': MapPin,
-  'relais-colis': Package,
-  'chronopost-pickup': MapPin,
-  'chronopost-shop2shop': Package,
   chronopost: Truck,
 } as const;
 
@@ -56,7 +35,7 @@ interface CarrierSelectorProps {
  * CarrierSelector
  *
  * Composant de sélection du transporteur pour le checkout.
- * Propose 5 transporteurs : Mondial Relay, Relais Colis, Chronopost.
+ * Propose 2 transporteurs : Mondial Relay (point relais) et Chronopost Express (domicile).
  */
 export function CarrierSelector({ selectedCarrier, onChange }: CarrierSelectorProps) {
   return (

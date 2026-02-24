@@ -16,14 +16,22 @@ export default function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
 
   useEffect(() => {
-    // Attendre que l'hydratation soit terminee
+    // Subscribe to finish-hydration event before triggering rehydration,
+    // so the callback is guaranteed to fire even if rehydrate() resolves
+    // synchronously on the same tick.
     const unsubFinishHydration = useCartStore.persist.onFinishHydration(() => {
       setIsHydrated(true);
     });
 
-    // Si deja hydrate, mettre a jour immediatement
+    // If the store was already hydrated (e.g. CartDropdown ran first), mark
+    // immediately so the page doesn't stay stuck on the skeleton.
     if (useCartStore.persist.hasHydrated()) {
       setIsHydrated(true);
+    } else {
+      // Store is configured with skipHydration:true, so we must trigger it
+      // explicitly from here for guest users. Authenticated users are handled
+      // by CartDropdown which calls getCartAction and replaceItems directly.
+      useCartStore.persist.rehydrate();
     }
 
     return () => {

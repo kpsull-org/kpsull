@@ -28,11 +28,16 @@ export function useCart(isAuthenticated: boolean) {
     isHydrated.current = true;
 
     if (isAuthenticated) {
-      getCartAction().then((dbItems) => {
-        if (dbItems.length > 0) {
-          replaceItems(dbItems);
-        }
-      });
+      getCartAction()
+        .then((dbItems) => {
+          if (dbItems.length > 0) {
+            replaceItems(dbItems);
+          }
+        })
+        .catch((err: unknown) => {
+          console.error('[useCart] Impossible de charger le panier depuis la DB:', err);
+          useCartStore.persist.rehydrate();
+        });
     } else {
       useCartStore.persist.rehydrate();
     }
