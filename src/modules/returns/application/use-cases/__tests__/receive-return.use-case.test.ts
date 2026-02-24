@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { ReceiveReturnUseCase } from '../receive-return.use-case';
-import type { ReturnRepository, ReturnRequest } from '../../ports/return.repository.interface';
+import type { ReturnRepository } from '../../ports/return.repository.interface';
+import { createShippedBackReturn } from './return.fixtures';
 
 type MockReturnRepository = {
   [K in keyof ReturnRepository]: Mock;
@@ -21,24 +22,6 @@ describe('ReceiveReturnUseCase', () => {
       delete: vi.fn(),
     };
     useCase = new ReceiveReturnUseCase(mockRepository as unknown as ReturnRepository);
-  });
-
-  const createShippedBackReturn = (): ReturnRequest => ({
-    id: 'return-1',
-    orderId: 'order-1',
-    orderNumber: 'KPS-2024-001',
-    creatorId: 'creator-123',
-    customerId: 'customer-1',
-    customerName: 'Jean Dupont',
-    customerEmail: 'jean@example.com',
-    reason: 'DEFECTIVE',
-    status: 'SHIPPED_BACK',
-    trackingNumber: 'TRACK-123',
-    carrier: 'Colissimo',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    approvedAt: new Date(),
-    shippedAt: new Date(),
   });
 
   it('should mark a shipped back return as received', async () => {
