@@ -2,17 +2,15 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { X } from 'lucide-react';
 import { QuantitySelector } from './quantity-selector';
 import type { CartItem as CartItemType } from '@/lib/stores/cart.store';
 
 interface CartItemProps {
-  item: CartItemType;
-  onUpdateQuantity: (quantity: number) => void;
-  onRemove: () => void;
-  formatPrice: (cents: number) => string;
+  readonly item: CartItemType;
+  readonly onUpdateQuantity: (quantity: number) => void;
+  readonly onRemove: () => void;
+  readonly formatPrice: (cents: number) => string;
 }
 
 export function CartItem({
@@ -25,60 +23,64 @@ export function CartItem({
   const productUrl = `/${item.creatorSlug}/products/${item.productId}`;
 
   return (
-    <Card className="p-4">
+    <div className="border-b border-black/10 py-6 font-sans">
       <div className="flex gap-4">
+        {/* Image */}
         <Link href={productUrl} className="flex-shrink-0">
-          <div className="relative w-24 h-24 rounded-md overflow-hidden bg-muted">
+          <div className="relative w-20 h-20 bg-[#F2F2F2] overflow-hidden">
             {item.image ? (
               <Image
                 src={item.image}
                 alt={item.name}
                 fill
-                className="object-cover hover:scale-105 transition-transform"
+                className="object-cover hover:scale-105 transition-transform duration-300"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                No image
+              <div className="w-full h-full flex items-center justify-center text-black/30 text-xs">
+                —
               </div>
             )}
           </div>
         </Link>
 
+        {/* Info */}
         <div className="flex-1 min-w-0">
-          <Link href={productUrl} className="hover:underline">
-            <h3 className="font-semibold truncate">{item.name}</h3>
+          <Link href={productUrl}>
+            <h3 className="font-bold text-sm tracking-wide uppercase truncate hover:underline">
+              {item.name}
+            </h3>
           </Link>
 
           {item.variantInfo && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-black/50 mt-0.5">
               {item.variantInfo.type}: {item.variantInfo.value}
             </p>
           )}
 
-          <p className="text-sm text-muted-foreground mt-1">
-            {formatPrice(item.price)} / unite
+          <p className="text-xs text-black/50 mt-1">
+            {formatPrice(item.price)} / unité
           </p>
 
-          <div className="flex items-center gap-4 mt-3 lg:hidden">
+          {/* Mobile: quantity + remove */}
+          <div className="flex items-center gap-3 mt-3 lg:hidden">
             <QuantitySelector
               value={item.quantity}
               onChange={onUpdateQuantity}
               min={1}
               max={99}
             />
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={onRemove}
-              className="text-destructive hover:text-destructive"
+              className="text-black/40 hover:text-black transition-colors"
               aria-label="Supprimer l'article"
             >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        <div className="hidden lg:flex items-center gap-6">
+        {/* Desktop: quantity + total + remove */}
+        <div className="hidden lg:flex items-start gap-6">
           <QuantitySelector
             value={item.quantity}
             onChange={onUpdateQuantity}
@@ -86,26 +88,25 @@ export function CartItem({
             max={99}
           />
 
-          <div className="w-24 text-right">
-            <p className="font-semibold">{formatPrice(lineTotal)}</p>
+          <div className="w-20 text-right">
+            <p className="font-bold text-sm">{formatPrice(lineTotal)}</p>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={onRemove}
-            className="text-destructive hover:text-destructive"
+            className="text-black/40 hover:text-black transition-colors mt-1"
             aria-label="Supprimer l'article"
           >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      <div className="lg:hidden mt-3 pt-3 border-t flex justify-between">
-        <span className="text-sm text-muted-foreground">Sous-total</span>
-        <span className="font-semibold">{formatPrice(lineTotal)}</span>
+      {/* Mobile total */}
+      <div className="lg:hidden mt-3 flex justify-between text-xs">
+        <span className="text-black/50">Sous-total</span>
+        <span className="font-bold">{formatPrice(lineTotal)}</span>
       </div>
-    </Card>
+    </div>
   );
 }

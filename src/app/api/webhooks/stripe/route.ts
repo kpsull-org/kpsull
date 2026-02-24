@@ -239,6 +239,14 @@ async function handlePaymentIntentSucceeded(
         period,
       },
     });
+
+    // Mettre à jour l'Order en PAID (idempotent via check status PENDING)
+    if (order.status === 'PENDING') {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: 'PAID' },
+      });
+    }
   } catch (error) {
     console.error('Error handling payment_intent.succeeded:', error);
     Sentry.captureException(error);

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Archivo, Jacquard_12 } from "next/font/google";
 import "./globals.css";
-import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -52,7 +51,6 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${archivo.variable} ${jacquard12.variable} antialiased`}
       >
-        <ImpersonationBanner />
         {children}
       </body>
     </html>

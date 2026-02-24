@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/sheet";
 
 const navItems = [
+  { label: "CATALOGUE", href: "/catalogue" },
   { label: "CREATEURS", href: "/createurs" },
   { label: "A PROPOS", href: "/a-propos" },
-  { label: "CATALOGUE", href: "/catalogue" },
 ];
 
 interface HeaderProps {

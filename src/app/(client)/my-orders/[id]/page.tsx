@@ -5,13 +5,40 @@ import { prisma } from '@/lib/prisma/client';
 import { GetClientOrderDetailUseCase } from '@/modules/orders/application/use-cases/client/get-client-order-detail.use-case';
 import { PrismaOrderRepository } from '@/modules/orders/infrastructure/repositories/prisma-order.repository';
 import { OrderTracking, type OrderTrackingData, type ShipmentTrackingData } from '@/components/client/order-tracking';
-import { createDispute } from './actions';
-import { requestReturn } from './actions';
+import { createDispute, requestReturn, cancelOrderAction } from './actions';
 import type { DisputeTypeValue } from '@/modules/disputes/domain';
 import type { ReturnReasonValue } from '@/modules/returns/domain';
+import type { ReturnItem } from '@/modules/returns/application/ports/return.repository.interface';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+async function handleReportIssue(
+  orderId: string,
+  type: DisputeTypeValue,
+  description: string
+): Promise<{ success: boolean; error?: string }> {
+  'use server';
+  return createDispute(orderId, type, description);
+}
+
+async function handleRequestReturn(
+  orderId: string,
+  reason: ReturnReasonValue,
+  returnItems: ReturnItem[],
+  additionalNotes?: string
+): Promise<{ success: boolean; error?: string }> {
+  'use server';
+  return requestReturn(orderId, reason, returnItems, additionalNotes);
+}
+
+async function handleCancelOrder(
+  orderId: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  'use server';
+  return cancelOrderAction(orderId, reason);
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -50,6 +77,8 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
     status: order.status,
     items: order.items.map((item) => ({
       id: item.id,
+      productId: item.productId,
+      variantId: item.variantId,
       productName: item.productName,
       image: item.image,
       variantInfo: item.variantInfo,
@@ -68,24 +97,6 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
 
   const trackingData: ShipmentTrackingData | null = null;
 
-  async function handleReportIssue(
-    orderId: string,
-    type: DisputeTypeValue,
-    description: string
-  ): Promise<{ success: boolean; error?: string }> {
-    'use server';
-    return createDispute(orderId, type, description);
-  }
-
-  async function handleRequestReturn(
-    orderId: string,
-    reason: ReturnReasonValue,
-    additionalNotes?: string
-  ): Promise<{ success: boolean; error?: string }> {
-    'use server';
-    return requestReturn(orderId, reason, additionalNotes);
-  }
-
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
       <div className="space-y-6">
@@ -94,6 +105,7 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
           tracking={trackingData}
           onReportIssue={handleReportIssue}
           onRequestReturn={handleRequestReturn}
+          onCancelOrder={handleCancelOrder}
         />
       </div>
     </div>

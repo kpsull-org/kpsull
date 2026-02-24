@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { RejectReturnUseCase } from '../reject-return.use-case';
-import type { ReturnRepository, ReturnRequest } from '../../ports/return.repository.interface';
+import type { ReturnRepository } from '../../ports/return.repository.interface';
+import { createRequestedReturn } from './return.fixtures';
 
 type MockReturnRepository = {
   [K in keyof ReturnRepository]: Mock;
@@ -20,20 +21,6 @@ describe('RejectReturnUseCase', () => {
       delete: vi.fn(),
     };
     useCase = new RejectReturnUseCase(mockRepository as unknown as ReturnRepository);
-  });
-
-  const createRequestedReturn = (): ReturnRequest => ({
-    id: 'return-1',
-    orderId: 'order-1',
-    orderNumber: 'KPS-2024-001',
-    creatorId: 'creator-123',
-    customerId: 'customer-1',
-    customerName: 'Jean Dupont',
-    customerEmail: 'jean@example.com',
-    reason: 'CHANGED_MIND',
-    status: 'REQUESTED',
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   describe('execute', () => {

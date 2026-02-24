@@ -6,45 +6,21 @@ import { ArrowLeft, Truck, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils/format';
+import { ORDER_STATUS_CONFIG } from '@/lib/utils/order-status';
 import { CancelOrderDialog } from './cancel-order-dialog';
 import type { OrderStatusValue } from '@/modules/orders/domain/value-objects/order-status.vo';
 
 interface OrderHeaderProps {
-  order: {
-    id: string;
-    orderNumber: string;
-    status: OrderStatusValue;
-    createdAt: Date;
-    cancellationReason?: string;
+  readonly order: {
+    readonly id: string;
+    readonly orderNumber: string;
+    readonly status: OrderStatusValue;
+    readonly createdAt: Date;
+    readonly cancellationReason?: string;
   };
-  onCancelOrder?: (orderId: string, reason: string) => Promise<{ success: boolean; error?: string }>;
+  readonly onCancelOrder?: (orderId: string, reason: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-const STATUS_CONFIG: Record<
-  OrderStatusValue,
-  { label: string; className: string }
-> = {
-  PENDING: { label: 'En attente', className: 'bg-yellow-100 text-yellow-800' },
-  PAID: { label: 'Payee', className: 'bg-blue-100 text-blue-800' },
-  SHIPPED: { label: 'Expediee', className: 'bg-purple-100 text-purple-800' },
-  DELIVERED: { label: 'Livree', className: 'bg-green-100 text-green-800' },
-  VALIDATION_PENDING: {
-    label: 'Validation en attente',
-    className: 'bg-orange-100 text-orange-800',
-  },
-  COMPLETED: { label: 'Terminee', className: 'bg-green-100 text-green-800' },
-  DISPUTE_OPENED: { label: 'Litige ouvert', className: 'bg-red-100 text-red-800' },
-  RETURN_SHIPPED: {
-    label: 'Retour expedie',
-    className: 'bg-orange-100 text-orange-800',
-  },
-  RETURN_RECEIVED: {
-    label: 'Retour recu',
-    className: 'bg-orange-100 text-orange-800',
-  },
-  REFUNDED: { label: 'Remboursee', className: 'bg-gray-100 text-gray-800' },
-  CANCELED: { label: 'Annulee', className: 'bg-red-100 text-red-800' },
-};
 
 /**
  * OrderHeader Component
@@ -60,7 +36,7 @@ const STATUS_CONFIG: Record<
 export function OrderHeader({ order, onCancelOrder }: OrderHeaderProps) {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
-  const statusConfig = STATUS_CONFIG[order.status] || {
+  const statusConfig = ORDER_STATUS_CONFIG[order.status] || {
     label: order.status,
     className: 'bg-gray-100 text-gray-800',
   };

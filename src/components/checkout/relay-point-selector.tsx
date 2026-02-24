@@ -1,171 +1,298 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, MapPin, Check, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useEffect, useRef, useState } from 'react';
+import { Check, MapPin, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RelayPoint } from '@/lib/schemas/checkout.schema';
+import relayPointsMock from './relay-points.mock.json';
 
-/** Mock relay points indexed by postal code prefix (2 first digits) */
-const MOCK_RELAY_POINTS: Record<string, RelayPoint[]> = {
-  '75': [
-    { id: 'PR-75001', name: 'Tabac Presse Châtelet', address: '12 rue de Rivoli', city: 'Paris', postalCode: '75001', openingHours: 'Lun-Sam 8h-20h' },
-    { id: 'PR-75002', name: 'Épicerie du Marais', address: '34 boulevard de Sébastopol', city: 'Paris', postalCode: '75002', openingHours: 'Lun-Dim 7h-22h' },
-    { id: 'PR-75003', name: 'Librairie République', address: '8 rue du Temple', city: 'Paris', postalCode: '75003', openingHours: 'Lun-Sam 9h-19h' },
-  ],
-  '14': [
-    { id: 'PR-14001', name: 'Tabac du Centre', address: '5 place de la République', city: 'Caen', postalCode: '14000', openingHours: 'Lun-Sam 7h30-19h30' },
-    { id: 'PR-14002', name: 'Superette Vaucelles', address: '22 avenue Henry Cheron', city: 'Caen', postalCode: '14000', openingHours: 'Lun-Sam 8h-20h' },
-    { id: 'PR-14003', name: 'Pressing Malherbe', address: '3 rue Malherbe', city: 'Caen', postalCode: '14000', openingHours: 'Mar-Sam 9h-18h' },
-  ],
-  '69': [
-    { id: 'PR-69001', name: 'Épicerie Bellecour', address: '15 place Bellecour', city: 'Lyon', postalCode: '69002', openingHours: 'Lun-Sam 8h-21h' },
-    { id: 'PR-69002', name: 'Tabac Croix-Rousse', address: '40 boulevard de la Croix-Rousse', city: 'Lyon', postalCode: '69004', openingHours: 'Lun-Dim 7h-20h' },
-    { id: 'PR-69003', name: 'Librairie Guillotière', address: '8 avenue Berthelot', city: 'Lyon', postalCode: '69007', openingHours: 'Lun-Sam 9h-19h' },
-  ],
-  '13': [
-    { id: 'PR-13001', name: 'Tabac Vieux-Port', address: '2 quai du Port', city: 'Marseille', postalCode: '13001', openingHours: 'Lun-Sam 7h-20h' },
-    { id: 'PR-13002', name: 'Epicerie Noailles', address: '18 rue de la République', city: 'Marseille', postalCode: '13001', openingHours: 'Lun-Sam 8h-21h' },
-  ],
+// NOTE (production): Remplacer Brand "BDTEST13" par le Brand ID officiel Mondial Relay
+// Obtenir les credentials partenaire : https://www.mondialrelay.fr/nous-rejoindre/devenir-partenaire/
+// Documentation widget : https://widget.mondialrelay.com/
+
+type MRSelectedData = {
+  ID: string;
+  Nom: string;
+  Adresse1: string;
+  Ville: string;
+  CP: string;
 };
 
-const DEFAULT_RELAY_POINTS: RelayPoint[] = [
-  { id: 'PR-DEF-01', name: 'Bureau de Tabac Central', address: '1 place de la Mairie', city: 'Votre ville', postalCode: '00000', openingHours: 'Lun-Sam 8h-19h' },
-  { id: 'PR-DEF-02', name: 'Supermarché du Centre', address: '5 rue Principale', city: 'Votre ville', postalCode: '00000', openingHours: 'Lun-Dim 8h-20h' },
-  { id: 'PR-DEF-03', name: 'Pressing Pressing', address: '12 avenue de la Gare', city: 'Votre ville', postalCode: '00000', openingHours: 'Mar-Sam 9h-18h' },
-];
+type MROptions = {
+  Target: string;
+  Brand: string;
+  PostCode: string;
+  ColLivMod: string;
+  AllowedCountries: string;
+  EnableGmap: boolean;
+  Responsive: boolean;
+  OnParcelShopSelected: (data: MRSelectedData) => void;
+};
 
-function getMockRelayPoints(postalCode: string): RelayPoint[] {
+type JQueryMR = (selector: string) => { MR_ParcelShopPicker: (options: MROptions) => void };
+
+const MR_WIDGET_CSS =
+  'https://widget.mondialrelay.com/parcelshop-picker/v4_0/CSS/mondialrelay-widget-v4_0.min.css';
+const MR_WIDGET_JS =
+  'https://widget.mondialrelay.com/parcelshop-picker/v4_0/jquery.plugin.mondialrelay.parcelshoppicker.min.js';
+const JQUERY_CDN = 'https://code.jquery.com/jquery-3.7.1.min.js';
+
+/**
+ * Chef-lieu de chaque département français (code 2 chiffres → ville principale).
+ * Utilisé pour le fallback quand aucun point relais mock n'est défini pour ce département.
+ */
+const DEPARTMENT_CHIEF_CITY: Record<string, string> = {
+  '01': 'Bourg-en-Bresse', '02': 'Laon', '03': 'Moulins', '04': 'Digne-les-Bains',
+  '05': 'Gap', '06': 'Nice', '07': 'Privas', '08': 'Charleville-Mézières',
+  '09': 'Foix', '10': 'Troyes', '11': 'Carcassonne', '12': 'Rodez',
+  '13': 'Marseille', '14': 'Caen', '15': 'Aurillac', '16': 'Angoulême',
+  '17': 'La Rochelle', '18': 'Bourges', '19': 'Tulle', '20': 'Ajaccio',
+  '21': 'Dijon', '22': 'Saint-Brieuc', '23': 'Guéret', '24': 'Périgueux',
+  '25': 'Besançon', '26': 'Valence', '27': 'Évreux', '28': 'Chartres',
+  '29': 'Quimper', '30': 'Nîmes', '31': 'Toulouse', '32': 'Auch',
+  '33': 'Bordeaux', '34': 'Montpellier', '35': 'Rennes', '36': 'Châteauroux',
+  '37': 'Tours', '38': 'Grenoble', '39': 'Lons-le-Saunier', '40': 'Mont-de-Marsan',
+  '41': 'Blois', '42': 'Saint-Étienne', '43': 'Le Puy-en-Velay', '44': 'Nantes',
+  '45': 'Orléans', '46': 'Cahors', '47': 'Agen', '48': 'Mende',
+  '49': 'Angers', '50': 'Saint-Lô', '51': 'Châlons-en-Champagne', '52': 'Chaumont',
+  '53': 'Laval', '54': 'Nancy', '55': 'Bar-le-Duc', '56': 'Vannes',
+  '57': 'Metz', '58': 'Nevers', '59': 'Lille', '60': 'Beauvais',
+  '61': 'Alençon', '62': 'Arras', '63': 'Clermont-Ferrand', '64': 'Pau',
+  '65': 'Tarbes', '66': 'Perpignan', '67': 'Strasbourg', '68': 'Colmar',
+  '69': 'Lyon', '70': 'Vesoul', '71': 'Mâcon', '72': 'Le Mans',
+  '73': 'Chambéry', '74': 'Annecy', '75': 'Paris', '76': 'Rouen',
+  '77': 'Melun', '78': 'Versailles', '79': 'Niort', '80': 'Amiens',
+  '81': 'Albi', '82': 'Montauban', '83': 'Toulon', '84': 'Avignon',
+  '85': 'La Roche-sur-Yon', '86': 'Poitiers', '87': 'Limoges', '88': 'Épinal',
+  '89': 'Auxerre', '90': 'Belfort', '91': 'Évry-Courcouronnes', '92': 'Nanterre',
+  '93': 'Bobigny', '94': 'Créteil', '95': 'Cergy', '97': 'Outre-Mer',
+};
+
+/** Mock relay points — utilisés en fallback si le widget ne se charge pas */
+const FALLBACK_RELAY_POINTS = relayPointsMock as Record<string, RelayPoint[]>;
+
+function getFallbackRelayPoints(postalCode: string): RelayPoint[] {
   const prefix = postalCode.substring(0, 2);
-  return MOCK_RELAY_POINTS[prefix] ?? DEFAULT_RELAY_POINTS;
+
+  // Entrées spécifiques pour ce département
+  if (FALLBACK_RELAY_POINTS[prefix]) {
+    return FALLBACK_RELAY_POINTS[prefix];
+  }
+
+  // Ville réelle du département via son chef-lieu
+  const city = DEPARTMENT_CHIEF_CITY[prefix] ?? DEPARTMENT_CHIEF_CITY[postalCode.substring(0, 3)] ?? 'France';
+  const deptPostalCode = `${prefix}000`;
+
+  return [
+    {
+      id: `MR-${prefix}001`,
+      name: 'Tabac de la Mairie',
+      address: '1 place de la Mairie',
+      city,
+      postalCode: deptPostalCode,
+      openingHours: 'Lun-Sam 8h-19h',
+    },
+    {
+      id: `MR-${prefix}002`,
+      name: 'Épicerie du Centre',
+      address: '5 rue Principale',
+      city,
+      postalCode: deptPostalCode,
+      openingHours: 'Lun-Dim 8h-20h',
+    },
+  ];
 }
 
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = false;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Script inaccessible: ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+function loadStyle(href: string): void {
+  if (document.querySelector(`link[href="${href}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = href;
+  document.head.appendChild(link);
+}
+
+type WidgetState = 'loading' | 'ready' | 'fallback';
+
 interface RelayPointSelectorProps {
-  readonly carrierName: string;
+  readonly initialPostalCode?: string;
   readonly selectedRelayPoint: RelayPoint | null;
   readonly onSelect: (point: RelayPoint) => void;
 }
 
 /**
- * RelayPointSelector
+ * RelayPointSelector — Widget embarqué Mondial Relay avec fallback mock
  *
- * Composant de sélection d'un point relais.
- * Recherche par code postal (données mock en mode démo).
- * En production, les APIs Mondial Relay / Relais Colis remplaceraient le mock.
+ * Tente de charger le widget officiel Mondial Relay (mode test BDTEST13).
+ * Si le widget échoue (URL inaccessible, CSP, réseau), bascule automatiquement
+ * sur une liste de points relais mock pour ne pas bloquer le parcours checkout.
+ *
+ * En production : remplacer Brand "BDTEST13" par l'identifiant officiel.
  */
-export function RelayPointSelector({ carrierName, selectedRelayPoint, onSelect }: RelayPointSelectorProps) {
-  const [postalCode, setPostalCode] = useState('');
-  const [searchedPostalCode, setSearchedPostalCode] = useState('');
-  const [results, setResults] = useState<RelayPoint[]>([]);
-  const [hasSearched, setHasSearched] = useState(false);
+export function RelayPointSelector({
+  initialPostalCode,
+  selectedRelayPoint,
+  onSelect,
+}: Readonly<RelayPointSelectorProps>) {
+  const [widgetState, setWidgetState] = useState<WidgetState>('loading');
+  const [fallbackPoints, setFallbackPoints] = useState<RelayPoint[]>([]);
+  const widgetInitialized = useRef(false);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
-  const handleSearch = () => {
-    if (!/^\d{5}$/.test(postalCode)) return;
-    const points = getMockRelayPoints(postalCode);
-    setResults(points);
-    setSearchedPostalCode(postalCode);
-    setHasSearched(true);
-  };
+  useEffect(() => {
+    if (widgetInitialized.current) return;
+    widgetInitialized.current = true;
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSearch();
-  };
+    const initWidget = async () => {
+      try {
+        if (!(globalThis as unknown as Window & { jQuery?: unknown }).jQuery) {
+          await loadScript(JQUERY_CDN);
+        }
+        loadStyle(MR_WIDGET_CSS);
+        await loadScript(MR_WIDGET_JS);
 
+        const jq = (globalThis as unknown as Window & { jQuery?: JQueryMR }).jQuery;
+        if (!jq) throw new Error('jQuery introuvable');
+
+        jq('#MR_Zone_Widget').MR_ParcelShopPicker({
+          Target: '#MR_Selected_RS',
+          Brand: 'BDTEST13',
+          PostCode: initialPostalCode ?? '',
+          ColLivMod: '24R',
+          AllowedCountries: 'FR',
+          EnableGmap: false,
+          Responsive: true,
+          OnParcelShopSelected: (data: MRSelectedData) => {
+            onSelectRef.current({
+              id: data.ID,
+              name: data.Nom,
+              address: data.Adresse1,
+              city: data.Ville,
+              postalCode: data.CP,
+            });
+          },
+        });
+
+        setWidgetState('ready');
+      } catch {
+        // Widget inaccessible — basculer sur le fallback mock
+        const points = getFallbackRelayPoints(initialPostalCode ?? '');
+        setFallbackPoints(points);
+        setWidgetState('fallback');
+      }
+    };
+
+    void initWidget();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ── Loading ── */
+  if (widgetState === 'loading') {
+    return (
+      <div className="mt-4 flex items-center gap-2 py-8 text-xs text-black/50">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Chargement des points relais…
+      </div>
+    );
+  }
+
+  /* ── Widget Mondial Relay (ready) ── */
+  if (widgetState === 'ready') {
+    return (
+      <div className="mt-4 space-y-4">
+        <p className="text-xs text-black/60 tracking-wide">
+          Sélectionnez un point relais Mondial Relay sur la carte ci-dessous
+        </p>
+        <input type="hidden" id="MR_Selected_RS" />
+        <div
+          id="MR_Zone_Widget"
+          className="min-h-[450px] border border-black/10 bg-gray-50"
+          aria-label="Carte des points relais Mondial Relay"
+        />
+        {selectedRelayPoint && <SelectedSummary point={selectedRelayPoint} />}
+      </div>
+    );
+  }
+
+  /* ── Fallback mock (widget inaccessible) ── */
   return (
-    <div className="mt-4 rounded-lg border border-primary/20 bg-primary/3 p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-        <p className="text-sm font-medium font-sans">
-          Sélectionner un point {carrierName}
+    <div className="mt-4 space-y-4">
+      <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 text-xs">
+        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-amber-800">
+          Le widget Mondial Relay est indisponible en mode démo.
+          Sélectionnez un point parmi la liste ci-dessous.
         </p>
       </div>
 
-      {/* Search */}
-      <div className="flex gap-2">
-        <Input
-          type="text"
-          inputMode="numeric"
-          pattern="\d{5}"
-          maxLength={5}
-          placeholder="Code postal (ex: 75001)"
-          value={postalCode}
-          onChange={(e) => setPostalCode(e.target.value.replaceAll(/\D/g, '').slice(0, 5))}
-          onKeyDown={handleKeyDown}
-          className="font-sans"
-          aria-label="Code postal pour rechercher un point relais"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleSearch}
-          disabled={postalCode.length !== 5}
-          className="flex-shrink-0"
-        >
-          <Search className="h-4 w-4 mr-2" />
-          Rechercher
-        </Button>
+      <div className="space-y-2">
+        {fallbackPoints.map((point) => {
+          const isSelected = selectedRelayPoint?.id === point.id;
+          return (
+            <button
+              key={point.id}
+              type="button"
+              onClick={() => onSelectRef.current(point)}
+              className={cn(
+                'w-full flex items-start gap-3 p-3 border text-left transition-colors text-sm',
+                isSelected
+                  ? 'border-black bg-black text-white'
+                  : 'border-black/20 hover:border-black bg-white text-black'
+              )}
+            >
+              <div className={cn(
+                'w-6 h-6 flex items-center justify-center border flex-shrink-0 mt-0.5',
+                isSelected ? 'border-white' : 'border-black/30'
+              )}>
+                {isSelected ? <Check className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold tracking-wide truncate">{point.name}</p>
+                <p className={cn('text-xs mt-0.5', isSelected ? 'text-white/70' : 'text-black/50')}>
+                  {point.address} — {point.postalCode} {point.city}
+                </p>
+                {point.openingHours && (
+                  <p className={cn('flex items-center gap-1 text-xs mt-1', isSelected ? 'text-white/60' : 'text-black/40')}>
+                    <Clock className="h-3 w-3" />
+                    {point.openingHours}
+                  </p>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Results */}
-      {hasSearched && (
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground font-sans">
-            {results.length} point{results.length > 1 ? 's' : ''} relais trouvé{results.length > 1 ? 's' : ''} près de {searchedPostalCode}
-          </p>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {results.map((point) => {
-              const isSelected = selectedRelayPoint?.id === point.id;
-              return (
-                <button
-                  key={point.id}
-                  type="button"
-                  onClick={() => onSelect(point)}
-                  className={cn(
-                    'w-full flex items-start gap-3 p-3 rounded-lg border text-left transition-all text-sm',
-                    isSelected
-                      ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-border hover:border-primary/40 hover:bg-muted/20'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'flex h-6 w-6 items-center justify-center rounded-full border-2 flex-shrink-0 mt-0.5',
-                      isSelected
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-muted-foreground/30'
-                    )}
-                  >
-                    {isSelected && <Check className="h-3 w-3" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold font-sans truncate">{point.name}</p>
-                    <p className="text-muted-foreground font-sans">{point.address}</p>
-                    <p className="text-muted-foreground font-sans">{point.postalCode} {point.city}</p>
-                    {point.openingHours && (
-                      <p className="flex items-center gap-1 text-xs text-muted-foreground/80 mt-1 font-sans">
-                        <Clock className="h-3 w-3" />
-                        {point.openingHours}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {selectedRelayPoint && <SelectedSummary point={selectedRelayPoint} />}
+    </div>
+  );
+}
 
-      {/* Selected summary */}
-      {selectedRelayPoint && (
-        <div className="flex items-start gap-2 p-3 rounded-md bg-green-50 border border-green-200 text-sm">
-          <Check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-green-800 font-sans">{selectedRelayPoint.name}</p>
-            <p className="text-green-700 font-sans">{selectedRelayPoint.address}, {selectedRelayPoint.postalCode} {selectedRelayPoint.city}</p>
-          </div>
-        </div>
-      )}
+function SelectedSummary({ point }: Readonly<{ point: RelayPoint }>) {
+  return (
+    <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 text-sm">
+      <Check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+      <div>
+        <p className="font-semibold text-green-800">{point.name}</p>
+        <p className="text-green-700 text-xs">
+          {point.address}, {point.postalCode} {point.city}
+        </p>
+      </div>
     </div>
   );
 }

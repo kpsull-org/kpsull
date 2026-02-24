@@ -4,19 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { useCartStore } from '@/lib/stores/cart.store';
 import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
-import { CartSummary } from '@/components/checkout/cart-summary';
 import { CarrierSelector } from '@/components/checkout/carrier-selector';
 import { RelayPointSelector } from '@/components/checkout/relay-point-selector';
 import {
@@ -27,7 +17,6 @@ import {
   type CarrierSelection,
   type RelayPoint,
 } from '@/lib/schemas/checkout.schema';
-import { formatPrice } from '@/lib/utils/format';
 
 /**
  * Carrier Selection Page
@@ -41,17 +30,12 @@ export default function CarrierPage() {
   const isHydrated = useCartHydration();
   const [selectedCarrier, setSelectedCarrier] = useState<CarrierSelection | null>(null);
   const [selectedRelayPoint, setSelectedRelayPoint] = useState<RelayPoint | null>(null);
+  const [shippingPostalCode, setShippingPostalCode] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
-  const isRelayCarrier = (
-    selectedCarrier?.carrier === 'mondial-relay' ||
-    selectedCarrier?.carrier === 'relais-colis' ||
-    selectedCarrier?.carrier === 'chronopost-pickup' ||
-    selectedCarrier?.carrier === 'chronopost-shop2shop'
-  );
+  const isRelayCarrier = selectedCarrier?.carrier === 'mondial-relay';
 
   const items = useCartStore((state) => state.items);
-  const getTotal = useCartStore((state) => state.getTotal);
 
   useEffect(() => {
     // Vérifier que l'adresse de livraison est présente
@@ -60,6 +44,7 @@ export default function CarrierPage() {
       router.push('/checkout/shipping');
       return;
     }
+    setShippingPostalCode(addressResult.data.postalCode);
 
     // Restaurer le transporteur précédemment sélectionné si présent
     const carrierResult = parseSessionStorage('selectedCarrier', CarrierSelectionSchema);
@@ -105,9 +90,9 @@ export default function CarrierPage() {
   if (!isHydrated) {
     return (
       <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-muted rounded" />
-          <div className="h-64 bg-muted rounded" />
+        <div className="space-y-4">
+          <div className="h-4 w-32 bg-black/10 animate-pulse" />
+          <div className="h-64 bg-black/5 animate-pulse" />
         </div>
       </div>
     );
@@ -118,72 +103,68 @@ export default function CarrierPage() {
   }
 
   return (
-    <div className="container py-8">
-      <Button variant="ghost" asChild className="mb-6">
-        <Link href="/checkout/shipping">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+    <div className="container py-8 font-sans">
+      <div className="mb-8">
+        <Link
+          href="/checkout/shipping"
+          className="inline-flex items-center gap-2 text-xs text-black/50 hover:text-black transition-colors tracking-wide"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
           Retour
         </Link>
-      </Button>
+      </div>
 
-      <h1 className="text-3xl font-bold mb-8">Mode de livraison</h1>
+      <h1 className="text-2xl font-bold tracking-wider uppercase mb-8">Mode de livraison</h1>
 
-      <div className="mb-8">
+      <div className="mb-10">
         <CheckoutStepper currentStep="carrier" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-sans">Choisissez votre transporteur</CardTitle>
-              <CardDescription className="font-sans">
-                Sélectionnez le mode de livraison adapté à vos besoins
-              </CardDescription>
-            </CardHeader>
+      <div className="max-w-xl mx-auto">
+        <div className="space-y-6">
+          <div className="border border-black p-6">
+            <h2 className="text-xs font-bold tracking-widest uppercase mb-1">
+              Choisissez votre transporteur
+            </h2>
+            <p className="text-xs text-black/50 mb-6">
+              Sélectionnez le mode de livraison adapté à vos besoins
+            </p>
 
-            <CardContent>
-              {error && (
-                <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                  {error}
-                </div>
-              )}
+            {error && (
+              <div className="mb-4 p-3 text-xs text-red-700 bg-red-50 border border-red-200">
+                {error}
+              </div>
+            )}
 
-              <CarrierSelector
-                selectedCarrier={selectedCarrier}
-                onChange={(carrier) => {
-                  setSelectedCarrier(carrier);
-                  setSelectedRelayPoint(null);
-                  setError(null);
-                }}
-              />
+            <CarrierSelector
+              selectedCarrier={selectedCarrier}
+              onChange={(carrier) => {
+                setSelectedCarrier(carrier);
+                setSelectedRelayPoint(null);
+                setError(null);
+              }}
+            />
 
-              {isRelayCarrier && selectedCarrier && (
+            {isRelayCarrier && selectedCarrier && (
+              <div className="mt-6">
                 <RelayPointSelector
-                  carrierName={selectedCarrier.carrierName}
+                  initialPostalCode={shippingPostalCode}
                   selectedRelayPoint={selectedRelayPoint}
                   onSelect={(point) => {
                     setSelectedRelayPoint(point);
                     setError(null);
                   }}
                 />
-              )}
-            </CardContent>
+              </div>
+            )}
 
-            <CardFooter>
-              <Button onClick={handleContinue} className="w-full" size="lg">
-                Continuer vers le paiement
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-1">
-          <CartSummary
-            subtotal={getTotal()}
-            shippingEstimate={selectedCarrier?.price}
-            formatPrice={formatPrice}
-          />
+            <button
+              onClick={handleContinue}
+              className="mt-6 w-full bg-black text-white text-xs font-bold tracking-widest uppercase py-4 hover:bg-black/90 transition-colors"
+            >
+              Continuer vers le paiement
+            </button>
+          </div>
         </div>
       </div>
     </div>

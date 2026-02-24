@@ -145,8 +145,10 @@ export interface AdminPlatformStats {
   totalPlatformRevenue: number;
   /** Previous period platform revenue for comparison */
   previousPlatformRevenue: number;
-  /** Revenue from subscriptions only in cents */
+  /** Revenue from subscriptions in the current period in cents (NOT MRR) */
   subscriptionRevenue: number;
+  /** Monthly Recurring Revenue from active subscriptions in cents */
+  subscriptionMRR: number;
   /** Revenue from commissions only in cents */
   commissionRevenue: number;
   /** Total number of orders across the platform */
@@ -169,7 +171,12 @@ export interface AdminPlatformStats {
  */
 export interface MonthlyRevenueDataPoint {
   month: number;
+  /** Total combined revenue (commissions + subscriptions) in cents */
   revenue: number;
+  /** Commission revenue for the month in cents */
+  commissions: number;
+  /** Subscription revenue for the month in cents */
+  subscriptions: number;
 }
 
 /**

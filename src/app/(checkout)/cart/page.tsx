@@ -7,7 +7,6 @@ import { useCartStore } from '@/lib/stores/cart.store';
 import { CartItem } from '@/components/checkout/cart-item';
 import { CartSummary } from '@/components/checkout/cart-summary';
 import { EmptyCart } from '@/components/checkout/empty-cart';
-import { Button } from '@/components/ui/button';
 
 export default function CartPage() {
   const [isHydrated, setIsHydrated] = useState(false);
@@ -17,14 +16,22 @@ export default function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
 
   useEffect(() => {
-    // Attendre que l'hydratation soit terminee
+    // Subscribe to finish-hydration event before triggering rehydration,
+    // so the callback is guaranteed to fire even if rehydrate() resolves
+    // synchronously on the same tick.
     const unsubFinishHydration = useCartStore.persist.onFinishHydration(() => {
       setIsHydrated(true);
     });
 
-    // Si deja hydrate, mettre a jour immediatement
+    // If the store was already hydrated (e.g. CartDropdown ran first), mark
+    // immediately so the page doesn't stay stuck on the skeleton.
     if (useCartStore.persist.hasHydrated()) {
       setIsHydrated(true);
+    } else {
+      // Store is configured with skipHydration:true, so we must trigger it
+      // explicitly from here for guest users. Authenticated users are handled
+      // by CartDropdown which calls getCartAction and replaceItems directly.
+      useCartStore.persist.rehydrate();
     }
 
     return () => {
@@ -38,14 +45,13 @@ export default function CartPage() {
       currency: 'EUR',
     }).format(cents / 100);
 
-  // Attendre l'hydratation avant de rendre
   if (!isHydrated) {
     return (
       <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
-          <div className="h-32 bg-muted rounded" />
+        <div className="space-y-4">
+          <div className="h-4 w-32 bg-black/10 animate-pulse" />
+          <div className="h-24 bg-black/5 animate-pulse" />
+          <div className="h-24 bg-black/5 animate-pulse" />
         </div>
       </div>
     );
@@ -56,20 +62,26 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container py-8">
-      <div className="mb-6">
-        <Button variant="ghost" asChild>
-          <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Continuer mes achats
-          </Link>
-        </Button>
+    <div className="container py-8 font-sans">
+      {/* Breadcrumb */}
+      <div className="mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs text-black/50 hover:text-black transition-colors tracking-wide"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Continuer mes achats
+        </Link>
       </div>
 
-      <h1 className="text-3xl font-bold mb-8">Mon Panier</h1>
+      <h1 className="text-2xl font-bold tracking-wider uppercase mb-8">
+        Mon panier{' '}
+        <span className="text-black/40 font-normal text-lg">({items.length})</span>
+      </h1>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+        {/* Items */}
+        <div className="lg:col-span-2">
           {items.map((item) => (
             <CartItem
               key={`${item.productId}-${item.variantId || 'default'}`}
@@ -83,6 +95,7 @@ export default function CartPage() {
           ))}
         </div>
 
+        {/* Summary */}
         <div className="lg:col-span-1">
           <CartSummary subtotal={getTotal()} formatPrice={formatPrice} />
         </div>

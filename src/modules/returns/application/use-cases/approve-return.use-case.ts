@@ -2,6 +2,7 @@ import { Result } from '@/shared/domain';
 import type { UseCase } from '@/shared/application/use-case.interface';
 import type { ReturnRepository } from '../ports/return.repository.interface';
 import type { ReturnStatusValue } from '../../domain/value-objects/return-status.vo';
+import { findAndValidateReturn } from './return-use-case.helpers';
 
 export interface ApproveReturnInput {
   returnId: string;
@@ -32,28 +33,19 @@ export class ApproveReturnUseCase implements UseCase<ApproveReturnInput, Approve
   constructor(private readonly returnRepository: ReturnRepository) {}
 
   async execute(input: ApproveReturnInput): Promise<Result<ApproveReturnOutput>> {
-    if (!input.returnId?.trim()) {
-      return Result.fail('Return ID est requis');
+    const findResult = await findAndValidateReturn(
+      this.returnRepository,
+      input.returnId,
+      input.creatorId,
+      'REQUESTED',
+      'Seules les demandes en attente peuvent etre approuvees'
+    );
+
+    if (findResult.isFailure) {
+      return Result.fail(findResult.error!);
     }
 
-    if (!input.creatorId?.trim()) {
-      return Result.fail('Creator ID est requis');
-    }
-
-    const returnRequest = await this.returnRepository.findById(input.returnId);
-
-    if (!returnRequest) {
-      return Result.fail('Demande de retour non trouvee');
-    }
-
-    if (returnRequest.creatorId !== input.creatorId) {
-      return Result.fail("Vous n'etes pas autorise a modifier cette demande de retour");
-    }
-
-    if (returnRequest.status !== 'REQUESTED') {
-      return Result.fail('Seules les demandes en attente peuvent etre approuvees');
-    }
-
+    const returnRequest = findResult.value;
     const now = new Date();
     const updatedReturn = {
       ...returnRequest,

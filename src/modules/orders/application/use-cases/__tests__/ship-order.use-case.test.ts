@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { ShipOrderUseCase } from '../ship-order.use-case';
 import { OrderRepository } from '../../ports/order.repository.interface';
-import { Order } from '../../../domain/entities/order.entity';
-import { OrderItem } from '../../../domain/entities/order-item.entity';
+import { createPendingOrder, createPaidOrder } from './order.fixtures';
 
 type MockOrderRepository = {
   [K in keyof OrderRepository]: Mock;
@@ -23,34 +22,6 @@ describe('ShipOrderUseCase', () => {
     };
     useCase = new ShipOrderUseCase(mockRepository as unknown as OrderRepository);
   });
-
-  const createPaidOrder = () => {
-    const items = [
-      OrderItem.create({
-        productId: 'product-1',
-        productName: 'Produit A',
-        price: 2999,
-        quantity: 1,
-      }).value,
-    ];
-
-    const order = Order.create({
-      creatorId: 'creator-123',
-      customerId: 'customer-123',
-      customerName: 'Jean Dupont',
-      customerEmail: 'jean@example.com',
-      items,
-      shippingAddress: {
-        street: '123 Rue Test',
-        city: 'Paris',
-        postalCode: '75001',
-        country: 'France',
-      },
-    }).value;
-
-    order.markAsPaid('pi_stripe_123');
-    return order;
-  };
 
   describe('execute', () => {
     it('should ship a paid order', async () => {
@@ -163,29 +134,7 @@ describe('ShipOrderUseCase', () => {
 
     it('should fail if order not in shippable status', async () => {
       // Arrange (pending order, not paid)
-      const items = [
-        OrderItem.create({
-          productId: 'product-1',
-          productName: 'Produit A',
-          price: 2999,
-          quantity: 1,
-        }).value,
-      ];
-
-      const order = Order.create({
-        creatorId: 'creator-123',
-        customerId: 'customer-123',
-        customerName: 'Jean Dupont',
-        customerEmail: 'jean@example.com',
-        items,
-        shippingAddress: {
-          street: '123 Rue Test',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-        },
-      }).value;
-
+      const order = createPendingOrder();
       mockRepository.findById.mockResolvedValue(order);
 
       // Act

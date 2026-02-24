@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { signOut } from 'next-auth/react';
 import { useCartStore, type CartItem } from '@/lib/stores/cart.store';
 import { getCartAction, saveCartAction } from '@/app/cart/actions';
 
@@ -28,11 +29,16 @@ export function useCart(isAuthenticated: boolean) {
     isHydrated.current = true;
 
     if (isAuthenticated) {
-      getCartAction().then((dbItems) => {
-        if (dbItems.length > 0) {
-          replaceItems(dbItems);
-        }
-      });
+      getCartAction()
+        .then((dbItems) => {
+          if (dbItems.length > 0) {
+            replaceItems(dbItems);
+          }
+        })
+        .catch((err: unknown) => {
+          console.error('[useCart] Impossible de charger le panier depuis la DB:', err);
+          useCartStore.persist.rehydrate();
+        });
     } else {
       useCartStore.persist.rehydrate();
     }
@@ -48,7 +54,16 @@ export function useCart(isAuthenticated: boolean) {
 
     saveTimeoutRef.current = setTimeout(() => {
       const currentItems = useCartStore.getState().items;
-      saveCartAction(currentItems);
+      saveCartAction(currentItems).then((result) => {
+        if (!result.success) {
+          if (result.error === 'SESSION_EXPIRED') {
+            // Session périmée (user supprimé en DB, cookie encore valide) → déconnexion
+            signOut({ callbackUrl: '/' });
+            return;
+          }
+          console.error('[useCart] Échec de la sauvegarde du panier:', result.error);
+        }
+      });
     }, 500);
   }, [isAuthenticated]);
 

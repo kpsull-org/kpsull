@@ -1,8 +1,13 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+
+vi.mock('@/modules/products/application/services/stock.service', () => ({
+  incrementStock: vi.fn().mockResolvedValue(undefined),
+  decrementStock: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { CancelOrderUseCase } from '../cancel-order.use-case';
 import { OrderRepository } from '../../ports/order.repository.interface';
-import { Order } from '../../../domain/entities/order.entity';
-import { OrderItem } from '../../../domain/entities/order-item.entity';
+import { createPendingOrder, createPaidOrder, createShippedOrder } from './order.fixtures';
 
 type MockOrderRepository = {
   [K in keyof OrderRepository]: Mock;
@@ -23,43 +28,6 @@ describe('CancelOrderUseCase', () => {
     };
     useCase = new CancelOrderUseCase(mockRepository as unknown as OrderRepository);
   });
-
-  const createPendingOrder = () => {
-    const items = [
-      OrderItem.create({
-        productId: 'product-1',
-        productName: 'Produit A',
-        price: 2999,
-        quantity: 1,
-      }).value,
-    ];
-
-    return Order.create({
-      creatorId: 'creator-123',
-      customerId: 'customer-123',
-      customerName: 'Jean Dupont',
-      customerEmail: 'jean@example.com',
-      items,
-      shippingAddress: {
-        street: '123 Rue Test',
-        city: 'Paris',
-        postalCode: '75001',
-        country: 'France',
-      },
-    }).value;
-  };
-
-  const createPaidOrder = () => {
-    const order = createPendingOrder();
-    order.markAsPaid('pi_stripe_123');
-    return order;
-  };
-
-  const createShippedOrder = () => {
-    const order = createPaidOrder();
-    order.ship('TRACK123456', 'Colissimo');
-    return order;
-  };
 
   describe('execute', () => {
     it('should cancel a pending order', async () => {

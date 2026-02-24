@@ -4,14 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/lib/stores/cart.store';
 import {
   ShippingAddressForm,
   ShippingAddress,
 } from '@/components/checkout/shipping-address-form';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
-import { CartSummary } from '@/components/checkout/cart-summary';
 import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 
 interface GuestInfo {
@@ -39,7 +37,6 @@ export default function ShippingPage() {
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
 
   const items = useCartStore((state) => state.items);
-  const getTotal = useCartStore((state) => state.getTotal);
 
   useEffect(() => {
     // Load guest info from session storage
@@ -48,12 +45,6 @@ export default function ShippingPage() {
       setGuestInfo(JSON.parse(stored));
     }
   }, []);
-
-  const formatPrice = (cents: number) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(cents / 100);
 
   const handleSubmit = (address: ShippingAddress) => {
     setIsLoading(true);
@@ -65,62 +56,57 @@ export default function ShippingPage() {
     router.push('/checkout/carrier');
   };
 
-  // Attendre l'hydratation avant de rendre
   if (!isHydrated) {
     return (
       <div className="container py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-muted rounded" />
-          <div className="h-96 bg-muted rounded" />
+        <div className="space-y-4">
+          <div className="h-4 w-32 bg-black/10 animate-pulse" />
+          <div className="h-96 bg-black/5 animate-pulse" />
         </div>
       </div>
     );
   }
 
-  // Redirect if cart is empty
   if (items.length === 0) {
     router.push('/cart');
     return null;
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 font-sans">
       {/* Back link */}
-      <Button variant="ghost" asChild className="mb-6">
-        <Link href="/checkout">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className="mb-8">
+        <Link
+          href="/checkout"
+          className="inline-flex items-center gap-2 text-xs text-black/50 hover:text-black transition-colors tracking-wide"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
           Retour
         </Link>
-      </Button>
+      </div>
 
-      <h1 className="text-3xl font-bold mb-8">Adresse de livraison</h1>
+      <h1 className="text-2xl font-bold tracking-wider uppercase mb-8">
+        Adresse de livraison
+      </h1>
 
       {/* Stepper */}
-      <div className="mb-8">
+      <div className="mb-10">
         <CheckoutStepper currentStep="shipping" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Shipping form */}
-        <div className="lg:col-span-2">
-          <ShippingAddressForm
-            initialData={
-              guestInfo
-                ? {
-                    firstName: guestInfo.firstName,
-                    lastName: guestInfo.lastName,
-                  }
-                : undefined
-            }
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
-        </div>
-
-        {/* Order summary */}
-        <div className="lg:col-span-1">
-          <CartSummary subtotal={getTotal()} formatPrice={formatPrice} />
-        </div>
+      <div className="max-w-xl mx-auto">
+        <ShippingAddressForm
+          initialData={
+            guestInfo
+              ? {
+                  firstName: guestInfo.firstName,
+                  lastName: guestInfo.lastName,
+                }
+              : undefined
+          }
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

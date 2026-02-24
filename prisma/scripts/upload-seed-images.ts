@@ -1,4 +1,14 @@
 /**
+ * @deprecated Ce script est OBSOLÈTE depuis la migration vers generate-images-gemini.ts
+ *
+ * Le seed mini (seed-mini.ts) lit UNIQUEMENT image-generation-mini-v3-progress.json
+ * généré par: bun prisma/scripts/generate-images-gemini.ts --mini
+ *
+ * Ce script génère product-images.json (Unsplash/Cloudinary) qui N'EST PLUS utilisé.
+ * Conservé pour référence mais NE PAS EXÉCUTER.
+ */
+
+/**
  * Script de génération d'images seed avec upload Cloudinary
  *
  * Usage:

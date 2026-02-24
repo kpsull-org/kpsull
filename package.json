@@ -28,7 +28,11 @@
     "build:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db next build --webpack",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "seed:images": "bun prisma/scripts/upload-seed-images.ts"
+    "seed:images:mini": "bun prisma/scripts/generate-images-gemini.ts --mini",
+    "seed:images:status": "bun prisma/scripts/generate-images-gemini.ts --status",
+    "seed:images:reset-mini": "bun prisma/scripts/generate-images-gemini.ts --reset-mini",
+    "db:fresh:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db bun prisma/reset-db.ts && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kpsull-db bun prisma/seed-mini.ts",
+    "db:fresh:prod": "railway run bun prisma/reset-db.ts && railway run bun prisma/seed-mini.ts"
   },
   "overrides": {
     "hono": "^4.11.9",
@@ -45,6 +49,8 @@
     "@react-email/components": "^1.0.7",
     "@react-pdf/renderer": "^4.3.2",
     "@sentry/nextjs": "^10.38.0",
+    "@stripe/react-stripe-js": "^5.6.0",
+    "@stripe/stripe-js": "^8.8.0",
     "@types/dompurify": "^3.2.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

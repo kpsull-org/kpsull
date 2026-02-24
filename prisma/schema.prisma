@@ -373,6 +373,12 @@ model Order {
   shippingPostalCode    String
   shippingCountry       String
 
+  // Shipping mode & relay point
+  shippingMode          String?   // "RELAY_POINT" | "HOME_DELIVERY"
+  relayPointId          String?   // ID externe point relais (ex: "MR_75001_001")
+  relayPointName        String?   // Dénormalisé (ex: "Tabac de la Gare")
+  shippingCost          Int?      // En centimes (ex: 390 = 3.90€)
+
   // Stripe integration
   stripePaymentIntentId String?
   stripeRefundId        String?
@@ -582,6 +588,9 @@ model ReturnRequest {
   additionalNotes String?
   status          ReturnStatus @default(REQUESTED)
   rejectionReason String?
+
+  // Items retournés (pour retours partiels) — [{ productId, variantId?, quantity, productName, price }]
+  returnItems Json? @default("[]")
 
   // Return shipping (client -> creator)
   trackingNumber String?

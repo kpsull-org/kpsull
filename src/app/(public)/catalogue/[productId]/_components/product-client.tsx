@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useCartStore } from "@/lib/stores/cart.store";
 
 interface VariantData {
   id: string;
@@ -20,6 +21,7 @@ interface ProductClientProps {
   selectedVariantId: string;
   productPrice: number;
   productName: string;
+  creatorSlug: string;
   brandName?: string | null;
   description?: string | null;
   infoRows?: { key: string; value: string }[];
@@ -40,15 +42,18 @@ export function ProductClient({
   selectedVariantId,
   productPrice,
   productName,
+  creatorSlug,
   brandName,
   description,
   infoRows,
 }: Readonly<ProductClientProps>) {
   const router = useRouter();
+  const addItem = useCartStore((state) => state.addItem);
   const [currentVariantId, setCurrentVariantId] =
     useState(selectedVariantId);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const currentVariant =
     variants.find((v) => v.id === currentVariantId) ?? variants[0];
@@ -63,6 +68,18 @@ export function ProductClient({
     (sku) => sku.size !== null
   );
 
+  // Masquer le sélecteur si taille unique (1 seule taille ou libellé "unique")
+  const isOnlyUniqueLabel = availableSizes.every(
+    (sku) => sku.size?.toLowerCase().replaceAll('-', '').replaceAll(' ', '').includes('unique') ?? false
+  );
+  const shouldHideSizeSelector =
+    availableSizes.length === 1 || (availableSizes.length > 0 && isOnlyUniqueLabel);
+
+  // Taille effective : auto-sélectionnée si taille unique, sinon choix utilisateur
+  const effectiveSelectedSize = shouldHideSizeSelector
+    ? (availableSizes[0]?.size ?? null)
+    : selectedSize;
+
   const handleVariantChange = (variantId: string) => {
     setCurrentVariantId(variantId);
     setSelectedSize(null);
@@ -75,6 +92,28 @@ export function ProductClient({
   const handleSizeSelect = (size: string, inStock: boolean) => {
     if (!inStock) return;
     setSelectedSize((prev) => (prev === size ? null : size));
+  };
+
+  const handleAddToCart = () => {
+    const variantId = currentVariant.id;
+    const name = effectiveSelectedSize
+      ? `${productName} - ${effectiveSelectedSize}`
+      : productName;
+
+    addItem({
+      productId,
+      variantId,
+      name,
+      price: displayPrice, // déjà en centimes depuis la DB
+      image: currentVariant.images[0],
+      creatorSlug,
+      variantInfo: effectiveSelectedSize
+        ? { type: 'Taille', value: effectiveSelectedSize }
+        : undefined,
+    });
+
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   const hasMultipleVariants = variants.length > 1;
@@ -197,17 +236,17 @@ export function ProductClient({
             </div>
           )}
 
-          {/* Size selector */}
-          {availableSizes.length > 0 && (
+          {/* Size selector — masqué si taille unique */}
+          {availableSizes.length > 0 && !shouldHideSizeSelector && (
             <div className="space-y-2">
               <p className="text-[10px] uppercase tracking-[0.15em] text-black/55 font-semibold">
-                Taille{selectedSize ? ` — ${selectedSize}` : ""}
+                Taille{effectiveSelectedSize ? ` — ${effectiveSelectedSize}` : ""}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {availableSizes.map((sku) => {
                   const size = sku.size as string;
                   const inStock = sku.stock > 0;
-                  const isSelected = selectedSize === size;
+                  const isSelected = effectiveSelectedSize === size;
 
                   let sizeButtonClass: string;
                   if (isSelected) {
@@ -238,17 +277,18 @@ export function ProductClient({
           {/* Add to cart */}
           <button
             className="w-full py-4 bg-black text-white text-[11px] uppercase tracking-[0.2em] font-medium hover:bg-black/80 transition-colors disabled:opacity-50"
-            disabled={availableSizes.length > 0 && selectedSize === null}
+            disabled={availableSizes.length > 0 && effectiveSelectedSize === null}
             title={
-              availableSizes.length > 0 && selectedSize === null
+              availableSizes.length > 0 && effectiveSelectedSize === null
                 ? "Veuillez sélectionner une taille"
                 : undefined
             }
+            onClick={handleAddToCart}
           >
-            Ajouter au panier
+            {addedToCart ? "✓ Ajouté au panier" : "Ajouter au panier"}
           </button>
 
-          {availableSizes.length > 0 && selectedSize === null && (
+          {!shouldHideSizeSelector && availableSizes.length > 0 && effectiveSelectedSize === null && (
             <p className="text-[10px] uppercase tracking-[0.1em] text-black/50 text-center -mt-3">
               Sélectionnez une taille
             </p>

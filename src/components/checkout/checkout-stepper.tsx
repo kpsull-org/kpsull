@@ -1,72 +1,66 @@
 'use client';
 
-import { Check, MapPin, CreditCard, Package, Truck } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 type CheckoutStep = 'auth' | 'shipping' | 'carrier' | 'payment' | 'confirmation';
 
 interface CheckoutStepperProps {
-  currentStep: CheckoutStep;
-  user?: {
-    id: string;
-    name?: string;
-    email: string;
+  readonly currentStep: CheckoutStep;
+  readonly user?: {
+    readonly id: string;
+    readonly name?: string;
+    readonly email: string;
   };
 }
 
-const steps: { key: CheckoutStep; label: string; icon: React.ReactNode }[] = [
-  { key: 'shipping', label: 'Livraison', icon: <MapPin className="h-5 w-5" /> },
-  { key: 'carrier', label: 'Transporteur', icon: <Truck className="h-5 w-5" /> },
-  { key: 'payment', label: 'Paiement', icon: <CreditCard className="h-5 w-5" /> },
-  { key: 'confirmation', label: 'Confirmation', icon: <Package className="h-5 w-5" /> },
+const steps: { key: CheckoutStep; label: string; number: number }[] = [
+  { key: 'shipping', label: 'Livraison', number: 1 },
+  { key: 'carrier', label: 'Transporteur', number: 2 },
+  { key: 'payment', label: 'Paiement', number: 3 },
+  { key: 'confirmation', label: 'Confirmation', number: 4 },
 ];
 
-/**
- * CheckoutStepper component
- *
- * Visual stepper showing checkout progress
- */
 export function CheckoutStepper({ currentStep, user }: CheckoutStepperProps) {
   const currentIndex = steps.findIndex((s) => s.key === currentStep);
 
   return (
-    <div className="space-y-8">
-      {/* Stepper */}
-      <nav aria-label="Progress">
-        <ol className="flex items-center justify-center gap-4 md:gap-8">
+    <div className="space-y-6 font-sans">
+      <nav aria-label="Étapes de commande">
+        <ol className="flex items-center justify-center">
           {steps.map((step, index) => {
             const isCompleted = index < currentIndex;
             const isCurrent = step.key === currentStep;
 
             return (
               <li key={step.key} className="flex items-center">
-                <div
-                  className={`flex items-center gap-2 ${
-                    isCurrent
-                      ? 'text-primary'
-                      : isCompleted
-                      ? 'text-muted-foreground'
-                      : 'text-muted-foreground/50'
-                  }`}
-                >
+                <div className="flex items-center gap-2">
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                    className={`w-7 h-7 flex items-center justify-center border text-xs font-bold transition-colors ${
                       isCurrent
-                        ? 'border-primary bg-primary text-primary-foreground'
+                        ? 'bg-black text-white border-black'
                         : isCompleted
-                        ? 'border-kpsull-green bg-kpsull-green text-white'
-                        : 'border-muted-foreground/30'
+                        ? 'bg-kpsull-green text-white border-kpsull-green'
+                        : 'border-black/20 text-black/30'
                     }`}
                   >
-                    {isCompleted ? <Check className="h-5 w-5" /> : step.icon}
+                    {isCompleted ? <Check className="h-3.5 w-3.5" /> : step.number}
                   </div>
-                  <span className="hidden md:inline font-medium font-sans">{step.label}</span>
+                  <span
+                    className={(() => {
+                      let stepTextClass = 'text-black/25';
+                      if (isCurrent) stepTextClass = 'text-black';
+                      else if (isCompleted) stepTextClass = 'text-black/50';
+                      return `hidden md:inline text-xs tracking-wider uppercase font-medium ${stepTextClass}`;
+                    })()}
+                  >
+                    {step.label}
+                  </span>
                 </div>
 
-                {/* Connector line */}
                 {index < steps.length - 1 && (
                   <div
-                    className={`hidden md:block w-12 lg:w-24 h-0.5 mx-4 ${
-                      index < currentIndex ? 'bg-primary' : 'bg-muted'
+                    className={`w-8 lg:w-16 h-px mx-3 ${
+                      index < currentIndex ? 'bg-black' : 'bg-black/15'
                     }`}
                   />
                 )}
@@ -76,18 +70,12 @@ export function CheckoutStepper({ currentStep, user }: CheckoutStepperProps) {
         </ol>
       </nav>
 
-      {/* User info banner if authenticated */}
       {user && (
-        <div className="bg-muted/50 rounded-lg p-4 text-center">
-          <p className="text-sm text-muted-foreground font-sans">
-            Connecte en tant que{' '}
-            <span className="font-medium text-foreground">
-              {user.name ?? user.email}
-            </span>
-          </p>
-        </div>
+        <p className="text-center text-xs text-black/50 tracking-wide">
+          Connecté en tant que{' '}
+          <span className="font-semibold text-black">{user.name ?? user.email}</span>
+        </p>
       )}
-
     </div>
   );
 }

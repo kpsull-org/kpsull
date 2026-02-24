@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { signOut } from 'next-auth/react';
 import { useCartStore } from '@/lib/stores/cart.store';
 import { saveCartAction } from '@/app/cart/actions';
 
@@ -31,7 +32,14 @@ export function CartSyncOnLogin({ isAuthenticated }: CartSyncOnLoginProps) {
       if (!Array.isArray(localItems) || localItems.length === 0) return;
 
       // Replace DB cart with local cart
-      saveCartAction(localItems).then(() => {
+      saveCartAction(localItems).then((result) => {
+        if (!result.success) {
+          if (result.error === 'SESSION_EXPIRED') {
+            signOut({ callbackUrl: '/' });
+            return;
+          }
+          return;
+        }
         // Clear localStorage cart and hydrate Zustand from the saved items
         localStorage.removeItem('kpsull-cart');
         useCartStore.getState().replaceItems(localItems);

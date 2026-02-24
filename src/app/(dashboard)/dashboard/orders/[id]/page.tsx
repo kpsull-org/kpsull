@@ -1,32 +1,10 @@
 import { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma/client';
-import { GetOrderDetailUseCase } from '@/modules/orders/application/use-cases/get-order-detail.use-case';
-import { PrismaOrderRepository } from '@/modules/orders/infrastructure/repositories/prisma-order.repository';
+import { getCreatorOrderOrThrow } from './_get-order';
 import { OrderHeaderWithActions } from '@/components/orders/order-header-with-actions';
 import { OrderItems } from '@/components/orders/order-items';
 import { CustomerInfo } from '@/components/orders/customer-info';
 import { OrderTimeline } from '@/components/orders/order-timeline';
-import type { OrderStatusValue } from '@/modules/orders/domain/value-objects/order-status.vo';
-
-type TimelineEventType =
-  | 'CREATED'
-  | 'PAID'
-  | 'SHIPPED'
-  | 'DELIVERED'
-  | 'COMPLETED'
-  | 'CANCELED'
-  | 'DISPUTE_OPENED'
-  | 'RETURN_SHIPPED'
-  | 'RETURN_RECEIVED'
-  | 'REFUNDED';
-
-interface TimelineEvent {
-  type: TimelineEventType;
-  timestamp: Date;
-  details?: string;
-}
+import { buildOrderTimelineEvents } from '@/lib/utils/order-status';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -53,34 +31,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * - AC5: Boutons d'action selon le statut
  */
 export default async function OrderDetailPage({ params }: PageProps) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/login');
-  }
-
-  // Only creators can access this page
-  if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
-    redirect('/profile');
-  }
-
   const { id } = await params;
-  const orderRepository = new PrismaOrderRepository(prisma);
-  const getOrderDetailUseCase = new GetOrderDetailUseCase(orderRepository);
-
-  const result = await getOrderDetailUseCase.execute({
-    orderId: id,
-    creatorId: session.user.id,
-  });
-
-  if (result.isFailure) {
-    notFound();
-  }
-
-  const order = result.value;
+  const { order } = await getCreatorOrderOrThrow(id);
 
   // Build timeline events
-  const timelineEvents = buildTimelineEvents(order);
+  const timelineEvents = buildOrderTimelineEvents(order);
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -127,67 +82,4 @@ export default async function OrderDetailPage({ params }: PageProps) {
       </div>
     </div>
   );
-}
-
-function buildTimelineEvents(order: {
-  status: OrderStatusValue;
-  createdAt: Date;
-  shippedAt?: Date;
-  deliveredAt?: Date;
-  trackingNumber?: string;
-  carrier?: string;
-  cancellationReason?: string;
-}): TimelineEvent[] {
-  const events: TimelineEvent[] = [
-    {
-      type: 'CREATED',
-      timestamp: order.createdAt,
-    },
-  ];
-
-  // Add PAID event if order is past pending
-  if (order.status !== 'PENDING' && order.status !== 'CANCELED') {
-    events.push({
-      type: 'PAID',
-      timestamp: order.createdAt, // Approximation - ideally we'd store payment timestamp
-    });
-  }
-
-  // Add SHIPPED event
-  if (order.shippedAt) {
-    events.push({
-      type: 'SHIPPED',
-      timestamp: order.shippedAt,
-      details: order.trackingNumber
-        ? `${order.carrier ?? 'Transporteur'}: ${order.trackingNumber}`
-        : undefined,
-    });
-  }
-
-  // Add DELIVERED event
-  if (order.deliveredAt) {
-    events.push({
-      type: 'DELIVERED',
-      timestamp: order.deliveredAt,
-    });
-  }
-
-  // Add CANCELED event
-  if (order.status === 'CANCELED') {
-    events.push({
-      type: 'CANCELED',
-      timestamp: order.createdAt, // Approximation
-      details: order.cancellationReason,
-    });
-  }
-
-  // Add REFUNDED event
-  if (order.status === 'REFUNDED') {
-    events.push({
-      type: 'REFUNDED',
-      timestamp: order.createdAt, // Approximation
-    });
-  }
-
-  return events;
 }

@@ -19,6 +19,12 @@ export function useCartHydration(): boolean {
 
     if (useCartStore.persist.hasHydrated()) {
       setIsHydrated(true);
+    } else {
+      // skipHydration: true dans le store — déclencher manuellement.
+      // Pour les utilisateurs connectés (getCartAction + replaceItems),
+      // rehydrate() lit localStorage vide et onFinishHydration se déclenche aussitôt
+      // sans écraser les items déjà chargés par CartDropdown.
+      useCartStore.persist.rehydrate();
     }
 
     return unsub;

@@ -41,11 +41,18 @@ export default async function CataloguePage({
   const selectedStyles = params.style ? params.style.split(",").filter(Boolean) : [];
   const selectedSizes = params.size ? params.size.split(",").filter(Boolean) : [];
   const selectedGenders = params.gender ? params.gender.split(",").filter(Boolean) : [];
-  // Quand seul "Unisexe" est sélectionné, on inclut Homme, Femme et Unisexe
-  const gendersForQuery =
-    selectedGenders.length === 1 && selectedGenders[0] === "Unisexe"
-      ? ["Homme", "Femme", "Unisexe"]
-      : selectedGenders;
+  // Expansion genre : Unisexe est toujours associé à Homme et Femme (dans les deux sens)
+  // - Sélection Homme ou Femme → inclut aussi Unisexe
+  // - Sélection Unisexe seul → inclut aussi Homme et Femme
+  // - Bébé et Enfant restent isolés
+  const expandedGenders = new Set(selectedGenders);
+  if (expandedGenders.has("Homme") || expandedGenders.has("Femme")) {
+    expandedGenders.add("Unisexe");
+  } else if (expandedGenders.size === 1 && expandedGenders.has("Unisexe")) {
+    expandedGenders.add("Homme");
+    expandedGenders.add("Femme");
+  }
+  const gendersForQuery = [...expandedGenders];
   const sort = params.sort ?? "newest";
 
   // Price in euros from search params, convert to cents for DB query

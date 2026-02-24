@@ -2,6 +2,7 @@ import { Result } from '@/shared/domain';
 import type { UseCase } from '@/shared/application/use-case.interface';
 import type { ReturnRepository } from '../ports/return.repository.interface';
 import type { ReturnStatusValue } from '../../domain/value-objects/return-status.vo';
+import { findAndValidateReturn } from './return-use-case.helpers';
 
 export interface ReceiveReturnInput {
   returnId: string;
@@ -31,28 +32,19 @@ export class ReceiveReturnUseCase implements UseCase<ReceiveReturnInput, Receive
   constructor(private readonly returnRepository: ReturnRepository) {}
 
   async execute(input: ReceiveReturnInput): Promise<Result<ReceiveReturnOutput>> {
-    if (!input.returnId?.trim()) {
-      return Result.fail('Return ID est requis');
+    const findResult = await findAndValidateReturn(
+      this.returnRepository,
+      input.returnId,
+      input.creatorId,
+      'SHIPPED_BACK',
+      'Seuls les retours expedies peuvent etre marques comme recus'
+    );
+
+    if (findResult.isFailure) {
+      return Result.fail(findResult.error!);
     }
 
-    if (!input.creatorId?.trim()) {
-      return Result.fail('Creator ID est requis');
-    }
-
-    const returnRequest = await this.returnRepository.findById(input.returnId);
-
-    if (!returnRequest) {
-      return Result.fail('Demande de retour non trouvee');
-    }
-
-    if (returnRequest.creatorId !== input.creatorId) {
-      return Result.fail("Vous n'etes pas autorise a modifier cette demande de retour");
-    }
-
-    if (returnRequest.status !== 'SHIPPED_BACK') {
-      return Result.fail('Seuls les retours expedies peuvent etre marques comme recus');
-    }
-
+    const returnRequest = findResult.value;
     const now = new Date();
     const updatedReturn = {
       ...returnRequest,
@@ -61,7 +53,7 @@ export class ReceiveReturnUseCase implements UseCase<ReceiveReturnInput, Receive
       updatedAt: now,
     };
 
-    await this.returnRepository.save(updatedReturn as typeof returnRequest);
+    await this.returnRepository.save(updatedReturn);
 
     return Result.ok({
       id: updatedReturn.id,

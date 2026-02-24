@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+
+vi.mock('@/modules/products/application/services/stock.service', () => ({
+  incrementStock: vi.fn().mockResolvedValue(undefined),
+  decrementStock: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { RefundReturnUseCase } from '../refund-return.use-case';
-import type { ReturnRepository, ReturnRequest } from '../../ports/return.repository.interface';
+import type { ReturnRepository } from '../../ports/return.repository.interface';
+import { createReceivedReturn } from './return.fixtures';
 
 type MockReturnRepository = {
   [K in keyof ReturnRepository]: Mock;
@@ -21,25 +28,6 @@ describe('RefundReturnUseCase', () => {
       delete: vi.fn(),
     };
     useCase = new RefundReturnUseCase(mockRepository as unknown as ReturnRepository);
-  });
-
-  const createReceivedReturn = (): ReturnRequest => ({
-    id: 'return-1',
-    orderId: 'order-1',
-    orderNumber: 'KPS-2024-001',
-    creatorId: 'creator-123',
-    customerId: 'customer-1',
-    customerName: 'Jean Dupont',
-    customerEmail: 'jean@example.com',
-    reason: 'DEFECTIVE',
-    status: 'RECEIVED',
-    trackingNumber: 'TRACK-123',
-    carrier: 'Colissimo',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    approvedAt: new Date(),
-    shippedAt: new Date(),
-    receivedAt: new Date(),
   });
 
   it('should mark a received return as refunded', async () => {

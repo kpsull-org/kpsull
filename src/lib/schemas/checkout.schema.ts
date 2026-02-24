@@ -68,11 +68,11 @@ export type RelayPoint = z.infer<typeof RelayPointSchema>;
  * Carrier selection schema for shipping method choice
  */
 export const CarrierSelectionSchema = z.object({
-  carrier: z.enum(['mondial-relay', 'chronopost', 'chronopost-pickup', 'chronopost-shop2shop', 'relais-colis']),
+  carrier: z.enum(['mondial-relay', 'chronopost']),
   carrierName: z.string().min(1),
   price: z.number().nonnegative(),
   estimatedDays: z.string().min(1),
-  /** Point relais sélectionné (Mondial Relay / Relais Colis uniquement) */
+  /** Point relais sélectionné (Mondial Relay uniquement) */
   relayPoint: RelayPointSchema.optional(),
 });
 
