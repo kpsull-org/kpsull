@@ -66,7 +66,7 @@ export function ProductDetail({ product, creatorSlug, isOwnProduct = false }: Pr
               {product.name}
             </h1>
             <p className="text-2xl font-bold mt-2 font-[family-name:var(--font-montserrat)]">
-              {formatPrice(displayPrice * 100)}
+              {formatPrice(displayPrice)}
             </p>
           </div>
 

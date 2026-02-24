@@ -161,12 +161,25 @@ export default function PaymentPage() {
             <CardContent className="space-y-4">
               {sessionError && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                  {sessionError}
-                  <div className="mt-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href="/checkout/carrier">Retour</Link>
-                    </Button>
-                  </div>
+                  {sessionError.includes('authentifi') || sessionError.includes('401') ? (
+                    <>
+                      <p className="font-medium mb-2">Vous devez être connecté pour finaliser votre commande.</p>
+                      <Button size="sm" asChild>
+                        <Link href={`/login?callbackUrl=/checkout/shipping`}>
+                          Se connecter
+                        </Link>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {sessionError}
+                      <div className="mt-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href="/checkout/carrier">Retour</Link>
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

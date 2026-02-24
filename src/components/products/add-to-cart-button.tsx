@@ -47,7 +47,7 @@ export function AddToCartButton({
         productId: product.id,
         name: variant ? `${product.name} - ${variant.name}` : product.name,
         variantId: variant?.id,
-        price: price * 100, // Convert to cents
+        price, // already in cents (DB convention)
         image: product.mainImageUrl,
         creatorSlug,
         variantInfo: variant ? { type: 'Variante', value: variant.name } : undefined,

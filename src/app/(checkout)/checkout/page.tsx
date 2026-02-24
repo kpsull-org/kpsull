@@ -1,6 +1,6 @@
+import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth/auth';
 import { CheckoutAuth } from '@/components/checkout/checkout-auth';
-import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
 
 /**
  * Checkout Page
@@ -17,21 +17,9 @@ import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
 export default async function CheckoutPage() {
   const session = await auth();
 
-  // If user is authenticated, show the checkout stepper
+  // Authenticated users skip the auth gate and go directly to shipping
   if (session?.user) {
-    return (
-      <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-8">Finaliser ma commande</h1>
-        <CheckoutStepper
-          currentStep="shipping"
-          user={{
-            id: session.user.id,
-            name: session.user.name ?? undefined,
-            email: session.user.email ?? '',
-          }}
-        />
-      </div>
-    );
+    redirect('/checkout/shipping');
   }
 
   // If not authenticated, show auth/guest options

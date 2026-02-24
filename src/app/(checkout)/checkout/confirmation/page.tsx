@@ -82,6 +82,43 @@ function ConfirmationContent() {
     return <ConfirmationSkeleton />;
   }
 
+  // orderId présent mais pas de détails en sessionStorage → afficher confirmation minimale
+  if (orderId && !order) {
+    return (
+      <div className="container py-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+            <CheckCircle className="h-8 w-8 text-green-600" />
+          </div>
+          <h1 className="text-3xl font-bold mb-2">Merci pour votre commande !</h1>
+          <p className="text-muted-foreground mb-2">
+            Votre commande a bien été confirmée.
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Référence : <span className="font-medium font-mono">{orderId}</span>
+          </p>
+          <Card className="mb-6 text-left">
+            <CardContent className="flex items-center gap-4 py-4">
+              <Mail className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium">Confirmation envoyée par email</p>
+                <p className="text-sm text-muted-foreground">
+                  Vous recevrez un email avec les détails de votre commande.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Button asChild>
+            <Link href="/">
+              Continuer mes achats
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!orderId || !order) {
     return (
       <div className="container py-8 text-center">

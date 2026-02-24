@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useCartStore } from "@/lib/stores/cart.store";
 
 interface VariantData {
   id: string;
@@ -20,6 +21,7 @@ interface ProductClientProps {
   selectedVariantId: string;
   productPrice: number;
   productName: string;
+  creatorSlug: string;
   brandName?: string | null;
   description?: string | null;
   infoRows?: { key: string; value: string }[];
@@ -40,15 +42,18 @@ export function ProductClient({
   selectedVariantId,
   productPrice,
   productName,
+  creatorSlug,
   brandName,
   description,
   infoRows,
 }: Readonly<ProductClientProps>) {
   const router = useRouter();
+  const addItem = useCartStore((state) => state.addItem);
   const [currentVariantId, setCurrentVariantId] =
     useState(selectedVariantId);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const currentVariant =
     variants.find((v) => v.id === currentVariantId) ?? variants[0];
@@ -75,6 +80,28 @@ export function ProductClient({
   const handleSizeSelect = (size: string, inStock: boolean) => {
     if (!inStock) return;
     setSelectedSize((prev) => (prev === size ? null : size));
+  };
+
+  const handleAddToCart = () => {
+    const variantId = currentVariant.id;
+    const name = selectedSize
+      ? `${productName} - ${selectedSize}`
+      : productName;
+
+    addItem({
+      productId,
+      variantId,
+      name,
+      price: displayPrice, // déjà en centimes depuis la DB
+      image: currentVariant.images[0],
+      creatorSlug,
+      variantInfo: selectedSize
+        ? { type: 'Taille', value: selectedSize }
+        : undefined,
+    });
+
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   const hasMultipleVariants = variants.length > 1;
@@ -244,8 +271,9 @@ export function ProductClient({
                 ? "Veuillez sélectionner une taille"
                 : undefined
             }
+            onClick={handleAddToCart}
           >
-            Ajouter au panier
+            {addedToCart ? "✓ Ajouté au panier" : "Ajouter au panier"}
           </button>
 
           {availableSizes.length > 0 && selectedSize === null && (
