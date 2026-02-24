@@ -297,12 +297,12 @@ function ensureSeedAssetsDir(): void {
   }
 }
 
-function loadCheckpoint(totalImages: number): Checkpoint {
+function loadCheckpoint(filePath: string, totalImages: number): Checkpoint {
   ensureSeedAssetsDir();
 
-  if (fs.existsSync(CHECKPOINT_PATH)) {
+  if (fs.existsSync(filePath)) {
     try {
-      const raw = fs.readFileSync(CHECKPOINT_PATH, 'utf-8');
+      const raw = fs.readFileSync(filePath, 'utf-8');
       return JSON.parse(raw) as Checkpoint;
     } catch {
       console.warn('⚠️  Checkpoint corrompu, création d\'un nouveau checkpoint.');
@@ -319,10 +319,10 @@ function loadCheckpoint(totalImages: number): Checkpoint {
   };
 }
 
-function saveCheckpoint(checkpoint: Checkpoint): void {
+function saveCheckpoint(filePath: string, checkpoint: Checkpoint): void {
   ensureSeedAssetsDir();
   checkpoint.lastUpdatedAt = new Date().toISOString();
-  fs.writeFileSync(CHECKPOINT_PATH, JSON.stringify(checkpoint, null, 2), 'utf-8');
+  fs.writeFileSync(filePath, JSON.stringify(checkpoint, null, 2), 'utf-8');
 }
 
 function loadOutput(): SeedImagesOutput {
@@ -395,6 +395,7 @@ function loadGenerationSpecs(): GenerationSpec[] {
 async function fetchImageFromHuggingFace(
   prompt: string,
   hfToken: string,
+  dimensions?: { width: number; height: number },
 ): Promise<Buffer> {
   const response = await fetch(HF_ENDPOINT, {
     method: 'POST',
@@ -403,7 +404,10 @@ async function fetchImageFromHuggingFace(
       'Content-Type': 'application/json',
       Accept: 'image/jpeg',
     },
-    body: JSON.stringify({ inputs: prompt.slice(0, 500) }),
+    body: JSON.stringify({
+      inputs: prompt.slice(0, 500),
+      ...(dimensions ? { parameters: { width: dimensions.width, height: dimensions.height } } : {}),
+    }),
   });
 
   if (response.status === 401 || response.status === 403) {
@@ -440,12 +444,13 @@ async function generateImageWithRetry(
   prompt: string,
   hfToken: string,
   variantId: string,
+  dimensions?: { width: number; height: number },
 ): Promise<Buffer> {
   let attempt = 0;
 
   while (attempt < MAX_RETRIES) {
     try {
-      return await fetchImageFromHuggingFace(prompt, hfToken);
+      return await fetchImageFromHuggingFace(prompt, hfToken, dimensions);
     } catch (err) {
       const error = err as Error & { isRateLimit?: boolean; isLoading?: boolean; isFatal?: boolean };
 
@@ -582,7 +587,7 @@ async function processVariant(
 
       imageUrls.push(uploadedUrl);
       checkpoint.completedImages++;
-      saveCheckpoint(checkpoint);
+      saveCheckpoint(CHECKPOINT_PATH, checkpoint);
 
       console.log(`✅`);
     } catch (err) {
@@ -592,7 +597,7 @@ async function processVariant(
       const message = error.message || String(err);
       console.log(`❌ ${message.slice(0, 80)}`);
       checkpoint.failedImages++;
-      saveCheckpoint(checkpoint);
+      saveCheckpoint(CHECKPOINT_PATH, checkpoint);
       return 'error';
     }
 
@@ -612,7 +617,7 @@ async function processVariant(
     output.products[spec.productId]!.variants[spec.variantId] = imageUrls;
 
     saveOutput(output);
-    saveCheckpoint(checkpoint);
+    saveCheckpoint(CHECKPOINT_PATH, checkpoint);
   }
 
   return 'ok';
@@ -622,7 +627,7 @@ async function runGeneration(specs: GenerationSpec[]): Promise<void> {
   const hfToken = process.env.HF_TOKEN!;
   const totalImages = computeTotalImages(specs);
 
-  const checkpoint = loadCheckpoint(totalImages);
+  const checkpoint = loadCheckpoint(CHECKPOINT_PATH, totalImages);
   const output = loadOutput();
 
   const pendingSpecs = specs.filter((s) => !(s.variantId in checkpoint.images));
@@ -1283,35 +1288,6 @@ function generateMiniSpecs(): MiniItem[] {
   return items;
 }
 
-function loadMiniCheckpoint(): Checkpoint {
-  ensureSeedAssetsDir();
-
-  if (fs.existsSync(MINI_CHECKPOINT_PATH)) {
-    try {
-      const raw = fs.readFileSync(MINI_CHECKPOINT_PATH, 'utf-8');
-      return JSON.parse(raw) as Checkpoint;
-    } catch {
-      console.warn('⚠️  Mini checkpoint corrompu, création d\'un nouveau.');
-    }
-  }
-
-  return {
-    startedAt: new Date().toISOString(),
-    lastUpdatedAt: new Date().toISOString(),
-    totalImages: 576,
-    completedImages: 0,
-    failedImages: 0,
-    images: {},
-  };
-}
-
-function saveMiniCheckpoint(checkpoint: Checkpoint): void {
-  ensureSeedAssetsDir();
-  checkpoint.lastUpdatedAt = new Date().toISOString();
-  fs.writeFileSync(MINI_CHECKPOINT_PATH, JSON.stringify(checkpoint, null, 2), 'utf-8');
-}
-
-
 async function processMiniItem(
   item: MiniItem,
   checkpoint: Checkpoint,
@@ -1327,55 +1303,18 @@ async function processMiniItem(
     );
 
     try {
-      const response = await fetch(HF_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${hfToken}`,
-          'Content-Type': 'application/json',
-          Accept: 'image/jpeg',
-        },
-        body: JSON.stringify({
-          inputs: (item.prompts[imgIdx] ?? item.prompts[0]!).slice(0, 700),
-          parameters: { width: item.width, height: item.height },
-        }),
-      });
+      const prompt = (item.prompts[imgIdx] ?? item.prompts[0]!).slice(0, 700);
+      const imageBuffer = await generateImageWithRetry(
+        prompt,
+        hfToken,
+        item.key,
+        { width: item.width, height: item.height },
+      );
+      const uploadedUrl = await uploadImageToCloudinary(imageBuffer, item.key, imgIdx + 1);
 
-      if (response.status === 401 || response.status === 403) {
-        const body = await response.text();
-        const error = new Error(`❌ HF_TOKEN invalide (${response.status}). Regénérez sur https://huggingface.co/settings/tokens\n   Détail: ${body.slice(0, 100)}`);
-        Object.assign(error, { isFatal: true });
-        throw error;
-      }
-
-      if (response.status === 429) {
-        const error = new Error('Rate limit (429)');
-        Object.assign(error, { isRateLimit: true });
-        throw error;
-      }
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`HF API erreur HTTP ${response.status}: ${body.slice(0, 200)}`);
-      }
-
-      const imageBuffer = Buffer.from(await response.arrayBuffer());
-      const base64 = imageBuffer.toString('base64');
-      const dataUri = `data:image/jpeg;base64,${base64}`;
-
-      const uploadResult = await cloudinary.uploader.upload(dataUri, {
-        folder: 'kpsull-seed',
-        public_id: `${item.key}-${imgIdx + 1}`,
-        overwrite: false,
-        resource_type: 'image',
-      });
-
-      if (!uploadResult.secure_url) {
-        throw new Error(`Cloudinary: pas de secure_url pour ${item.key}-${imgIdx + 1}`);
-      }
-
-      imageUrls.push(uploadResult.secure_url);
+      imageUrls.push(uploadedUrl);
       checkpoint.completedImages++;
-      saveMiniCheckpoint(checkpoint);
+      saveCheckpoint(MINI_CHECKPOINT_PATH, checkpoint);
       console.log('✅');
     } catch (err) {
       const error = err as Error & { isFatal?: boolean };
@@ -1383,7 +1322,7 @@ async function processMiniItem(
       const message = error.message || String(err);
       console.log(`❌ ${message.slice(0, 80)}`);
       checkpoint.failedImages++;
-      saveMiniCheckpoint(checkpoint);
+      saveCheckpoint(MINI_CHECKPOINT_PATH, checkpoint);
       return 'error';
     }
 
@@ -1397,7 +1336,7 @@ async function processMiniItem(
       images: imageUrls,
       completedAt: new Date().toISOString(),
     };
-    saveMiniCheckpoint(checkpoint);
+    saveCheckpoint(MINI_CHECKPOINT_PATH, checkpoint);
   }
 
   return 'ok';
@@ -1406,7 +1345,7 @@ async function processMiniItem(
 async function runMiniGeneration(): Promise<void> {
   const hfToken = process.env.HF_TOKEN!;
   const allItems = generateMiniSpecs();
-  const checkpoint = loadMiniCheckpoint();
+  const checkpoint = loadCheckpoint(MINI_CHECKPOINT_PATH, 570);
 
   const pending = allItems.filter((item) => !(item.key in checkpoint.images));
   const pendingImageCount = pending.reduce((s, i) => s + i.imageCount, 0);
@@ -1497,7 +1436,7 @@ async function main(): Promise<void> {
 
   if (isStatus) {
     const totalImages = computeTotalImages(specs);
-    const checkpoint = loadCheckpoint(totalImages);
+    const checkpoint = loadCheckpoint(CHECKPOINT_PATH, totalImages);
     displayStatus(checkpoint, specs.length);
     return;
   }

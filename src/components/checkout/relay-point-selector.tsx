@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, MapPin, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RelayPoint } from '@/lib/schemas/checkout.schema';
+import relayPointsMock from './relay-points.mock.json';
 
 // TODO (production): Remplacer Brand "BDTEST13" par le Brand ID officiel Mondial Relay
 // Obtenir les credentials partenaire : https://www.mondialrelay.fr/nous-rejoindre/devenir-partenaire/
@@ -67,141 +68,8 @@ const DEPARTMENT_CHIEF_CITY: Record<string, string> = {
   '93': 'Bobigny', '94': 'Créteil', '95': 'Cergy', '97': 'Outre-Mer',
 };
 
-/** Helper compact pour créer un RelayPoint sans répéter les noms de propriétés */
-function rp(
-  id: string,
-  name: string,
-  address: string,
-  city: string,
-  postalCode: string,
-  openingHours: string,
-): RelayPoint {
-  return { id, name, address, city, postalCode, openingHours };
-}
-
 /** Mock relay points — utilisés en fallback si le widget ne se charge pas */
-const FALLBACK_RELAY_POINTS: Record<string, RelayPoint[]> = {
-  '06': [
-    rp('MR-06001', 'Tabac Masséna', '4 place Masséna', 'Nice', '06000', 'Lun-Sam 7h30-20h'),
-    rp('MR-06002', 'Presse Gambetta', '18 av. Gambetta', 'Nice', '06000', 'Lun-Sam 7h-19h30'),
-  ],
-  '13': [
-    rp('MR-13001', 'Tabac Vieux-Port', '2 quai du Port', 'Marseille', '13001', 'Lun-Sam 7h-20h'),
-    rp('MR-13006', 'Épicerie Cours Julien', '20 cours Julien', 'Marseille', '13006', 'Lun-Dim 8h-22h'),
-    rp('MR-13008', 'Tabac Prado', '135 av. du Prado', 'Marseille', '13008', 'Lun-Sam 7h-20h'),
-  ],
-  '14': [
-    rp('MR-14001', 'Tabac de la Paix', '3 place de la République', 'Caen', '14000', 'Lun-Sam 7h30-20h'),
-    rp('MR-14002', 'Presse Saint-Pierre', '12 rue Saint-Pierre', 'Caen', '14000', 'Lun-Sam 8h-19h'),
-  ],
-  '21': [
-    rp('MR-21001', 'Tabac Darcy', '1 place Darcy', 'Dijon', '21000', 'Lun-Sam 7h30-20h'),
-    rp('MR-21002', 'Épicerie Clemenceau', '8 av. Clemenceau', 'Dijon', '21000', 'Lun-Dim 8h-21h'),
-  ],
-  '29': [
-    rp('MR-29001', 'Tabac Cordeliers', '2 rue des Cordeliers', 'Quimper', '29000', 'Lun-Sam 7h30-19h30'),
-    rp('MR-29002', 'Presse Brest Centre', '15 rue de Siam', 'Brest', '29200', 'Lun-Sam 7h-20h'),
-  ],
-  '31': [
-    rp('MR-31001', 'Tabac Capitole', '1 place du Capitole', 'Toulouse', '31000', 'Lun-Sam 7h30-20h'),
-    rp('MR-31002', 'Épicerie Saint-Cyprien', '22 allées Charles-de-Fitte', 'Toulouse', '31300', 'Lun-Dim 8h-22h'),
-  ],
-  '33': [
-    rp('MR-33001', 'Tabac Place de la Bourse', '2 place de la Bourse', 'Bordeaux', '33000', 'Lun-Sam 7h30-20h'),
-    rp('MR-33002', 'Épicerie Chartrons', '5 cours du Médoc', 'Bordeaux', '33000', 'Lun-Dim 8h-21h'),
-  ],
-  '34': [
-    rp('MR-34001', 'Tabac Comédie', '3 place de la Comédie', 'Montpellier', '34000', 'Lun-Sam 7h30-20h'),
-    rp('MR-34002', 'Presse Antigone', '10 bd du Jeu-de-Paume', 'Montpellier', '34000', 'Lun-Sam 8h-19h30'),
-  ],
-  '35': [
-    rp('MR-35001', 'Tabac République', '6 place de la République', 'Rennes', '35000', 'Lun-Sam 7h30-20h'),
-    rp('MR-35002', 'Épicerie Thabor', '14 rue Nantaise', 'Rennes', '35000', 'Lun-Dim 8h-21h'),
-  ],
-  '38': [
-    rp('MR-38001', 'Tabac Victor Hugo', '2 place Victor-Hugo', 'Grenoble', '38000', 'Lun-Sam 7h30-20h'),
-    rp('MR-38002', 'Presse Championnet', '8 rue Championnet', 'Grenoble', '38000', 'Lun-Sam 8h-19h30'),
-  ],
-  '44': [
-    rp('MR-44001', 'Tabac Commerce', '3 place du Commerce', 'Nantes', '44000', 'Lun-Sam 7h30-20h'),
-    rp('MR-44002', 'Épicerie Bouffay', '12 rue de la Juiverie', 'Nantes', '44000', 'Lun-Dim 8h-22h'),
-  ],
-  '45': [
-    rp('MR-45001', 'Tabac Martroi', '1 place du Martroi', 'Orléans', '45000', 'Lun-Sam 7h30-20h'),
-    rp('MR-45002', 'Presse Saint-Charles', '6 rue Saint-Charles', 'Orléans', '45000', 'Lun-Sam 8h-19h30'),
-  ],
-  '49': [
-    rp('MR-49001', 'Tabac Ralliement', '4 place du Ralliement', 'Angers', '49000', 'Lun-Sam 7h30-20h'),
-    rp('MR-49002', 'Épicerie Doutre', '8 place de la Laiterie', 'Angers', '49100', 'Lun-Dim 8h-21h'),
-  ],
-  '51': [
-    rp('MR-51001', 'Tabac République', '5 place de la République', 'Reims', '51100', 'Lun-Sam 7h30-20h'),
-    rp('MR-51002', 'Presse Erlon', "22 place d'Erlon", 'Reims', '51100', 'Lun-Sam 8h-20h'),
-  ],
-  '54': [
-    rp('MR-54001', 'Tabac Stanislas', '2 place Stanislas', 'Nancy', '54000', 'Lun-Sam 7h30-20h'),
-    rp('MR-54002', 'Presse Carnot', '16 rue Carnot', 'Nancy', '54000', 'Lun-Sam 8h-19h30'),
-  ],
-  '57': [
-    rp('MR-57001', 'Tabac Gardon', '8 place du Gardon', 'Metz', '57000', 'Lun-Sam 7h30-20h'),
-    rp('MR-57002', 'Épicerie Saint-Étienne', '3 rue des Jardins', 'Metz', '57000', 'Lun-Dim 8h-21h'),
-  ],
-  '59': [
-    rp('MR-59001', 'Tabac Grand-Place', '2 place du Gén. de Gaulle', 'Lille', '59000', 'Lun-Sam 7h30-20h'),
-    rp('MR-59002', 'Presse Solférino', '10 rue Solférino', 'Lille', '59000', 'Lun-Sam 8h-20h'),
-    rp('MR-59003', 'Épicerie Vieux-Lille', '4 rue de la Monnaie', 'Lille', '59800', 'Lun-Dim 8h-22h'),
-  ],
-  '63': [
-    rp('MR-63001', 'Tabac Jaude', '1 place de Jaude', 'Clermont-Ferrand', '63000', 'Lun-Sam 7h30-20h'),
-    rp('MR-63002', 'Presse Blatin', '6 av. Blatin', 'Clermont-Ferrand', '63000', 'Lun-Sam 8h-19h30'),
-  ],
-  '67': [
-    rp('MR-67001', 'Tabac Place Kléber', '1 place Kléber', 'Strasbourg', '67000', 'Lun-Sam 7h30-20h'),
-    rp('MR-67002', 'Presse Petite France', '12 quai Saint-Thomas', 'Strasbourg', '67000', 'Lun-Sam 8h-20h'),
-  ],
-  '69': [
-    rp('MR-69002', 'Épicerie Bellecour', '15 place Bellecour', 'Lyon', '69002', 'Lun-Sam 8h-21h'),
-    rp('MR-69004', 'Tabac Croix-Rousse', '40 bd de la Croix-Rousse', 'Lyon', '69004', 'Lun-Dim 7h-20h'),
-    rp('MR-69006', 'Presse Confluence', '2 cours Charlemagne', 'Lyon', '69002', 'Lun-Sam 9h-20h'),
-  ],
-  '72': [
-    rp('MR-72001', 'Tabac République', '2 place de la République', 'Le Mans', '72000', 'Lun-Sam 7h30-20h'),
-    rp('MR-72002', 'Presse Jacobins', '8 rue des Jacobins', 'Le Mans', '72000', 'Lun-Sam 8h-19h30'),
-  ],
-  '74': [
-    rp('MR-74001', 'Tabac Bonlieu', '3 rue Jean-Jaurès', 'Annecy', '74000', 'Lun-Sam 7h30-20h'),
-    rp('MR-74002', 'Épicerie Vieille Ville', '10 rue Sainte-Claire', 'Annecy', '74000', 'Lun-Dim 8h-21h'),
-  ],
-  '75': [
-    rp('MR-75001', 'Tabac Châtelet', '12 rue de Rivoli', 'Paris', '75001', 'Lun-Sam 8h-20h'),
-    rp('MR-75003', 'Épicerie du Marais', '34 bd de Sébastopol', 'Paris', '75003', 'Lun-Dim 7h-22h'),
-    rp('MR-75011', 'Tabac Nation', '1 place de la Nation', 'Paris', '75011', 'Lun-Sam 7h-20h'),
-  ],
-  '76': [
-    rp('MR-76001', 'Tabac Vieux-Marché', '2 place du Vieux-Marché', 'Rouen', '76000', 'Lun-Sam 7h30-20h'),
-    rp('MR-76002', 'Presse Saint-Sever', "10 bd de l'Yser", 'Rouen', '76100', 'Lun-Sam 8h-19h30'),
-  ],
-  '83': [
-    rp('MR-83001', 'Tabac Liberté', '5 place de la Liberté', 'Toulon', '83000', 'Lun-Sam 7h30-20h'),
-    rp('MR-83002', 'Presse Mayol', '18 av. du Maréchal-Leclerc', 'Toulon', '83000', 'Lun-Sam 8h-19h30'),
-  ],
-  '84': [
-    rp('MR-84001', 'Tabac Horloge', "1 place de l'Horloge", 'Avignon', '84000', 'Lun-Sam 7h30-20h'),
-    rp('MR-84002', 'Épicerie Intra-Muros', '8 rue de la République', 'Avignon', '84000', 'Lun-Dim 8h-21h'),
-  ],
-  '92': [
-    rp('MR-92001', 'Tabac Defense', '1 parvis de la Défense', 'Courbevoie', '92400', 'Lun-Ven 7h-21h'),
-    rp('MR-92002', 'Presse Neuilly', '6 av. Charles-de-Gaulle', 'Neuilly-sur-Seine', '92200', 'Lun-Sam 7h30-20h'),
-  ],
-  '93': [
-    rp('MR-93001', 'Tabac Saint-Denis', '4 rue de la République', 'Saint-Denis', '93200', 'Lun-Sam 8h-20h'),
-    rp('MR-93002', 'Épicerie Montreuil', '10 place Jean-Jaurès', 'Montreuil', '93100', 'Lun-Dim 8h-22h'),
-  ],
-  '94': [
-    rp('MR-94001', 'Tabac Créteil', '3 rue Juliette-Récamier', 'Créteil', '94000', 'Lun-Sam 8h-20h'),
-    rp('MR-94002', 'Presse Vincennes', '2 av. de Paris', 'Vincennes', '94300', 'Lun-Sam 7h30-20h'),
-  ],
-};
+const FALLBACK_RELAY_POINTS = relayPointsMock as Record<string, RelayPoint[]>;
 
 function getFallbackRelayPoints(postalCode: string): RelayPoint[] {
   const prefix = postalCode.substring(0, 2);

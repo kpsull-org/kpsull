@@ -337,19 +337,16 @@ test.describe('Checkout — cart persistence cross-session', () => {
 // Scénario 3: Relay point selection
 // ---------------------------------------------------------------------------
 test.describe('Checkout — relay point selection', () => {
-  test('should show relay point selector when mondial-relay is selected', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await seedLocalStorageCart(page, [TEST_CART_ITEM]);
-    await seedSessionStorage(page, {
-      shippingAddress: TEST_SHIPPING_ADDRESS,
-    });
-
+    await seedSessionStorage(page, { shippingAddress: TEST_SHIPPING_ADDRESS });
     await page.goto('/checkout/carrier');
-
     await expect(
       page.getByRole('heading', { name: /mode de livraison/i })
     ).toBeVisible({ timeout: 10_000 });
+  });
 
-    // Select Mondial Relay (a relay carrier)
+  test('should show relay point selector when mondial-relay is selected', async ({ page }) => {
     await page.locator('#carrier-mondial-relay').check();
     await expect(page.locator('#carrier-mondial-relay')).toBeChecked();
 
@@ -365,18 +362,6 @@ test.describe('Checkout — relay point selection', () => {
   });
 
   test('should display 9 relay points for postal code 75001', async ({ page }) => {
-    await seedLocalStorageCart(page, [TEST_CART_ITEM]);
-    await seedSessionStorage(page, {
-      shippingAddress: TEST_SHIPPING_ADDRESS,
-    });
-
-    await page.goto('/checkout/carrier');
-
-    await expect(
-      page.getByRole('heading', { name: /mode de livraison/i })
-    ).toBeVisible({ timeout: 10_000 });
-
-    // Select Mondial Relay to trigger RelayPointSelector
     await page.locator('#carrier-mondial-relay').check();
 
     // Wait for the relay point selector to appear
@@ -384,77 +369,44 @@ test.describe('Checkout — relay point selection', () => {
       page.getByLabel(/code postal pour rechercher un point relais/i)
     ).toBeVisible({ timeout: 5_000 });
 
-    // Enter postal code 75001
     await page.getByLabel(/code postal pour rechercher un point relais/i).fill('75001');
-
-    // Click "Rechercher"
     await page.getByRole('button', { name: /rechercher/i }).click();
 
     // Should display 9 relay points for the 75 prefix
-    // Text format: "9 points relais trouvés près de 75001"
     await expect(
       page.getByText(/9 points? relais? trouv/i)
     ).toBeVisible({ timeout: 5_000 });
   });
 
   test('should allow selecting a relay point and confirm selection', async ({ page }) => {
-    await seedLocalStorageCart(page, [TEST_CART_ITEM]);
-    await seedSessionStorage(page, {
-      shippingAddress: TEST_SHIPPING_ADDRESS,
-    });
-
-    await page.goto('/checkout/carrier');
-
-    await expect(
-      page.getByRole('heading', { name: /mode de livraison/i })
-    ).toBeVisible({ timeout: 10_000 });
-
-    // Select Mondial Relay
     await page.locator('#carrier-mondial-relay').check();
 
     await expect(
       page.getByLabel(/code postal pour rechercher un point relais/i)
     ).toBeVisible({ timeout: 5_000 });
 
-    // Search for relay points
     await page.getByLabel(/code postal pour rechercher un point relais/i).fill('75001');
     await page.getByRole('button', { name: /rechercher/i }).click();
 
-    // Wait for results
     await expect(page.getByText(/points? relais? trouv/i)).toBeVisible({ timeout: 5_000 });
 
-    // Click the first relay point button
     const firstRelayPoint = page.locator('button[type="button"]').filter({
       hasText: /Tabac Presse Châtelet|Épicerie du Marais|Librairie République/,
     }).first();
 
     await firstRelayPoint.click();
 
-    // The selected relay point summary shows in green
     await expect(
       page.locator('.bg-green-50').filter({ hasText: /Tabac Presse|Épicerie|Librairie/ })
     ).toBeVisible({ timeout: 5_000 });
   });
 
   test('should require relay point selection before continuing', async ({ page }) => {
-    await seedLocalStorageCart(page, [TEST_CART_ITEM]);
-    await seedSessionStorage(page, {
-      shippingAddress: TEST_SHIPPING_ADDRESS,
-    });
-
-    await page.goto('/checkout/carrier');
-
-    await expect(
-      page.getByRole('heading', { name: /mode de livraison/i })
-    ).toBeVisible({ timeout: 10_000 });
-
     // Select Mondial Relay (relay carrier) but do NOT select a relay point
     await page.locator('#carrier-mondial-relay').check();
 
-    // Try to continue
     await page.getByRole('button', { name: /continuer vers le paiement/i }).click();
 
-    // Should show error for missing relay point
     await expect(
       page.getByText(/veuillez selectionner un point relais/i)
     ).toBeVisible();
