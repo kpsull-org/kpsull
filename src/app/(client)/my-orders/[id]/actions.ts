@@ -6,9 +6,40 @@ import { stripe } from '@/lib/stripe/client';
 import { PrismaOrderRepository } from '@/modules/orders/infrastructure/repositories/prisma-order.repository';
 import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories/prisma-return.repository';
 import { CancelOrderUseCase } from '@/modules/orders/application/use-cases/cancel-order.use-case';
+import type { Order } from '@/modules/orders/domain/entities/order.entity';
 import type { DisputeTypeValue } from '@/modules/disputes/domain';
 import type { ReturnReasonValue } from '@/modules/returns/domain';
 import type { ReturnRequest, ReturnItem } from '@/modules/returns/application/ports/return.repository.interface';
+
+type ActionError = { success: false; error: string };
+
+type OwnedOrderContext =
+  | ActionError
+  | { success: true; order: Order; userId: string };
+
+/**
+ * Verifies authentication and order ownership.
+ * Returns the order and userId on success, or an error result on failure.
+ */
+async function requireOwnedOrder(orderId: string): Promise<OwnedOrderContext> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Non authentifie' };
+  }
+
+  const orderRepository = new PrismaOrderRepository(prisma);
+  const order = await orderRepository.findById(orderId);
+
+  if (!order) {
+    return { success: false, error: 'Commande non trouvee' };
+  }
+
+  if (order.customerId !== session.user.id) {
+    return { success: false, error: 'Non autorise' };
+  }
+
+  return { success: true, order, userId: session.user.id };
+}
 
 /**
  * Server action to create a dispute for an order
@@ -19,24 +50,10 @@ export async function createDispute(
   _description: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await auth();
+    const ctx = await requireOwnedOrder(orderId);
+    if (!ctx.success) return ctx;
 
-    if (!session?.user) {
-      return { success: false, error: 'Non authentifie' };
-    }
-
-    const orderRepository = new PrismaOrderRepository(prisma);
-    const order = await orderRepository.findById(orderId);
-
-    if (!order) {
-      return { success: false, error: 'Commande non trouvee' };
-    }
-
-    if (order.customerId !== session.user.id) {
-      return { success: false, error: 'Non autorise' };
-    }
-
-    if (order.status.value !== 'DELIVERED') {
+    if (ctx.order.status.value !== 'DELIVERED') {
       return { success: false, error: 'Seules les commandes livrees peuvent faire objet de litige' };
     }
 
@@ -62,22 +79,10 @@ export async function requestReturn(
   additionalNotes?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await auth();
+    const ctx = await requireOwnedOrder(orderId);
+    if (!ctx.success) return ctx;
 
-    if (!session?.user) {
-      return { success: false, error: 'Non authentifie' };
-    }
-
-    const orderRepository = new PrismaOrderRepository(prisma);
-    const order = await orderRepository.findById(orderId);
-
-    if (!order) {
-      return { success: false, error: 'Commande non trouvee' };
-    }
-
-    if (order.customerId !== session.user.id) {
-      return { success: false, error: 'Non autorise' };
-    }
+    const { order } = ctx;
 
     if (order.status.value !== 'DELIVERED') {
       return { success: false, error: 'Seules les commandes livrees peuvent faire objet de retour' };
@@ -108,7 +113,7 @@ export async function requestReturn(
       orderId,
       orderNumber: order.orderNumber,
       creatorId: order.creatorId,
-      customerId: session.user.id,
+      customerId: ctx.userId,
       customerName: order.customerName,
       customerEmail: order.customerEmail,
       reason,
@@ -136,26 +141,14 @@ export async function cancelOrderAction(
   reason: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
-      return { success: false, error: 'Non authentifie' };
-    }
-
     if (!reason?.trim()) {
       return { success: false, error: "La raison d'annulation est requise" };
     }
 
-    const orderRepository = new PrismaOrderRepository(prisma);
-    const order = await orderRepository.findById(orderId);
+    const ctx = await requireOwnedOrder(orderId);
+    if (!ctx.success) return ctx;
 
-    if (!order) {
-      return { success: false, error: 'Commande non trouvee' };
-    }
-
-    if (order.customerId !== session.user.id) {
-      return { success: false, error: 'Non autorise' };
-    }
+    const { order } = ctx;
 
     if (order.status.value !== 'PAID') {
       return {
@@ -174,6 +167,7 @@ export async function cancelOrderAction(
     // Annuler la commande via use case (restitue aussi le stock)
     // Le use case vérifie creatorId — on passe order.creatorId car la vérification
     // client a déjà été faite ci-dessus (order.customerId === session.user.id)
+    const orderRepository = new PrismaOrderRepository(prisma);
     const cancelUseCase = new CancelOrderUseCase(orderRepository);
     const cancelResult = await cancelUseCase.execute({
       orderId,
