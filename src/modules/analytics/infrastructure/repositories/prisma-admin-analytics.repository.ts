@@ -39,6 +39,15 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
   // Internal helpers — Stripe
   // ---------------------------------------------------------------------------
 
+  private calcItemMRR(item: Stripe.SubscriptionItem): number {
+    const amount = item.price.unit_amount ?? 0;
+    const quantity = item.quantity ?? 1;
+    const interval = item.price.recurring?.interval;
+    if (interval === 'month') return amount * quantity;
+    if (interval === 'year') return Math.round((amount * quantity) / 12);
+    return 0;
+  }
+
   /**
    * Fetch MRR from active Stripe subscriptions.
    * Returns 0 if Stripe is not configured or has no active subscriptions.
@@ -54,25 +63,16 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
       const params: Stripe.SubscriptionListParams = { status: 'active', limit: 100 };
       if (startingAfter) params.starting_after = startingAfter;
 
-      const response: Stripe.ApiList<Stripe.Subscription> =
-        await this.stripe.subscriptions.list(params);
+      const response = await this.stripe.subscriptions.list(params);
 
       for (const sub of response.data) {
         for (const item of sub.items.data) {
-          const amount = item.price.unit_amount ?? 0;
-          const quantity = item.quantity ?? 1;
-          const interval = item.price.recurring?.interval;
-
-          if (interval === 'month') {
-            mrr += amount * quantity;
-          } else if (interval === 'year') {
-            mrr += Math.round((amount * quantity) / 12);
-          }
+          mrr += this.calcItemMRR(item);
         }
       }
 
       hasMore = response.has_more;
-      startingAfter = hasMore ? response.data[response.data.length - 1]?.id : undefined;
+      startingAfter = hasMore ? response.data.at(-1)?.id : undefined;
     }
 
     return mrr;

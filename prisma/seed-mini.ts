@@ -482,6 +482,14 @@ function buildVariantId(creatorId: string, colIdx: number, prodIdx: number, colo
   return `var_${creatorId}_${colIdx}_${prodIdx}_${colorIdx}`;
 }
 
+function buildVariantIdsForCreator(c: MiniCreatorDef): string[] {
+  return c.collections.flatMap((_, colIdx) =>
+    c.products.flatMap((_, prodIdx) =>
+      c.colors.map((_, colorIdx) => buildVariantId(c.id, colIdx, prodIdx, colorIdx))
+    )
+  );
+}
+
 function calcSubscriptionPeriod(billing: { interval: 'month' | 'year'; startDate: Date }): {
   start: Date;
   end: Date;
@@ -1230,11 +1238,7 @@ async function cleanupMiniSeedData(): Promise<void> {
     ),
   );
 
-  const variantIds = MINI_CREATORS.flatMap((c) =>
-    c.collections.flatMap((_, colIdx) =>
-      c.products.flatMap((_, prodIdx) => c.colors.map((_, colorIdx) => buildVariantId(c.id, colIdx, prodIdx, colorIdx))),
-    ),
-  );
+  const variantIds = MINI_CREATORS.flatMap(buildVariantIdsForCreator);
 
   const skusDeleted = await prisma.productSku.deleteMany({
     where: { variantId: { in: variantIds } },
