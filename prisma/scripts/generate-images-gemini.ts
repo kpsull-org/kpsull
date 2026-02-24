@@ -734,19 +734,20 @@ function resetMiniCheckpoint(): void {
 //
 // Usage : bun prisma/scripts/generate-images-gemini.ts --mini
 //
-// Génère 570 images pour le seed mini :
+// Génère 576 images pour le seed mini :
+//   - 6 images styles éditoriaux (Style.imageUrl, 1/style)
 //   - 6 profils créateurs (User.image)
 //   - 6 bannières créateurs (CreatorPage.bannerImage)
 //   - 18 covers collections (Project.coverImage)
 //   - 540 images variantes produit (ProductVariant.images, 2/variante)
 //
-// Checkpoint : prisma/seed-assets/image-generation-mini-progress.json
+// Checkpoint : prisma/seed-assets/image-generation-mini-v3-progress.json
 // ──────────────────────────────────────────────────────────────────────────────
 
 interface MiniItem {
   key: string;        // checkpoint key + Cloudinary public_id prefix
-  type: 'profile' | 'banner' | 'cover' | 'variant';
-  imageCount: number; // 1 pour profile/banner/cover, 2 pour variant
+  type: 'style' | 'profile' | 'banner' | 'cover' | 'variant';
+  imageCount: number; // 1 pour profile/banner/cover/style, 2 pour variant
   width: number;
   height: number;
   prompts: string[];  // [heroPrompt] ou [heroPrompt, detailPrompt] pour variants
@@ -799,6 +800,47 @@ const COLOR_EN: Record<string, string> = {
 function toEn(colorName: string): string {
   return COLOR_EN[colorName] ?? colorName;
 }
+
+// ─── Styles système — images éditoriales ──────────────────────────────────────
+
+interface MiniStyleConfig {
+  key: string;   // checkpoint key: "style_streetwear", "style_boudoir", etc.
+  name: string;
+  prompt: string;
+}
+
+const MINI_STYLES_CFG: MiniStyleConfig[] = [
+  {
+    key: 'style_streetwear',
+    name: 'Streetwear',
+    prompt: `Editorial fashion photography for "Streetwear" style concept. Urban concrete underpass, late afternoon golden light cutting through. Deconstructed oversized black jacket and cargo trousers hung on exposed rusted pipe, industrial backdrop. Raw graffiti wall in soft background focus. Cinematic wide shot, strong diagonal shadows, 8K.`,
+  },
+  {
+    key: 'style_boudoir',
+    name: 'Boudoir',
+    prompt: `Editorial fashion photography for "Boudoir" style concept. Intimate Parisian bedroom, late morning amber light through sheer ivory curtains. Fine French lingerie — silk charmeuse and Calais lace — draped over an antique chair edge and vintage perfume bottles on dressing table. Candle softly lit, warm sensual atmosphere, beautiful and tasteful. 8K cinematic.`,
+  },
+  {
+    key: 'style_artisanat',
+    name: 'Artisanat',
+    prompt: `Editorial fashion photography for "Artisanat" maker style concept. Sunlit atelier workshop, rough wooden workbench. Hands of a female artisan mid-work — casting molten metal into geometric mold, tools and metal shavings surrounding. Raw materials: hammered brass, oxidized silver, wax casting blocks. Warm tungsten overhead light, honest craft beauty. 8K.`,
+  },
+  {
+    key: 'style_cottagecore',
+    name: 'Cottagecore',
+    prompt: `Editorial fashion photography for "Cottagecore" style concept. Sun-dappled English garden, late morning soft light through apple tree canopy. White organic linen dress with hand-embroidered botanical flowers laid on wildflower meadow alongside pressed fern specimens, elderflower bunches, wicker basket. Dreamy pastoral atmosphere, gentle naturalistic beauty. 8K.`,
+  },
+  {
+    key: 'style_techwear',
+    name: 'Techwear',
+    prompt: `Editorial fashion photography for "Techwear" style concept. Futuristic brutalist overpass at blue hour, dramatic city lights. Modular black technical outerwear — YKK zippers, sealed seams, multiple utility pockets — hanging on industrial scaffold with precision. Misty rain droplets on waterproof ripstop. Cinematic cold blue-grey palette, technical precision aesthetic. 8K.`,
+  },
+  {
+    key: 'style_romantique',
+    name: 'Romantique',
+    prompt: `Editorial fashion photography for "Romantique" style concept. Wild rose garden at golden hour, dappled warm light through climbing roses. Flowing botanical-print silk midi dress and velvet evening gown draped over moss-covered stone bench. Fresh roses, dried lavender, illustrated sketchbook open. Ethereal romantic atmosphere, painterly beauty. 8K.`,
+  },
+];
 
 const MINI_CREATORS_CFG: MiniCreatorConfig[] = [
   // ─── 1. HUGO TESSIER — Streetwear déconstruit post-industriel ───────────────
@@ -1165,6 +1207,19 @@ const MINI_CREATORS_CFG: MiniCreatorConfig[] = [
 function generateMiniSpecs(): MiniItem[] {
   const items: MiniItem[] = [];
 
+  // 0. Style images (6 × 1 image = 6 images) — 768×512 landscape editorial
+  for (const style of MINI_STYLES_CFG) {
+    items.push({
+      key: style.key,
+      type: 'style',
+      imageCount: 1,
+      width: 768,
+      height: 512,
+      prompts: [style.prompt],
+      displayName: `Style — ${style.name}`,
+    });
+  }
+
   for (const c of MINI_CREATORS_CFG) {
     // 1. Profile portrait (512×512)
     items.push({
@@ -1243,7 +1298,7 @@ function loadMiniCheckpoint(): Checkpoint {
   return {
     startedAt: new Date().toISOString(),
     lastUpdatedAt: new Date().toISOString(),
-    totalImages: 570,
+    totalImages: 576,
     completedImages: 0,
     failedImages: 0,
     images: {},
@@ -1363,8 +1418,8 @@ async function runMiniGeneration(): Promise<void> {
   console.log('╚══════════════════════════════════════════════╝');
   console.log('');
   console.log(`Modèle:              ${HF_MODEL} (free tier)`);
-  console.log(`Items totaux:        ${allItems.length} (6 profils + 6 bannières + 18 covers + 270 variants)`);
-  console.log(`Images totales:      570`);
+  console.log(`Items totaux:        ${allItems.length} (6 styles + 6 profils + 6 bannières + 18 covers + 270 variants)`);
+  console.log(`Images totales:      576`);
   console.log(`Items restants:      ${pending.length}`);
   console.log(`Images restantes:    ${pendingImageCount}`);
   console.log(`Délai entre req:     ${DELAY_BETWEEN_REQUESTS_MS}ms`);

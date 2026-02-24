@@ -138,12 +138,12 @@ function loadMiniCheckpoint(): MiniCheckpoint {
 // ─── Styles système ───────────────────────────────────────────────────────────
 
 const MINI_STYLES = [
-  { id: 'style_mini_streetwear', name: 'Streetwear' },
-  { id: 'style_mini_lingerie',   name: 'Lingerie' },
-  { id: 'style_mini_bijoux',     name: 'Bijoux' },
-  { id: 'style_mini_enfant',     name: 'Enfant' },
-  { id: 'style_mini_techwear',   name: 'Techwear' },
-  { id: 'style_mini_romantique', name: 'Romantique' },
+  { id: 'style_mini_streetwear',  name: 'Streetwear'  },
+  { id: 'style_mini_boudoir',     name: 'Boudoir'     },
+  { id: 'style_mini_artisanat',   name: 'Artisanat'   },
+  { id: 'style_mini_cottagecore', name: 'Cottagecore' },
+  { id: 'style_mini_techwear',    name: 'Techwear'    },
+  { id: 'style_mini_romantique',  name: 'Romantique'  },
 ];
 
 // ─── Définition des 6 créateurs mini ──────────────────────────────────────────
@@ -215,7 +215,7 @@ const MINI_CREATORS: MiniCreatorDef[] = [
       { name: 'Rose nude', code: '#E8B4A0' },
     ],
     sizeSet: ['XS', 'S', 'M', 'L', 'XL'],
-    styleId: 'style_mini_lingerie',
+    styleId: 'style_mini_boudoir',
   },
   {
     id: 'yasmine_larbi',
@@ -249,7 +249,7 @@ const MINI_CREATORS: MiniCreatorDef[] = [
       { name: 'Bronze', code: '#8B5E3C' },
     ],
     sizeSet: ['Unique'],
-    styleId: 'style_mini_bijoux',
+    styleId: 'style_mini_artisanat',
   },
   {
     id: 'marie_durand',
@@ -266,16 +266,16 @@ const MINI_CREATORS: MiniCreatorDef[] = [
     siret: '12345678901004',
     stripeAccountId: 'acct_marie_durand_demo',
     collections: [
-      { name: 'Premiers Pas', desc: 'Essentiels bébé 0-24 mois en coton bio, blanc et écru, douceur pure' },
+      { name: 'Layette Douceur', desc: 'Layette bébé 0-18 mois en coton bio GOTS certifié — essentiels naissance, blanc et écru, douceur pure pour les premiers jours' },
       { name: 'Grandir Doucement', desc: 'Vêtements enfant 2-8 ans, tons terre naturels, jeu et raffinement' },
       { name: 'Dimanche Matin', desc: 'Tenues de cérémonie tous âges, lin fin et broderie anglaise' },
     ],
     products: [
-      { name: 'Barboteuse brodée', category: 'tshirt', priceRange: [2900, 4900], gender: 'Enfant', materials: '100% Coton bio GOTS', fit: 'Regular', season: 'Toutes saisons' },
-      { name: 'Cardigan bébé', category: 'pull_knitwear', priceRange: [3900, 6900], gender: 'Enfant', materials: '100% Laine mérinos bio GOTS', fit: 'Regular', season: 'Automne-Hiver' },
+      { name: 'Barboteuse brodée', category: 'tshirt', priceRange: [2900, 4900], gender: 'Bébé', materials: '100% Coton bio GOTS', fit: 'Regular', season: 'Toutes saisons' },
+      { name: 'Gigoteuse bébé', category: 'pull_knitwear', priceRange: [5900, 8900], gender: 'Bébé', materials: '100% Coton bio GOTS double épaisseur 2.5 tog', fit: 'Regular', season: 'Automne-Hiver' },
+      { name: 'Cardigan bébé', category: 'pull_knitwear', priceRange: [3900, 6900], gender: 'Bébé', materials: '100% Laine mérinos bio GOTS lavable machine', fit: 'Regular', season: 'Automne-Hiver' },
       { name: 'Robe enfant smockée', category: 'robe', priceRange: [4900, 8900], gender: 'Enfant', materials: '100% Coton voile GOTS', fit: 'Regular', season: 'Printemps-Été' },
       { name: 'Salopette enfant', category: 'pantalon', priceRange: [3900, 6900], gender: 'Enfant', materials: '100% Coton canvas bio', fit: 'Regular', season: 'Toutes saisons' },
-      { name: 'Veste réversible', category: 'veste_blouson', priceRange: [4900, 7900], gender: 'Enfant', materials: 'Coton canvas + coton imprimé', fit: 'Regular', season: 'Printemps-Automne' },
     ],
     colors: [
       { name: 'Blanc naturel', code: '#FAF7F2' },
@@ -283,7 +283,7 @@ const MINI_CREATORS: MiniCreatorDef[] = [
       { name: 'Vert sauge', code: '#8FA88A' },
     ],
     sizeSet: ['0-3M', '3-6M', '6-12M', '12-18M', '18-24M', '2Y', '4Y', '6Y', '8Y'],
-    styleId: 'style_mini_enfant',
+    styleId: 'style_mini_cottagecore',
   },
   {
     id: 'louis_renard',
@@ -423,16 +423,20 @@ async function seedAdmin(hashedPassword: string): Promise<void> {
 
 // ─── Seed styles système ──────────────────────────────────────────────────────
 
-async function seedStyles(): Promise<void> {
+async function seedStyles(checkpoint: MiniCheckpoint): Promise<void> {
   for (const s of MINI_STYLES) {
+    // clé checkpoint : "style_streetwear", "style_boudoir", etc.
+    const styleKey = `style_${s.id.replace('style_mini_', '')}`;
+    const imageUrl = checkpoint.images[styleKey]?.images[0] ?? null;
     await prisma.style.upsert({
       where: { id: s.id },
-      update: { name: s.name },
+      update: { name: s.name, ...(imageUrl ? { imageUrl } : {}) },
       create: {
         id: s.id,
         name: s.name,
         isCustom: false,
         status: 'APPROVED',
+        ...(imageUrl ? { imageUrl } : {}),
       },
     });
   }
@@ -1172,7 +1176,7 @@ async function main(): Promise<void> {
 
   // Styles système (requis avant les produits)
   console.log('▶ Styles système...');
-  await seedStyles();
+  await seedStyles(checkpoint);
 
   // Admin
   console.log('▶ Admin...');

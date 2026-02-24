@@ -1,8 +1,8 @@
 {
   "startedAt": "2026-02-24T08:50:39.051Z",
-  "lastUpdatedAt": "2026-02-24T12:43:00.005Z",
+  "lastUpdatedAt": "2026-02-24T13:21:00.614Z",
   "totalImages": 570,
-  "completedImages": 467,
+  "completedImages": 577,
   "failedImages": 0,
   "images": {
     "profile_hugo_tessier": {
@@ -1694,6 +1694,422 @@
         "https://res.cloudinary.com/damucxy2t/image/upload/v1771936943/kpsull-seed/var_louis_renard_2_3_0-2.jpg"
       ],
       "completedAt": "2026-02-24T12:42:46.208Z"
+    },
+    "var_louis_renard_2_3_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771936979/kpsull-seed/var_louis_renard_2_3_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771936993/kpsull-seed/var_louis_renard_2_3_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:43:13.625Z"
+    },
+    "var_louis_renard_2_3_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937006/kpsull-seed/var_louis_renard_2_3_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937021/kpsull-seed/var_louis_renard_2_3_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:43:43.804Z"
+    },
+    "var_louis_renard_2_4_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937037/kpsull-seed/var_louis_renard_2_4_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937051/kpsull-seed/var_louis_renard_2_4_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:44:11.476Z"
+    },
+    "var_louis_renard_2_4_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937064/kpsull-seed/var_louis_renard_2_4_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937078/kpsull-seed/var_louis_renard_2_4_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:44:39.133Z"
+    },
+    "var_louis_renard_2_4_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937092/kpsull-seed/var_louis_renard_2_4_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937106/kpsull-seed/var_louis_renard_2_4_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:45:06.776Z"
+    },
+    "profile_camille_petit": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937121/kpsull-seed/profile_camille_petit-1.jpg"
+      ],
+      "completedAt": "2026-02-24T12:45:21.441Z"
+    },
+    "banner_camille_petit": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937136/kpsull-seed/banner_camille_petit-1.jpg"
+      ],
+      "completedAt": "2026-02-24T12:45:36.730Z"
+    },
+    "cover_camille_petit_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937151/kpsull-seed/cover_camille_petit_0-1.jpg"
+      ],
+      "completedAt": "2026-02-24T12:45:51.643Z"
+    },
+    "var_camille_petit_0_0_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937166/kpsull-seed/var_camille_petit_0_0_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937181/kpsull-seed/var_camille_petit_0_0_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:46:22.483Z"
+    },
+    "var_camille_petit_0_0_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937196/kpsull-seed/var_camille_petit_0_0_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937211/kpsull-seed/var_camille_petit_0_0_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:46:51.493Z"
+    },
+    "var_camille_petit_0_0_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937225/kpsull-seed/var_camille_petit_0_0_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937240/kpsull-seed/var_camille_petit_0_0_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:47:21.001Z"
+    },
+    "var_camille_petit_0_1_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937255/kpsull-seed/var_camille_petit_0_1_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937269/kpsull-seed/var_camille_petit_0_1_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:47:50.018Z"
+    },
+    "var_camille_petit_0_1_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937284/kpsull-seed/var_camille_petit_0_1_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937298/kpsull-seed/var_camille_petit_0_1_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:48:19.001Z"
+    },
+    "var_camille_petit_0_1_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937315/kpsull-seed/var_camille_petit_0_1_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937330/kpsull-seed/var_camille_petit_0_1_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:48:51.193Z"
+    },
+    "var_camille_petit_0_2_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937345/kpsull-seed/var_camille_petit_0_2_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937359/kpsull-seed/var_camille_petit_0_2_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:49:20.249Z"
+    },
+    "var_camille_petit_0_2_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937374/kpsull-seed/var_camille_petit_0_2_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937390/kpsull-seed/var_camille_petit_0_2_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:49:51.651Z"
+    },
+    "var_camille_petit_0_2_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937406/kpsull-seed/var_camille_petit_0_2_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937427/kpsull-seed/var_camille_petit_0_2_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:50:27.385Z"
+    },
+    "var_camille_petit_0_3_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937441/kpsull-seed/var_camille_petit_0_3_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937456/kpsull-seed/var_camille_petit_0_3_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:50:57.125Z"
+    },
+    "var_camille_petit_0_3_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937471/kpsull-seed/var_camille_petit_0_3_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937486/kpsull-seed/var_camille_petit_0_3_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:51:26.734Z"
+    },
+    "var_camille_petit_0_3_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937501/kpsull-seed/var_camille_petit_0_3_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937515/kpsull-seed/var_camille_petit_0_3_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:51:56.145Z"
+    },
+    "var_camille_petit_0_4_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937530/kpsull-seed/var_camille_petit_0_4_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937545/kpsull-seed/var_camille_petit_0_4_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:52:25.526Z"
+    },
+    "var_camille_petit_0_4_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937559/kpsull-seed/var_camille_petit_0_4_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937574/kpsull-seed/var_camille_petit_0_4_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:52:55.178Z"
+    },
+    "var_camille_petit_0_4_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937589/kpsull-seed/var_camille_petit_0_4_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937605/kpsull-seed/var_camille_petit_0_4_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:53:26.443Z"
+    },
+    "cover_camille_petit_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937624/kpsull-seed/cover_camille_petit_1-1.jpg"
+      ],
+      "completedAt": "2026-02-24T12:53:44.573Z"
+    },
+    "var_camille_petit_1_0_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937637/kpsull-seed/var_camille_petit_1_0_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937651/kpsull-seed/var_camille_petit_1_0_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:54:11.862Z"
+    },
+    "var_camille_petit_1_0_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937665/kpsull-seed/var_camille_petit_1_0_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937679/kpsull-seed/var_camille_petit_1_0_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:54:39.993Z"
+    },
+    "var_camille_petit_1_0_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937693/kpsull-seed/var_camille_petit_1_0_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937707/kpsull-seed/var_camille_petit_1_0_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:55:08.632Z"
+    },
+    "var_camille_petit_1_1_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937721/kpsull-seed/var_camille_petit_1_1_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937735/kpsull-seed/var_camille_petit_1_1_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:55:36.889Z"
+    },
+    "var_camille_petit_1_1_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937750/kpsull-seed/var_camille_petit_1_1_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937763/kpsull-seed/var_camille_petit_1_1_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:56:05.223Z"
+    },
+    "var_camille_petit_1_1_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937778/kpsull-seed/var_camille_petit_1_1_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937792/kpsull-seed/var_camille_petit_1_1_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:56:33.112Z"
+    },
+    "var_camille_petit_1_2_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937806/kpsull-seed/var_camille_petit_1_2_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937820/kpsull-seed/var_camille_petit_1_2_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:57:00.799Z"
+    },
+    "var_camille_petit_1_2_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937834/kpsull-seed/var_camille_petit_1_2_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937848/kpsull-seed/var_camille_petit_1_2_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:57:28.537Z"
+    },
+    "var_camille_petit_1_2_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937861/kpsull-seed/var_camille_petit_1_2_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937875/kpsull-seed/var_camille_petit_1_2_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:57:56.506Z"
+    },
+    "var_camille_petit_1_3_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937889/kpsull-seed/var_camille_petit_1_3_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937904/kpsull-seed/var_camille_petit_1_3_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:58:24.770Z"
+    },
+    "var_camille_petit_1_3_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937918/kpsull-seed/var_camille_petit_1_3_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937932/kpsull-seed/var_camille_petit_1_3_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:58:52.804Z"
+    },
+    "var_camille_petit_1_3_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937946/kpsull-seed/var_camille_petit_1_3_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937959/kpsull-seed/var_camille_petit_1_3_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:59:20.524Z"
+    },
+    "var_camille_petit_1_4_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937973/kpsull-seed/var_camille_petit_1_4_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771937987/kpsull-seed/var_camille_petit_1_4_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T12:59:48.003Z"
+    },
+    "var_camille_petit_1_4_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938001/kpsull-seed/var_camille_petit_1_4_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938014/kpsull-seed/var_camille_petit_1_4_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:00:15.353Z"
+    },
+    "var_camille_petit_1_4_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938028/kpsull-seed/var_camille_petit_1_4_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938042/kpsull-seed/var_camille_petit_1_4_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:00:43.037Z"
+    },
+    "cover_camille_petit_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938065/kpsull-seed/cover_camille_petit_2-1.jpg"
+      ],
+      "completedAt": "2026-02-24T13:01:06.507Z"
+    },
+    "var_camille_petit_2_0_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938079/kpsull-seed/var_camille_petit_2_0_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938093/kpsull-seed/var_camille_petit_2_0_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:01:34.649Z"
+    },
+    "var_camille_petit_2_0_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938109/kpsull-seed/var_camille_petit_2_0_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938125/kpsull-seed/var_camille_petit_2_0_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:02:05.661Z"
+    },
+    "var_camille_petit_2_0_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938139/kpsull-seed/var_camille_petit_2_0_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938153/kpsull-seed/var_camille_petit_2_0_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:02:34.157Z"
+    },
+    "var_camille_petit_2_1_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938167/kpsull-seed/var_camille_petit_2_1_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938181/kpsull-seed/var_camille_petit_2_1_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:03:02.051Z"
+    },
+    "var_camille_petit_2_1_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938195/kpsull-seed/var_camille_petit_2_1_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938208/kpsull-seed/var_camille_petit_2_1_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:03:29.811Z"
+    },
+    "var_camille_petit_2_1_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938223/kpsull-seed/var_camille_petit_2_1_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938237/kpsull-seed/var_camille_petit_2_1_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:03:58.380Z"
+    },
+    "var_camille_petit_2_2_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938251/kpsull-seed/var_camille_petit_2_2_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938265/kpsull-seed/var_camille_petit_2_2_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:04:26.078Z"
+    },
+    "var_camille_petit_2_2_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938279/kpsull-seed/var_camille_petit_2_2_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938296/kpsull-seed/var_camille_petit_2_2_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:05:20.730Z"
+    },
+    "var_camille_petit_2_2_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938334/kpsull-seed/var_camille_petit_2_2_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938348/kpsull-seed/var_camille_petit_2_2_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:05:48.500Z"
+    },
+    "var_camille_petit_2_3_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938368/kpsull-seed/var_camille_petit_2_3_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938411/kpsull-seed/var_camille_petit_2_3_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:06:51.437Z"
+    },
+    "var_camille_petit_2_3_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938424/kpsull-seed/var_camille_petit_2_3_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938438/kpsull-seed/var_camille_petit_2_3_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:07:18.764Z"
+    },
+    "var_camille_petit_2_3_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938452/kpsull-seed/var_camille_petit_2_3_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938465/kpsull-seed/var_camille_petit_2_3_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:07:46.394Z"
+    },
+    "var_camille_petit_2_4_0": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938479/kpsull-seed/var_camille_petit_2_4_0-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938493/kpsull-seed/var_camille_petit_2_4_0-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:08:13.762Z"
+    },
+    "var_camille_petit_2_4_1": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938507/kpsull-seed/var_camille_petit_2_4_1-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938521/kpsull-seed/var_camille_petit_2_4_1-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:08:41.745Z"
+    },
+    "var_camille_petit_2_4_2": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938535/kpsull-seed/var_camille_petit_2_4_2-1.jpg",
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771938549/kpsull-seed/var_camille_petit_2_4_2-2.jpg"
+      ],
+      "completedAt": "2026-02-24T13:09:09.747Z"
+    },
+    "style_streetwear": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771939182/kpsull-seed/style_streetwear-1.jpg"
+      ],
+      "completedAt": "2026-02-24T13:19:43.510Z"
+    },
+    "style_boudoir": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771939198/kpsull-seed/style_boudoir-1.jpg"
+      ],
+      "completedAt": "2026-02-24T13:19:58.581Z"
+    },
+    "style_artisanat": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771939213/kpsull-seed/style_artisanat-1.jpg"
+      ],
+      "completedAt": "2026-02-24T13:20:13.772Z"
+    },
+    "style_cottagecore": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771939228/kpsull-seed/style_cottagecore-1.jpg"
+      ],
+      "completedAt": "2026-02-24T13:20:30.090Z"
+    },
+    "style_techwear": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771939244/kpsull-seed/style_techwear-1.jpg"
+      ],
+      "completedAt": "2026-02-24T13:20:45.051Z"
+    },
+    "style_romantique": {
+      "images": [
+        "https://res.cloudinary.com/damucxy2t/image/upload/v1771939259/kpsull-seed/style_romantique-1.jpg"
+      ],
+      "completedAt": "2026-02-24T13:21:00.614Z"
     }
   }
 }

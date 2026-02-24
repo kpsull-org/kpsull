@@ -105,101 +105,104 @@ export default async function CreateursPage() {
             const previewVariants = variantsByCreator.get(page.creatorId) ?? [];
 
             return (
-              <Link
+              <div
                 key={page.id}
-                href={`/${page.slug}`}
                 className={[
-                  'group block border-b border-black',
+                  'border-b border-black',
                   idx % 2 === 0 ? 'sm:border-r' : '',
                 ].join(' ')}
               >
-                      {/* Bannière */}
-                      <div className="relative aspect-video overflow-hidden bg-[#EBEBEB]">
-                        {page.bannerImage ? (
-                          <Image
-                            src={page.bannerImage}
-                            alt={page.title}
-                            fill
-                            sizes="(max-width: 640px) 100vw, 50vw"
-                            className="object-cover transition-transform duration-700 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="h-full w-full bg-[#F0F0EE]" />
-                        )}
-                        {/* Nom en overlay */}
-                        <div className="absolute inset-0 bg-black/30 flex items-end p-4 md:p-6">
-                          <p className="font-[family-name:var(--font-jacquard-12)] text-3xl leading-none text-white md:text-4xl">
-                            {page.title}
-                          </p>
-                        </div>
-                      </div>
+                {/* Bannière + infos texte → lien vers la page créateur */}
+                <Link href={`/${page.slug}`} className="group block">
+                  {/* Bannière */}
+                  <div className="relative aspect-video overflow-hidden bg-[#EBEBEB]">
+                    {page.bannerImage ? (
+                      <Image
+                        src={page.bannerImage}
+                        alt={page.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 50vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-[#F0F0EE]" />
+                    )}
+                    {/* Nom en overlay */}
+                    <div className="absolute inset-0 bg-black/30 flex items-end p-4 md:p-6">
+                      <p className="font-[family-name:var(--font-jacquard-12)] text-3xl leading-none text-white md:text-4xl">
+                        {page.title}
+                      </p>
+                    </div>
+                  </div>
 
-                      {/* Infos texte (avec padding) */}
-                      {(page.tagline ?? page.description) && (
-                        <div className="border-t border-black px-4 py-3 md:px-6">
-                          {page.tagline && (
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-black/50">
-                              {page.tagline}
-                            </p>
-                          )}
-                          {page.description && (
-                            <p className="line-clamp-2 text-sm text-black/60">
-                              {page.description}
-                            </p>
-                          )}
-                        </div>
+                  {/* Infos texte */}
+                  {(page.tagline ?? page.description) && (
+                    <div className="border-t border-black px-4 py-3 md:px-6">
+                      {page.tagline && (
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-black/50">
+                          {page.tagline}
+                        </p>
                       )}
-
-                      {/* Mini-grille produits — pleine largeur, bord à bord */}
-                      {previewVariants.length > 0 && (
-                        <div className="border-t border-black/10 grid grid-cols-4 gap-2 p-2">
-                          {previewVariants.map((v) => {
-                            const imgs = Array.isArray(v.images)
-                              ? (v.images as string[])
-                              : [];
-                            const img1 = imgs[0] ?? null;
-                            const img2 = imgs[1] ?? null;
-                            const price = v.priceOverride ?? v.product.price;
-
-                            return (
-                              <div
-                                key={v.id}
-                                className="group/item relative aspect-square overflow-hidden bg-[#F5F5F3]"
-                              >
-                                {img1 && (
-                                  <>
-                                    <Image
-                                      src={img1}
-                                      alt={v.product.name}
-                                      fill
-                                      sizes="12vw"
-                                      className={`object-cover transition-all duration-500 ${
-                                        img2
-                                          ? 'group-hover/item:opacity-0'
-                                          : 'group-hover/item:scale-105'
-                                      }`}
-                                    />
-                                    {img2 && (
-                                      <Image
-                                        src={img2}
-                                        alt={v.product.name}
-                                        fill
-                                        sizes="12vw"
-                                        className="absolute inset-0 object-cover opacity-0 transition-opacity duration-500 group-hover/item:opacity-100"
-                                      />
-                                    )}
-                                  </>
-                                )}
-                                {/* Prix : visible uniquement au hover, en bas à droite */}
-                                <span className="absolute bottom-1 right-1 bg-black/60 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white opacity-0 transition-opacity duration-200 group-hover/item:opacity-100 backdrop-blur-[2px]">
-                                  {formatPrice(price)}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                      {page.description && (
+                        <p className="line-clamp-2 text-sm text-black/60">
+                          {page.description}
+                        </p>
                       )}
-              </Link>
+                    </div>
+                  )}
+                </Link>
+
+                {/* Mini-grille produits — chaque produit redirige vers sa propre page */}
+                {previewVariants.length > 0 && (
+                  <div className="border-t border-black/10 grid grid-cols-4 gap-2 p-2">
+                    {previewVariants.map((v) => {
+                      const imgs = Array.isArray(v.images)
+                        ? (v.images as string[])
+                        : [];
+                      const img1 = imgs[0] ?? null;
+                      const img2 = imgs[1] ?? null;
+                      const price = v.priceOverride ?? v.product.price;
+
+                      return (
+                        <Link
+                          key={v.id}
+                          href={`/${page.slug}/products/${v.product.id}`}
+                          className="group/item relative aspect-square block overflow-hidden bg-[#F5F5F3]"
+                        >
+                          {img1 && (
+                            <>
+                              <Image
+                                src={img1}
+                                alt={v.product.name}
+                                fill
+                                sizes="12vw"
+                                className={`object-cover transition-all duration-500 ${
+                                  img2
+                                    ? 'group-hover/item:opacity-0'
+                                    : 'group-hover/item:scale-105'
+                                }`}
+                              />
+                              {img2 && (
+                                <Image
+                                  src={img2}
+                                  alt={v.product.name}
+                                  fill
+                                  sizes="12vw"
+                                  className="absolute inset-0 object-cover opacity-0 transition-opacity duration-500 group-hover/item:opacity-100"
+                                />
+                              )}
+                            </>
+                          )}
+                          {/* Prix : visible uniquement au hover, en bas à droite */}
+                          <span className="absolute bottom-1 right-1 bg-black/60 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white opacity-0 transition-opacity duration-200 group-hover/item:opacity-100 backdrop-blur-[2px]">
+                            {formatPrice(price)}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
