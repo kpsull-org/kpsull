@@ -1,7 +1,8 @@
 'use client';
 
-import { Users, DollarSign, ShoppingCart, UserPlus } from 'lucide-react';
+import { Users, DollarSign, ShoppingCart, UserPlus, PieChart } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export interface AdminStatsData {
@@ -13,10 +14,8 @@ export interface AdminStatsData {
   totalPlatformRevenue: number;
   /** Percentage change in revenue vs previous period */
   revenueChange?: number;
-  /** Revenue from subscriptions in the current period in cents (NOT MRR) */
+  /** Revenue from subscriptions in the current period in cents */
   subscriptionRevenue?: number;
-  /** Monthly Recurring Revenue from active subscriptions in cents */
-  subscriptionMRR?: number;
   /** Revenue from commissions only in cents */
   commissionRevenue?: number;
   /** Total number of orders across the platform */
@@ -38,9 +37,6 @@ export interface AdminStatsCardsProps {
   className?: string;
 }
 
-/**
- * Format a number as currency (from cents)
- */
 function formatCurrency(valueInCents: number, currency: string): string {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -50,47 +46,96 @@ function formatCurrency(valueInCents: number, currency: string): string {
   }).format(valueInCents / 100);
 }
 
-/**
- * Format a number with thousands separator
- */
 function formatNumber(value: number): string {
   return new Intl.NumberFormat('fr-FR').format(value);
 }
 
 /**
+ * RevenueBreakdownCard
+ *
+ * 5th card — shows commissions vs subscriptions split with a proportional bar.
+ */
+function RevenueBreakdownCard({
+  commissions,
+  subscriptions,
+  currency,
+}: {
+  commissions: number;
+  subscriptions: number;
+  currency: string;
+}) {
+  const total = commissions + subscriptions;
+  const commissionsPercent = total > 0 ? Math.round((commissions / total) * 100) : 50;
+  const subscriptionsPercent = 100 - commissionsPercent;
+
+  return (
+    <Card className="transition-shadow hover:shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          Répartition du CA
+        </CardTitle>
+        <PieChart className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Commissions row */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+            <span className="text-muted-foreground">Commissions</span>
+          </div>
+          <span className="font-semibold tabular-nums">
+            {formatCurrency(commissions, currency)}
+          </span>
+        </div>
+
+        {/* Subscriptions row */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+            <span className="text-muted-foreground">Abonnements</span>
+          </div>
+          <span className="font-semibold tabular-nums">
+            {formatCurrency(subscriptions, currency)}
+          </span>
+        </div>
+
+        {/* Proportional bar */}
+        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="flex h-full"
+          >
+            <div
+              className="bg-primary transition-all"
+              style={{ width: `${commissionsPercent}%` }}
+              title={`Commissions ${commissionsPercent}%`}
+            />
+            <div
+              className="bg-green-500 transition-all"
+              style={{ width: `${subscriptionsPercent}%` }}
+              title={`Abonnements ${subscriptionsPercent}%`}
+            />
+          </div>
+        </div>
+
+        {/* Percentages */}
+        <div className="flex justify-between text-[11px] text-muted-foreground">
+          <span>{commissionsPercent}%</span>
+          <span>{subscriptionsPercent}%</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
  * AdminStatsCards
  *
- * Story 11-1: Dashboard admin KPIs
- *
- * Displays a grid of 4 KPI cards for the admin dashboard:
- * - Createurs actifs (Active Creators)
- * - CA plateforme (Platform Revenue)
- * - Commandes totales (Total Orders)
- * - Nouveaux createurs (New Creators)
- *
- * Each card shows the current value and optionally the percentage
- * change compared to the previous period.
- *
- * Acceptance Criteria:
- * - AC1: KPIs plateforme (nombre createurs, CA total plateforme, commandes totales)
- * - AC2: Tendances vs periode precedente
- *
- * @example
- * ```tsx
- * <AdminStatsCards
- *   data={{
- *     totalCreators: 142,
- *     creatorsChange: 13.6,
- *     totalPlatformRevenue: 18750000, // in cents
- *     revenueChange: 23.4,
- *     totalOrders: 2145,
- *     ordersChange: 13.5,
- *     newCreators: 24,
- *     newCreatorsChange: 33.3,
- *   }}
- *   currency="EUR"
- * />
- * ```
+ * Displays a grid of 5 KPI cards for the admin dashboard:
+ * 1. Créateurs actifs
+ * 2. CA plateforme (total)
+ * 3. Commandes totales
+ * 4. Nouveaux créateurs
+ * 5. Répartition du CA (commissions vs abonnements)
  */
 export function AdminStatsCards({
   data,
@@ -102,9 +147,8 @@ export function AdminStatsCards({
     creatorsChange,
     totalPlatformRevenue,
     revenueChange,
-    subscriptionRevenue,
-    subscriptionMRR,
-    commissionRevenue,
+    subscriptionRevenue = 0,
+    commissionRevenue = 0,
     totalOrders,
     ordersChange,
     newCreators,
@@ -114,7 +158,7 @@ export function AdminStatsCards({
   return (
     <div
       className={cn(
-        'grid gap-4 md:grid-cols-2 lg:grid-cols-4',
+        'grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
         className
       )}
     >
@@ -126,28 +170,13 @@ export function AdminStatsCards({
         comparisonLabel="vs mois precedent"
       />
 
-      <div className="flex flex-col gap-2">
-        <StatCard
-          title="CA plateforme"
-          value={formatCurrency(totalPlatformRevenue, currency)}
-          icon={DollarSign}
-          percentageChange={revenueChange}
-          comparisonLabel="vs mois precedent"
-        />
-        {(subscriptionRevenue !== undefined || commissionRevenue !== undefined || subscriptionMRR !== undefined) && (
-          <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground space-y-0.5">
-            {subscriptionRevenue !== undefined && (
-              <p>Abonnements&nbsp;: {formatCurrency(subscriptionRevenue, currency)}</p>
-            )}
-            {commissionRevenue !== undefined && (
-              <p>Commissions&nbsp;: {formatCurrency(commissionRevenue, currency)}</p>
-            )}
-            {subscriptionMRR !== undefined && subscriptionMRR > 0 && (
-              <p className="border-t pt-0.5 mt-0.5">MRR&nbsp;: {formatCurrency(subscriptionMRR, currency)}/mois</p>
-            )}
-          </div>
-        )}
-      </div>
+      <StatCard
+        title="CA plateforme"
+        value={formatCurrency(totalPlatformRevenue, currency)}
+        icon={DollarSign}
+        percentageChange={revenueChange}
+        comparisonLabel="vs mois precedent"
+      />
 
       <StatCard
         title="Commandes totales"
@@ -163,6 +192,12 @@ export function AdminStatsCards({
         icon={UserPlus}
         percentageChange={newCreatorsChange}
         comparisonLabel="vs mois precedent"
+      />
+
+      <RevenueBreakdownCard
+        commissions={commissionRevenue}
+        subscriptions={subscriptionRevenue}
+        currency={currency}
       />
     </div>
   );

@@ -90,7 +90,6 @@ export default async function AdminRevenuePage() {
             totalPlatformRevenue: stats.totalPlatformRevenue,
             revenueChange: stats.revenueChange,
             subscriptionRevenue: stats.subscriptionRevenue,
-            subscriptionMRR: stats.subscriptionMRR,
             commissionRevenue: stats.commissionRevenue,
             totalOrders: stats.totalOrders,
             ordersChange: stats.ordersChange,
