@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' blob: data: https://res.cloudinary.com https://images.unsplash.com https://picsum.photos https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://widget.mondialrelay.com https://*.mondialrelay.com",
               "font-src 'self' data: https://widget.mondialrelay.com",
               "connect-src 'self' https://*.sentry.io https://o*.ingest.sentry.io https://api.stripe.com https://*.mondialrelay.com",
-              "frame-src https://js.stripe.com https://hooks.stripe.com",
+              "frame-src https://js.stripe.com https://hooks.stripe.com https://*.openstreetmap.org",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

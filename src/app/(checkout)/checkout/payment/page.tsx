@@ -9,7 +9,6 @@ import { useCartStore } from '@/lib/stores/cart.store';
 import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 import { getCartAction } from '@/app/cart/actions';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
-import { CartSummary } from '@/components/checkout/cart-summary';
 import {
   ShippingAddressSchema,
   CarrierSelectionSchema,
@@ -44,6 +43,7 @@ export default function PaymentPage() {
 
   const items = useCartStore((state) => state.items);
   const getTotal = useCartStore((state) => state.getTotal);
+  // getTotal est utilisé dans CheckoutForm via le total passé en prop
 
   const formatPrice = (cents: number) =>
     new Intl.NumberFormat('fr-FR', {
@@ -168,8 +168,7 @@ export default function PaymentPage() {
         <CheckoutStepper currentStep="payment" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="max-w-xl space-y-4">
           <div className="border border-black p-6">
             <h2 className="text-xs font-bold tracking-widest uppercase mb-1">
               Informations de paiement
@@ -283,15 +282,6 @@ export default function PaymentPage() {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="lg:col-span-1">
-          <CartSummary
-            subtotal={getTotal()}
-            shippingEstimate={selectedCarrier?.price}
-            formatPrice={formatPrice}
-          />
-        </div>
       </div>
     </div>
   );

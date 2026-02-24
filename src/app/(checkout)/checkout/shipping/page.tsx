@@ -10,7 +10,6 @@ import {
   ShippingAddress,
 } from '@/components/checkout/shipping-address-form';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
-import { CartSummary } from '@/components/checkout/cart-summary';
 import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 
 interface GuestInfo {
@@ -38,7 +37,6 @@ export default function ShippingPage() {
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
 
   const items = useCartStore((state) => state.items);
-  const getTotal = useCartStore((state) => state.getTotal);
 
   useEffect(() => {
     // Load guest info from session storage
@@ -47,12 +45,6 @@ export default function ShippingPage() {
       setGuestInfo(JSON.parse(stored));
     }
   }, []);
-
-  const formatPrice = (cents: number) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(cents / 100);
 
   const handleSubmit = (address: ShippingAddress) => {
     setIsLoading(true);
@@ -102,27 +94,19 @@ export default function ShippingPage() {
         <CheckoutStepper currentStep="shipping" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-        {/* Shipping form */}
-        <div className="lg:col-span-2">
-          <ShippingAddressForm
-            initialData={
-              guestInfo
-                ? {
-                    firstName: guestInfo.firstName,
-                    lastName: guestInfo.lastName,
-                  }
-                : undefined
-            }
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
-        </div>
-
-        {/* Order summary */}
-        <div className="lg:col-span-1">
-          <CartSummary subtotal={getTotal()} formatPrice={formatPrice} />
-        </div>
+      <div className="max-w-xl">
+        <ShippingAddressForm
+          initialData={
+            guestInfo
+              ? {
+                  firstName: guestInfo.firstName,
+                  lastName: guestInfo.lastName,
+                }
+              : undefined
+          }
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

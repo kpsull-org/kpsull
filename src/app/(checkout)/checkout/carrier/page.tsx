@@ -7,7 +7,6 @@ import { ArrowLeft } from 'lucide-react';
 import { useCartStore } from '@/lib/stores/cart.store';
 import { useCartHydration } from '@/lib/hooks/use-cart-hydration';
 import { CheckoutStepper } from '@/components/checkout/checkout-stepper';
-import { CartSummary } from '@/components/checkout/cart-summary';
 import { CarrierSelector } from '@/components/checkout/carrier-selector';
 import { RelayPointSelector } from '@/components/checkout/relay-point-selector';
 import {
@@ -18,7 +17,6 @@ import {
   type CarrierSelection,
   type RelayPoint,
 } from '@/lib/schemas/checkout.schema';
-import { formatPrice } from '@/lib/utils/format';
 
 /**
  * Carrier Selection Page
@@ -38,7 +36,6 @@ export default function CarrierPage() {
   const isRelayCarrier = selectedCarrier?.carrier === 'mondial-relay';
 
   const items = useCartStore((state) => state.items);
-  const getTotal = useCartStore((state) => state.getTotal);
 
   useEffect(() => {
     // Vérifier que l'adresse de livraison est présente
@@ -123,8 +120,8 @@ export default function CarrierPage() {
         <CheckoutStepper currentStep="carrier" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="max-w-xl">
+        <div className="space-y-6">
           <div className="border border-black p-6">
             <h2 className="text-xs font-bold tracking-widest uppercase mb-1">
               Choisissez votre transporteur
@@ -168,14 +165,6 @@ export default function CarrierPage() {
               Continuer vers le paiement
             </button>
           </div>
-        </div>
-
-        <div className="lg:col-span-1">
-          <CartSummary
-            subtotal={getTotal()}
-            shippingEstimate={selectedCarrier?.price}
-            formatPrice={formatPrice}
-          />
         </div>
       </div>
     </div>
