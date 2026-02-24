@@ -1,6 +1,7 @@
 'use server';
 
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/client';
 import { CartItemSchema } from '@/lib/schemas/checkout.schema';
@@ -60,16 +61,24 @@ export async function saveCartAction(
   // Serialize validated data to ensure Prisma-compatible plain JSON
   const serializedItems = JSON.parse(JSON.stringify(validation.data));
 
-  await prisma.cart.upsert({
-    where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      items: serializedItems,
-    },
-    update: {
-      items: serializedItems,
-    },
-  });
+  try {
+    await prisma.cart.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        items: serializedItems,
+      },
+      update: {
+        items: serializedItems,
+      },
+    });
+  } catch (err) {
+    // FK violation = session périmée (user supprimé côté DB, cookie encore valide)
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+      return { success: false, error: 'SESSION_EXPIRED' };
+    }
+    throw err;
+  }
 
   return { success: true };
 }
@@ -81,16 +90,23 @@ export async function clearCartAction(): Promise<{ success: boolean }> {
   const session = await auth();
   if (!session?.user?.id) return { success: false };
 
-  await prisma.cart.upsert({
-    where: { userId: session.user.id },
-    create: {
-      userId: session.user.id,
-      items: [],
-    },
-    update: {
-      items: [],
-    },
-  });
+  try {
+    await prisma.cart.upsert({
+      where: { userId: session.user.id },
+      create: {
+        userId: session.user.id,
+        items: [],
+      },
+      update: {
+        items: [],
+      },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+      return { success: false };
+    }
+    throw err;
+  }
 
   return { success: true };
 }

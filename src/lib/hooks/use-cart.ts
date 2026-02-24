@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { signOut } from 'next-auth/react';
 import { useCartStore, type CartItem } from '@/lib/stores/cart.store';
 import { getCartAction, saveCartAction } from '@/app/cart/actions';
 
@@ -55,6 +56,11 @@ export function useCart(isAuthenticated: boolean) {
       const currentItems = useCartStore.getState().items;
       saveCartAction(currentItems).then((result) => {
         if (!result.success) {
+          if (result.error === 'SESSION_EXPIRED') {
+            // Session périmée (user supprimé en DB, cookie encore valide) → déconnexion
+            void signOut({ callbackUrl: '/' });
+            return;
+          }
           console.error('[useCart] Échec de la sauvegarde du panier:', result.error);
         }
       });
