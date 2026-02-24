@@ -8,25 +8,7 @@ import { OrderHeaderWithActions } from '@/components/orders/order-header-with-ac
 import { OrderItems } from '@/components/orders/order-items';
 import { CustomerInfo } from '@/components/orders/customer-info';
 import { OrderTimeline } from '@/components/orders/order-timeline';
-import type { OrderStatusValue } from '@/modules/orders/domain/value-objects/order-status.vo';
-
-type TimelineEventType =
-  | 'CREATED'
-  | 'PAID'
-  | 'SHIPPED'
-  | 'DELIVERED'
-  | 'COMPLETED'
-  | 'CANCELED'
-  | 'DISPUTE_OPENED'
-  | 'RETURN_SHIPPED'
-  | 'RETURN_RECEIVED'
-  | 'REFUNDED';
-
-interface TimelineEvent {
-  type: TimelineEventType;
-  timestamp: Date;
-  details?: string;
-}
+import { buildOrderTimelineEvents } from '@/lib/utils/order-status';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -80,7 +62,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const order = result.value;
 
   // Build timeline events
-  const timelineEvents = buildTimelineEvents(order);
+  const timelineEvents = buildOrderTimelineEvents(order);
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -127,67 +109,4 @@ export default async function OrderDetailPage({ params }: PageProps) {
       </div>
     </div>
   );
-}
-
-function buildTimelineEvents(order: {
-  status: OrderStatusValue;
-  createdAt: Date;
-  shippedAt?: Date;
-  deliveredAt?: Date;
-  trackingNumber?: string;
-  carrier?: string;
-  cancellationReason?: string;
-}): TimelineEvent[] {
-  const events: TimelineEvent[] = [
-    {
-      type: 'CREATED',
-      timestamp: order.createdAt,
-    },
-  ];
-
-  // Add PAID event if order is past pending
-  if (order.status !== 'PENDING' && order.status !== 'CANCELED') {
-    events.push({
-      type: 'PAID',
-      timestamp: order.createdAt, // Approximation - ideally we'd store payment timestamp
-    });
-  }
-
-  // Add SHIPPED event
-  if (order.shippedAt) {
-    events.push({
-      type: 'SHIPPED',
-      timestamp: order.shippedAt,
-      details: order.trackingNumber
-        ? `${order.carrier ?? 'Transporteur'}: ${order.trackingNumber}`
-        : undefined,
-    });
-  }
-
-  // Add DELIVERED event
-  if (order.deliveredAt) {
-    events.push({
-      type: 'DELIVERED',
-      timestamp: order.deliveredAt,
-    });
-  }
-
-  // Add CANCELED event
-  if (order.status === 'CANCELED') {
-    events.push({
-      type: 'CANCELED',
-      timestamp: order.createdAt, // Approximation
-      details: order.cancellationReason,
-    });
-  }
-
-  // Add REFUNDED event
-  if (order.status === 'REFUNDED') {
-    events.push({
-      type: 'REFUNDED',
-      timestamp: order.createdAt, // Approximation
-    });
-  }
-
-  return events;
 }

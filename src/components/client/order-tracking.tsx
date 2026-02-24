@@ -14,6 +14,7 @@ import { OrderItems } from '@/components/orders/order-items';
 import { ReportIssueDialog } from '@/components/orders/report-issue-dialog';
 import { ReturnRequestDialog } from '@/components/orders/return-request-dialog';
 import { formatDate } from '@/lib/utils/format';
+import { ORDER_STATUS_CONFIG, buildOrderTimelineEvents } from '@/lib/utils/order-status';
 import type { OrderStatusValue } from '@/modules/orders/domain/value-objects/order-status.vo';
 import type { TrackingStatusValue } from '@/modules/shipping/domain/value-objects/tracking-status.vo';
 import type { DisputeTypeValue } from '@/modules/disputes/domain';
@@ -94,31 +95,6 @@ export interface OrderTrackingProps {
   onCancelOrder?: (orderId: string, reason: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-/**
- * Status configuration for badges
- */
-const STATUS_CONFIG: Record<OrderStatusValue, { label: string; className: string }> = {
-  PENDING: { label: 'En attente', className: 'bg-yellow-100 text-yellow-800' },
-  PAID: { label: 'Payee', className: 'bg-blue-100 text-blue-800' },
-  SHIPPED: { label: 'Expediee', className: 'bg-purple-100 text-purple-800' },
-  DELIVERED: { label: 'Livree', className: 'bg-green-100 text-green-800' },
-  VALIDATION_PENDING: {
-    label: 'Validation en attente',
-    className: 'bg-orange-100 text-orange-800',
-  },
-  COMPLETED: { label: 'Terminee', className: 'bg-green-100 text-green-800' },
-  DISPUTE_OPENED: { label: 'Litige ouvert', className: 'bg-red-100 text-red-800' },
-  RETURN_SHIPPED: {
-    label: 'Retour expedie',
-    className: 'bg-orange-100 text-orange-800',
-  },
-  RETURN_RECEIVED: {
-    label: 'Retour recu',
-    className: 'bg-orange-100 text-orange-800',
-  },
-  REFUNDED: { label: 'Remboursee', className: 'bg-gray-100 text-gray-800' },
-  CANCELED: { label: 'Annulee', className: 'bg-red-100 text-red-800' },
-};
 
 /**
  * Calculate days remaining for return eligibility (14 days from delivery)
@@ -133,118 +109,6 @@ function calculateDaysRemaining(deliveredAt: Date): number {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   return Math.max(0, diffDays);
-}
-
-/**
- * Build timeline events from order data
- */
-function buildTimelineEvents(order: OrderTrackingData): Array<{
-  type:
-    | 'CREATED'
-    | 'PAID'
-    | 'SHIPPED'
-    | 'DELIVERED'
-    | 'COMPLETED'
-    | 'CANCELED'
-    | 'DISPUTE_OPENED'
-    | 'RETURN_SHIPPED'
-    | 'RETURN_RECEIVED'
-    | 'REFUNDED';
-  timestamp: Date;
-  details?: string;
-}> {
-  const events: Array<{
-    type:
-      | 'CREATED'
-      | 'PAID'
-      | 'SHIPPED'
-      | 'DELIVERED'
-      | 'COMPLETED'
-      | 'CANCELED'
-      | 'DISPUTE_OPENED'
-      | 'RETURN_SHIPPED'
-      | 'RETURN_RECEIVED'
-      | 'REFUNDED';
-    timestamp: Date;
-    details?: string;
-  }> = [
-    {
-      type: 'CREATED',
-      timestamp: order.createdAt,
-    },
-  ];
-
-  // Add PAID event if order is past pending
-  if (order.status !== 'PENDING' && order.status !== 'CANCELED') {
-    events.push({
-      type: 'PAID',
-      timestamp: order.createdAt,
-    });
-  }
-
-  // Add SHIPPED event
-  if (order.shippedAt) {
-    events.push({
-      type: 'SHIPPED',
-      timestamp: order.shippedAt,
-      details: order.trackingNumber
-        ? `${order.carrier ?? 'Transporteur'}: ${order.trackingNumber}`
-        : undefined,
-    });
-  }
-
-  // Add DELIVERED event
-  if (order.deliveredAt) {
-    events.push({
-      type: 'DELIVERED',
-      timestamp: order.deliveredAt,
-    });
-  }
-
-  // Add status-specific events
-  if (order.status === 'CANCELED') {
-    events.push({
-      type: 'CANCELED',
-      timestamp: order.createdAt,
-    });
-  }
-
-  if (order.status === 'REFUNDED') {
-    events.push({
-      type: 'REFUNDED',
-      timestamp: order.createdAt,
-    });
-  }
-
-  if (order.status === 'DISPUTE_OPENED') {
-    events.push({
-      type: 'DISPUTE_OPENED',
-      timestamp: order.createdAt,
-    });
-  }
-
-  if (order.status === 'RETURN_SHIPPED') {
-    events.push({
-      type: 'RETURN_SHIPPED',
-      timestamp: order.createdAt,
-    });
-  }
-
-  if (order.status === 'RETURN_RECEIVED') {
-    events.push({
-      type: 'RETURN_RECEIVED',
-      timestamp: order.createdAt,
-    });
-  }
-
-  if (order.status === 'COMPLETED') {
-    events.push({
-      type: 'COMPLETED',
-      timestamp: order.createdAt,
-    });
-  }
-
-  return events;
 }
 
 /**
@@ -275,7 +139,7 @@ export function OrderTracking({
   const [cancelSuccess, setCancelSuccess] = useState(false);
   const [isCancelling, startCancelTransition] = useTransition();
 
-  const statusConfig = STATUS_CONFIG[order.status] || {
+  const statusConfig = ORDER_STATUS_CONFIG[order.status] || {
     label: order.status,
     className: 'bg-gray-100 text-gray-800',
   };
@@ -288,7 +152,7 @@ export function OrderTracking({
   const canRequestReturn = isDelivered && daysRemaining > 0;
 
   // Build timeline events
-  const timelineEvents = buildTimelineEvents(order);
+  const timelineEvents = buildOrderTimelineEvents(order);
 
   return (
     <div className="space-y-6">
