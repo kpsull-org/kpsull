@@ -1,9 +1,5 @@
 import { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma/client';
-import { GetOrderDetailUseCase } from '@/modules/orders/application/use-cases/get-order-detail.use-case';
-import { PrismaOrderRepository } from '@/modules/orders/infrastructure/repositories/prisma-order.repository';
+import { getCreatorOrderOrThrow } from './_get-order';
 import { OrderHeaderWithActions } from '@/components/orders/order-header-with-actions';
 import { OrderItems } from '@/components/orders/order-items';
 import { CustomerInfo } from '@/components/orders/customer-info';
@@ -35,31 +31,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * - AC5: Boutons d'action selon le statut
  */
 export default async function OrderDetailPage({ params }: PageProps) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/login');
-  }
-
-  // Only creators can access this page
-  if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
-    redirect('/profile');
-  }
-
   const { id } = await params;
-  const orderRepository = new PrismaOrderRepository(prisma);
-  const getOrderDetailUseCase = new GetOrderDetailUseCase(orderRepository);
-
-  const result = await getOrderDetailUseCase.execute({
-    orderId: id,
-    creatorId: session.user.id,
-  });
-
-  if (result.isFailure) {
-    notFound();
-  }
-
-  const order = result.value;
+  const { order } = await getCreatorOrderOrThrow(id);
 
   // Build timeline events
   const timelineEvents = buildOrderTimelineEvents(order);

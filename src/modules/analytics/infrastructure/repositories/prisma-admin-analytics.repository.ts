@@ -206,16 +206,17 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
   }
 
   /**
-   * Fetch DB PlatformTransaction SUBSCRIPTION amounts grouped by month.
-   * Used as fallback when Stripe invoices are not available.
+   * Generic helper: fetch PlatformTransaction amounts of a given type grouped by month.
+   * Only CAPTURED transactions within [yearStart, yearEnd[ are considered.
    */
-  private async fetchLocalSubscriptionByMonth(
+  private async fetchTransactionsByMonth(
+    type: 'COMMISSION' | 'SUBSCRIPTION',
     yearStart: Date,
     yearEnd: Date
   ): Promise<Record<number, number>> {
     const txs = await this.prisma.platformTransaction.findMany({
       where: {
-        type: 'SUBSCRIPTION',
+        type,
         status: 'CAPTURED',
         createdAt: { gte: yearStart, lt: yearEnd },
       },
@@ -228,6 +229,17 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
       byMonth[month] = (byMonth[month] ?? 0) + tx.amount;
     }
     return byMonth;
+  }
+
+  /**
+   * Fetch DB PlatformTransaction SUBSCRIPTION amounts grouped by month.
+   * Used as fallback when Stripe invoices are not available.
+   */
+  private async fetchLocalSubscriptionByMonth(
+    yearStart: Date,
+    yearEnd: Date
+  ): Promise<Record<number, number>> {
+    return this.fetchTransactionsByMonth('SUBSCRIPTION', yearStart, yearEnd);
   }
 
   // ---------------------------------------------------------------------------
@@ -328,20 +340,7 @@ export class PrismaAdminAnalyticsRepository implements AdminAnalyticsRepository 
     yearStart: Date,
     yearEnd: Date
   ): Promise<Record<number, number>> {
-    const txs = await this.prisma.platformTransaction.findMany({
-      where: {
-        type: 'COMMISSION',
-        status: 'CAPTURED',
-        createdAt: { gte: yearStart, lt: yearEnd },
-      },
-      select: { createdAt: true, amount: true },
-    });
-
-    const byMonth: Record<number, number> = {};
-    for (const tx of txs) {
-      const month = tx.createdAt.getMonth();
-      byMonth[month] = (byMonth[month] ?? 0) + tx.amount;
-    }
+    const byMonth = await this.fetchTransactionsByMonth('COMMISSION', yearStart, yearEnd);
 
     const hasData = Object.values(byMonth).some((v) => v > 0);
     if (hasData) return byMonth;

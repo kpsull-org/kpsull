@@ -3,6 +3,7 @@ import type { UseCase } from '@/shared/application/use-case.interface';
 import type { ReturnRepository } from '../ports/return.repository.interface';
 import type { ReturnStatusValue } from '../../domain/value-objects/return-status.vo';
 import { incrementStock } from '@/modules/products/application/services/stock.service';
+import { findAndValidateReturn } from './return-use-case.helpers';
 
 export interface RefundReturnInput {
   returnId: string;
@@ -31,28 +32,19 @@ export class RefundReturnUseCase implements UseCase<RefundReturnInput, RefundRet
   constructor(private readonly returnRepository: ReturnRepository) {}
 
   async execute(input: RefundReturnInput): Promise<Result<RefundReturnOutput>> {
-    if (!input.returnId?.trim()) {
-      return Result.fail('Return ID est requis');
+    const findResult = await findAndValidateReturn(
+      this.returnRepository,
+      input.returnId,
+      input.creatorId,
+      'RECEIVED',
+      'Seuls les retours recus peuvent etre rembourses'
+    );
+
+    if (findResult.isFailure) {
+      return Result.fail(findResult.error!);
     }
 
-    if (!input.creatorId?.trim()) {
-      return Result.fail('Creator ID est requis');
-    }
-
-    const returnRequest = await this.returnRepository.findById(input.returnId);
-
-    if (!returnRequest) {
-      return Result.fail('Demande de retour non trouvee');
-    }
-
-    if (returnRequest.creatorId !== input.creatorId) {
-      return Result.fail("Vous n'etes pas autorise a modifier cette demande de retour");
-    }
-
-    if (returnRequest.status !== 'RECEIVED') {
-      return Result.fail('Seuls les retours recus peuvent etre rembourses');
-    }
-
+    const returnRequest = findResult.value!;
     const now = new Date();
     const updatedReturn = {
       ...returnRequest,

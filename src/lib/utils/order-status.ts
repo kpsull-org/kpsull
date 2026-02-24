@@ -42,6 +42,15 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatusValue, { label: string; clas
   CANCELED: { label: 'Annulee', className: 'bg-red-100 text-red-800' },
 };
 
+const STATUS_EVENT_TYPES: Partial<Record<OrderStatusValue, TimelineEventType>> = {
+  CANCELED: 'CANCELED',
+  REFUNDED: 'REFUNDED',
+  DISPUTE_OPENED: 'DISPUTE_OPENED',
+  RETURN_SHIPPED: 'RETURN_SHIPPED',
+  RETURN_RECEIVED: 'RETURN_RECEIVED',
+  COMPLETED: 'COMPLETED',
+};
+
 export function buildOrderTimelineEvents(order: OrderTimelineInput): OrderTimelineEvent[] {
   const events: OrderTimelineEvent[] = [{ type: 'CREATED', timestamp: order.createdAt }];
 
@@ -63,28 +72,13 @@ export function buildOrderTimelineEvents(order: OrderTimelineInput): OrderTimeli
     events.push({ type: 'DELIVERED', timestamp: order.deliveredAt });
   }
 
-  if (order.status === 'CANCELED') {
-    events.push({ type: 'CANCELED', timestamp: order.createdAt, details: order.cancellationReason });
-  }
-
-  if (order.status === 'REFUNDED') {
-    events.push({ type: 'REFUNDED', timestamp: order.createdAt });
-  }
-
-  if (order.status === 'DISPUTE_OPENED') {
-    events.push({ type: 'DISPUTE_OPENED', timestamp: order.createdAt });
-  }
-
-  if (order.status === 'RETURN_SHIPPED') {
-    events.push({ type: 'RETURN_SHIPPED', timestamp: order.createdAt });
-  }
-
-  if (order.status === 'RETURN_RECEIVED') {
-    events.push({ type: 'RETURN_RECEIVED', timestamp: order.createdAt });
-  }
-
-  if (order.status === 'COMPLETED') {
-    events.push({ type: 'COMPLETED', timestamp: order.createdAt });
+  const extraType = STATUS_EVENT_TYPES[order.status];
+  if (extraType) {
+    events.push({
+      type: extraType,
+      timestamp: order.createdAt,
+      details: order.status === 'CANCELED' ? order.cancellationReason : undefined,
+    });
   }
 
   return events;
@@ -100,30 +94,6 @@ export const ORDER_STATUSES = [
   { value: 'CANCELED', label: 'Annulee' },
   { value: 'DISPUTE_OPENED', label: 'Litige ouvert' },
 ] as const;
-
-const STATUS_BADGE_CLASSES: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  PAID: 'bg-blue-100 text-blue-800',
-  SHIPPED: 'bg-purple-100 text-purple-800',
-  DELIVERED: 'bg-green-100 text-green-800',
-  COMPLETED: 'bg-green-200 text-green-900',
-  CANCELED: 'bg-red-100 text-red-800',
-  DISPUTE_OPENED: 'bg-orange-100 text-orange-800',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'En attente',
-  PAID: 'Payee',
-  SHIPPED: 'Expediee',
-  DELIVERED: 'Livree',
-  VALIDATION_PENDING: 'Validation en attente',
-  COMPLETED: 'Terminee',
-  DISPUTE_OPENED: 'Litige ouvert',
-  RETURN_SHIPPED: 'Retour expedie',
-  RETURN_RECEIVED: 'Retour recu',
-  REFUNDED: 'Remboursee',
-  CANCELED: 'Annulee',
-};
 
 const amountFormatter = new Intl.NumberFormat('fr-FR', {
   style: 'currency',
@@ -141,9 +111,9 @@ export function formatDate(isoDate: string): string {
 }
 
 export function getStatusBadgeClass(status: string): string {
-  return STATUS_BADGE_CLASSES[status] ?? 'bg-gray-100 text-gray-800';
+  return ORDER_STATUS_CONFIG[status as OrderStatusValue]?.className ?? 'bg-gray-100 text-gray-800';
 }
 
 export function getStatusLabel(status: string): string {
-  return STATUS_LABELS[status] ?? status;
+  return ORDER_STATUS_CONFIG[status as OrderStatusValue]?.label ?? status;
 }

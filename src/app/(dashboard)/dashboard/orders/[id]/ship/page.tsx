@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { auth } from '@/lib/auth';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ShippingForm, ShippingFormData } from '@/components/orders/shipping-form';
 import { ShipOrderUseCase } from '@/modules/orders/application/use-cases/ship-order.use-case';
 import { PrismaOrderRepository } from '@/modules/orders/infrastructure/repositories/prisma-order.repository';
-import { GetOrderDetailUseCase } from '@/modules/orders/application/use-cases/get-order-detail.use-case';
+import { getCreatorOrderOrThrow } from '../_get-order';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -33,31 +33,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * - AC3: Affichage du tracking dans les details commande
  */
 export default async function ShipOrderPage({ params }: PageProps) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect('/login');
-  }
-
-  // Only creators can access this page
-  if (session.user.role !== 'CREATOR' && session.user.role !== 'ADMIN') {
-    redirect('/profile');
-  }
-
   const { id } = await params;
-  const orderRepository = new PrismaOrderRepository(prisma);
-  const getOrderDetailUseCase = new GetOrderDetailUseCase(orderRepository);
-
-  const result = await getOrderDetailUseCase.execute({
-    orderId: id,
-    creatorId: session.user.id,
-  });
-
-  if (result.isFailure) {
-    notFound();
-  }
-
-  const order = result.value;
+  const { order } = await getCreatorOrderOrThrow(id);
 
   // Only PAID orders can be shipped
   if (order.status !== 'PAID') {

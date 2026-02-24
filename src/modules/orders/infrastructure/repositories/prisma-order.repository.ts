@@ -137,21 +137,7 @@ export class PrismaOrderRepository implements OrderRepository {
       where.customerId = filters.customerId;
     }
 
-    const [orders, total] = await Promise.all([
-      this.prisma.order.findMany({
-        where,
-        include: { items: true },
-        orderBy: { createdAt: 'desc' },
-        skip: pagination?.skip ?? 0,
-        take: pagination?.take ?? 20,
-      }),
-      this.prisma.order.count({ where }),
-    ]);
-
-    return {
-      orders: await Promise.all(orders.map((o) => this.toDomain(o))),
-      total,
-    };
+    return this.findOrdersWithPagination(where, pagination);
   }
 
   async findByCustomerId(
@@ -160,6 +146,13 @@ export class PrismaOrderRepository implements OrderRepository {
   ): Promise<{ orders: Order[]; total: number }> {
     const where: Prisma.OrderWhereInput = { customerId };
 
+    return this.findOrdersWithPagination(where, pagination);
+  }
+
+  private async findOrdersWithPagination(
+    where: Prisma.OrderWhereInput,
+    pagination?: PaginationOptions
+  ): Promise<{ orders: Order[]; total: number }> {
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
         where,
