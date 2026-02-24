@@ -7,10 +7,10 @@ import { QuantitySelector } from './quantity-selector';
 import type { CartItem as CartItemType } from '@/lib/stores/cart.store';
 
 interface CartItemProps {
-  item: CartItemType;
-  onUpdateQuantity: (quantity: number) => void;
-  onRemove: () => void;
-  formatPrice: (cents: number) => string;
+  readonly item: CartItemType;
+  readonly onUpdateQuantity: (quantity: number) => void;
+  readonly onRemove: () => void;
+  readonly formatPrice: (cents: number) => string;
 }
 
 export function CartItem({

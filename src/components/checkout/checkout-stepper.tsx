@@ -5,11 +5,11 @@ import { Check } from 'lucide-react';
 type CheckoutStep = 'auth' | 'shipping' | 'carrier' | 'payment' | 'confirmation';
 
 interface CheckoutStepperProps {
-  currentStep: CheckoutStep;
-  user?: {
-    id: string;
-    name?: string;
-    email: string;
+  readonly currentStep: CheckoutStep;
+  readonly user?: {
+    readonly id: string;
+    readonly name?: string;
+    readonly email: string;
   };
 }
 

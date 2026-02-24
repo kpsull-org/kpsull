@@ -11,14 +11,14 @@ import { CancelOrderDialog } from './cancel-order-dialog';
 import type { OrderStatusValue } from '@/modules/orders/domain/value-objects/order-status.vo';
 
 interface OrderHeaderProps {
-  order: {
-    id: string;
-    orderNumber: string;
-    status: OrderStatusValue;
-    createdAt: Date;
-    cancellationReason?: string;
+  readonly order: {
+    readonly id: string;
+    readonly orderNumber: string;
+    readonly status: OrderStatusValue;
+    readonly createdAt: Date;
+    readonly cancellationReason?: string;
   };
-  onCancelOrder?: (orderId: string, reason: string) => Promise<{ success: boolean; error?: string }>;
+  readonly onCancelOrder?: (orderId: string, reason: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 

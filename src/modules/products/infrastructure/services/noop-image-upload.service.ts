@@ -9,7 +9,7 @@ import type { ImageUploadService } from '../../application/ports/image-upload.se
 export class NoopImageUploadService implements ImageUploadService {
   async upload(_file: Buffer, filename: string): Promise<Result<string>> {
     const timestamp = Date.now();
-    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const sanitizedFilename = filename.replaceAll(/[^a-zA-Z0-9.-]/g, '_');
     const placeholderUrl = `/uploads/products/${timestamp}-${sanitizedFilename}`;
     return Result.ok(placeholderUrl);
   }

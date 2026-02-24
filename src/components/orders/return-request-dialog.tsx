@@ -21,14 +21,14 @@ export interface ReturnableItem {
 }
 
 interface ReturnRequestDialogProps {
-  orderId: string;
-  orderNumber: string;
-  deliveredAt: Date;
-  daysRemaining: number;
-  items: ReturnableItem[];
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onSubmit: (
+  readonly orderId: string;
+  readonly orderNumber: string;
+  readonly deliveredAt: Date;
+  readonly daysRemaining: number;
+  readonly items: ReturnableItem[];
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
+  readonly onSubmit: (
     orderId: string,
     reason: ReturnReasonValue,
     returnItems: ReturnItem[],

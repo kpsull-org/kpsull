@@ -14,9 +14,9 @@ export interface ShippingAddress {
 }
 
 interface ShippingAddressFormProps {
-  initialData?: Partial<ShippingAddress>;
-  onSubmit: (address: ShippingAddress) => void;
-  isLoading?: boolean;
+  readonly initialData?: Partial<ShippingAddress>;
+  readonly onSubmit: (address: ShippingAddress) => void;
+  readonly isLoading?: boolean;
 }
 
 const POSTAL_CODE_REGEX = /^\d{5}$/;

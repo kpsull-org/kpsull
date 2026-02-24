@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
 
 interface CartSummaryProps {
-  subtotal: number;
-  shippingEstimate?: number;
-  formatPrice: (cents: number) => string;
+  readonly subtotal: number;
+  readonly shippingEstimate?: number;
+  readonly formatPrice: (cents: number) => string;
 }
 
 export function CartSummary({
