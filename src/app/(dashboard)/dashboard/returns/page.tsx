@@ -2,12 +2,14 @@ import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma/client';
+import { stripe } from '@/lib/stripe/client';
 import { ListReturnsUseCase } from '@/modules/returns/application/use-cases/list-returns.use-case';
 import { ApproveReturnUseCase } from '@/modules/returns/application/use-cases/approve-return.use-case';
 import { RejectReturnUseCase } from '@/modules/returns/application/use-cases/reject-return.use-case';
 import { ReceiveReturnUseCase } from '@/modules/returns/application/use-cases/receive-return.use-case';
 import { RefundReturnUseCase } from '@/modules/returns/application/use-cases/refund-return.use-case';
 import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories/prisma-return.repository';
+import type { ReturnItem } from '@/modules/returns/application/ports/return.repository.interface';
 import { Card, CardContent } from '@/components/ui/card';
 import { ReturnsPageClient } from './page-client';
 import type { ReturnStatusValue } from '@/modules/returns/domain/value-objects/return-status.vo';
@@ -120,15 +122,51 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
     }
 
     const repository = new PrismaReturnRepository(prisma);
-    const useCase = new ReceiveReturnUseCase(repository);
 
-    const receiveResult = await useCase.execute({
+    // Étape 1 : marquer comme RECEIVED
+    const receiveUseCase = new ReceiveReturnUseCase(repository);
+    const receiveResult = await receiveUseCase.execute({
       returnId,
       creatorId: currentSession.user.id,
     });
 
     if (receiveResult.isFailure) {
       return { success: false, error: receiveResult.error };
+    }
+
+    // Étape 2 : déclencher le remboursement Stripe automatiquement
+    try {
+      const returnRequest = await repository.findById(returnId);
+      if (!returnRequest) {
+        return { success: false, error: 'Demande de retour introuvable' };
+      }
+
+      const order = await prisma.order.findUnique({
+        where: { id: returnRequest.orderId },
+        select: { stripePaymentIntentId: true, totalAmount: true },
+      });
+
+      if (order?.stripePaymentIntentId) {
+        // Calculer le montant à rembourser (partiel ou total)
+        const returnItems = returnRequest.returnItems as ReturnItem[] | undefined;
+        const refundAmount =
+          returnItems && returnItems.length > 0
+            ? returnItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+            : order.totalAmount;
+
+        await stripe.refunds.create({
+          payment_intent: order.stripePaymentIntentId,
+          amount: refundAmount,
+        });
+      }
+
+      // Étape 3 : marquer comme REFUNDED (restaure aussi le stock via use case)
+      const refundUseCase = new RefundReturnUseCase(repository);
+      await refundUseCase.execute({ returnId, creatorId: currentSession.user.id });
+    } catch (err) {
+      console.error('[receiveReturn] Auto-refund failed:', err);
+      // Retour reçu mais remboursement échoué → signaler sans bloquer
+      return { success: true, warning: 'Colis reçu mais le remboursement automatique a échoué. Traitez-le manuellement.' };
     }
 
     return { success: true };

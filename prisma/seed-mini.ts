@@ -6,7 +6,7 @@
  *   - 6 créateurs (niches diversifiées : streetwear, lingerie, bijoux, knitwear, outerwear, romantique)
  *   - 3 collections × 5 produits × 3 variantes (couleurs) par créateur
  *   - 50 clients avec profils français réalistes
- *   - 150 commandes distribuées sur les 6 derniers mois
+ *   - 900 commandes distribuées sur les 12 derniers mois
  *
  * Images :
  *   Lit depuis prisma/seed-assets/image-generation-mini-v3-progress.json si disponible.
@@ -57,9 +57,7 @@ const prisma = new PrismaClient({ adapter });
 function daysAgo(n: number): Date {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
 }
-function daysFromNow(n: number): Date {
-  return new Date(Date.now() + n * 24 * 60 * 60 * 1000);
-}
+
 function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -355,6 +353,29 @@ const MINI_CREATORS: MiniCreatorDef[] = [
   },
 ];
 
+// ─── Billing config par créateur ─────────────────────────────────────────────
+
+const PLAN_MONTHLY_CENTS: Record<string, number> = {
+  ESSENTIEL: 2900,
+  STUDIO: 7900,
+  ATELIER: 9500,
+};
+const PLAN_YEARLY_CENTS: Record<string, number> = {
+  ESSENTIEL: 29000,
+  STUDIO: 79000,
+  ATELIER: 95000,
+};
+
+/** Définit l'intervalle de facturation et la date de début d'abonnement pour chaque créateur. */
+const CREATOR_BILLING: Record<string, { interval: 'month' | 'year'; startDate: Date }> = {
+  hugo_tessier:  { interval: 'year',  startDate: new Date(2025, 2, 1)  }, // Mar 2025 — annuel
+  nadia_forte:   { interval: 'month', startDate: new Date(2025, 7, 1)  }, // Août 2025 — mensuel
+  yasmine_larbi: { interval: 'year',  startDate: new Date(2025, 5, 1)  }, // Juin 2025 — annuel
+  marie_durand:  { interval: 'month', startDate: new Date(2025, 9, 1)  }, // Oct 2025 — mensuel
+  louis_renard:  { interval: 'month', startDate: new Date(2025, 4, 1)  }, // Mai 2025 — mensuel
+  camille_petit: { interval: 'year',  startDate: new Date(2025, 8, 1)  }, // Sep 2025 — annuel
+};
+
 // ─── Clients ──────────────────────────────────────────────────────────────────
 
 const FIRST_NAMES = ['Marie', 'Thomas', 'Emma', 'Nicolas', 'Camille', 'Lucas', 'Léa', 'Pierre', 'Sophie', 'Antoine',
@@ -477,6 +498,22 @@ async function seedCreator(
   });
 
   // 2. Subscription
+  const billing = CREATOR_BILLING[def.id] ?? { interval: 'month' as const, startDate: daysAgo(90) };
+  // Ne PAS muter billing.startDate — utiliser des copies pour éviter de corrompre CREATOR_BILLING
+  let subscriptionPeriodStart: Date;
+  let subscriptionPeriodEnd: Date;
+  if (billing.interval === 'year') {
+    subscriptionPeriodStart = new Date(billing.startDate);
+    subscriptionPeriodEnd = new Date(billing.startDate);
+    subscriptionPeriodEnd.setFullYear(subscriptionPeriodEnd.getFullYear() + 1);
+  } else {
+    // Période courante = mois en cours depuis la date de départ
+    const monthsElapsed = Math.floor((Date.now() - billing.startDate.getTime()) / (30 * 24 * 60 * 60 * 1000));
+    subscriptionPeriodStart = new Date(billing.startDate);
+    subscriptionPeriodStart.setMonth(subscriptionPeriodStart.getMonth() + monthsElapsed);
+    subscriptionPeriodEnd = new Date(subscriptionPeriodStart);
+    subscriptionPeriodEnd.setMonth(subscriptionPeriodEnd.getMonth() + 1);
+  }
   await prisma.subscription.upsert({
     where: { userId },
     update: {},
@@ -486,14 +523,14 @@ async function seedCreator(
       creatorId: userId,
       plan: def.plan,
       status: SubscriptionStatus.ACTIVE,
-      billingInterval: 'year',
-      currentPeriodStart: daysAgo(90),
-      currentPeriodEnd: daysFromNow(275),
+      billingInterval: billing.interval,
+      currentPeriodStart: subscriptionPeriodStart,
+      currentPeriodEnd: subscriptionPeriodEnd,
       commissionRate: def.plan === Plan.ESSENTIEL ? 0.05 : def.plan === Plan.STUDIO ? 0.04 : 0.03,
       productsUsed: def.collections.length * def.products.length,
       stripeSubscriptionId: `sub_demo_${def.id}`,
       stripeCustomerId: `cus_demo_${def.id}`,
-      stripePriceId: `price_demo_${def.plan.toLowerCase()}_year`,
+      stripePriceId: `price_demo_${def.plan.toLowerCase()}_${billing.interval === 'year' ? 'year' : 'month'}`,
     },
   });
 
@@ -702,10 +739,36 @@ async function seedOrders(
     OrderStatus.CANCELED,
   ];
 
+  const TARGET = 900;
   const creatorIds = [...allCreatorProductIds.keys()];
-  let orderCount = 0;
 
-  for (let i = 0; i < 150; i++) {
+  const ordersData: Array<{
+    id: string;
+    orderNumber: string;
+    creatorId: string;
+    customerId: string;
+    customerName: string;
+    customerEmail: string;
+    status: OrderStatus;
+    totalAmount: number;
+    shippingStreet: string;
+    shippingCity: string;
+    shippingPostalCode: string;
+    shippingCountry: string;
+    shippedAt: Date | null;
+    deliveredAt: Date | null;
+    createdAt: Date;
+  }> = [];
+
+  const itemsData: Array<{
+    orderId: string;
+    productId: string;
+    productName: string;
+    price: number;
+    quantity: number;
+  }> = [];
+
+  for (let i = 0; i < TARGET; i++) {
     const client = clients[i % clients.length]!;
     const creatorId = creatorIds[i % creatorIds.length]!;
     const productIds = allCreatorProductIds.get(creatorId) ?? [];
@@ -715,45 +778,43 @@ async function seedOrders(
     const status = pick(ORDER_STATUSES);
     const price = randInt(3900, 19900);
     const quantity = randInt(1, 3);
+    const orderId = `ord_mini_${String(i + 1).padStart(4, '0')}`;
     const orderNumber = `ORD-MINI-${String(i + 1).padStart(4, '0')}`;
-    const createdDaysAgo = randInt(1, 180);
+    const createdDaysAgo = randInt(1, 365);
+    const isShipped = (['SHIPPED', 'DELIVERED', 'COMPLETED'] as string[]).includes(status);
+    const isDelivered = (['DELIVERED', 'COMPLETED'] as string[]).includes(status);
 
-    // Check for existing order to avoid duplicate orderNumber
-    const existing = await prisma.order.findUnique({ where: { orderNumber } });
-    if (existing) continue;
-
-    await prisma.order.create({
-      data: {
-        orderNumber,
-        creatorId: `user_${creatorId}`,
-        customerId: client.id,
-        customerName: client.name,
-        customerEmail: client.email,
-        status,
-        totalAmount: price * quantity,
-        shippingStreet: client.address,
-        shippingCity: client.city,
-        shippingPostalCode: client.postalCode,
-        shippingCountry: 'France',
-        shippedAt: (['SHIPPED', 'DELIVERED', 'COMPLETED'] as string[]).includes(status)
-          ? daysAgo(createdDaysAgo - 2) : null,
-        deliveredAt: (['DELIVERED', 'COMPLETED'] as string[]).includes(status)
-          ? daysAgo(createdDaysAgo - 5) : null,
-        createdAt: daysAgo(createdDaysAgo),
-        items: {
-          create: [{
-            productId,
-            productName: `Produit ${productId}`,
-            price,
-            quantity,
-          }],
-        },
-      },
+    ordersData.push({
+      id: orderId,
+      orderNumber,
+      creatorId: `user_${creatorId}`,
+      customerId: client.id,
+      customerName: client.name,
+      customerEmail: client.email,
+      status,
+      totalAmount: price * quantity,
+      shippingStreet: client.address,
+      shippingCity: client.city,
+      shippingPostalCode: client.postalCode,
+      shippingCountry: 'France',
+      shippedAt: isShipped ? daysAgo(Math.max(0, createdDaysAgo - 2)) : null,
+      deliveredAt: isDelivered ? daysAgo(Math.max(0, createdDaysAgo - 5)) : null,
+      createdAt: daysAgo(createdDaysAgo),
     });
-    orderCount++;
+
+    itemsData.push({
+      orderId,
+      productId,
+      productName: `Produit ${productId}`,
+      price,
+      quantity,
+    });
   }
 
-  console.log(`   ✓ ${orderCount} commandes créées`);
+  await prisma.order.createMany({ data: ordersData, skipDuplicates: true });
+  await prisma.orderItem.createMany({ data: itemsData, skipDuplicates: false });
+
+  console.log(`   ✓ ${ordersData.length} commandes créées (batch createMany)`);
 }
 
 // ─── Seed modèles manquants ────────────────────────────────────────────────────
@@ -904,24 +965,99 @@ async function seedMissingModels(): Promise<void> {
   }
   console.log(`   ✓ ${Math.min(disputeOrders.length, disputeConfigs.length)} litiges créés`);
 
-  // 5. PlatformTransaction — commissions sur 20 commandes COMPLETED
-  const completedOrders = await prisma.order.findMany({
-    where: { orderNumber: { startsWith: 'ORD-MINI-' }, status: OrderStatus.COMPLETED },
-    take: 20,
+  // 5. PlatformTransaction — commissions sur toutes les commandes PAID/SHIPPED/DELIVERED/COMPLETED
+  const COMMISSION_RATE_BY_CREATOR_USER_ID: Map<string, number> = new Map(
+    MINI_CREATORS.map((c) => [
+      `user_${c.id}`,
+      c.plan === Plan.ESSENTIEL ? 0.05 : c.plan === Plan.STUDIO ? 0.04 : 0.03,
+    ]),
+  );
+  const paidOrders = await prisma.order.findMany({
+    where: {
+      orderNumber: { startsWith: 'ORD-MINI-' },
+      status: { in: [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.COMPLETED] },
+    },
     orderBy: { orderNumber: 'asc' },
   });
-  const platformTxData = completedOrders.map((order, i) => ({
-    id: `ptx_mini_${i + 1}`,
-    type: PlatformTransactionType.COMMISSION,
-    status: PlatformTransactionStatus.CAPTURED,
-    amount: Math.round(order.totalAmount * 0.08),
-    creatorId: order.creatorId,
-    orderId: order.id,
-    subscriptionId: null,
-    period: new Date(order.createdAt.getFullYear(), order.createdAt.getMonth(), 1),
-  }));
+  const platformTxData = paidOrders.map((order, i) => {
+    const rate = COMMISSION_RATE_BY_CREATOR_USER_ID.get(order.creatorId) ?? 0.05;
+    return {
+      id: `ptx_mini_${i + 1}`,
+      type: PlatformTransactionType.COMMISSION,
+      status: PlatformTransactionStatus.CAPTURED,
+      amount: Math.round(order.totalAmount * rate),
+      creatorId: order.creatorId,
+      orderId: order.id,
+      subscriptionId: null,
+      period: new Date(order.createdAt.getFullYear(), order.createdAt.getMonth(), 1),
+      createdAt: order.createdAt,
+    };
+  });
   await prisma.platformTransaction.createMany({ data: platformTxData, skipDuplicates: true });
   console.log(`   ✓ ${platformTxData.length} transactions plateforme créées`);
+
+  // 5b. PlatformTransaction — abonnements créateurs
+  // Annuel : 1 transaction au montant total dès le premier mois
+  // Mensuel : 1 transaction par mois depuis la date de début
+  const subTxData: Array<{
+    id: string;
+    type: PlatformTransactionType;
+    status: PlatformTransactionStatus;
+    amount: number;
+    creatorId: string;
+    orderId: null;
+    subscriptionId: string;
+    period: Date;
+    createdAt: Date;
+  }> = [];
+  let subTxIdx = 0;
+
+  for (const creator of MINI_CREATORS) {
+    const billing = CREATOR_BILLING[creator.id];
+    if (!billing) continue;
+    const creatorUserId = `user_${creator.id}`;
+    const subscriptionId = `sub_${creator.id}`;
+
+    if (billing.interval === 'year') {
+      // 1 seule transaction au montant annuel complet, le mois du départ
+      const amount = PLAN_YEARLY_CENTS[creator.plan] ?? 0;
+      subTxIdx++;
+      subTxData.push({
+        id: `ptx_mini_sub_${subTxIdx}`,
+        type: PlatformTransactionType.SUBSCRIPTION,
+        status: PlatformTransactionStatus.CAPTURED,
+        amount,
+        creatorId: creatorUserId,
+        orderId: null,
+        subscriptionId,
+        period: new Date(billing.startDate.getFullYear(), billing.startDate.getMonth(), 1),
+        createdAt: billing.startDate,
+      });
+    } else {
+      // 1 transaction par mois depuis startDate jusqu'au mois courant
+      const amount = PLAN_MONTHLY_CENTS[creator.plan] ?? 0;
+      const now = new Date();
+      const cursor = new Date(billing.startDate.getFullYear(), billing.startDate.getMonth(), 1);
+      while (cursor <= now) {
+        subTxIdx++;
+        subTxData.push({
+          id: `ptx_mini_sub_${subTxIdx}`,
+          type: PlatformTransactionType.SUBSCRIPTION,
+          status: PlatformTransactionStatus.CAPTURED,
+          amount,
+          creatorId: creatorUserId,
+          orderId: null,
+          subscriptionId,
+          period: new Date(cursor),
+          createdAt: new Date(cursor.getFullYear(), cursor.getMonth(), 5), // J+5 du mois
+        });
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    }
+  }
+
+  await prisma.platformTransaction.createMany({ data: subTxData, skipDuplicates: true });
+  console.log(`   ✓ ${subTxData.length} transactions abonnements créées (3 annuels, 3 mensuels)`);
 
   // 6. Invoice — CLIENT_ORDER pour commandes COMPLETED + CREATOR_SUBSCRIPTION pour créateurs
   const invoiceOrdersAll = await prisma.order.findMany({
@@ -1160,7 +1296,7 @@ async function main(): Promise<void> {
   console.log('╚══════════════════════════════════════════════╝');
   console.log('');
   console.log('6 créateurs × 3 collections × 5 produits × 3 variantes');
-  console.log('50 clients | 150 commandes');
+  console.log('50 clients | 900 commandes');
   console.log('');
 
   // Nettoyage préalable
@@ -1217,7 +1353,7 @@ async function main(): Promise<void> {
   console.log(`Produits:       ${MINI_CREATORS.length * 3 * 5}`);
   console.log(`Variantes:      ${totalVariants}`);
   console.log(`Clients:        50`);
-  console.log(`Commandes:      ~150`);
+  console.log(`Commandes:      ~900`);
   console.log(`Images totales: ${totalImages}`);
   console.log(`Images seeded:  ${imagesGenerated} / ${totalImages}`);
   console.log('');

@@ -10,6 +10,7 @@ import {
   parseSessionStorage,
   type OrderConfirmation,
 } from '@/lib/schemas/checkout.schema';
+import { useCartStore } from '@/lib/stores/cart.store';
 
 /**
  * Order Confirmation Page
@@ -57,6 +58,8 @@ function ConfirmationContent() {
       setOrder(result.data);
       // Clear after loading (one-time view)
       sessionStorage.removeItem('orderConfirmation');
+      // Vider le panier localStorage après commande réussie (DB déjà vidée par create-session)
+      useCartStore.getState().clear();
     } else if (result.error) {
       console.warn('Invalid order confirmation in sessionStorage:', result.error.issues);
       // Invalid data was already removed by parseSessionStorage

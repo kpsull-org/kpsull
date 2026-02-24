@@ -40,7 +40,12 @@ export async function DashboardStats({ creatorId }: DashboardStatsProps) {
 
   const revenueData: MonthlyRevenue[] = MONTH_LABELS.map((month, i) => {
     const point = stats.monthlyRevenue.find((p) => p.month === i);
-    return { month, revenue: (point?.revenueCents ?? 0) / 100 };
+    return {
+      month,
+      revenue: (point?.revenueCents ?? 0) / 100,
+      commissions: (point?.revenueCents ?? 0) / 100,
+      subscriptions: 0,
+    };
   });
 
   const currentMonthRevenueCents =

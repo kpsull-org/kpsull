@@ -13,8 +13,10 @@ export interface AdminStatsData {
   totalPlatformRevenue: number;
   /** Percentage change in revenue vs previous period */
   revenueChange?: number;
-  /** Revenue from subscriptions only in cents */
+  /** Revenue from subscriptions in the current period in cents (NOT MRR) */
   subscriptionRevenue?: number;
+  /** Monthly Recurring Revenue from active subscriptions in cents */
+  subscriptionMRR?: number;
   /** Revenue from commissions only in cents */
   commissionRevenue?: number;
   /** Total number of orders across the platform */
@@ -101,6 +103,7 @@ export function AdminStatsCards({
     totalPlatformRevenue,
     revenueChange,
     subscriptionRevenue,
+    subscriptionMRR,
     commissionRevenue,
     totalOrders,
     ordersChange,
@@ -131,13 +134,16 @@ export function AdminStatsCards({
           percentageChange={revenueChange}
           comparisonLabel="vs periode precedente"
         />
-        {(subscriptionRevenue !== undefined || commissionRevenue !== undefined) && (
+        {(subscriptionRevenue !== undefined || commissionRevenue !== undefined || subscriptionMRR !== undefined) && (
           <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground space-y-0.5">
             {subscriptionRevenue !== undefined && (
               <p>Abonnements&nbsp;: {formatCurrency(subscriptionRevenue, currency)}</p>
             )}
             {commissionRevenue !== undefined && (
               <p>Commissions&nbsp;: {formatCurrency(commissionRevenue, currency)}</p>
+            )}
+            {subscriptionMRR !== undefined && subscriptionMRR > 0 && (
+              <p className="border-t pt-0.5 mt-0.5">MRR&nbsp;: {formatCurrency(subscriptionMRR, currency)}/mois</p>
             )}
           </div>
         )}

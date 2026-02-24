@@ -2,6 +2,7 @@ import { Result } from '@/shared/domain';
 import type { UseCase } from '@/shared/application/use-case.interface';
 import type { ReturnRepository } from '../ports/return.repository.interface';
 import type { ReturnStatusValue } from '../../domain/value-objects/return-status.vo';
+import { incrementStock } from '@/modules/products/application/services/stock.service';
 
 export interface RefundReturnInput {
   returnId: string;
@@ -61,6 +62,16 @@ export class RefundReturnUseCase implements UseCase<RefundReturnInput, RefundRet
     };
 
     await this.returnRepository.save(updatedReturn);
+
+    // Restituer le stock des items retournés (si renseignés)
+    if (returnRequest.returnItems && returnRequest.returnItems.length > 0) {
+      await incrementStock(
+        returnRequest.returnItems.map((item) => ({
+          variantId: item.variantId,
+          quantity: item.quantity,
+        }))
+      );
+    }
 
     return Result.ok({
       id: updatedReturn.id,

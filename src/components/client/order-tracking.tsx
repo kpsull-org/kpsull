@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, AlertTriangle, RotateCcw, Package } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, RotateCcw, Package, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { TrackingTimeline, type TrackingTimelineEvent } from '@/components/orders/tracking-timeline';
 import { OrderTimeline } from '@/components/orders/order-timeline';
 import { OrderItems } from '@/components/orders/order-items';
@@ -16,12 +18,15 @@ import type { OrderStatusValue } from '@/modules/orders/domain/value-objects/ord
 import type { TrackingStatusValue } from '@/modules/shipping/domain/value-objects/tracking-status.vo';
 import type { DisputeTypeValue } from '@/modules/disputes/domain';
 import type { ReturnReasonValue } from '@/modules/returns/domain';
+import type { ReturnItem } from '@/modules/returns/application/ports/return.repository.interface';
 
 /**
  * Order item interface for display
  */
 interface OrderItem {
   id: string;
+  productId: string;
+  variantId?: string;
   productName: string;
   image?: string;
   variantInfo?: string;
@@ -83,8 +88,10 @@ export interface OrderTrackingProps {
   onRequestReturn: (
     orderId: string,
     reason: ReturnReasonValue,
+    returnItems: ReturnItem[],
     additionalNotes?: string
   ) => Promise<{ success: boolean; error?: string }>;
+  onCancelOrder?: (orderId: string, reason: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 /**
@@ -257,9 +264,16 @@ export function OrderTracking({
   tracking,
   onReportIssue,
   onRequestReturn,
+  onCancelOrder,
 }: OrderTrackingProps) {
+  const router = useRouter();
   const [isReportIssueOpen, setIsReportIssueOpen] = useState(false);
   const [isReturnRequestOpen, setIsReturnRequestOpen] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [isCancelling, startCancelTransition] = useTransition();
 
   const statusConfig = STATUS_CONFIG[order.status] || {
     label: order.status,
@@ -268,6 +282,7 @@ export function OrderTracking({
 
   // Determine if actions are available
   const isDelivered = order.status === 'DELIVERED';
+  const canCancel = order.status === 'PAID';
   const canReportIssue = isDelivered;
   const daysRemaining = order.deliveredAt ? calculateDaysRemaining(order.deliveredAt) : 0;
   const canRequestReturn = isDelivered && daysRemaining > 0;
@@ -296,6 +311,12 @@ export function OrderTracking({
 
         {/* Action buttons - AC3 */}
         <div className="flex gap-2">
+          {canCancel && onCancelOrder && (
+            <Button variant="destructive" size="sm" onClick={() => setIsCancelOpen(true)}>
+              <X className="h-4 w-4 mr-2" />
+              Annuler la commande
+            </Button>
+          )}
           {canReportIssue && (
             <Button variant="outline" onClick={() => setIsReportIssueOpen(true)}>
               <AlertTriangle className="h-4 w-4 mr-2" />
@@ -419,10 +440,106 @@ export function OrderTracking({
           orderNumber={order.orderNumber}
           deliveredAt={order.deliveredAt}
           daysRemaining={daysRemaining}
+          items={order.items.map((item) => ({
+            id: item.id,
+            productId: item.productId,
+            variantId: item.variantId,
+            productName: item.productName,
+            variantInfo: item.variantInfo,
+            quantity: item.quantity,
+            price: item.price,
+          }))}
           open={isReturnRequestOpen}
           onOpenChange={setIsReturnRequestOpen}
           onSubmit={onRequestReturn}
         />
+      )}
+
+      {isCancelOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => !isCancelling && setIsCancelOpen(false)}
+            aria-hidden="true"
+          />
+          <Card className="relative z-10 w-full max-w-md mx-4 shadow-xl border-2 border-black">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-2 top-2"
+              onClick={() => setIsCancelOpen(false)}
+              disabled={isCancelling}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fermer</span>
+            </Button>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl uppercase tracking-widest">Annuler la commande</CardTitle>
+              <CardDescription>Commande {order.orderNumber}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {cancelSuccess ? (
+                <div className="p-4 bg-green-50 border border-green-200 rounded text-green-800 text-sm">
+                  Votre commande a ete annulee et vous serez rembourse sous 3-5 jours ouvrés.
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Cette action est irréversible. Le montant vous sera rembourse sur votre moyen de paiement.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="cancelReason">Raison de l&apos;annulation <span className="text-destructive">*</span></Label>
+                    <textarea
+                      id="cancelReason"
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      placeholder="Expliquez pourquoi vous souhaitez annuler..."
+                      disabled={isCancelling}
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                  {cancelError && (
+                    <p className="text-sm text-destructive">{cancelError}</p>
+                  )}
+                  <div className="flex flex-col gap-2 pt-2">
+                    <Button
+                      variant="destructive"
+                      disabled={isCancelling || !cancelReason.trim()}
+                      onClick={() => {
+                        setCancelError(null);
+                        startCancelTransition(async () => {
+                          const result = await onCancelOrder!(order.id, cancelReason);
+                          if (result.success) {
+                            setCancelSuccess(true);
+                            router.refresh();
+                          } else {
+                            setCancelError(result.error ?? "Une erreur s'est produite");
+                          }
+                        });
+                      }}
+                      className="w-full"
+                    >
+                      {isCancelling ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Annulation en cours...</>
+                      ) : (
+                        "Confirmer l'annulation"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => { setIsCancelOpen(false); setCancelError(null); }}
+                      disabled={isCancelling}
+                      className="w-full"
+                    >
+                      Garder ma commande
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );

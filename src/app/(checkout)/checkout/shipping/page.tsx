@@ -94,7 +94,7 @@ export default function ShippingPage() {
         <CheckoutStepper currentStep="shipping" />
       </div>
 
-      <div className="max-w-xl">
+      <div className="max-w-xl mx-auto">
         <ShippingAddressForm
           initialData={
             guestInfo

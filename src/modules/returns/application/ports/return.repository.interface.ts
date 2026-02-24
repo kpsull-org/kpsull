@@ -1,6 +1,14 @@
 import type { ReturnStatusValue } from '../../domain/value-objects/return-status.vo';
 import type { ReturnReasonValue } from '../../domain/value-objects/return-reason.vo';
 
+export interface ReturnItem {
+  productId: string;
+  variantId?: string;
+  quantity: number;
+  productName: string;
+  price: number;
+}
+
 /**
  * Return Request DTO for persistence
  */
@@ -16,6 +24,7 @@ export interface ReturnRequest {
   reasonDetails?: string;
   status: ReturnStatusValue;
   rejectionReason?: string;
+  returnItems?: ReturnItem[];
 
   // Return shipping (client -> creator)
   trackingNumber?: string;

@@ -168,7 +168,7 @@ export default function PaymentPage() {
         <CheckoutStepper currentStep="payment" />
       </div>
 
-      <div className="max-w-xl space-y-4">
+      <div className="max-w-xl mx-auto space-y-4">
           <div className="border border-black p-6">
             <h2 className="text-xs font-bold tracking-widest uppercase mb-1">
               Informations de paiement

@@ -589,6 +589,9 @@ model ReturnRequest {
   status          ReturnStatus @default(REQUESTED)
   rejectionReason String?
 
+  // Items retournés (pour retours partiels) — [{ productId, variantId?, quantity, productName, price }]
+  returnItems Json? @default("[]")
+
   // Return shipping (client -> creator)
   trackingNumber String?
   carrier        String?

@@ -15,6 +15,7 @@ const DEFAULT_STATS: AdminPlatformStats = {
   totalPlatformRevenue: 18750000,
   previousPlatformRevenue: 15200000,
   subscriptionRevenue: 12500000,
+  subscriptionMRR: 1041667,
   commissionRevenue: 6250000,
   totalOrders: 2145,
   previousOrders: 1890,
@@ -32,6 +33,7 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
     totalPlatformRevenue: 4850000,
     previousPlatformRevenue: 4200000,
     subscriptionRevenue: 3200000,
+    subscriptionMRR: 1041667,
     commissionRevenue: 1650000,
     totalOrders: 523,
     previousOrders: 478,
@@ -44,6 +46,7 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
     totalPlatformRevenue: 18750000,
     previousPlatformRevenue: 15200000,
     subscriptionRevenue: 12500000,
+    subscriptionMRR: 1041667,
     commissionRevenue: 6250000,
     totalOrders: 2145,
     previousOrders: 1890,
@@ -56,6 +59,7 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
     totalPlatformRevenue: 52300000,
     previousPlatformRevenue: 38500000,
     subscriptionRevenue: 35000000,
+    subscriptionMRR: 1041667,
     commissionRevenue: 17300000,
     totalOrders: 6420,
     previousOrders: 4850,
@@ -68,6 +72,7 @@ const MOCK_ADMIN_STATS: Record<string, AdminPlatformStats> = {
     totalPlatformRevenue: 198500000,
     previousPlatformRevenue: 125000000,
     subscriptionRevenue: 132000000,
+    subscriptionMRR: 1041667,
     commissionRevenue: 66500000,
     totalOrders: 24500,
     previousOrders: 15800,
@@ -102,10 +107,16 @@ export class MockAdminAnalyticsRepository implements AdminAnalyticsRepository {
   }
 
   async getMonthlyRevenue(_year: number): Promise<MonthlyRevenueDataPoint[]> {
-    return Array.from({ length: 12 }, (_, i) => ({
-      month: i,
-      revenue: Math.floor(Math.random() * 500000) + 100000,
-    }));
+    return Array.from({ length: 12 }, (_, i) => {
+      const commissions = Math.floor(Math.random() * 300000) + 50000;
+      const subscriptions = Math.floor(Math.random() * 200000) + 50000;
+      return {
+        month: i,
+        revenue: commissions + subscriptions,
+        commissions,
+        subscriptions,
+      };
+    });
   }
 
   async getRevenueByCreator(limit: number): Promise<CreatorRevenueBreakdown[]> {

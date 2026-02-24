@@ -46,7 +46,12 @@ export default async function AdminRevenuePage() {
   const monthlyChartData: MonthlyRevenue[] = monthlyResult.isSuccess
     ? MONTH_LABELS.map((month, i) => {
         const point = monthlyResult.value.revenueByMonth.find((p) => p.month === i);
-        return { month, revenue: (point?.revenue ?? 0) / 100 };
+        return {
+          month,
+          revenue: (point?.revenue ?? 0) / 100,
+          commissions: (point?.commissions ?? 0) / 100,
+          subscriptions: (point?.subscriptions ?? 0) / 100,
+        };
       })
     : [];
 
@@ -85,6 +90,7 @@ export default async function AdminRevenuePage() {
             totalPlatformRevenue: stats.totalPlatformRevenue,
             revenueChange: stats.revenueChange,
             subscriptionRevenue: stats.subscriptionRevenue,
+            subscriptionMRR: stats.subscriptionMRR,
             commissionRevenue: stats.commissionRevenue,
             totalOrders: stats.totalOrders,
             ordersChange: stats.ordersChange,

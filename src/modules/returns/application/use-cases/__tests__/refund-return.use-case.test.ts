@@ -1,4 +1,10 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+
+vi.mock('@/modules/products/application/services/stock.service', () => ({
+  incrementStock: vi.fn().mockResolvedValue(undefined),
+  decrementStock: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { RefundReturnUseCase } from '../refund-return.use-case';
 import type { ReturnRepository, ReturnRequest } from '../../ports/return.repository.interface';
 

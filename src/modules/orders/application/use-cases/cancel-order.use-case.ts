@@ -2,6 +2,7 @@ import { Result } from '@/shared/domain';
 import { UseCase } from '@/shared/application/use-case.interface';
 import { OrderRepository } from '../ports/order.repository.interface';
 import { OrderStatusValue } from '../../domain/value-objects/order-status.vo';
+import { incrementStock } from '@/modules/products/application/services/stock.service';
 
 export interface CancelOrderInput {
   orderId: string;
@@ -52,6 +53,11 @@ export class CancelOrderUseCase implements UseCase<CancelOrderInput, CancelOrder
     }
 
     await this.orderRepository.save(order);
+
+    // Restituer le stock des variantes de la commande annulée
+    await incrementStock(
+      order.items.map((item) => ({ variantId: item.variantId, quantity: item.quantity }))
+    );
 
     return Result.ok({
       id: order.idString,

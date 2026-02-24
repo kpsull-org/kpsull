@@ -12,6 +12,7 @@ import {
 } from '@/modules/analytics/application/use-cases';
 import { PrismaAdminAnalyticsRepository } from '@/modules/analytics/infrastructure/repositories';
 import { prisma } from '@/lib/prisma/client';
+import { stripe } from '@/lib/stripe/client';
 import type { TimePeriodType } from '@/modules/analytics/domain/value-objects';
 import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,10 +35,17 @@ const MONTH_LABELS = [
 ] as const;
 
 /** Map month index (0–11) from the use case to a MonthlyRevenue chart entry */
-function toMonthlyRevenue(dataPoints: { month: number; revenue: number }[]): MonthlyRevenue[] {
+function toMonthlyRevenue(
+  dataPoints: { month: number; revenue: number; commissions: number; subscriptions: number }[]
+): MonthlyRevenue[] {
   return MONTH_LABELS.map((month, i) => {
     const point = dataPoints.find((p) => p.month === i);
-    return { month, revenue: (point?.revenue ?? 0) / 100 };
+    return {
+      month,
+      revenue: (point?.revenue ?? 0) / 100,
+      commissions: (point?.commissions ?? 0) / 100,
+      subscriptions: (point?.subscriptions ?? 0) / 100,
+    };
   });
 }
 
@@ -68,8 +76,8 @@ export default async function AdminDashboardPage({
 
   const currentYear = new Date().getFullYear();
 
-  // Initialize use cases with Prisma repository
-  const adminRepository = new PrismaAdminAnalyticsRepository(prisma);
+  // Initialize use cases with Prisma repository + Stripe for subscription revenue
+  const adminRepository = new PrismaAdminAnalyticsRepository(prisma, stripe);
   const getAdminStatsUseCase = new GetAdminStatsUseCase(adminRepository);
   const getMonthlyRevenueUseCase = new GetAdminMonthlyRevenueUseCase(adminRepository);
 
@@ -81,7 +89,7 @@ export default async function AdminDashboardPage({
 
   const revenueData = revenueResult.isSuccess
     ? toMonthlyRevenue(revenueResult.value.revenueByMonth)
-    : MONTH_LABELS.map((month) => ({ month, revenue: 0 }));
+    : MONTH_LABELS.map((month) => ({ month, revenue: 0, commissions: 0, subscriptions: 0 }));
 
   // Handle error case
   if (result.isFailure) {
@@ -124,6 +132,7 @@ export default async function AdminDashboardPage({
             totalPlatformRevenue: stats.totalPlatformRevenue,
             revenueChange: stats.revenueChange,
             subscriptionRevenue: stats.subscriptionRevenue,
+            subscriptionMRR: stats.subscriptionMRR,
             commissionRevenue: stats.commissionRevenue,
             totalOrders: stats.totalOrders,
             ordersChange: stats.ordersChange,

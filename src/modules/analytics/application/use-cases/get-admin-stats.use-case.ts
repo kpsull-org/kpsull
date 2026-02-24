@@ -16,8 +16,10 @@ export interface GetAdminStatsOutput {
   totalPlatformRevenue: number;
   /** Percentage change in revenue vs previous period */
   revenueChange: number;
-  /** Revenue from subscriptions only in cents */
+  /** Revenue from subscriptions in the current period in cents (NOT MRR) */
   subscriptionRevenue: number;
+  /** Monthly Recurring Revenue from active subscriptions in cents */
+  subscriptionMRR: number;
   /** Revenue from commissions only in cents */
   commissionRevenue: number;
   /** Total number of orders across the platform */
@@ -99,6 +101,7 @@ export class GetAdminStatsUseCase
         totalPlatformRevenue: stats.totalPlatformRevenue,
         revenueChange,
         subscriptionRevenue: stats.subscriptionRevenue,
+        subscriptionMRR: stats.subscriptionMRR,
         commissionRevenue: stats.commissionRevenue,
         totalOrders: stats.totalOrders,
         ordersChange,
