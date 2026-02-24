@@ -35,7 +35,7 @@ export function CartSyncOnLogin({ isAuthenticated }: CartSyncOnLoginProps) {
       saveCartAction(localItems).then((result) => {
         if (!result.success) {
           if (result.error === 'SESSION_EXPIRED') {
-            void signOut({ callbackUrl: '/' });
+            signOut({ callbackUrl: '/' });
             return;
           }
           return;

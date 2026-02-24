@@ -32,6 +32,13 @@ const CreateSessionBodySchema = z.object({
   items: z.array(InlineCartItemSchema).optional(),
 });
 
+/** Resolve creatorId from a creator slug. Returns 'unknown' if not found. */
+async function resolveCreatorId(slug: string | undefined): Promise<string> {
+  if (!slug) return 'unknown';
+  const creatorPage = await prisma.creatorPage.findUnique({ where: { slug } });
+  return creatorPage?.creatorId ?? 'unknown';
+}
+
 /**
  * POST /api/checkout/create-session
  *
@@ -90,16 +97,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   const total = itemsTotal + shippingCostCents;
 
   // 6. Resolve creatorId from first item's creatorSlug
-  let creatorId = 'unknown';
-  const firstCreatorSlug = items[0]?.creatorSlug;
-  if (firstCreatorSlug) {
-    const creatorPage = await prisma.creatorPage.findUnique({
-      where: { slug: firstCreatorSlug },
-    });
-    if (creatorPage) {
-      creatorId = creatorPage.creatorId;
-    }
-  }
+  const creatorId = await resolveCreatorId(items[0]?.creatorSlug);
 
   // 7. Generate order number (pattern: ORD-{timestamp base36}-{random 4 chars})
   const timestamp = Date.now().toString(36).toUpperCase();

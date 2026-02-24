@@ -58,7 +58,7 @@ export function useCart(isAuthenticated: boolean) {
         if (!result.success) {
           if (result.error === 'SESSION_EXPIRED') {
             // Session périmée (user supprimé en DB, cookie encore valide) → déconnexion
-            void signOut({ callbackUrl: '/' });
+            signOut({ callbackUrl: '/' });
             return;
           }
           console.error('[useCart] Échec de la sauvegarde du panier:', result.error);
