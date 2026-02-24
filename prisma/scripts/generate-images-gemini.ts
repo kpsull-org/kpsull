@@ -465,7 +465,14 @@ async function generateImageWithRetry(
       }
 
       const waitSec = RETRY_WAIT_MS / 1000;
-      const reason = error.isRateLimit === true ? 'Rate limit' : error.isLoading === true ? 'Modèle en chargement' : 'Erreur';
+      let reason: string;
+      if (error.isRateLimit === true) {
+        reason = 'Rate limit';
+      } else if (error.isLoading === true) {
+        reason = 'Modèle en chargement';
+      } else {
+        reason = 'Erreur';
+      }
       console.log(`\n  ⏳ ${reason} — attente ${waitSec}s avant retry ${attempt}/${MAX_RETRIES}...`);
       await sleep(RETRY_WAIT_MS);
     }
@@ -895,26 +902,27 @@ function generateMiniSpecs(): MiniItem[] {
 
   for (const c of MINI_CREATORS_CFG) {
     // 1. Profile portrait (512×512)
-    items.push({
-      key: `profile_${c.id}`,
-      type: 'profile',
-      imageCount: 1,
-      width: 512,
-      height: 512,
-      prompts: [c.portraitPrompt],
-      displayName: `${c.name} — portrait`,
-    });
-
-    // 2. Brand banner (1024×512)
-    items.push({
-      key: `banner_${c.id}`,
-      type: 'banner',
-      imageCount: 1,
-      width: 1024,
-      height: 512,
-      prompts: [c.bannerPrompt],
-      displayName: `${c.name} — bannière`,
-    });
+    items.push(
+      {
+        key: `profile_${c.id}`,
+        type: 'profile',
+        imageCount: 1,
+        width: 512,
+        height: 512,
+        prompts: [c.portraitPrompt],
+        displayName: `${c.name} — portrait`,
+      },
+      // 2. Brand banner (1024×512)
+      {
+        key: `banner_${c.id}`,
+        type: 'banner',
+        imageCount: 1,
+        width: 1024,
+        height: 512,
+        prompts: [c.bannerPrompt],
+        displayName: `${c.name} — bannière`,
+      },
+    );
 
     // 3. Collections : cover + variants produit
     for (let colIdx = 0; colIdx < c.collections.length; colIdx++) {
@@ -966,8 +974,9 @@ async function processMiniItem(
   const imageUrls: string[] = [];
 
   for (let imgIdx = 0; imgIdx < item.imageCount; imgIdx++) {
+    const imgSuffix = item.imageCount > 1 ? ` (img ${imgIdx + 1}/${item.imageCount})` : '';
     process.stdout.write(
-      `[${displayIndex}/${total}] ${item.displayName}${item.imageCount > 1 ? ` (img ${imgIdx + 1}/${item.imageCount})` : ''}... `,
+      `[${displayIndex}/${total}] ${item.displayName}${imgSuffix}... `,
     );
 
     try {
@@ -1073,11 +1082,11 @@ async function runMiniGeneration(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const isStatus = args.includes('--status');
-  const isReset = args.includes('--reset');
-  const isResetMini = args.includes('--reset-mini');
-  const isMini = args.includes('--mini');
+  const args = new Set(process.argv.slice(2));
+  const isStatus = args.has('--status');
+  const isReset = args.has('--reset');
+  const isResetMini = args.has('--reset-mini');
+  const isMini = args.has('--mini');
 
   if (isReset) {
     resetCheckpoint();
