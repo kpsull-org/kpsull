@@ -44,7 +44,7 @@ export class ReceiveReturnUseCase implements UseCase<ReceiveReturnInput, Receive
       return Result.fail(findResult.error!);
     }
 
-    const returnRequest = findResult.value!;
+    const returnRequest = findResult.value;
     const now = new Date();
     const updatedReturn = {
       ...returnRequest,
@@ -53,7 +53,7 @@ export class ReceiveReturnUseCase implements UseCase<ReceiveReturnInput, Receive
       updatedAt: now,
     };
 
-    await this.returnRepository.save(updatedReturn as typeof returnRequest);
+    await this.returnRepository.save(updatedReturn);
 
     return Result.ok({
       id: updatedReturn.id,

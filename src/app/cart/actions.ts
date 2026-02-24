@@ -59,7 +59,7 @@ export async function saveCartAction(
   }
 
   // Serialize validated data to ensure Prisma-compatible plain JSON
-  const serializedItems = JSON.parse(JSON.stringify(validation.data));
+  const serializedItems = structuredClone(validation.data);
 
   try {
     await prisma.cart.upsert({

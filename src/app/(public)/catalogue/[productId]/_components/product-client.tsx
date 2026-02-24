@@ -70,7 +70,7 @@ export function ProductClient({
 
   // Masquer le sélecteur si taille unique (1 seule taille ou libellé "unique")
   const isOnlyUniqueLabel = availableSizes.every(
-    (sku) => sku.size?.toLowerCase().replace(/[-\s]/g, '').includes('unique') ?? false
+    (sku) => sku.size?.toLowerCase().replaceAll('-', '').replaceAll(' ', '').includes('unique') ?? false
   );
   const shouldHideSizeSelector =
     availableSizes.length === 1 || (availableSizes.length > 0 && isOnlyUniqueLabel);

@@ -45,7 +45,7 @@ export class ApproveReturnUseCase implements UseCase<ApproveReturnInput, Approve
       return Result.fail(findResult.error!);
     }
 
-    const returnRequest = findResult.value!;
+    const returnRequest = findResult.value;
     const now = new Date();
     const updatedReturn = {
       ...returnRequest,

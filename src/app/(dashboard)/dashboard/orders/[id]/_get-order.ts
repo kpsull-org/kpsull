@@ -42,5 +42,5 @@ export async function getCreatorOrderOrThrow(id: string): Promise<CreatorOrderRe
     notFound();
   }
 
-  return { order: result.value!, session };
+  return { order: result.value, session };
 }

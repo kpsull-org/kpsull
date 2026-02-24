@@ -59,11 +59,11 @@ function RevenueBreakdownCard({
   commissions,
   subscriptions,
   currency,
-}: {
+}: Readonly<{
   commissions: number;
   subscriptions: number;
   currency: string;
-}) {
+}>) {
   const total = commissions + subscriptions;
   const commissionsPercent = total > 0 ? Math.round((commissions / total) * 100) : 50;
   const subscriptionsPercent = 100 - commissionsPercent;
@@ -141,7 +141,7 @@ export function AdminStatsCards({
   data,
   currency = 'EUR',
   className,
-}: AdminStatsCardsProps) {
+}: Readonly<AdminStatsCardsProps>) {
   const {
     totalCreators,
     creatorsChange,

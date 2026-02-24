@@ -14,6 +14,33 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+async function handleReportIssue(
+  orderId: string,
+  type: DisputeTypeValue,
+  description: string
+): Promise<{ success: boolean; error?: string }> {
+  'use server';
+  return createDispute(orderId, type, description);
+}
+
+async function handleRequestReturn(
+  orderId: string,
+  reason: ReturnReasonValue,
+  returnItems: ReturnItem[],
+  additionalNotes?: string
+): Promise<{ success: boolean; error?: string }> {
+  'use server';
+  return requestReturn(orderId, reason, returnItems, additionalNotes);
+}
+
+async function handleCancelOrder(
+  orderId: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  'use server';
+  return cancelOrderAction(orderId, reason);
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
   return {
@@ -69,33 +96,6 @@ export default async function ClientOrderDetailPage({ params }: PageProps) {
   };
 
   const trackingData: ShipmentTrackingData | null = null;
-
-  async function handleReportIssue(
-    orderId: string,
-    type: DisputeTypeValue,
-    description: string
-  ): Promise<{ success: boolean; error?: string }> {
-    'use server';
-    return createDispute(orderId, type, description);
-  }
-
-  async function handleRequestReturn(
-    orderId: string,
-    reason: ReturnReasonValue,
-    returnItems: ReturnItem[],
-    additionalNotes?: string
-  ): Promise<{ success: boolean; error?: string }> {
-    'use server';
-    return requestReturn(orderId, reason, returnItems, additionalNotes);
-  }
-
-  async function handleCancelOrder(
-    orderId: string,
-    reason: string
-  ): Promise<{ success: boolean; error?: string }> {
-    'use server';
-    return cancelOrderAction(orderId, reason);
-  }
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">

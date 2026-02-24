@@ -9,7 +9,6 @@ import { RejectReturnUseCase } from '@/modules/returns/application/use-cases/rej
 import { ReceiveReturnUseCase } from '@/modules/returns/application/use-cases/receive-return.use-case';
 import { RefundReturnUseCase } from '@/modules/returns/application/use-cases/refund-return.use-case';
 import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories/prisma-return.repository';
-import type { ReturnItem } from '@/modules/returns/application/ports/return.repository.interface';
 import { Card, CardContent } from '@/components/ui/card';
 import { ReturnsPageClient } from './page-client';
 import type { ReturnStatusValue } from '@/modules/returns/domain/value-objects/return-status.vo';
@@ -148,7 +147,7 @@ export default async function ReturnsPage({ searchParams }: ReturnsPageProps) {
 
       if (order?.stripePaymentIntentId) {
         // Calculer le montant à rembourser (partiel ou total)
-        const returnItems = returnRequest.returnItems as ReturnItem[] | undefined;
+        const returnItems = returnRequest.returnItems;
         const refundAmount =
           returnItems && returnItems.length > 0
             ? returnItems.reduce((sum, item) => sum + item.price * item.quantity, 0)

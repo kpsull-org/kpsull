@@ -44,7 +44,7 @@ export class RefundReturnUseCase implements UseCase<RefundReturnInput, RefundRet
       return Result.fail(findResult.error!);
     }
 
-    const returnRequest = findResult.value!;
+    const returnRequest = findResult.value;
     const now = new Date();
     const updatedReturn = {
       ...returnRequest,
