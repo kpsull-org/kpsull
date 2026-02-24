@@ -6,10 +6,15 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma/client';
 
 // Déduplique la query entre generateMetadata et la page dans le même rendu (Vercel best practice 3.6)
+// try/catch: DB peut être désynchronisée au build (colonnes manquantes avant migration) → retourne null
 const getCreatorPage = cache(async (slug: string) => {
-  return prisma.creatorPage.findFirst({
-    where: { slug, status: 'PUBLISHED' },
-  });
+  try {
+    return await prisma.creatorPage.findFirst({
+      where: { slug, status: 'PUBLISHED' },
+    });
+  } catch {
+    return null;
+  }
 });
 
 export const revalidate = 3600;
