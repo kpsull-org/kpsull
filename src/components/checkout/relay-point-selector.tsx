@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import type { RelayPoint } from '@/lib/schemas/checkout.schema';
 import relayPointsMock from './relay-points.mock.json';
 
-// TODO (production): Remplacer Brand "BDTEST13" par le Brand ID officiel Mondial Relay
+// NOTE (production): Remplacer Brand "BDTEST13" par le Brand ID officiel Mondial Relay
 // Obtenir les credentials partenaire : https://www.mondialrelay.fr/nous-rejoindre/devenir-partenaire/
 // Documentation widget : https://widget.mondialrelay.com/
 
@@ -147,7 +147,7 @@ export function RelayPointSelector({
   initialPostalCode,
   selectedRelayPoint,
   onSelect,
-}: RelayPointSelectorProps) {
+}: Readonly<RelayPointSelectorProps>) {
   const [widgetState, setWidgetState] = useState<WidgetState>('loading');
   const [fallbackPoints, setFallbackPoints] = useState<RelayPoint[]>([]);
   const widgetInitialized = useRef(false);
@@ -160,13 +160,13 @@ export function RelayPointSelector({
 
     const initWidget = async () => {
       try {
-        if (!(window as Window & { jQuery?: unknown }).jQuery) {
+        if (!(globalThis as unknown as Window & { jQuery?: unknown }).jQuery) {
           await loadScript(JQUERY_CDN);
         }
         loadStyle(MR_WIDGET_CSS);
         await loadScript(MR_WIDGET_JS);
 
-        const jq = (window as Window & { jQuery?: JQueryMR }).jQuery;
+        const jq = (globalThis as unknown as Window & { jQuery?: JQueryMR }).jQuery;
         if (!jq) throw new Error('jQuery introuvable');
 
         jq('#MR_Zone_Widget').MR_ParcelShopPicker({
@@ -283,7 +283,7 @@ export function RelayPointSelector({
   );
 }
 
-function SelectedSummary({ point }: { point: RelayPoint }) {
+function SelectedSummary({ point }: Readonly<{ point: RelayPoint }>) {
   return (
     <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 text-sm">
       <Check className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />

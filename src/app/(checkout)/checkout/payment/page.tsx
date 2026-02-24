@@ -293,7 +293,7 @@ interface CheckoutFormProps {
   total: number;
 }
 
-function CheckoutForm({ orderId, formatPrice, total }: CheckoutFormProps) {
+function CheckoutForm({ orderId, formatPrice, total }: Readonly<CheckoutFormProps>) {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -309,7 +309,7 @@ function CheckoutForm({ orderId, formatPrice, total }: CheckoutFormProps) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/checkout/confirmation?order=${orderId}`,
+        return_url: `${globalThis.location.origin}/checkout/confirmation?order=${orderId}`,
       },
     });
 

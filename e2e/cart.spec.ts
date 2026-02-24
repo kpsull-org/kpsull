@@ -159,7 +159,7 @@ test.describe('Cart — guest persistence', () => {
 
     // If the product has sizes, select the first available one
     const sizeButtons = page.locator('button[disabled=false]').filter({
-      hasText: /^(XS|S|M|L|XL|XXL|[0-9]{1,2})$/,
+      hasText: /^(XS|S|M|L|XL|XXL|\d{1,2})$/,
     });
     const hasSizes = await sizeButtons.first().isVisible().catch(() => false);
     if (hasSizes) {

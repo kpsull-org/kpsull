@@ -46,9 +46,12 @@ export function CheckoutStepper({ currentStep, user }: CheckoutStepperProps) {
                     {isCompleted ? <Check className="h-3.5 w-3.5" /> : step.number}
                   </div>
                   <span
-                    className={`hidden md:inline text-xs tracking-wider uppercase font-medium ${
-                      isCurrent ? 'text-black' : isCompleted ? 'text-black/50' : 'text-black/25'
-                    }`}
+                    className={(() => {
+                      let stepTextClass = 'text-black/25';
+                      if (isCurrent) stepTextClass = 'text-black';
+                      else if (isCompleted) stepTextClass = 'text-black/50';
+                      return `hidden md:inline text-xs tracking-wider uppercase font-medium ${stepTextClass}`;
+                    })()}
                   >
                     {step.label}
                   </span>

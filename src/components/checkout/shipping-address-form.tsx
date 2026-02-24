@@ -44,7 +44,7 @@ function validateAddress(addr: ShippingAddress): Partial<Record<keyof ShippingAd
   } else if (!POSTAL_CODE_REGEX.test(addr.postalCode)) {
     errs.postalCode = 'Code postal invalide (5 chiffres)';
   }
-  if (addr.phone && !PHONE_REGEX.test(addr.phone.replace(/\s/g, ''))) {
+  if (addr.phone && !PHONE_REGEX.test(addr.phone.replaceAll(' ', ''))) {
     errs.phone = 'Numéro de téléphone invalide';
   }
   return errs;
@@ -165,7 +165,7 @@ export function ShippingAddressForm({
             <label htmlFor="postalCode" className={labelClass}>Code postal *</label>
             <input id="postalCode" type="text" placeholder="75001" maxLength={5}
               value={address.postalCode}
-              onChange={(e) => updateField('postalCode', e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => updateField('postalCode', e.target.value.replaceAll(/\D/gu, ''))}
               className={inputClass} />
             {errors.postalCode && <p className={errorClass}>{errors.postalCode}</p>}
           </div>
@@ -270,7 +270,7 @@ export function ShippingAddressForm({
                 <label htmlFor="billing-postalCode" className={labelClass}>Code postal *</label>
                 <input id="billing-postalCode" type="text" placeholder="75001" maxLength={5}
                   value={billingAddress.postalCode}
-                  onChange={(e) => updateBillingField('postalCode', e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => updateBillingField('postalCode', e.target.value.replaceAll(/\D/gu, ''))}
                   className={inputClass} />
                 {billingErrors.postalCode && <p className={errorClass}>{billingErrors.postalCode}</p>}
               </div>
