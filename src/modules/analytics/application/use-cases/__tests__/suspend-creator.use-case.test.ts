@@ -23,7 +23,7 @@ describe('SuspendCreatorUseCase', () => {
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(mockRepo.suspendCreator).toHaveBeenCalledWith('creator-1');
+    expect(mockRepo.suspendCreator).toHaveBeenCalledWith('creator-1', 'admin-1', 'Violation des CGU');
   });
 
   it('should fail when reason is empty', async () => {

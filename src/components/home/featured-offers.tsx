@@ -18,7 +18,7 @@ const getFeaturedProducts = unstable_cache(
     return prisma.product.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
-      take: 8,
+      take: 16,
       include: {
         variants: {
           take: 1,
@@ -31,8 +31,19 @@ const getFeaturedProducts = unstable_cache(
   { revalidate: 300, tags: ['products'] },
 );
 
+function fisherYatesShuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j] as T, a[i] as T];
+  }
+  return a;
+}
+
 export async function FeaturedOffers() {
-  const products = await getFeaturedProducts();
+  const pool = await getFeaturedProducts();
+  // Shuffle côté serveur (par requête) puis on prend 8
+  const products = fisherYatesShuffle(pool).slice(0, 8);
 
   if (products.length === 0) return null;
 

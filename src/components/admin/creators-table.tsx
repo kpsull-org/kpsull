@@ -23,16 +23,30 @@ import { cn } from '@/lib/utils';
 import type {
   CreatorStatus,
   CreatorSortField,
-  CreatorSummary,
   SortDirection,
 } from '@/modules/analytics/application/ports';
 
 // Re-export types for convenience
-export type { CreatorStatus, CreatorSortField, CreatorSummary, SortDirection };
+export type { CreatorStatus, CreatorSortField, SortDirection } from '@/modules/analytics/application/ports';
+
+/**
+ * Serialized version of CreatorSummary with Date fields as ISO strings.
+ * Used to safely pass data across the Server/Client Component boundary in Next.js,
+ * which cannot serialize Date objects directly.
+ */
+export interface SerializedCreatorSummary {
+  id: string;
+  name: string;
+  email: string;
+  /** ISO 8601 string — converted from Date before passing to client */
+  registeredAt: string;
+  status: CreatorStatus;
+  totalRevenue: number;
+}
 
 export interface CreatorsTableProps {
   /** List of creators to display */
-  creators: CreatorSummary[];
+  creators: SerializedCreatorSummary[];
   /** Total number of creators (for pagination) */
   total: number;
   /** Current page (1-indexed) */
@@ -62,11 +76,11 @@ export interface CreatorsTableProps {
   /** Callback when page changes */
   onPageChange?: (page: number) => void;
   /** Callback when suspend action is triggered */
-  onSuspend?: (creator: CreatorSummary) => void;
+  onSuspend?: (creator: SerializedCreatorSummary) => void;
   /** Callback when reactivate action is triggered */
-  onReactivate?: (creator: CreatorSummary) => void;
+  onReactivate?: (creator: SerializedCreatorSummary) => void;
   /** Callback when impersonate action is triggered */
-  onImpersonate?: (creator: CreatorSummary) => void;
+  onImpersonate?: (creator: SerializedCreatorSummary) => void;
   /** Optional className for styling */
   className?: string;
 }
@@ -84,14 +98,15 @@ function formatCurrency(cents: number, currency: string): string {
 }
 
 /**
- * Format date to localized string
+ * Format date to localized string.
+ * Accepts either a Date object or an ISO string (from serialized server props).
  */
-function formatDate(date: Date): string {
+function formatDate(date: Date | string): string {
   return new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-  }).format(date);
+  }).format(new Date(date));
 }
 
 /**

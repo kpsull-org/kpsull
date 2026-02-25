@@ -30,11 +30,22 @@ function formatPrice(cents: number): string {
   }).format(cents / 100);
 }
 
+function fisherYatesShuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j] as T, a[i] as T];
+  }
+  return a;
+}
+
 export default async function CreateursPage() {
-  const pages = await prisma.creatorPage.findMany({
+  const pagesRaw = await prisma.creatorPage.findMany({
     where: { status: 'PUBLISHED' },
     orderBy: { publishedAt: 'desc' },
   });
+  // Ordre aléatoire à chaque rechargement
+  const pages = fisherYatesShuffle(pagesRaw);
 
   const creatorIds = pages.map((p) => p.creatorId);
 

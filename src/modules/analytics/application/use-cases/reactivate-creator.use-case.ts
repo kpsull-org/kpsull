@@ -27,7 +27,7 @@ export class ReactivateCreatorUseCase
       return Result.fail('La raison de reactivation est obligatoire');
     }
 
-    await this.creatorRepository.reactivateCreator(input.creatorId);
+    await this.creatorRepository.reactivateCreator(input.creatorId, input.adminId, input.reason);
     return Result.ok(undefined);
   }
 }

@@ -28,7 +28,7 @@ export class SuspendCreatorUseCase
       return Result.fail('La raison de suspension est obligatoire');
     }
 
-    await this.creatorRepository.suspendCreator(input.creatorId);
+    await this.creatorRepository.suspendCreator(input.creatorId, input.adminId, input.reason);
     return Result.ok(undefined);
   }
 }
