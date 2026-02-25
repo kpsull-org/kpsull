@@ -23,7 +23,7 @@ describe('ReactivateCreatorUseCase', () => {
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(mockRepo.reactivateCreator).toHaveBeenCalledWith('creator-1');
+    expect(mockRepo.reactivateCreator).toHaveBeenCalledWith('creator-1', 'admin-1', 'Situation regularisee');
   });
 
   it('should fail when reason is empty', async () => {

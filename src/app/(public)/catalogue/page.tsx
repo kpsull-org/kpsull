@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma/client";
 import { FilterSidebar } from "./_components/filter-sidebar";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Catalogue — KPSULL",
   description:
@@ -104,6 +106,7 @@ export default async function CataloguePage({
             style: { select: { name: true } },
             category: true,
             gender: true,
+            creatorId: true,
           },
         },
         skus: {
@@ -133,8 +136,8 @@ export default async function CataloguePage({
   const minPrice = minPriceEuros * 100;
   const maxPrice = maxPriceEuros * 100;
 
-  // Graine journalière : stable dans la journée, change chaque jour
-  const dailySeed = new Date().toISOString().slice(0, 10);
+  // Graine aléatoire par requête : change à chaque rechargement
+  const seed = Math.random().toString(36);
 
   function seededRng(seed: string) {
     let h = 2166136261;
@@ -150,9 +153,11 @@ export default async function CataloguePage({
     };
   }
 
-  function shuffleInterleaved<T extends { productId: string },>(items: T[], seed: string): T[] {
-    const rand = seededRng(seed);
-    // Fisher-Yates sur un tableau
+  function shuffleInterleaved<T extends { productId: string; product: { creatorId: string } }>(
+    items: T[],
+    rngSeed: string
+  ): T[] {
+    const rand = seededRng(rngSeed);
     const fyShuffle = <U,>(arr: U[]): U[] => {
       const a = [...arr];
       for (let i = a.length - 1; i > 0; i--) {
@@ -164,26 +169,44 @@ export default async function CataloguePage({
       return a;
     };
 
-    // Grouper par produit et mélanger l'ordre des variantes dans chaque groupe
-    const groups = new Map<string, T[]>();
+    // Grouper par (creatorId, productId) pour interleaving à 2 niveaux
+    const creatorMap = new Map<string, Map<string, T[]>>();
     for (const item of items) {
-      const g = groups.get(item.productId) ?? [];
+      const cId = item.product.creatorId;
+      const pId = item.productId;
+      if (!creatorMap.has(cId)) creatorMap.set(cId, new Map());
+      const productMap = creatorMap.get(cId)!;
+      const g = productMap.get(pId) ?? [];
       g.push(item);
-      groups.set(item.productId, g);
+      productMap.set(pId, g);
     }
 
-    // Mélanger l'ordre des groupes (produits)
-    const shuffledGroups = fyShuffle([...groups.values()].map((g) => fyShuffle(g)));
+    // Pour chaque créateur : interleaving round-robin des variantes par produit
+    const interleavedPerCreator: T[][] = fyShuffle(
+      [...creatorMap.values()].map((productMap) => {
+        const shuffledGroups = fyShuffle(
+          [...productMap.values()].map((g) => fyShuffle(g))
+        );
+        const result: T[] = [];
+        const maxLen = Math.max(...shuffledGroups.map((g) => g.length));
+        for (let i = 0; i < maxLen; i++) {
+          for (const group of shuffledGroups) {
+            if (i < group.length) result.push(group[i] as T);
+          }
+        }
+        return result;
+      })
+    );
 
-    // Interleaving round-robin : 1 variante par produit à la fois
-    const result: T[] = [];
-    const maxLen = Math.max(...shuffledGroups.map((g) => g.length));
+    // Interleaving round-robin des créateurs : jamais 2 produits du même créateur côte à côte
+    const finalResult: T[] = [];
+    const maxLen = Math.max(...interleavedPerCreator.map((g) => g.length), 0);
     for (let i = 0; i < maxLen; i++) {
-      for (const group of shuffledGroups) {
-        if (i < group.length) result.push(group[i] as T);
+      for (const group of interleavedPerCreator) {
+        if (i < group.length) finalResult.push(group[i] as T);
       }
     }
-    return result;
+    return finalResult;
   }
 
   const filteredVariants = (() => {
@@ -201,8 +224,8 @@ export default async function CataloguePage({
         (a, b) => (b.priceOverride ?? b.product.price) - (a.priceOverride ?? a.product.price),
       );
     }
-    // Par défaut : ordre randomisé, interleaved par produit, stable dans la journée
-    return shuffleInterleaved(filtered, dailySeed);
+    // Par défaut : ordre vraiment aléatoire, change à chaque reload
+    return shuffleInterleaved(filtered, seed);
   })();
 
   const sizes = skuSizesRaw

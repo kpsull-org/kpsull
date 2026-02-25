@@ -129,7 +129,13 @@ async function fetchRelatedProducts(
     collected.push(...mapped);
   }
 
-  return collected;
+  // Shuffle pour varier l'ordre à chaque chargement
+  const a = [...collected];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j] as RelatedProduct, a[i] as RelatedProduct];
+  }
+  return a;
 }
 
 export async function RelatedProducts({

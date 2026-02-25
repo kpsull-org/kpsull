@@ -3,18 +3,20 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useTransition, useState } from 'react';
 import { CreatorsTable } from '@/components/admin/creators-table';
+import type { SerializedCreatorSummary } from '@/components/admin/creators-table';
 import { SuspendCreatorDialog } from '@/components/admin/suspend-creator-dialog';
 import { ReactivateCreatorDialog } from '@/components/admin/reactivate-creator-dialog';
 import type {
-  CreatorSummary,
   CreatorSortField,
   CreatorStatus,
   SortDirection,
 } from '@/modules/analytics/application/ports';
 import { suspendCreatorAction, reactivateCreatorAction } from './actions';
 
+export type { SerializedCreatorSummary } from '@/components/admin/creators-table';
+
 export interface CreatorsPageClientProps {
-  initialCreators: CreatorSummary[];
+  initialCreators: SerializedCreatorSummary[];
   initialTotal: number;
   initialPage: number;
   initialPageSize: number;
@@ -51,7 +53,7 @@ export function CreatorsPageClient({
   // Dialog states
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
-  const [selectedCreator, setSelectedCreator] = useState<CreatorSummary | null>(null);
+  const [selectedCreator, setSelectedCreator] = useState<SerializedCreatorSummary | null>(null);
 
   /**
    * Update URL with new search params
@@ -115,18 +117,18 @@ export function CreatorsPageClient({
     [updateSearchParams]
   );
 
-  const handleSuspend = useCallback((creator: CreatorSummary) => {
+  const handleSuspend = useCallback((creator: SerializedCreatorSummary) => {
     setSelectedCreator(creator);
     setSuspendDialogOpen(true);
   }, []);
 
-  const handleReactivate = useCallback((creator: CreatorSummary) => {
+  const handleReactivate = useCallback((creator: SerializedCreatorSummary) => {
     setSelectedCreator(creator);
     setReactivateDialogOpen(true);
   }, []);
 
   const handleImpersonate = useCallback(
-    async (creator: CreatorSummary) => {
+    async (creator: SerializedCreatorSummary) => {
       const response = await fetch('/api/admin/impersonate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

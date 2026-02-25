@@ -281,12 +281,12 @@ export interface CreatorRepository {
   /**
    * Suspend a creator
    */
-  suspendCreator(creatorId: string): Promise<void>;
+  suspendCreator(creatorId: string, adminId: string, reason: string): Promise<void>;
 
   /**
    * Reactivate a suspended creator
    */
-  reactivateCreator(creatorId: string): Promise<void>;
+  reactivateCreator(creatorId: string, adminId: string, reason: string): Promise<void>;
 }
 
 /**
