@@ -214,7 +214,7 @@ describe('CheckLimitUseCase', () => {
     });
 
     it('should return null for unknown plan', () => {
-      const recommendation = useCase.getUpgradeRecommendation('UNKNOWN' as any);
+      const recommendation = useCase.getUpgradeRecommendation('UNKNOWN' as never);
       expect(recommendation).toBeNull();
     });
   });

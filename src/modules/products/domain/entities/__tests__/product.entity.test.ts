@@ -248,7 +248,7 @@ describe('Product Entity', () => {
         name: 'Test',
         priceAmount: 100,
         priceCurrency: 'EUR',
-        status: 'INVALID' as any,
+        status: 'INVALID' as never,
         createdAt: now,
         updatedAt: now,
       });

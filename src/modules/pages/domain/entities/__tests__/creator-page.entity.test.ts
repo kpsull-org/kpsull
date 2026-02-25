@@ -145,7 +145,7 @@ describe('CreatorPage Entity', () => {
       const result = CreatorPage.reconstitute({
         id: 'page-123',
         ...VALID_PAGE_PROPS,
-        status: 'INVALID_STATUS' as any,
+        status: 'INVALID_STATUS' as never,
         sections: [],
         createdAt: new Date(),
         updatedAt: new Date(),

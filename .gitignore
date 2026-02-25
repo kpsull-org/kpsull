@@ -36,3 +36,18 @@ dist
 
 # Vercel
 .vercel
+
+# Screenshots de debug et outils visuels
+.playwright-mcp/
+FIGMA_*.md
+
+# Artefacts d'implémentation BMAD (docs internes de développement)
+.claude/bmad/implementation-artifacts/
+
+# Screenshots de debug à la racine
+autosave-*.png
+form-*.png
+modal-*.png
+*-before.png
+*-after.png
+*-redesign-*.png

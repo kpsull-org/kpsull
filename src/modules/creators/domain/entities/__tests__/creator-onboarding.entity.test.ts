@@ -279,7 +279,7 @@ describe('CreatorOnboarding Entity', () => {
       const result = CreatorOnboarding.reconstitute({
         id: 'onboard-1',
         userId: 'user-123',
-        currentStep: 'INVALID_STEP' as any,
+        currentStep: 'INVALID_STEP' as never,
         professionalInfoCompleted: false,
         siretVerified: false,
         stripeOnboarded: false,

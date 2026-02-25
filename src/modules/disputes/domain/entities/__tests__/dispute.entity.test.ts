@@ -230,7 +230,7 @@ describe('Dispute Entity', () => {
       const result = Dispute.create({
         orderId: 'order-123',
         customerId: 'customer-456',
-        type: undefined as any,
+        type: undefined as never,
         description: 'Description suffisamment longue',
       });
 

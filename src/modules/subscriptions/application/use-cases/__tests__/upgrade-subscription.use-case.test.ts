@@ -190,7 +190,7 @@ describe('UpgradeSubscriptionUseCase', () => {
 
     it('should fail when targetPlan is missing', async () => {
       const result = await useCase.execute({
-        creatorId: 'creator-1', targetPlan: '' as any, billingInterval: 'year',
+        creatorId: 'creator-1', targetPlan: '' as never, billingInterval: 'year',
         stripeSubscriptionId: 'sub_123', stripeCustomerId: 'cus_123', stripePriceId: 'price_123',
         periodStart, periodEnd,
       });
