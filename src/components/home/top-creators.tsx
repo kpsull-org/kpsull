@@ -140,6 +140,15 @@ export async function TopCreators() {
             );
           })}
         </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/createurs"
+            className="border border-black px-10 py-3.5 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] transition-colors hover:bg-black hover:text-white"
+          >
+            Voir tous les créateurs
+          </Link>
+        </div>
       </div>
     </section>
   );

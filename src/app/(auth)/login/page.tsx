@@ -8,16 +8,14 @@ export const metadata: Metadata = {
   description: 'Connectez-vous à votre compte Kpsull',
 };
 
-/**
- * Login page
- *
- * Allows users to sign in using:
- * - Email/password credentials
- * - Google OAuth
- *
- * Accounts with the same email are automatically linked.
- */
-export default function LoginPage() {
+type Props = {
+  searchParams: Promise<{ callbackUrl?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: Props) {
+  const { callbackUrl } = await searchParams;
+  const safeCallbackUrl = callbackUrl ?? '/';
+
   return (
     <AuthCard
       title="Connexion"
@@ -25,10 +23,10 @@ export default function LoginPage() {
       footer={{
         text: 'Pas encore de compte ?',
         linkText: "S'inscrire",
-        linkHref: '/signup',
+        linkHref: callbackUrl ? `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/signup',
       }}
     >
-      <CredentialsForm mode="login" callbackUrl="/" />
+      <CredentialsForm mode="login" callbackUrl={safeCallbackUrl} />
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -41,7 +39,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <GoogleSignInButton mode="signin" callbackUrl="/auth/redirect" />
+      <GoogleSignInButton mode="signin" callbackUrl={safeCallbackUrl !== '/' ? safeCallbackUrl : '/auth/redirect'} />
     </AuthCard>
   );
 }

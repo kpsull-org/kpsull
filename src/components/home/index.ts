@@ -1,8 +1,14 @@
 export { HeroSection } from "./hero-section";
+export { BeCreatorButton } from "./be-creator-button";
 export { HeroTransition } from "./hero-transition";
+export { HowItWorks } from "./how-it-works";
 export { CategorySlider } from "./category-slider";
 export { FeaturedOffers } from "./featured-offers";
+export { ReassuranceStrip } from "./reassurance-strip";
 export { TopCreators } from "./top-creators";
+export { AboutTeaser } from "./about-teaser";
+export { CreatorCta } from "./creator-cta";
+export { NewsletterSection } from "./newsletter-section";
 export { StylesGrid } from "./styles-grid";
 export { FAQSection } from "./faq-section";
 export { SectionSeparator } from "./section-separator";
