@@ -230,6 +230,23 @@ async function seedVariantsAndSkus(
         skuCount++;
       }
     }
+    // Sync Product.sizes avec les tailles des SKUs pour que le dashboard affiche les colonnes
+    const seenSizes = new Set<string>();
+    const orderedSizes: string[] = [];
+    for (const vd of config.variants) {
+      for (const skuDef of vd.sizes) {
+        if (skuDef.size !== null && !seenSizes.has(skuDef.size)) {
+          seenSizes.add(skuDef.size);
+          orderedSizes.push(skuDef.size);
+        }
+      }
+    }
+    if (orderedSizes.length > 0) {
+      await prisma.product.update({
+        where: { id: config.productId },
+        data: { sizes: orderedSizes.map((size) => ({ size })) },
+      });
+    }
   }
 
   return { variantCount, skuCount };
