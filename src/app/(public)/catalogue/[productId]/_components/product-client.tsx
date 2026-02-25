@@ -123,7 +123,7 @@ export function ProductClient({
       {/* Left: Gallery */}
       <div className="w-full lg:w-[45%] border-r border-black self-start">
         {/* Main image — carrée sans padding */}
-        <div className="relative aspect-square w-full overflow-hidden bg-[#F5F5F3]">
+        <div key={mainImage ?? 'no-image'} className="relative aspect-square w-full overflow-hidden bg-[#F5F5F3] kp-blur-in">
           {mainImage ? (
             <Image
               src={mainImage}

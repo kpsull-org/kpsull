@@ -299,7 +299,7 @@ export default async function CataloguePage({
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-              {filteredVariants.map((variant) => {
+              {filteredVariants.map((variant, idx) => {
                 const images = Array.isArray(variant.images)
                   ? (variant.images as string[])
                   : [];
@@ -312,7 +312,7 @@ export default async function CataloguePage({
                   <Link
                     key={variant.id}
                     href={`/catalogue/${variant.product.id}?variant=${variant.id}`}
-                    className="group block bg-white border-t border-black [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+3)]:border-t-0 lg:[&:nth-child(-n+4)]:border-t-0"
+                    className={`group block bg-white border-t border-black [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+3)]:border-t-0 lg:[&:nth-child(-n+4)]:border-t-0 kp-scroll-reveal-delay-${(idx % 4) + 1}`}
                   >
                     {/* Image carrée */}
                     <div className="aspect-square relative overflow-hidden bg-[#F5F5F3]">
