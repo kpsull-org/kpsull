@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cart.store";
+
+const LENS_SIZE = 220;
+const ZOOM_FACTOR = 3;
 
 interface VariantData {
   id: string;
@@ -54,6 +58,10 @@ export function ProductClient({
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [lensPos, setLensPos] = useState({ x: 50, y: 50 });
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const containerWRef = useRef(0);
 
   const currentVariant =
     variants.find((v) => v.id === currentVariantId) ?? variants[0];
@@ -79,6 +87,22 @@ export function ProductClient({
   const effectiveSelectedSize = shouldHideSizeSelector
     ? (availableSizes[0]?.size ?? null)
     : selectedSize;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageContainerRef.current) return;
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    containerWRef.current = rect.width;
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    setLensPos({ x, y });
+  };
+
+  // background-size correct pour zoomer VRAIMENT par rapport à l'image principale
+  // Formule : ZOOM_FACTOR × containerWidth / LENS_SIZE × 100%
+  const bgSizePct =
+    containerWRef.current > 0
+      ? (ZOOM_FACTOR * containerWRef.current / LENS_SIZE) * 100
+      : ZOOM_FACTOR * 100;
 
   const handleVariantChange = (variantId: string) => {
     setCurrentVariantId(variantId);
@@ -123,7 +147,13 @@ export function ProductClient({
       {/* Left: Gallery */}
       <div className="w-full lg:w-[45%] border-r border-black self-start">
         {/* Main image — carrée sans padding */}
-        <div className="relative aspect-square w-full overflow-hidden bg-[#F5F5F3]">
+        <div
+          ref={imageContainerRef}
+          className="relative aspect-square w-full overflow-hidden bg-[#F5F5F3] cursor-crosshair"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          onMouseMove={handleMouseMove}
+        >
           {mainImage ? (
             <Image
               src={mainImage}
@@ -139,6 +169,81 @@ export function ProductClient({
                 Aucune image
               </span>
             </div>
+          )}
+
+          {/* Magnifying glass lens */}
+          {isHovering && mainImage && (
+            <div
+              className="absolute pointer-events-none z-20 rounded-full"
+              style={{
+                width: `${LENS_SIZE}px`,
+                height: `${LENS_SIZE}px`,
+                left: `${lensPos.x}%`,
+                top: `${lensPos.y}%`,
+                transform: "translate(-50%, -50%)",
+                backgroundImage: `url(${mainImage})`,
+                backgroundSize: `${bgSizePct}%`,
+                backgroundPosition: `${lensPos.x}% ${lensPos.y}%`,
+                border: "2px solid rgba(255, 255, 255, 0.9)",
+                boxShadow:
+                  "0 0 0 1px rgba(0,0,0,0.15), 0 8px 32px rgba(0,0,0,0.35)",
+              }}
+            />
+          )}
+
+          {/* Barres de navigation verticales — discrètes, pleine hauteur */}
+          {images.length > 1 && (
+            <>
+              {/* Barre gauche */}
+              <div
+                className={`group absolute left-0 top-0 h-full w-10 z-30 cursor-pointer flex items-center transition-opacity duration-200 ${
+                  isHovering ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+                onClick={() =>
+                  setMainImageIndex((prev) =>
+                    prev === 0 ? images.length - 1 : prev - 1
+                  )
+                }
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  setMainImageIndex((prev) =>
+                    prev === 0 ? images.length - 1 : prev - 1
+                  )
+                }
+                aria-label="Image précédente"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-black/0 to-transparent group-hover:from-black/20 transition-colors duration-200" />
+                <div className="absolute right-0 top-[10%] h-[80%] w-px bg-white/25 group-hover:bg-white/55 group-hover:top-0 group-hover:h-full transition-all duration-200" />
+                <ChevronLeft className="relative ml-1.5 h-4 w-4 text-white/0 group-hover:text-white drop-shadow-md transition-colors duration-200" />
+              </div>
+
+              {/* Barre droite */}
+              <div
+                className={`group absolute right-0 top-0 h-full w-10 z-30 cursor-pointer flex items-center justify-end transition-opacity duration-200 ${
+                  isHovering ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+                onClick={() =>
+                  setMainImageIndex((prev) =>
+                    prev === images.length - 1 ? 0 : prev + 1
+                  )
+                }
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  setMainImageIndex((prev) =>
+                    prev === images.length - 1 ? 0 : prev + 1
+                  )
+                }
+                aria-label="Image suivante"
+              >
+                <div className="absolute inset-0 bg-gradient-to-l from-black/0 to-transparent group-hover:from-black/20 transition-colors duration-200" />
+                <div className="absolute left-0 top-[10%] h-[80%] w-px bg-white/25 group-hover:bg-white/55 group-hover:top-0 group-hover:h-full transition-all duration-200" />
+                <ChevronRight className="relative mr-1.5 h-4 w-4 text-white/0 group-hover:text-white drop-shadow-md transition-colors duration-200" />
+              </div>
+            </>
           )}
         </div>
 
