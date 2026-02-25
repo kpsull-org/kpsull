@@ -41,8 +41,10 @@ dist
 .playwright-mcp/
 FIGMA_*.md
 
-# Artefacts d'implémentation BMAD (docs internes de développement)
+# Artefacts BMAD (docs internes de développement — ne pas versionner)
 .claude/bmad/implementation-artifacts/
+.claude/bmad/planning-artifacts/
+.claude/bmad/sprint-status.yaml
 
 # Screenshots de debug à la racine
 autosave-*.png

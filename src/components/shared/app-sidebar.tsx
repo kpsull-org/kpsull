@@ -78,7 +78,7 @@ export function AppSidebar({ items, sectionLabel, badges }: Readonly<AppSidebarP
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden w-[260px] shrink-0 border-r bg-white md:flex md:flex-col">
+      <aside className="hidden fixed left-0 top-0 h-screen w-[260px] border-r bg-white z-40 md:flex md:flex-col">
         {/* Logo + Back to site */}
         <div className="flex h-16 items-center justify-between border-b px-5">
           <Link href="/" className="flex items-center gap-2.5">

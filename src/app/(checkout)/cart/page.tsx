@@ -47,11 +47,18 @@ export default function CartPage() {
 
   if (!isHydrated) {
     return (
-      <div className="container py-8">
-        <div className="space-y-4">
-          <div className="h-4 w-32 bg-black/10 animate-pulse" />
-          <div className="h-24 bg-black/5 animate-pulse" />
-          <div className="h-24 bg-black/5 animate-pulse" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 font-sans">
+        <div className="h-4 w-32 bg-black/10 animate-pulse mb-10" />
+        <div className="h-7 w-48 bg-black/10 animate-pulse mb-8" />
+        <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="h-28 bg-black/5 animate-pulse" />
+            <div className="h-28 bg-black/5 animate-pulse" />
+            <div className="h-28 bg-black/5 animate-pulse" />
+          </div>
+          <div className="lg:col-span-1">
+            <div className="h-64 bg-black/5 animate-pulse" />
+          </div>
         </div>
       </div>
     );
@@ -62,9 +69,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container py-8 font-sans">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 font-sans">
       {/* Breadcrumb */}
-      <div className="mb-8">
+      <div className="mb-10">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-xs text-black/50 hover:text-black transition-colors tracking-wide"
@@ -74,18 +81,33 @@ export default function CartPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold tracking-wider uppercase mb-8">
+      <h1 className="text-2xl font-bold tracking-wider uppercase mb-10">
         Mon panier{' '}
         <span className="text-black/40 font-normal text-lg">({items.length})</span>
       </h1>
 
-      <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+      <div className="grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12">
         {/* Items */}
-        <div className="lg:col-span-2">
-          {items.map((item) => (
+        <div>
+          {/* Desktop column headers */}
+          <div className="hidden lg:grid grid-cols-[1fr_auto_auto_auto] gap-6 pb-3 border-b border-black/10 mb-1">
+            <span className="text-[10px] font-medium tracking-widest uppercase text-black/40">
+              Produit
+            </span>
+            <span className="text-[10px] font-medium tracking-widest uppercase text-black/40 w-24 text-center">
+              Qté
+            </span>
+            <span className="text-[10px] font-medium tracking-widest uppercase text-black/40 w-20 text-right">
+              Prix
+            </span>
+            <span className="w-5" />
+          </div>
+
+          {items.map((item, index) => (
             <CartItem
               key={`${item.productId}-${item.variantId || 'default'}`}
               item={item}
+              index={index}
               onUpdateQuantity={(quantity) =>
                 updateQuantity(item.productId, quantity, item.variantId)
               }
@@ -96,7 +118,7 @@ export default function CartPage() {
         </div>
 
         {/* Summary */}
-        <div className="lg:col-span-1">
+        <div>
           <CartSummary subtotal={getTotal()} formatPrice={formatPrice} />
         </div>
       </div>
