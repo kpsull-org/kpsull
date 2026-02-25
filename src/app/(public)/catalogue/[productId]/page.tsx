@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
@@ -12,16 +13,24 @@ interface ProductPageProps {
   searchParams: Promise<{ variant?: string }>;
 }
 
+const getProduct = cache(async (productId: string) =>
+  prisma.product.findUnique({
+    where: { id: productId, status: "PUBLISHED" },
+    include: {
+      variants: {
+        include: {
+          skus: { select: { size: true, stock: true } },
+        },
+      },
+    },
+  })
+);
+
 export async function generateMetadata({
   params,
 }: Readonly<ProductPageProps>): Promise<Metadata> {
   const { productId } = await params;
-
-  const product = await prisma.product.findUnique({
-    where: { id: productId, status: "PUBLISHED" },
-    select: { name: true, description: true },
-  });
-
+  const product = await getProduct(productId);
   if (!product) return { title: "Produit introuvable — KPSULL" };
 
   return {
@@ -37,16 +46,7 @@ export default async function ProductPage({
   const { productId } = await params;
   const { variant: variantParam } = await searchParams;
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId, status: "PUBLISHED" },
-    include: {
-      variants: {
-        include: {
-          skus: { select: { size: true, stock: true } },
-        },
-      },
-    },
-  });
+  const product = await getProduct(productId);
 
   if (!product) notFound();
 

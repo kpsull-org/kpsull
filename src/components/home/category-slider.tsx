@@ -1,13 +1,21 @@
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 
+const getApprovedStyles = unstable_cache(
+  async () =>
+    prisma.style.findMany({
+      where: { status: 'APPROVED', isCustom: false },
+      select: { name: true, imageUrl: true },
+      orderBy: { name: 'asc' },
+    }),
+  ['approved-styles'],
+  { revalidate: 600, tags: ['styles'] }
+);
+
 export async function CategorySlider() {
-  const styles = await prisma.style.findMany({
-    where: { status: 'APPROVED', isCustom: false },
-    select: { name: true, imageUrl: true },
-    orderBy: { name: 'asc' },
-  });
+  const styles = await getApprovedStyles();
 
   if (styles.length === 0) return null;
 

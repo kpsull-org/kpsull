@@ -9,7 +9,7 @@ export function AboutTeaser() {
           {/* Photo */}
           <div className="kp-blur-in relative aspect-[4/5] overflow-hidden md:aspect-[4/3]">
             <Image
-              src="https://res.cloudinary.com/damucxy2t/image/upload/v1771845067/kpsull/notre-histoire.jpg"
+              src="https://res.cloudinary.com/damucxy2t/image/upload/f_auto,q_auto/v1771845067/kpsull/notre-histoire.jpg"
               alt="Notre histoire KPSULL"
               fill
               className="object-cover"
