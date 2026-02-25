@@ -116,7 +116,7 @@ export async function TopCreators() {
               <Link
                 key={page.slug}
                 href={`/${page.slug}`}
-                className="group block overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md"
+                className="group block overflow-hidden bg-white"
               >
                 <div className="relative aspect-square overflow-hidden bg-muted">
                   {coverImage ? (
@@ -139,6 +139,15 @@ export async function TopCreators() {
               </Link>
             );
           })}
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/createurs"
+            className="border border-black px-10 py-3.5 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] transition-colors hover:bg-black hover:text-white"
+          >
+            Voir tous les créateurs
+          </Link>
         </div>
       </div>
     </section>

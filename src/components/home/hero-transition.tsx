@@ -22,7 +22,7 @@ export function HeroTransition() {
       {/* Content -- Figma: h:246px zone, text Archivo Bold 40px #EFD050 */}
       <div className="relative flex min-h-[100px] items-center justify-between px-6 py-6 md:min-h-[120px] md:px-12 md:py-8 lg:min-h-[140px] lg:pl-[83px] lg:pr-20 lg:py-10">
         {/* Subtitle text */}
-        <p className="max-w-4xl font-[family-name:var(--font-archivo)] text-sm font-bold leading-snug text-[#EFD050] sm:text-base md:text-lg lg:text-xl xl:text-[22px] xl:leading-[1.4] 2xl:text-[26px]">
+        <p className="max-w-4xl font-[family-name:var(--font-archivo)] text-xs font-bold leading-snug text-[#EFD050] sm:text-sm md:text-base lg:text-base xl:text-lg xl:leading-[1.4] 2xl:text-xl">
           Une plateforme reliant createurs de mode locaux et passionnes,
           <br className="hidden lg:block" />
           {" "}offrant des pieces uniques et artisanales, accessibles a vous,

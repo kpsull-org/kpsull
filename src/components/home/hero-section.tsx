@@ -1,5 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { BeCreatorButton } from "@/components/home/be-creator-button";
 
 export function HeroSection() {
   return (
@@ -26,6 +28,18 @@ export function HeroSection() {
         <h1 className="font-[family-name:var(--font-montserrat)] text-2xl font-semibold leading-none tracking-tight text-[#D6C8BD] md:text-4xl lg:text-[40px] xl:text-[48px] 2xl:text-[64px]">
           L&apos;ANTIDOTE A L&apos;UNIFORME.
         </h1>
+
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <Link
+            href="/catalogue"
+            className="border border-white bg-white px-8 py-3 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
+          >
+            PARCOURIR LE CATALOGUE
+          </Link>
+          <BeCreatorButton className="border border-white/60 px-8 py-3 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] text-white/80 transition-colors hover:border-white hover:text-white">
+            DEVENIR CRÉATEUR
+          </BeCreatorButton>
+        </div>
       </div>
     </section>
   );

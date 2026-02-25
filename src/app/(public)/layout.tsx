@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartSyncOnLogin } from "@/components/layout/cart-sync-on-login";
+import { CookieBanner } from "@/components/layout/cookie-banner";
 import { auth } from "@/lib/auth";
 
 export default async function PublicLayout({
@@ -21,6 +22,7 @@ export default async function PublicLayout({
       <main className="flex-1 min-h-screen">{children}</main>
       <Footer />
       <CartSyncOnLogin isAuthenticated={!!session?.user} />
+      <CookieBanner />
     </div>
   );
 }

@@ -3,7 +3,16 @@ import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 
-// Cache cross-request 5 min — pool de 16 pour permettre le shuffle aléatoire
+function formatPrice(cents: number): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
+// Cache cross-request 5 min (server-cache-lru — Vercel best practice 3.3)
 const getFeaturedProducts = unstable_cache(
   async () => {
     return prisma.product.findMany({
@@ -53,34 +62,53 @@ export async function FeaturedOffers() {
             const images = Array.isArray(product.variants[0]?.images)
               ? (product.variants[0].images as string[])
               : [];
-            const imageUrl = images[0] ?? null;
-            const priceEuros = (product.price / 100).toFixed(2).replace('.00', '');
+            const img1 = images[0] ?? null;
+            const img2 = images[1] ?? null;
 
             return (
               <Link
                 key={product.id}
                 href={`/catalogue/${product.id}`}
-                className="group block overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md"
+                className="group/item block overflow-hidden bg-white"
               >
                 <div className="relative aspect-square overflow-hidden bg-muted">
-                  {imageUrl ? (
-                    <Image
-                      src={imageUrl}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 640px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
+                  {img1 ? (
+                    <>
+                      <Image
+                        src={img1}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 640px) 50vw, 25vw"
+                        className={`object-cover transition-all duration-500 ${
+                          img2
+                            ? 'group-hover/item:opacity-0'
+                            : 'group-hover/item:scale-105'
+                        }`}
+                      />
+                      {img2 && (
+                        <Image
+                          src={img2}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 640px) 50vw, 25vw"
+                          className="absolute inset-0 object-cover opacity-0 transition-opacity duration-500 group-hover/item:opacity-100"
+                        />
+                      )}
+                    </>
                   ) : (
                     <div className="absolute inset-0 bg-gray-200" />
                   )}
+                  {/* Prix overlay — visible uniquement au hover, en bas à droite */}
+                  <span className="absolute bottom-1.5 right-1.5 bg-black/60 px-2 py-0.5 text-[11px] font-bold leading-none text-white opacity-0 transition-opacity duration-200 group-hover/item:opacity-100 backdrop-blur-[2px]">
+                    {formatPrice(product.price)}
+                  </span>
                 </div>
-                <div className="px-3 py-2">
+                <div className="border-t border-black/10 px-3 py-2">
                   <h3 className="font-[family-name:var(--font-montserrat)] text-xs font-semibold leading-tight md:text-sm line-clamp-1">
                     {product.name}
                   </h3>
                   <p className="mt-1 font-[family-name:var(--font-montserrat)] text-sm font-bold">
-                    {priceEuros}€
+                    {formatPrice(product.price)}
                   </p>
                 </div>
               </Link>

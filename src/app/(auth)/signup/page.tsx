@@ -8,17 +8,14 @@ export const metadata: Metadata = {
   description: 'Creez votre compte Kpsull pour commencer a vendre ou acheter',
 };
 
-/**
- * Signup page
- *
- * Allows users to create a new account using:
- * - Email/password credentials
- * - Google OAuth
- *
- * If an account exists with the same email (from Google), the password is added
- * to enable both login methods.
- */
-export default function SignupPage() {
+type Props = {
+  searchParams: Promise<{ callbackUrl?: string }>;
+};
+
+export default async function SignupPage({ searchParams }: Readonly<Props>) {
+  const { callbackUrl } = await searchParams;
+  const safeCallbackUrl = callbackUrl ?? '/';
+
   return (
     <AuthCard
       title="Creer un compte"
@@ -26,10 +23,10 @@ export default function SignupPage() {
       footer={{
         text: 'Deja un compte ?',
         linkText: 'Se connecter',
-        linkHref: '/login',
+        linkHref: callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login',
       }}
     >
-      <CredentialsForm mode="signup" callbackUrl="/" />
+      <CredentialsForm mode="signup" callbackUrl={safeCallbackUrl} />
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -42,7 +39,7 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <GoogleSignInButton mode="signup" callbackUrl="/auth/redirect" />
+      <GoogleSignInButton mode="signup" callbackUrl={safeCallbackUrl} />
 
       <p className="text-center text-sm text-muted-foreground">
         En vous inscrivant, vous acceptez nos{' '}

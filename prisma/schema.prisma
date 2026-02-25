@@ -810,3 +810,16 @@ model Invoice {
   @@index([period])
   @@map("invoices")
 }
+
+// ============================================
+// NEWSLETTER
+// ============================================
+
+model NewsletterSubscriber {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("newsletter_subscribers")
+}

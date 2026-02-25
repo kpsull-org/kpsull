@@ -26,7 +26,7 @@ export async function CategorySlider() {
               <Link
                 key={style.name}
                 href={`/catalogue?style=${encodeURIComponent(style.name)}`}
-                className="group relative aspect-[2/1] overflow-hidden rounded-2xl"
+                className="group relative aspect-[2/1] overflow-hidden"
               >
                 {style.imageUrl ? (
                   <Image

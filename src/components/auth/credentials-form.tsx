@@ -17,7 +17,7 @@ interface CredentialsFormProps {
   readonly callbackUrl?: string;
 }
 
-export function CredentialsForm({ mode, callbackUrl: _callbackUrl = '/' }: CredentialsFormProps) {
+export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +105,7 @@ export function CredentialsForm({ mode, callbackUrl: _callbackUrl = '/' }: Crede
         } else {
           router.refresh();
           const session = await getSession();
-          router.push(getRoleRedirectUrl(session?.user?.role));
+          router.push(callbackUrl === '/' ? getRoleRedirectUrl(session?.user?.role) : callbackUrl);
         }
       } else {
         // Login validation
@@ -135,7 +135,7 @@ export function CredentialsForm({ mode, callbackUrl: _callbackUrl = '/' }: Crede
 
         router.refresh();
         const session = await getSession();
-        router.push(getRoleRedirectUrl(session?.user?.role));
+        router.push(callbackUrl === '/' ? getRoleRedirectUrl(session?.user?.role) : callbackUrl);
       }
     } catch {
       setError('Une erreur est survenue. Veuillez reessayer.');
