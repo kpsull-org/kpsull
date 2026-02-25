@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,12 @@ interface ProductVariant {
   isAvailable: boolean;
 }
 
+interface ProductCreator {
+  name: string | null;
+  image: string | null;
+  slug: string;
+}
+
 interface ProductDetailProps {
   product: {
     id: string;
@@ -27,13 +34,14 @@ interface ProductDetailProps {
     images: string[];
     variants: ProductVariant[];
   };
+  creator: ProductCreator;
   creatorSlug: string;
   isOwnProduct?: boolean;
 }
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
 
-export function ProductDetail({ product, creatorSlug, isOwnProduct = false }: ProductDetailProps) {
+export function ProductDetail({ product, creator, creatorSlug, isOwnProduct = false }: ProductDetailProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const selectedVariantId = product.variants.length > 0 ? (product.variants[0]?.id ?? null) : null;
 
@@ -65,6 +73,25 @@ export function ProductDetail({ product, creatorSlug, isOwnProduct = false }: Pr
             <h1 className="text-[32px] font-semibold uppercase font-[family-name:var(--font-montserrat)]">
               {product.name}
             </h1>
+            <div className="flex items-center gap-2 mt-1">
+              {creator.image && (
+                <Image
+                  src={creator.image}
+                  alt={creator.name ?? 'Créateur'}
+                  width={24}
+                  height={24}
+                  className="rounded-full object-cover shrink-0"
+                />
+              )}
+              {creator.name && (
+                <Link
+                  href={`/${creator.slug}`}
+                  className="text-sm text-muted-foreground hover:underline"
+                >
+                  {creator.name}
+                </Link>
+              )}
+            </div>
             <p className="text-2xl font-bold mt-2 font-[family-name:var(--font-montserrat)]">
               {formatPrice(displayPrice)}
             </p>

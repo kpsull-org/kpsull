@@ -3,6 +3,7 @@ import {
   GetPublicProductUseCase,
   type GetPublicProductInput,
   type PublicProductRepository,
+  type PublicCreatorOutput,
 } from '../get-public-product.use-case';
 import { Product } from '../../../../domain/entities/product.entity';
 import { ProductVariant } from '../../../../domain/entities/product-variant.entity';
@@ -13,6 +14,13 @@ describe('GetPublicProductUseCase', () => {
   let mockRepo: {
     findPublishedById: Mock;
     findVariantsByProductId: Mock;
+    findCreatorByProductId: Mock;
+  };
+
+  const mockCreator: PublicCreatorOutput = {
+    name: 'Alice Dupont',
+    image: 'https://example.com/avatar.jpg',
+    slug: 'alice-dupont',
   };
 
   const createMockProduct = (isPublished = true) => {
@@ -55,6 +63,7 @@ describe('GetPublicProductUseCase', () => {
     mockRepo = {
       findPublishedById: vi.fn(),
       findVariantsByProductId: vi.fn(),
+      findCreatorByProductId: vi.fn().mockResolvedValue(mockCreator),
     };
     useCase = new GetPublicProductUseCase(mockRepo as unknown as PublicProductRepository);
   });
@@ -258,6 +267,44 @@ describe('GetPublicProductUseCase', () => {
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.value.variants[0]!.images).toEqual(images);
+    });
+
+    it('should include creator info in the public response', async () => {
+      // Arrange
+      const product = createMockProduct(true);
+      mockRepo.findPublishedById.mockResolvedValue(product);
+      mockRepo.findVariantsByProductId.mockResolvedValue([]);
+      mockRepo.findCreatorByProductId.mockResolvedValue(mockCreator);
+
+      const input: GetPublicProductInput = { productId: product.idString };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.creator.name).toBe('Alice Dupont');
+      expect(result.value.creator.image).toBe('https://example.com/avatar.jpg');
+      expect(result.value.creator.slug).toBe('alice-dupont');
+    });
+
+    it('should fallback to empty creator when creator not found', async () => {
+      // Arrange
+      const product = createMockProduct(true);
+      mockRepo.findPublishedById.mockResolvedValue(product);
+      mockRepo.findVariantsByProductId.mockResolvedValue([]);
+      mockRepo.findCreatorByProductId.mockResolvedValue(null);
+
+      const input: GetPublicProductInput = { productId: product.idString };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.creator.name).toBeNull();
+      expect(result.value.creator.image).toBeNull();
+      expect(result.value.creator.slug).toBe('');
     });
   });
 });

@@ -112,6 +112,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         images: product.images,
         variants: product.variants,
       }}
+      creator={product.creator}
       creatorSlug={slug}
       isOwnProduct={isOwnProduct}
     />

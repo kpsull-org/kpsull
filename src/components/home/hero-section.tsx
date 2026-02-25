@@ -39,7 +39,7 @@ export function HeroSection() {
           >
             PARCOURIR LE CATALOGUE
           </Link>
-          <BeCreatorButton className="border border-white/60 px-8 py-3 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] text-white/80 transition-colors hover:border-white hover:text-white">
+          <BeCreatorButton className="border border-white px-8 py-3 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] text-white backdrop-blur-[2px] bg-black/20 transition-colors hover:bg-black/40">
             DEVENIR CRÉATEUR
           </BeCreatorButton>
         </div>
