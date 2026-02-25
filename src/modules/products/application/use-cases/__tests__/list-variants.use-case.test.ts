@@ -11,6 +11,17 @@ import {
   type MockProductRepo,
 } from './variant-test.helpers';
 
+function createSimpleVariant(id: string, name: string, stock: number) {
+  return ProductVariant.reconstitute({
+    id,
+    productId: 'product-123',
+    name,
+    stock,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }).value;
+}
+
 describe('ListVariantsUseCase', () => {
   let useCase: ListVariantsUseCase;
   let mockVariantRepo: MockVariantRepo;
@@ -29,17 +40,6 @@ describe('ListVariantsUseCase', () => {
       mockProductRepo as unknown as ProductRepository
     );
   });
-
-  function createSimpleVariant(id: string, name: string, stock: number) {
-    return ProductVariant.reconstitute({
-      id,
-      productId: 'product-123',
-      name,
-      stock,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).value;
-  }
 
   describe('execute', () => {
     it('should list variants for a product successfully', async () => {

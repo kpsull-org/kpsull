@@ -71,7 +71,7 @@ async function isAuthorized(userId: string, creatorId: string): Promise<boolean>
     where: { userId },
   });
 
-  if (onboarding && onboarding.userId === userId) return true;
+  if (onboarding?.userId === userId) return true;
   return userId === creatorId;
 }
 
