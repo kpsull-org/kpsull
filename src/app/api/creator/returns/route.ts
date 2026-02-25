@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     // Check if user is a creator
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
+      select: { role: true },
     });
 
     if (!user || user.role !== 'CREATOR') {
@@ -48,31 +49,36 @@ export async function GET(request: NextRequest) {
       { skip, take: limit }
     );
 
-    // Enrich with order details if needed
-    const enrichedReturns = await Promise.all(
-      returns.map(async (ret) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ret.orderId },
-          include: { items: true },
-        });
+    // Batch load order details for all returns in a single query
+    const orderIds = returns.map((ret) => ret.orderId);
+    const orders = await prisma.order.findMany({
+      where: { id: { in: orderIds } },
+      select: {
+        id: true,
+        totalAmount: true,
+        items: { select: { productName: true, variantInfo: true, quantity: true, price: true, image: true } },
+      },
+    });
+    const orderMap = new Map(orders.map((o) => [o.id, o]));
 
-        return {
-          ...ret,
-          order: order
-            ? {
-                totalAmount: order.totalAmount,
-                items: order.items.map((item) => ({
-                  productName: item.productName,
-                  variantInfo: item.variantInfo,
-                  quantity: item.quantity,
-                  price: item.price,
-                  image: item.image,
-                })),
-              }
-            : null,
-        };
-      })
-    );
+    const enrichedReturns = returns.map((ret) => {
+      const order = orderMap.get(ret.orderId);
+      return {
+        ...ret,
+        order: order
+          ? {
+              totalAmount: order.totalAmount,
+              items: order.items.map((item) => ({
+                productName: item.productName,
+                variantInfo: item.variantInfo,
+                quantity: item.quantity,
+                price: item.price,
+                image: item.image,
+              })),
+            }
+          : null,
+      };
+    });
 
     return NextResponse.json({
       returns: enrichedReturns,
