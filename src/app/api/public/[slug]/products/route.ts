@@ -55,8 +55,8 @@ export async function GET(
     { products, total, pages, page },
     {
       headers: {
-        // Cache 30s côté CDN — les produits publics ne changent pas à chaque seconde
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        // Cache 5 min côté CDN — les produits publics changent rarement
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       },
     }
   );

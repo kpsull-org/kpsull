@@ -54,6 +54,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Dates invalides' }, { status: 400 });
     }
 
+    // Limit export range to 12 months to prevent OOM on large datasets
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (diffDays > 366) {
+      return NextResponse.json(
+        { error: 'La periode ne peut pas depasser 12 mois' },
+        { status: 400 }
+      );
+    }
+
     // Check if user is the creator
     const onboarding = await prisma.creatorOnboarding.findUnique({
       where: { userId: session.user.id },
