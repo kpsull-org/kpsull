@@ -245,82 +245,83 @@ body {
 }
 
 /* Scroll reveal — uses CSS scroll-driven animations (Chrome 115+, Firefox 114+, Safari 18+) */
+/* animation-range: entry 20% = animation starts when 20% of the element is visible */
 .kp-scroll-reveal {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-timeline: view();
-  animation-range: entry 0% entry 55%;
+  animation-range: entry 20% entry 70%;
 }
 
 /* Stagger variants for grid children */
 .kp-scroll-reveal-delay-1 {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 55%;
+  animation-range: entry 20% entry 70%;
 }
 
 .kp-scroll-reveal-delay-2 {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 55%;
+  animation-range: entry 20% entry 70%;
 }
 
 .kp-scroll-reveal-delay-3 {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 55%;
+  animation-range: entry 20% entry 70%;
 }
 
 /* Blur-in pour images (bannières créateur, hero images) */
 .kp-blur-in {
   animation: kp-blur-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-timeline: view();
-  animation-range: entry 0% entry 50%;
+  animation-range: entry 20% entry 65%;
 }
 
 /* Luxury reveal — version lente pour titres et sections */
 .kp-luxury-reveal {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-timeline: view();
-  animation-range: entry 0% entry 45%;
+  animation-range: entry 15% entry 65%;
 }
 
 /* Variantes stagger luxury — délais de 0.2s (vs 0.1s standard) */
 .kp-luxury-delay-1 {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 45%;
+  animation-range: entry 15% entry 65%;
 }
 
 .kp-luxury-delay-2 {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 45%;
+  animation-range: entry 15% entry 65%;
 }
 
 .kp-luxury-delay-3 {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 45%;
+  animation-range: entry 15% entry 65%;
 }
 
 .kp-luxury-delay-4 {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 45%;
+  animation-range: entry 15% entry 65%;
 }
 
 /* Scalex pour séparateurs visuels */
 .kp-scale-divider {
   animation: kp-scale-x 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-timeline: view();
-  animation-range: entry 0% entry 40%;
+  animation-range: entry 15% entry 60%;
 }
 
 /* Fix stagger delay-4 manquant (bug reassurance-strip) */
 .kp-scroll-reveal-delay-4 {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
   animation-timeline: view();
-  animation-range: entry 0% entry 55%;
+  animation-range: entry 20% entry 70%;
 }
 
 /* Animation d'entrée de page — déclenche au montage du composant */
