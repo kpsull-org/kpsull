@@ -36,7 +36,7 @@ export default async function AdminLayout({
     <div className="flex min-h-screen bg-gray-50/50">
       <AdminSidebar badges={badges} />
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col md:pl-[260px]">
         <main className="flex-1 px-6 py-6 md:px-8 md:py-8 kp-page-enter">
           {children}
         </main>
