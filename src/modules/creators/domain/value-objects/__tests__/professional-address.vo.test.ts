@@ -78,24 +78,18 @@ describe('ProfessionalAddress Value Object', () => {
       expect(addr1.equals(addr2)).toBe(true);
     });
 
-    it('should not be equal to address with different street', () => {
+    it.each([
+      {
+        label: 'different street',
+        other: { street: '20 avenue des Champs', city: 'Paris', postalCode: '75001' },
+      },
+      {
+        label: 'different city',
+        other: { street: '10 rue de la Paix', city: 'Lyon', postalCode: '69001' },
+      },
+    ])('should not be equal to address with $label', ({ other }) => {
       const addr1 = ProfessionalAddress.create(validBase).value;
-      const addr2 = ProfessionalAddress.create({
-        street: '20 avenue des Champs',
-        city: 'Paris',
-        postalCode: '75001',
-      }).value;
-
-      expect(addr1.equals(addr2)).toBe(false);
-    });
-
-    it('should not be equal to address with different city', () => {
-      const addr1 = ProfessionalAddress.create(validBase).value;
-      const addr2 = ProfessionalAddress.create({
-        street: '10 rue de la Paix',
-        city: 'Lyon',
-        postalCode: '69001',
-      }).value;
+      const addr2 = ProfessionalAddress.create(other).value;
 
       expect(addr1.equals(addr2)).toBe(false);
     });

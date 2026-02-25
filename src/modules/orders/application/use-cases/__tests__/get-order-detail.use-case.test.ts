@@ -140,39 +140,15 @@ describe('GetOrderDetailUseCase', () => {
       expect(result.error).toContain('autorisé');
     });
 
-    it('should fail without creatorId', async () => {
-      // Act
-      const result = await useCase.execute({
-        orderId: 'some-id',
-        creatorId: '',
-      });
+    it.each([
+      { field: 'empty creatorId', input: { orderId: 'some-id', creatorId: '' }, expectedError: 'Creator ID' },
+      { field: 'whitespace-only creatorId', input: { orderId: 'some-id', creatorId: '   ' }, expectedError: 'Creator ID est requis' },
+      { field: 'empty orderId', input: { orderId: '', creatorId: 'creator-123' }, expectedError: 'Order ID' },
+    ])('should fail with $field', async ({ input, expectedError }) => {
+      const result = await useCase.execute(input);
 
-      // Assert
       expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Creator ID');
-    });
-
-    it('should fail when creatorId contains only whitespace', async () => {
-      // Act
-      const result = await useCase.execute({
-        orderId: 'some-id',
-        creatorId: '   ',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Creator ID est requis');
-    });
-
-    it('should fail without orderId', async () => {
-      // Act
-      const result = await useCase.execute({
-        orderId: '',
-        creatorId: 'creator-123',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain(expectedError);
     });
   });
 });

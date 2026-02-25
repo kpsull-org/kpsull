@@ -92,16 +92,16 @@ describe('ShipOrderUseCase', () => {
 
     describe('missing required fields', () => {
       it.each([
-        { field: 'trackingNumber', input: { trackingNumber: '', carrier: 'Colissimo' }, expectedError: 'suivi' },
-        { field: 'carrier', input: { trackingNumber: 'TRACK123456', carrier: '' }, expectedError: 'transporteur' },
-      ])('should fail without $field', async ({ input, expectedError }) => {
+        { field: 'trackingNumber', overrides: { trackingNumber: '' }, expectedError: 'suivi' },
+        { field: 'carrier', overrides: { carrier: '' }, expectedError: 'transporteur' },
+      ])('should fail without $field', async ({ overrides, expectedError }) => {
         const order = createPaidOrder();
         mockRepository.findById.mockResolvedValue(order);
 
         const result = await useCase.execute({
           orderId: order.idString,
-          creatorId: 'creator-123',
-          ...input,
+          ...defaultShipInput,
+          ...overrides,
         });
 
         expect(result.isFailure).toBe(true);

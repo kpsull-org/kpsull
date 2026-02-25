@@ -1,57 +1,25 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CreateVariantUseCase, type CreateVariantInput } from '../variants/create-variant.use-case';
 import type { VariantRepository } from '../../ports/variant.repository.interface';
 import type { ProductRepository } from '../../ports/product.repository.interface';
-import { Product } from '../../../domain/entities/product.entity';
+import {
+  createMockVariantRepo,
+  createMockProductRepo,
+  createValidTestProduct,
+  type MockVariantRepo,
+  type MockProductRepo,
+} from './variant-test.helpers';
 
 describe('CreateVariantUseCase', () => {
   let useCase: CreateVariantUseCase;
-  let mockVariantRepo: {
-    findById: Mock;
-    findByProductId: Mock;
-    save: Mock;
-    delete: Mock;
-    countByProductId: Mock;
-  };
-  let mockProductRepo: {
-    findById: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    countByCreatorId: Mock;
-  };
-  let validProduct: Product;
+  let mockVariantRepo: MockVariantRepo;
+  let mockProductRepo: MockProductRepo;
 
   beforeEach(() => {
-    mockVariantRepo = {
-      findById: vi.fn(),
-      findByProductId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      countByProductId: vi.fn(),
-    };
+    mockVariantRepo = createMockVariantRepo();
+    mockProductRepo = createMockProductRepo();
 
-    mockProductRepo = {
-      findById: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
-
-    // Create a valid product for tests
-    validProduct = Product.reconstitute({
-      id: 'product-123',
-      creatorId: 'creator-123',
-      name: 'Mon Produit',
-      priceAmount: 2999,
-      priceCurrency: 'EUR',
-      status: 'PUBLISHED',
-      publishedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).value;
-
+    const validProduct = createValidTestProduct();
     mockProductRepo.findById.mockResolvedValue(validProduct);
     mockVariantRepo.save.mockResolvedValue(undefined);
 

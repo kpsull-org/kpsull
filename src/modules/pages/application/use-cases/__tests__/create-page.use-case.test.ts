@@ -1,38 +1,16 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CreatePageUseCase, CreatePageInput } from '../create-page.use-case';
 import { PageRepository } from '../../ports/page.repository.interface';
 import { CreatorPage } from '../../../domain/entities/creator-page.entity';
+import { createMockPageRepo, type MockPageRepo } from './page-test.helpers';
 
 describe('CreatePageUseCase', () => {
   let useCase: CreatePageUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn().mockResolvedValue(false),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
+    mockRepo.slugExists.mockResolvedValue(false);
     useCase = new CreatePageUseCase(mockRepo as unknown as PageRepository);
   });
 

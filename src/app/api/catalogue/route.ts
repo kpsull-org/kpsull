@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
+import { shuffleInterleaved } from '@/lib/utils/catalogue-shuffle';
 
 const PAGE_SIZE = 32;
 
@@ -15,20 +16,6 @@ const getCachedMaxPrice = unstable_cache(
   ['catalogue-max-price'],
   { revalidate: 600, tags: ['products'] }
 );
-
-function seededRng(seed: string) {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.codePointAt(i) ?? 0;
-    h = Math.imul(h, 16777619);
-  }
-  return () => {
-    h ^= h << 13;
-    h ^= h >> 17;
-    h ^= h << 5;
-    return (h >>> 0) / 0x100000000;
-  };
-}
 
 type VariantItem = {
   id: string;
@@ -46,56 +33,6 @@ type VariantItem = {
   };
   skus: { size: string | null; stock: number }[];
 };
-
-function shuffleInterleaved(items: VariantItem[], rngSeed: string): VariantItem[] {
-  const rand = seededRng(rngSeed);
-  const fyShuffle = <U,>(arr: U[]): U[] => {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      const tmp = a[i] as U;
-      a[i] = a[j] as U;
-      a[j] = tmp;
-    }
-    return a;
-  };
-
-  const creatorMap = new Map<string, Map<string, VariantItem[]>>();
-  for (const item of items) {
-    const cId = item.product.creatorId;
-    const pId = item.productId;
-    if (!creatorMap.has(cId)) creatorMap.set(cId, new Map());
-    const productMap = creatorMap.get(cId)!;
-    const g = productMap.get(pId) ?? [];
-    g.push(item);
-    productMap.set(pId, g);
-  }
-
-  const interleavedPerCreator: VariantItem[][] = fyShuffle(
-    [...creatorMap.values()].map((productMap) => {
-      const shuffledGroups = fyShuffle(
-        [...productMap.values()].map((g) => fyShuffle(g))
-      );
-      const result: VariantItem[] = [];
-      const maxLen = Math.max(...shuffledGroups.map((g) => g.length));
-      for (let i = 0; i < maxLen; i++) {
-        for (const group of shuffledGroups) {
-          if (i < group.length) result.push(group[i] as VariantItem);
-        }
-      }
-      return result;
-    })
-  );
-
-  const finalResult: VariantItem[] = [];
-  const maxLen = Math.max(...interleavedPerCreator.map((g) => g.length), 0);
-  for (let i = 0; i < maxLen; i++) {
-    for (const group of interleavedPerCreator) {
-      if (i < group.length) finalResult.push(group[i] as VariantItem);
-    }
-  }
-  return finalResult;
-}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

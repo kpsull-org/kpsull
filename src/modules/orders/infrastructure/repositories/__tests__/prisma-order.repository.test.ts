@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaOrderRepository } from '../prisma-order.repository';
 import { ConcurrentModificationError } from '../../errors/concurrent-modification.error';
+import { Order } from '../../../domain/entities/order.entity';
+import { OrderItem } from '../../../domain/entities/order-item.entity';
 
 const mockTx = vi.hoisted(() => ({
   order: {
@@ -75,6 +77,31 @@ function buildPrismaItem(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function buildTestOrderWithItem() {
+  const item = OrderItem.create({
+    productId: 'product-1',
+    productName: 'Produit A',
+    price: 2999,
+    quantity: 1,
+  }).value;
+
+  const order = Order.create({
+    creatorId: 'creator-123',
+    customerId: 'customer-123',
+    customerName: 'Jean Dupont',
+    customerEmail: 'jean@example.com',
+    items: [item],
+    shippingAddress: {
+      street: '1 Rue Paris',
+      city: 'Paris',
+      postalCode: '75001',
+      country: 'France',
+    },
+  }).value;
+
+  return { item, order };
+}
+
 describe('PrismaOrderRepository', () => {
   let repository: PrismaOrderRepository;
 
@@ -92,29 +119,7 @@ describe('PrismaOrderRepository', () => {
 
   describe('save', () => {
     it('should upsert a new order without items', async () => {
-      const { Order } = await import('../../../domain/entities/order.entity');
-      const { OrderItem } = await import('../../../domain/entities/order-item.entity');
-
-      const item = OrderItem.create({
-        productId: 'product-1',
-        productName: 'Produit A',
-        price: 2999,
-        quantity: 1,
-      }).value;
-
-      const order = Order.create({
-        creatorId: 'creator-123',
-        customerId: 'customer-123',
-        customerName: 'Jean Dupont',
-        customerEmail: 'jean@example.com',
-        items: [item],
-        shippingAddress: {
-          street: '1 Rue Paris',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-        },
-      }).value;
+      const { order } = buildTestOrderWithItem();
 
       await repository.save(order);
 
@@ -124,29 +129,7 @@ describe('PrismaOrderRepository', () => {
     });
 
     it('should skip createMany when order has no items', async () => {
-      const { Order } = await import('../../../domain/entities/order.entity');
-      const { OrderItem } = await import('../../../domain/entities/order-item.entity');
-
-      const item = OrderItem.create({
-        productId: 'product-1',
-        productName: 'Produit A',
-        price: 2999,
-        quantity: 1,
-      }).value;
-
-      const order = Order.create({
-        creatorId: 'creator-123',
-        customerId: 'customer-123',
-        customerName: 'Jean Dupont',
-        customerEmail: 'jean@example.com',
-        items: [item],
-        shippingAddress: {
-          street: '1 Rue Paris',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-        },
-      }).value;
+      const { order } = buildTestOrderWithItem();
 
       // Access private items to test the 0-items branch via reconstitute
       const prismaOrderWithNoItems = buildPrismaOrder({ items: [] });
@@ -160,15 +143,7 @@ describe('PrismaOrderRepository', () => {
     });
 
     it('should throw ConcurrentModificationError if updatedAt differs', async () => {
-      const { Order } = await import('../../../domain/entities/order.entity');
-      const { OrderItem } = await import('../../../domain/entities/order-item.entity');
-
-      const item = OrderItem.create({
-        productId: 'product-1',
-        productName: 'Produit A',
-        price: 2999,
-        quantity: 1,
-      }).value;
+      const { item } = buildTestOrderWithItem();
 
       // Create order via reconstitute so we can control updatedAt
       const order = Order.reconstitute({
@@ -200,15 +175,7 @@ describe('PrismaOrderRepository', () => {
     });
 
     it('should succeed if updatedAt matches (no concurrent modification)', async () => {
-      const { Order } = await import('../../../domain/entities/order.entity');
-      const { OrderItem } = await import('../../../domain/entities/order-item.entity');
-
-      const item = OrderItem.create({
-        productId: 'product-1',
-        productName: 'Produit A',
-        price: 2999,
-        quantity: 1,
-      }).value;
+      const { item } = buildTestOrderWithItem();
 
       const updatedAt = new Date('2024-01-01T10:00:00Z');
       const order = Order.reconstitute({
@@ -239,8 +206,6 @@ describe('PrismaOrderRepository', () => {
     });
 
     it('should save order with all optional fields', async () => {
-      const { Order } = await import('../../../domain/entities/order.entity');
-      const { OrderItem } = await import('../../../domain/entities/order-item.entity');
 
       const item = OrderItem.create({
         productId: 'product-1',

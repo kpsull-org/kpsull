@@ -1,4 +1,20 @@
-import type { ReturnRequest } from '../../ports/return.repository.interface';
+import { vi, type Mock } from 'vitest';
+import type { ReturnRequest, ReturnRepository } from '../../ports/return.repository.interface';
+
+export type MockReturnRepository = {
+  [K in keyof ReturnRepository]: Mock;
+};
+
+export function createMockReturnRepository(): MockReturnRepository {
+  return {
+    save: vi.fn(),
+    findById: vi.fn(),
+    findByOrderId: vi.fn(),
+    findByCreatorId: vi.fn(),
+    findByCustomerId: vi.fn(),
+    delete: vi.fn(),
+  };
+}
 
 export function createBaseReturnRequest(overrides: Partial<ReturnRequest> = {}): ReturnRequest {
   return {

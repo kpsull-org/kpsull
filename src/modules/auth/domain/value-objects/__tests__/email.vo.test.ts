@@ -35,25 +35,30 @@ describe('Email Value Object', () => {
   });
 
   describe('equality', () => {
-    it('should be equal for same email addresses', () => {
-      const email1 = Email.create('test@example.com').value;
-      const email2 = Email.create('test@example.com').value;
+    it.each([
+      {
+        label: 'same email addresses',
+        email1: 'test@example.com',
+        email2: 'test@example.com',
+        expected: true,
+      },
+      {
+        label: 'same email regardless of case',
+        email1: 'Test@Example.com',
+        email2: 'test@example.com',
+        expected: true,
+      },
+      {
+        label: 'different emails',
+        email1: 'test1@example.com',
+        email2: 'test2@example.com',
+        expected: false,
+      },
+    ])('should return $expected for $label', ({ email1, email2, expected }) => {
+      const e1 = Email.create(email1).value;
+      const e2 = Email.create(email2).value;
 
-      expect(email1.equals(email2)).toBe(true);
-    });
-
-    it('should be equal regardless of case', () => {
-      const email1 = Email.create('Test@Example.com').value;
-      const email2 = Email.create('test@example.com').value;
-
-      expect(email1.equals(email2)).toBe(true);
-    });
-
-    it('should not be equal for different emails', () => {
-      const email1 = Email.create('test1@example.com').value;
-      const email2 = Email.create('test2@example.com').value;
-
-      expect(email1.equals(email2)).toBe(false);
+      expect(e1.equals(e2)).toBe(expected);
     });
   });
 

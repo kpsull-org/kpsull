@@ -1,11 +1,7 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ReceiveReturnUseCase } from '../receive-return.use-case';
 import type { ReturnRepository } from '../../ports/return.repository.interface';
-import { createShippedBackReturn } from './return.fixtures';
-
-type MockReturnRepository = {
-  [K in keyof ReturnRepository]: Mock;
-};
+import { createShippedBackReturn, createMockReturnRepository, type MockReturnRepository } from './return.fixtures';
 
 describe('ReceiveReturnUseCase', () => {
   let useCase: ReceiveReturnUseCase;
@@ -13,14 +9,7 @@ describe('ReceiveReturnUseCase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRepository = {
-      save: vi.fn(),
-      findById: vi.fn(),
-      findByOrderId: vi.fn(),
-      findByCreatorId: vi.fn(),
-      findByCustomerId: vi.fn(),
-      delete: vi.fn(),
-    };
+    mockRepository = createMockReturnRepository();
     useCase = new ReceiveReturnUseCase(mockRepository as unknown as ReturnRepository);
   });
 

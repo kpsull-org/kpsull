@@ -1,24 +1,14 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ListReturnsUseCase } from '../list-returns.use-case';
 import type { ReturnRepository, ReturnRequest } from '../../ports/return.repository.interface';
-
-type MockReturnRepository = {
-  [K in keyof ReturnRepository]: Mock;
-};
+import { createMockReturnRepository, type MockReturnRepository } from './return.fixtures';
 
 describe('ListReturnsUseCase', () => {
   let useCase: ListReturnsUseCase;
   let mockRepository: MockReturnRepository;
 
   beforeEach(() => {
-    mockRepository = {
-      save: vi.fn(),
-      findById: vi.fn(),
-      findByOrderId: vi.fn(),
-      findByCreatorId: vi.fn(),
-      findByCustomerId: vi.fn(),
-      delete: vi.fn(),
-    };
+    mockRepository = createMockReturnRepository();
     useCase = new ListReturnsUseCase(mockRepository as unknown as ReturnRepository);
   });
 

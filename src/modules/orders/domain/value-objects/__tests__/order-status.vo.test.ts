@@ -155,48 +155,22 @@ describe('OrderStatus', () => {
   });
 
   describe('fromString', () => {
-    it('should create from valid PENDING string', () => {
-      const result = OrderStatus.fromString('PENDING');
+    it.each([
+      'PENDING',
+      'PAID',
+      'SHIPPED',
+      'DELIVERED',
+      'VALIDATION_PENDING',
+      'COMPLETED',
+      'DISPUTE_OPENED',
+      'CANCELED',
+      'REFUNDED',
+      'RETURN_SHIPPED',
+      'RETURN_RECEIVED',
+    ])('should create from valid %s string', (status) => {
+      const result = OrderStatus.fromString(status);
       expect(result.isSuccess).toBe(true);
-      expect(result.value.value).toBe('PENDING');
-    });
-
-    it('should create from valid VALIDATION_PENDING string', () => {
-      const result = OrderStatus.fromString('VALIDATION_PENDING');
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.value).toBe('VALIDATION_PENDING');
-    });
-
-    it('should create from valid RETURN_SHIPPED string', () => {
-      const result = OrderStatus.fromString('RETURN_SHIPPED');
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.value).toBe('RETURN_SHIPPED');
-    });
-
-    it('should create from valid RETURN_RECEIVED string', () => {
-      const result = OrderStatus.fromString('RETURN_RECEIVED');
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.value).toBe('RETURN_RECEIVED');
-    });
-
-    it('should create from valid COMPLETED string', () => {
-      const result = OrderStatus.fromString('COMPLETED');
-      expect(result.isSuccess).toBe(true);
-    });
-
-    it('should create from valid DISPUTE_OPENED string', () => {
-      const result = OrderStatus.fromString('DISPUTE_OPENED');
-      expect(result.isSuccess).toBe(true);
-    });
-
-    it('should create from valid REFUNDED string', () => {
-      const result = OrderStatus.fromString('REFUNDED');
-      expect(result.isSuccess).toBe(true);
-    });
-
-    it('should create from valid CANCELED string', () => {
-      const result = OrderStatus.fromString('CANCELED');
-      expect(result.isSuccess).toBe(true);
+      expect(result.value.value).toBe(status);
     });
 
     it('should fail for invalid status string', () => {

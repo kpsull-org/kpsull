@@ -27,59 +27,40 @@ describe('UpgradeSubscriptionUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should upgrade ESSENTIEL to STUDIO successfully', async () => {
-      mockRepo.set('creator-1', createTestSubscription({
-        productsUsed: 8, pinnedProductsUsed: 2,
-        stripeSubscriptionId: 'sub_old_123',
-      }));
+    describe('successful upgrades', () => {
+      it.each([
+        {
+          label: 'ESSENTIEL to STUDIO',
+          existing: { productsUsed: 8, pinnedProductsUsed: 2, stripeSubscriptionId: 'sub_old_123' },
+          input: { ...defaultInput } as typeof defaultInput & { targetPlan: 'STUDIO' | 'ATELIER' },
+          expected: { plan: 'STUDIO', previousPlan: 'ESSENTIEL', commissionRate: 0.04, stripeSubscriptionId: 'sub_new_123' },
+        },
+        {
+          label: 'ESSENTIEL to ATELIER',
+          existing: { productsUsed: 5, pinnedProductsUsed: 1, stripeSubscriptionId: 'sub_old_123' },
+          input: { ...defaultInput, targetPlan: 'ATELIER' as const, stripeSubscriptionId: 'sub_new_456', stripePriceId: 'price_atelier_year' },
+          expected: { plan: 'ATELIER', previousPlan: 'ESSENTIEL', commissionRate: 0.03 },
+        },
+        {
+          label: 'STUDIO to ATELIER',
+          existing: { plan: 'STUDIO' as const, productsUsed: 18, pinnedProductsUsed: 4, stripeSubscriptionId: 'sub_studio_123', stripeCustomerId: 'cus_456' },
+          input: { ...defaultInput, targetPlan: 'ATELIER' as const, stripeSubscriptionId: 'sub_new_789', stripeCustomerId: 'cus_456', stripePriceId: 'price_atelier_year' },
+          expected: { plan: 'ATELIER', previousPlan: 'STUDIO', commissionRate: 0.03 },
+        },
+      ])('should upgrade $label successfully', async ({ existing, input, expected }) => {
+        mockRepo.set('creator-1', createTestSubscription(existing));
 
-      const result = await useCase.execute(defaultInput);
+        const result = await useCase.execute(input);
 
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.plan).toBe('STUDIO');
-      expect(result.value.previousPlan).toBe('ESSENTIEL');
-      expect(result.value.commissionRate).toBe(0.04);
-      expect(result.value.stripeSubscriptionId).toBe('sub_new_123');
-      expect(mockRepo.savedSubscription).not.toBeNull();
-    });
-
-    it('should upgrade ESSENTIEL to ATELIER successfully', async () => {
-      mockRepo.set('creator-1', createTestSubscription({
-        productsUsed: 5, pinnedProductsUsed: 1,
-        stripeSubscriptionId: 'sub_old_123',
-      }));
-
-      const result = await useCase.execute({
-        ...defaultInput,
-        targetPlan: 'ATELIER',
-        stripeSubscriptionId: 'sub_new_456',
-        stripePriceId: 'price_atelier_year',
+        expect(result.isSuccess).toBe(true);
+        expect(result.value.plan).toBe(expected.plan);
+        expect(result.value.previousPlan).toBe(expected.previousPlan);
+        expect(result.value.commissionRate).toBe(expected.commissionRate);
+        if ('stripeSubscriptionId' in expected) {
+          expect(result.value.stripeSubscriptionId).toBe(expected.stripeSubscriptionId);
+        }
+        expect(mockRepo.savedSubscription).not.toBeNull();
       });
-
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.plan).toBe('ATELIER');
-      expect(result.value.previousPlan).toBe('ESSENTIEL');
-      expect(result.value.commissionRate).toBe(0.03);
-    });
-
-    it('should upgrade STUDIO to ATELIER successfully', async () => {
-      mockRepo.set('creator-1', createTestSubscription({
-        plan: 'STUDIO', productsUsed: 18, pinnedProductsUsed: 4,
-        stripeSubscriptionId: 'sub_studio_123', stripeCustomerId: 'cus_456',
-      }));
-
-      const result = await useCase.execute({
-        ...defaultInput,
-        targetPlan: 'ATELIER',
-        stripeSubscriptionId: 'sub_new_789',
-        stripeCustomerId: 'cus_456',
-        stripePriceId: 'price_atelier_year',
-      });
-
-      expect(result.isSuccess).toBe(true);
-      expect(result.value.plan).toBe('ATELIER');
-      expect(result.value.previousPlan).toBe('STUDIO');
-      expect(result.value.commissionRate).toBe(0.03);
     });
 
     it('should change billing interval from monthly to yearly', async () => {

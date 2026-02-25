@@ -59,68 +59,16 @@ describe('ProductVariant Entity', () => {
       expect(result.value.isAvailable).toBe(false);
     });
 
-    it('should fail when productId is empty', () => {
-      // Arrange
-      const props = {
-        productId: '',
-        name: 'Taille M',
-        stock: 10,
-      };
-
-      // Act
+    it.each([
+      { label: 'productId is empty', props: { productId: '', name: 'Taille M', stock: 10 }, expectedError: 'Product ID' },
+      { label: 'name is empty', props: { productId: 'product-123', name: '', stock: 10 }, expectedError: 'nom' },
+      { label: 'name is only whitespace', props: { productId: 'product-123', name: '   ', stock: 10 }, expectedError: 'nom' },
+      { label: 'name exceeds 100 characters', props: { productId: 'product-123', name: 'a'.repeat(101), stock: 10 }, expectedError: '100' },
+    ])('should fail when $label', ({ props, expectedError }) => {
       const result = ProductVariant.create(props);
 
-      // Assert
       expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Product ID');
-    });
-
-    it('should fail when name is empty', () => {
-      // Arrange
-      const props = {
-        productId: 'product-123',
-        name: '',
-        stock: 10,
-      };
-
-      // Act
-      const result = ProductVariant.create(props);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('nom');
-    });
-
-    it('should fail when name is only whitespace', () => {
-      // Arrange
-      const props = {
-        productId: 'product-123',
-        name: '   ',
-        stock: 10,
-      };
-
-      // Act
-      const result = ProductVariant.create(props);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('nom');
-    });
-
-    it('should fail when name exceeds 100 characters', () => {
-      // Arrange
-      const props = {
-        productId: 'product-123',
-        name: 'a'.repeat(101),
-        stock: 10,
-      };
-
-      // Act
-      const result = ProductVariant.create(props);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('100');
+      expect(result.error).toContain(expectedError);
     });
 
     it('should fail when stock is negative', () => {

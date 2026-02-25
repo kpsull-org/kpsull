@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('@/modules/products/application/services/stock.service', () => ({
   incrementStock: vi.fn().mockResolvedValue(undefined),
@@ -7,11 +7,7 @@ vi.mock('@/modules/products/application/services/stock.service', () => ({
 
 import { RefundReturnUseCase } from '../refund-return.use-case';
 import type { ReturnRepository } from '../../ports/return.repository.interface';
-import { createReceivedReturn } from './return.fixtures';
-
-type MockReturnRepository = {
-  [K in keyof ReturnRepository]: Mock;
-};
+import { createReceivedReturn, createMockReturnRepository, type MockReturnRepository } from './return.fixtures';
 
 describe('RefundReturnUseCase', () => {
   let useCase: RefundReturnUseCase;
@@ -19,14 +15,7 @@ describe('RefundReturnUseCase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRepository = {
-      save: vi.fn(),
-      findById: vi.fn(),
-      findByOrderId: vi.fn(),
-      findByCreatorId: vi.fn(),
-      findByCustomerId: vi.fn(),
-      delete: vi.fn(),
-    };
+    mockRepository = createMockReturnRepository();
     useCase = new RefundReturnUseCase(mockRepository as unknown as ReturnRepository);
   });
 
