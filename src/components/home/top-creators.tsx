@@ -116,7 +116,7 @@ export async function TopCreators() {
               <Link
                 key={page.slug}
                 href={`/${page.slug}`}
-                className="group block overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md"
+                className="group block overflow-hidden bg-white"
               >
                 <div className="relative aspect-square overflow-hidden bg-muted">
                   {coverImage ? (
