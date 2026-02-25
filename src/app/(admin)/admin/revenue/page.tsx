@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 import { AdminStatsCards } from '@/components/admin';
 import {
@@ -11,6 +12,25 @@ import {
 } from '@/modules/analytics/application/use-cases';
 import { PrismaAdminAnalyticsRepository } from '@/modules/analytics/infrastructure/repositories';
 import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
+
+/** Cache revenue analytics for 5 minutes to avoid repeated DB/Stripe calls */
+const getCachedRevenueStats = unstable_cache(
+  async (period: string, year: number) => {
+    const repo = new PrismaAdminAnalyticsRepository(prisma);
+    const [statsResult, monthlyResult, creatorsResult] = await Promise.all([
+      new GetAdminStatsUseCase(repo).execute({ period: period as 'LAST_30_DAYS' }),
+      new GetAdminMonthlyRevenueUseCase(repo).execute({ year }),
+      new GetAdminRevenueByCreatorUseCase(repo).execute({ limit: 10 }),
+    ]);
+    return {
+      stats: statsResult.isSuccess ? statsResult.value : null,
+      monthly: monthlyResult.isSuccess ? monthlyResult.value : null,
+      creators: creatorsResult.isSuccess ? creatorsResult.value : null,
+    };
+  },
+  ['admin-revenue-stats'],
+  { revalidate: 300, tags: ['admin-stats'] }
+);
 
 export const metadata: Metadata = {
   title: 'Revenus plateforme | Admin Kpsull',
@@ -31,21 +51,14 @@ function formatCurrency(amountInCents: number): string {
 
 export default async function AdminRevenuePage() {
   const currentYear = new Date().getFullYear();
-  const adminRepository = new PrismaAdminAnalyticsRepository(prisma);
 
-  const statsUseCase = new GetAdminStatsUseCase(adminRepository);
-  const monthlyRevenueUseCase = new GetAdminMonthlyRevenueUseCase(adminRepository);
-  const revenueByCreatorUseCase = new GetAdminRevenueByCreatorUseCase(adminRepository);
+  // Use 5-min cache to avoid repeated DB calls on each visit
+  const { stats: statsValue, monthly: monthlyValue, creators: creatorsValue } =
+    await getCachedRevenueStats('LAST_30_DAYS', currentYear);
 
-  const [statsResult, monthlyResult, creatorsResult] = await Promise.all([
-    statsUseCase.execute({ period: 'LAST_30_DAYS' }),
-    monthlyRevenueUseCase.execute({ year: currentYear }),
-    revenueByCreatorUseCase.execute({ limit: 10 }),
-  ]);
-
-  const monthlyChartData: MonthlyRevenue[] = monthlyResult.isSuccess
+  const monthlyChartData: MonthlyRevenue[] = monthlyValue
     ? MONTH_LABELS.map((month, i) => {
-        const point = monthlyResult.value.revenueByMonth.find((p) => p.month === i);
+        const point = monthlyValue.revenueByMonth.find((p) => p.month === i);
         return {
           month,
           revenue: (point?.revenue ?? 0) / 100,
@@ -55,21 +68,21 @@ export default async function AdminRevenuePage() {
       })
     : [];
 
-  const creatorRows = creatorsResult.isSuccess ? creatorsResult.value.creators : [];
+  const creatorRows = creatorsValue?.creators ?? [];
 
-  if (statsResult.isFailure) {
+  if (!statsValue) {
     return (
       <div className="container py-10">
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
           <p className="text-destructive">
-            Erreur lors du chargement des statistiques: {statsResult.error}
+            Erreur lors du chargement des statistiques.
           </p>
         </div>
       </div>
     );
   }
 
-  const stats: GetAdminStatsOutput = statsResult.value;
+  const stats: GetAdminStatsOutput = statsValue;
 
   return (
     <div className="container py-10">

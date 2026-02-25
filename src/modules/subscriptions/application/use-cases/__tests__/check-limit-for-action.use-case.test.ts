@@ -138,7 +138,7 @@ describe('CheckLimitForActionUseCase', () => {
     });
 
     it('should fail when action is missing', async () => {
-      const result = await useCase.execute({ creatorId: 'creator-1', action: '' as any });
+      const result = await useCase.execute({ creatorId: 'creator-1', action: '' as never });
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('Action');

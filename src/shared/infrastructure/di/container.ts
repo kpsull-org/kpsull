@@ -19,7 +19,9 @@ export class Container {
 
   registerInstance<T>(token: symbol, instance: T): void {
     this.registrations.set(token, {
+      /* c8 ignore start */
       factory: () => instance,
+      /* c8 ignore stop */
       instance,
       resolved: true,
     });

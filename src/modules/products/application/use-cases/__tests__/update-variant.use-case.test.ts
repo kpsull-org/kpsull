@@ -185,5 +185,53 @@ describe('UpdateVariantUseCase', () => {
       expect(result.value.isAvailable).toBe(false);
     });
 
+    it('should fail when priceOverride is negative (invalid money)', async () => {
+      // Arrange
+      const input: UpdateVariantInput = {
+        id: 'variant-123',
+        priceOverride: -1,
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(mockVariantRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should remove color when removeColor is true', async () => {
+      // Arrange
+      const input: UpdateVariantInput = {
+        id: 'variant-123',
+        removeColor: true,
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.color).toBeUndefined();
+      expect(result.value.colorCode).toBeUndefined();
+    });
+
+    it('should update color when color fields are provided', async () => {
+      // Arrange
+      const input: UpdateVariantInput = {
+        id: 'variant-123',
+        color: 'Rouge',
+        colorCode: '#FF0000',
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.color).toBe('Rouge');
+      expect(result.value.colorCode).toBe('#FF0000');
+    });
+
   });
 });

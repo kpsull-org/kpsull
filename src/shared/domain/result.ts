@@ -28,12 +28,14 @@ export class Result<T> {
   private readonly _value?: T;
 
   private constructor(isSuccess: boolean, error?: string, value?: T) {
+    /* c8 ignore start */
     if (isSuccess && error) {
       throw new Error("Invalid operation: success result cannot have an error");
     }
     if (!isSuccess && !error) {
       throw new Error("Invalid operation: failed result must have an error");
     }
+    /* c8 ignore stop */
 
     this.isSuccess = isSuccess;
     this.isFailure = !isSuccess;

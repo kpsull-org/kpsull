@@ -116,6 +116,11 @@ describe('User Entity', () => {
       expect(events).toHaveLength(1);
       expect(events[0]!.eventType).toBe('UserCreated');
     });
+
+    it('should fail with invalid role', () => {
+      const result = User.create({ ...validProps, role: 'INVALID_ROLE' as RoleType });
+      expect(result.isFailure).toBe(true);
+    });
   });
 
   describe('reconstitute', () => {
@@ -156,6 +161,30 @@ describe('User Entity', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value.domainEvents).toHaveLength(0);
     });
+
+    it('should fail with invalid email in reconstitute', () => {
+      const id = UniqueId.create();
+      const result = User.reconstitute({
+        id: id.value,
+        email: 'not-an-email',
+        role: RoleType.CLIENT,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('should fail with invalid role in reconstitute', () => {
+      const id = UniqueId.create();
+      const result = User.reconstitute({
+        id: id.value,
+        email: 'test@example.com',
+        role: 'INVALID_ROLE' as RoleType,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      expect(result.isFailure).toBe(true);
+    });
   });
 
   describe('updateProfile', () => {
@@ -189,6 +218,41 @@ describe('User Entity', () => {
       expect(user.name).toBe('Jane Doe');
       expect(user.image).toBe('https://example.com/new-avatar.jpg');
     });
+
+    it('should update phone', () => {
+      const user = User.create(validProps).value;
+      const result = user.updateProfile({ phone: '+33612345678' });
+      expect(result.isSuccess).toBe(true);
+      expect(user.phone).toBe('+33612345678');
+    });
+
+    it('should update address', () => {
+      const user = User.create(validProps).value;
+      const result = user.updateProfile({ address: '12 rue de la Paix' });
+      expect(result.isSuccess).toBe(true);
+      expect(user.address).toBe('12 rue de la Paix');
+    });
+
+    it('should update city', () => {
+      const user = User.create(validProps).value;
+      const result = user.updateProfile({ city: 'Paris' });
+      expect(result.isSuccess).toBe(true);
+      expect(user.city).toBe('Paris');
+    });
+
+    it('should update postalCode', () => {
+      const user = User.create(validProps).value;
+      const result = user.updateProfile({ postalCode: '75001' });
+      expect(result.isSuccess).toBe(true);
+      expect(user.postalCode).toBe('75001');
+    });
+
+    it('should update country', () => {
+      const user = User.create(validProps).value;
+      const result = user.updateProfile({ country: 'FR' });
+      expect(result.isSuccess).toBe(true);
+      expect(user.country).toBe('FR');
+    });
   });
 
   describe('changeRole', () => {
@@ -208,6 +272,12 @@ describe('User Entity', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(user.role.value).toBe(RoleType.ADMIN);
+    });
+
+    it('should fail when new role is invalid', () => {
+      const user = User.create(validProps).value;
+      const result = user.changeRole('INVALID_ROLE' as RoleType);
+      expect(result.isFailure).toBe(true);
     });
   });
 

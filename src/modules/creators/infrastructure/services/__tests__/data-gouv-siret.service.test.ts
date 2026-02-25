@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { DataGouvSiretService } from '../data-gouv-siret.service';
+import { DataGouvSiretService, validateSiretClient, formatSiret } from '../data-gouv-siret.service';
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -163,28 +163,16 @@ describe('DataGouvSiretService', () => {
       expect(result.error).toContain('non trouvé');
     });
 
-    it('should fail on API error (500)', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
+    it.each([
+      { label: 'API error (500)', mockSetup: () => mockFetch.mockResolvedValueOnce({ ok: false, status: 500 }), errorContains: 'Erreur API' },
+      { label: 'rate limit (429)', mockSetup: () => mockFetch.mockResolvedValueOnce({ ok: false, status: 429 }), errorContains: 'Trop de requêtes' },
+    ])('should fail on $label', async ({ mockSetup, errorContains }) => {
+      mockSetup();
 
       const result = await service.verifySiret('87869129400010');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Erreur API');
-    });
-
-    it('should fail on rate limit (429)', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 429,
-      });
-
-      const result = await service.verifySiret('87869129400010');
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Trop de requêtes');
+      expect(result.error).toContain(errorContains);
     });
 
     it('should return timeout error when request times out', async () => {
@@ -321,5 +309,96 @@ describe('DataGouvSiretService', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('invalide');
     });
+  });
+
+  describe('getLegalFormLabel (prefix matching)', () => {
+    it('should return a prefix-matched label for an unknown exact code with known prefix', async () => {
+      // nature_juridique = '5201' → no exact match → prefix '52' → 'Société en nom collectif'
+      const responseWithPrefixCode = {
+        results: [
+          {
+            ...VALID_API_RESPONSE.results[0],
+            nature_juridique: '5201',
+          },
+        ],
+        total_results: 1,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => responseWithPrefixCode,
+      });
+
+      const result = await service.verifySiret('87869129400010');
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.legalForm).toBe('Société en nom collectif');
+    });
+
+    it('should return undefined legalForm for a code with no match at all', async () => {
+      // nature_juridique = '9999' → no exact match, no prefix match
+      const responseWithUnknownCode = {
+        results: [
+          {
+            ...VALID_API_RESPONSE.results[0],
+            nature_juridique: '9999',
+          },
+        ],
+        total_results: 1,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => responseWithUnknownCode,
+      });
+
+      const result = await service.verifySiret('87869129400010');
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.legalForm).toBeUndefined();
+    });
+  });
+});
+
+describe('validateSiretClient', () => {
+  it.each([
+    { label: 'empty string', siret: '', errorContains: 'requis' },
+    { label: 'wrong length', siret: '12345', errorContains: '14 chiffres' },
+    { label: 'non-digit characters', siret: '1234567890123A', errorContains: 'chiffres' },
+    { label: 'failed Luhn checksum', siret: '87869129400011', errorContains: 'invalide' },
+  ])('should return invalid for $label', ({ siret, errorContains }) => {
+    const result = validateSiretClient(siret);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toContain(errorContains);
+  });
+
+  it('should return valid for a correct SIRET', () => {
+    const result = validateSiretClient('87869129400010');
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should strip spaces and dashes before validation', () => {
+    const result = validateSiretClient('878 691 294 00010');
+    expect(result.isValid).toBe(true);
+  });
+});
+
+describe('formatSiret', () => {
+  it('should format a 14-digit SIRET correctly', () => {
+    const result = formatSiret('87869129400010');
+    expect(result).toBe('878 691 294 00010');
+  });
+
+  it('should return original string for non-14-digit input', () => {
+    const result = formatSiret('1234');
+    expect(result).toBe('1234');
+  });
+
+  it('should strip spaces before formatting', () => {
+    const result = formatSiret('878 691 294 00010');
+    expect(result).toBe('878 691 294 00010');
   });
 });

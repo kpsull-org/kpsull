@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Archivo, Jacquard_12 } from "next/font/google";
 import "./globals.css";
+import { ScrollRevealProvider } from "@/components/layout/scroll-reveal-provider";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -51,6 +52,7 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${archivo.variable} ${jacquard12.variable} antialiased`}
       >
+        <ScrollRevealProvider />
         {children}
       </body>
     </html>

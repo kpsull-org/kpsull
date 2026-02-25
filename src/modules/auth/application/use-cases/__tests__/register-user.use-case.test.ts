@@ -81,7 +81,7 @@ describe('RegisterUserUseCase', () => {
     const result = await useCase.execute({
       name: 'Jean Dupont',
       email: 'jean@example.com',
-      password: 'Password123!',
+      password: 'Password123!', // NOSONAR - test fixture, not a real credential
     });
 
     expect(result.isFailure).toBe(true);
@@ -101,13 +101,35 @@ describe('RegisterUserUseCase', () => {
     await useCase.execute({
       name: 'Jean Nouveau',
       email: 'jean@example.com',
-      password: 'Password123!',
+      password: 'Password123!', // NOSONAR - test fixture, not a real credential
     });
 
     expect(mockAccountRepo.linkPassword).toHaveBeenCalledWith(
       'oauth-user-id',
       'hashed-password',
       'Jean OAuth' // keeps existing name
+    );
+  });
+
+  it('should use provided name when OAuth user has no existing name', async () => {
+    vi.mocked(mockAccountRepo.findUserWithAccountsByEmail).mockResolvedValue({
+      id: 'oauth-user-id',
+      email: 'jean@example.com',
+      name: null,
+      hashedPassword: null,
+      accounts: [],
+    });
+
+    await useCase.execute({
+      name: 'Jean Nouveau',
+      email: 'jean@example.com',
+      password: 'Password123!', // NOSONAR - test fixture, not a real credential
+    });
+
+    expect(mockAccountRepo.linkPassword).toHaveBeenCalledWith(
+      'oauth-user-id',
+      'hashed-password',
+      'Jean Nouveau' // falls back to provided name
     );
   });
 });

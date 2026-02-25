@@ -3,6 +3,7 @@ import { Result } from '@/shared/domain/result';
 import { CreatorOnboarding } from '../../domain/entities/creator-onboarding.entity';
 import { CreatorOnboardingRepository } from '../ports/creator-onboarding.repository.interface';
 import { CreatorOnboardingDTO } from '../dtos/creator-onboarding.dto';
+import { toCreatorOnboardingDTO } from './creator-onboarding-dto.mapper';
 
 /**
  * Input for InitiateCreatorUpgrade use case
@@ -37,7 +38,7 @@ export class InitiateCreatorUpgradeUseCase
       await this.creatorOnboardingRepository.findByUserId(input.userId);
 
     if (existingOnboarding) {
-      return Result.ok(this.toDTO(existingOnboarding));
+      return Result.ok(toCreatorOnboardingDTO(existingOnboarding));
     }
 
     // Create new onboarding
@@ -54,25 +55,6 @@ export class InitiateCreatorUpgradeUseCase
     // Save to repository
     await this.creatorOnboardingRepository.save(onboarding);
 
-    return Result.ok(this.toDTO(onboarding));
-  }
-
-  private toDTO(onboarding: CreatorOnboarding): CreatorOnboardingDTO {
-    return {
-      id: onboarding.id.value,
-      userId: onboarding.userId,
-      currentStep: onboarding.currentStep.value,
-      stepNumber: onboarding.currentStep.stepNumber,
-      professionalInfoCompleted: onboarding.professionalInfoCompleted,
-      siretVerified: onboarding.siretVerified,
-      stripeOnboarded: onboarding.stripeOnboarded,
-      brandName: onboarding.brandName,
-      siret: onboarding.siret,
-      professionalAddress: onboarding.professionalAddress,
-      stripeAccountId: onboarding.stripeAccountId,
-      startedAt: onboarding.startedAt,
-      completedAt: onboarding.completedAt,
-      isFullyCompleted: onboarding.isFullyCompleted,
-    };
+    return Result.ok(toCreatorOnboardingDTO(onboarding));
   }
 }

@@ -6,14 +6,16 @@
     "seed": "bun run prisma/seed.ts"
   },
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "dev": "next dev --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "check": "tsc --noEmit",
     "test": "vitest run",
+    "test:server": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "coverage": "vitest run --coverage",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

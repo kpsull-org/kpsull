@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { Package, Store, Users, DollarSign, ArrowRight } from 'lucide-react';
 import { AdminStatsCards } from '@/components/admin';
 import {
@@ -14,6 +15,27 @@ import { prisma } from '@/lib/prisma/client';
 import { stripe } from '@/lib/stripe/client';
 import { RevenueChart, type MonthlyRevenue } from '@/components/dashboard/revenue-chart';
 import { Card, CardContent } from '@/components/ui/card';
+
+/** Cache admin stats for 5 minutes to avoid repeated Stripe calls */
+const getCachedAdminStats = unstable_cache(
+  async (period: string) => {
+    const repo = new PrismaAdminAnalyticsRepository(prisma, stripe);
+    const result = await new GetAdminStatsUseCase(repo).execute({ period: period as 'THIS_MONTH' | 'LAST_30_DAYS' });
+    return result.isSuccess ? result.value : null;
+  },
+  ['admin-stats'],
+  { revalidate: 300, tags: ['admin-stats'] }
+);
+
+const getCachedMonthlyRevenue = unstable_cache(
+  async (year: number) => {
+    const repo = new PrismaAdminAnalyticsRepository(prisma, stripe);
+    const result = await new GetAdminMonthlyRevenueUseCase(repo).execute({ year });
+    return result.isSuccess ? result.value : null;
+  },
+  ['admin-monthly-revenue'],
+  { revalidate: 300, tags: ['admin-stats'] }
+);
 
 export const metadata: Metadata = {
   title: 'Dashboard Admin | Kpsull',
@@ -63,36 +85,30 @@ export default async function AdminDashboardPage() {
   // Auth is handled by middleware (src/middleware.ts)
   const currentYear = new Date().getFullYear();
 
-  // Initialize use cases with Prisma repository + Stripe for subscription revenue
-  const adminRepository = new PrismaAdminAnalyticsRepository(prisma, stripe);
-  const getAdminStatsUseCase = new GetAdminStatsUseCase(adminRepository);
-  const getMonthlyRevenueUseCase = new GetAdminMonthlyRevenueUseCase(adminRepository);
-
-  // Run stats and revenue use cases in parallel
-  // Cards = THIS_MONTH, Chart = currentYear (hardcoded, no period selector)
-  const [result, revenueResult] = await Promise.all([
-    getAdminStatsUseCase.execute({ period: 'THIS_MONTH' }),
-    getMonthlyRevenueUseCase.execute({ year: currentYear }),
+  // Run stats and revenue in parallel, using 5-min cache to avoid repeated Stripe calls
+  const [statsValue, revenueValue] = await Promise.all([
+    getCachedAdminStats('THIS_MONTH'),
+    getCachedMonthlyRevenue(currentYear),
   ]);
 
-  const revenueData = revenueResult.isSuccess
-    ? toMonthlyRevenue(revenueResult.value.revenueByMonth)
+  const revenueData = revenueValue
+    ? toMonthlyRevenue(revenueValue.revenueByMonth)
     : MONTH_LABELS.map((month) => ({ month, revenue: 0, commissions: 0, subscriptions: 0 }));
 
   // Handle error case
-  if (result.isFailure) {
+  if (!statsValue) {
     return (
       <div className="container py-10">
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
           <p className="text-destructive">
-            Erreur lors du chargement des statistiques: {result.error}
+            Erreur lors du chargement des statistiques.
           </p>
         </div>
       </div>
     );
   }
 
-  const stats: GetAdminStatsOutput = result.value;
+  const stats: GetAdminStatsOutput = statsValue;
 
   return (
     <div className="container py-10">

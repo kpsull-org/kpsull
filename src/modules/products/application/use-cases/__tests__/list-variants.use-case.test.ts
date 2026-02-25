@@ -1,58 +1,37 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ListVariantsUseCase, type ListVariantsInput } from '../variants/list-variants.use-case';
 import type { VariantRepository } from '../../ports/variant.repository.interface';
 import type { ProductRepository } from '../../ports/product.repository.interface';
-import { Product } from '../../../domain/entities/product.entity';
 import { ProductVariant } from '../../../domain/entities/product-variant.entity';
+import {
+  createMockVariantRepo,
+  createMockProductRepo,
+  createValidTestProduct,
+  type MockVariantRepo,
+  type MockProductRepo,
+} from './variant-test.helpers';
+
+function createSimpleVariant(id: string, name: string, stock: number) {
+  return ProductVariant.reconstitute({
+    id,
+    productId: 'product-123',
+    name,
+    stock,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }).value;
+}
 
 describe('ListVariantsUseCase', () => {
   let useCase: ListVariantsUseCase;
-  let mockVariantRepo: {
-    findById: Mock;
-    findByProductId: Mock;
-    save: Mock;
-    delete: Mock;
-    countByProductId: Mock;
-  };
-  let mockProductRepo: {
-    findById: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    countByCreatorId: Mock;
-  };
-  let validProduct: Product;
+  let mockVariantRepo: MockVariantRepo;
+  let mockProductRepo: MockProductRepo;
 
   beforeEach(() => {
-    mockVariantRepo = {
-      findById: vi.fn(),
-      findByProductId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      countByProductId: vi.fn(),
-    };
+    mockVariantRepo = createMockVariantRepo();
+    mockProductRepo = createMockProductRepo();
 
-    mockProductRepo = {
-      findById: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
-
-    // Create a valid product for tests
-    validProduct = Product.reconstitute({
-      id: 'product-123',
-      creatorId: 'creator-123',
-      name: 'Mon Produit',
-      priceAmount: 2999,
-      priceCurrency: 'EUR',
-      status: 'PUBLISHED',
-      publishedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }).value;
-
+    const validProduct = createValidTestProduct();
     mockProductRepo.findById.mockResolvedValue(validProduct);
     mockVariantRepo.findByProductId.mockResolvedValue([]);
 
@@ -66,22 +45,8 @@ describe('ListVariantsUseCase', () => {
     it('should list variants for a product successfully', async () => {
       // Arrange
       const testVariants = [
-        ProductVariant.reconstitute({
-          id: 'variant-1',
-          productId: 'product-123',
-          name: 'Taille S',
-          stock: 5,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).value,
-        ProductVariant.reconstitute({
-          id: 'variant-2',
-          productId: 'product-123',
-          name: 'Taille M',
-          stock: 10,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).value,
+        createSimpleVariant('variant-1', 'Taille S', 5),
+        createSimpleVariant('variant-2', 'Taille M', 10),
       ];
 
       mockVariantRepo.findByProductId.mockResolvedValue(testVariants);
@@ -177,30 +142,9 @@ describe('ListVariantsUseCase', () => {
     it('should return total count of variants', async () => {
       // Arrange
       const variants = [
-        ProductVariant.reconstitute({
-          id: 'variant-1',
-          productId: 'product-123',
-          name: 'Taille S',
-          stock: 5,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).value,
-        ProductVariant.reconstitute({
-          id: 'variant-2',
-          productId: 'product-123',
-          name: 'Taille M',
-          stock: 10,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).value,
-        ProductVariant.reconstitute({
-          id: 'variant-3',
-          productId: 'product-123',
-          name: 'Taille L',
-          stock: 8,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).value,
+        createSimpleVariant('variant-1', 'Taille S', 5),
+        createSimpleVariant('variant-2', 'Taille M', 10),
+        createSimpleVariant('variant-3', 'Taille L', 8),
       ];
 
       mockVariantRepo.findByProductId.mockResolvedValue(variants);
@@ -219,40 +163,7 @@ describe('ListVariantsUseCase', () => {
 
     it('should return variants without price override as undefined', async () => {
       // Arrange
-      const variant = ProductVariant.reconstitute({
-        id: 'variant-1',
-        productId: 'product-123',
-        name: 'Taille S',
-        stock: 5,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).value;
-
-      mockVariantRepo.findByProductId.mockResolvedValue([variant]);
-
-      const input: ListVariantsInput = {
-        productId: 'product-123',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isSuccess).toBe(true);
-      const variants = result.value?.variants ?? [];
-      expect(variants[0]?.priceOverride).toBeUndefined();
-    });
-
-    it('should return variants without priceOverride as undefined when not set', async () => {
-      // Arrange
-      const variant = ProductVariant.reconstitute({
-        id: 'variant-1',
-        productId: 'product-123',
-        name: 'Taille S',
-        stock: 5,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).value;
+      const variant = createSimpleVariant('variant-1', 'Taille S', 5);
 
       mockVariantRepo.findByProductId.mockResolvedValue([variant]);
 
@@ -272,22 +183,8 @@ describe('ListVariantsUseCase', () => {
     it('should indicate variant availability based on stock', async () => {
       // Arrange
       const variants = [
-        ProductVariant.reconstitute({
-          id: 'variant-1',
-          productId: 'product-123',
-          name: 'En stock',
-          stock: 10,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).value,
-        ProductVariant.reconstitute({
-          id: 'variant-2',
-          productId: 'product-123',
-          name: 'Rupture',
-          stock: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).value,
+        createSimpleVariant('variant-1', 'En stock', 10),
+        createSimpleVariant('variant-2', 'Rupture', 0),
       ];
 
       mockVariantRepo.findByProductId.mockResolvedValue(variants);

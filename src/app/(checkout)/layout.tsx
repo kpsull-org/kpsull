@@ -16,7 +16,7 @@ export default function CheckoutLayout({
       </header>
 
       {/* Main content */}
-      <main className="flex-1 px-4 sm:px-6 lg:px-8">{children}</main>
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 kp-page-enter">{children}</main>
     </div>
   );
 }

@@ -44,6 +44,17 @@ export async function requireCreatorAuth(): Promise<AuthResult> {
   return result;
 }
 
+export async function requireAdminAuth(): Promise<AuthResult> {
+  const result = await requireAuth();
+  if (!result.success) return result;
+
+  if (result.user.role !== 'ADMIN') {
+    return { success: false, response: NextResponse.json({ error: 'Acces reserve aux administrateurs' }, { status: 403 }) };
+  }
+
+  return result;
+}
+
 export function apiError(message: string, status = 500): NextResponse {
   return NextResponse.json({ error: message }, { status });
 }

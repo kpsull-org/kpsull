@@ -16,14 +16,14 @@ interface ProductCardProps {
 export function ProductCard({ product, creatorSlug }: ProductCardProps) {
   return (
     <Link href={`/${creatorSlug}/products/${product.id}`} className="group">
-      <div className="overflow-hidden transition-transform hover:scale-105">
+      <div className="overflow-hidden">
         <div className="aspect-square relative bg-muted overflow-hidden rounded-[15px]">
           {product.mainImageUrl ? (
             <Image
               src={product.mainImageUrl}
               alt={product.name}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (

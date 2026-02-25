@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   AddSectionUseCase,
   AddSectionInput,
@@ -12,22 +12,11 @@ import {
 import { PageRepository } from '../../ports/page.repository.interface';
 import { CreatorPage } from '../../../domain/entities/creator-page.entity';
 import { SectionType } from '../../../domain/value-objects/section-type.vo';
+import { createMockPageRepo, type MockPageRepo } from './page-test.helpers';
 
 describe('AddSectionUseCase', () => {
   let useCase: AddSectionUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   const createMockPage = () => {
     return CreatorPage.create({
@@ -38,19 +27,7 @@ describe('AddSectionUseCase', () => {
   };
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn(),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
     useCase = new AddSectionUseCase(mockRepo as unknown as PageRepository);
   });
 
@@ -207,19 +184,7 @@ describe('AddSectionUseCase', () => {
 
 describe('UpdateSectionUseCase', () => {
   let useCase: UpdateSectionUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   const createMockPageWithSection = () => {
     const page = CreatorPage.create({
@@ -236,19 +201,7 @@ describe('UpdateSectionUseCase', () => {
   };
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn(),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
     useCase = new UpdateSectionUseCase(mockRepo as unknown as PageRepository);
   });
 
@@ -295,6 +248,41 @@ describe('UpdateSectionUseCase', () => {
         heading: 'New Heading',
         subheading: 'New Sub',
       });
+    });
+
+    it('should show section successfully', async () => {
+      const { page, section } = createMockPageWithSection();
+      // Hide it first so we can show it
+      section.hide();
+      mockRepo.findById.mockResolvedValue(page);
+
+      const input: UpdateSectionInput = {
+        sectionId: section.idString,
+        pageId: page.idString,
+        creatorId: 'creator-123',
+        isVisible: true,
+      };
+
+      const result = await useCase.execute(input);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.isVisible).toBe(true);
+    });
+
+    it('should fail when title is too long', async () => {
+      const { page, section } = createMockPageWithSection();
+      mockRepo.findById.mockResolvedValue(page);
+
+      const input: UpdateSectionInput = {
+        sectionId: section.idString,
+        pageId: page.idString,
+        creatorId: 'creator-123',
+        title: 'a'.repeat(201),
+      };
+
+      const result = await useCase.execute(input);
+
+      expect(result.isFailure).toBe(true);
     });
 
     it('should hide section successfully', async () => {
@@ -380,19 +368,7 @@ describe('UpdateSectionUseCase', () => {
 
 describe('RemoveSectionUseCase', () => {
   let useCase: RemoveSectionUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   const createMockPageWithSection = () => {
     const page = CreatorPage.create({
@@ -408,19 +384,7 @@ describe('RemoveSectionUseCase', () => {
   };
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn(),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
     useCase = new RemoveSectionUseCase(mockRepo as unknown as PageRepository);
   });
 
@@ -504,19 +468,7 @@ describe('RemoveSectionUseCase', () => {
 
 describe('ReorderSectionsUseCase', () => {
   let useCase: ReorderSectionsUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   const createMockPageWithSections = () => {
     const page = CreatorPage.create({
@@ -531,19 +483,7 @@ describe('ReorderSectionsUseCase', () => {
   };
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn(),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
     useCase = new ReorderSectionsUseCase(mockRepo as unknown as PageRepository);
   });
 

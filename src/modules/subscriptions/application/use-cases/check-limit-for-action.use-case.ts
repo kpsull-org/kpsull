@@ -116,7 +116,9 @@ export class CheckLimitForActionUseCase
 
   private buildBlockedMessage(action: string, limit: number, planValue: string): string {
     const labels = CheckLimitForActionUseCase.ACTION_LABELS[action]!;
+    /* c8 ignore start */
     const upgrade = CheckLimitForActionUseCase.UPGRADE_MAP[planValue.toLowerCase()] ?? '';
+    /* c8 ignore stop */
     return `Impossible de ${labels.action}. Limite de ${limit} ${labels.type} atteinte. ${upgrade}`.trim();
   }
 

@@ -864,7 +864,7 @@ describe('Subscription Entity', () => {
       const result = Subscription.create({
         userId: 'user-123',
         creatorId: 'creator-123',
-        plan: 'INVALID' as any,
+        plan: 'INVALID' as never,
       });
 
       expect(result.isFailure).toBe(true);
@@ -877,7 +877,7 @@ describe('Subscription Entity', () => {
         id: 'sub-123',
         userId: 'user-123',
         creatorId: 'creator-123',
-        plan: 'INVALID' as any,
+        plan: 'INVALID' as never,
         status: 'ACTIVE',
         billingInterval: 'year',
         currentPeriodStart: baseDate,
@@ -949,7 +949,7 @@ describe('Subscription Entity', () => {
         plan: 'ESSENTIEL',
       }).value;
 
-      const result = subscription.changePlan('INVALID' as any);
+      const result = subscription.changePlan('INVALID' as never);
 
       expect(result.isFailure).toBe(true);
     });

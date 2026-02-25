@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Result } from '@/shared/domain';
 import { UpdateProfileUseCase, UpdateProfileInput } from '../update-profile.use-case';
 import { UserRepository } from '../../ports/user.repository.interface';
 import { User } from '../../../domain/entities/user.entity';
@@ -125,6 +126,18 @@ describe('UpdateProfileUseCase', () => {
       await useCase.execute({ userId, name: 'New Name' });
 
       expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+    });
+
+    it('should fail when updateProfile returns a failure', async () => {
+      const user = validUser();
+      vi.mocked(mockUserRepository.findById).mockResolvedValue(user);
+      vi.spyOn(user, 'updateProfile').mockReturnValue(Result.fail('Profile update failed'));
+
+      const result = await useCase.execute({ userId, name: 'New Name' });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe('Profile update failed');
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
   });
 });

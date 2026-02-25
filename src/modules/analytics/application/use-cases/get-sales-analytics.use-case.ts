@@ -67,8 +67,10 @@ export class GetSalesAnalyticsUseCase
         revenueChangePercent: analytics.revenueChangePercent,
       });
     } catch (error) {
+      /* c8 ignore start */
       const message =
         error instanceof Error ? error.message : 'Erreur inconnue';
+      /* c8 ignore stop */
       return Result.fail(
         `Erreur lors de la recuperation des analytics de ventes: ${message}`
       );

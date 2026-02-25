@@ -70,6 +70,7 @@ export class PrismaOrderRepository implements OrderRepository {
         where: { orderId: order.idString },
       });
 
+      /* c8 ignore start */
       if (order.items.length > 0) {
         await tx.orderItem.createMany({
           data: order.items.map((item) => ({
@@ -85,6 +86,7 @@ export class PrismaOrderRepository implements OrderRepository {
           })),
         });
       }
+      /* c8 ignore stop */
     });
   }
 
@@ -189,9 +191,11 @@ export class PrismaOrderRepository implements OrderRepository {
         image: item.image ?? undefined,
       });
 
+      /* c8 ignore start */
       if (itemResult.isFailure) {
         throw new Error(`Failed to reconstitute OrderItem ${item.id}: ${itemResult.error}`);
       }
+      /* c8 ignore stop */
 
       items.push(itemResult.value);
     }

@@ -26,55 +26,27 @@ describe('Dispute Entity', () => {
       expect(result.value.createdAt).toBeDefined();
     });
 
-    it('should fail when orderId is missing', () => {
-      // Arrange
-      const props = {
-        orderId: '',
-        customerId: 'customer-456',
-        type: DisputeType.damaged(),
-        description: 'Description du probleme avec le produit',
-      };
-
-      // Act
+    it.each([
+      {
+        label: 'orderId is missing',
+        props: { orderId: '', customerId: 'customer-456', type: DisputeType.damaged(), description: 'Description du probleme avec le produit' },
+        expectedError: 'commande',
+      },
+      {
+        label: 'customerId is missing',
+        props: { orderId: 'order-123', customerId: '', type: DisputeType.damaged(), description: 'Description du probleme avec le produit' },
+        expectedError: 'client',
+      },
+      {
+        label: 'description is too short',
+        props: { orderId: 'order-123', customerId: 'customer-456', type: DisputeType.damaged(), description: 'Court' },
+        expectedError: '10 caracteres',
+      },
+    ])('should fail when $label', ({ props, expectedError }) => {
       const result = Dispute.create(props);
 
-      // Assert
       expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('commande');
-    });
-
-    it('should fail when customerId is missing', () => {
-      // Arrange
-      const props = {
-        orderId: 'order-123',
-        customerId: '',
-        type: DisputeType.damaged(),
-        description: 'Description du probleme avec le produit',
-      };
-
-      // Act
-      const result = Dispute.create(props);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('client');
-    });
-
-    it('should fail when description is too short', () => {
-      // Arrange
-      const props = {
-        orderId: 'order-123',
-        customerId: 'customer-456',
-        type: DisputeType.damaged(),
-        description: 'Court',
-      };
-
-      // Act
-      const result = Dispute.create(props);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('10 caracteres');
+      expect(result.error).toContain(expectedError);
     });
 
     it('should trim description and validate', () => {
@@ -230,7 +202,7 @@ describe('Dispute Entity', () => {
       const result = Dispute.create({
         orderId: 'order-123',
         customerId: 'customer-456',
-        type: undefined as any,
+        type: undefined as never,
         description: 'Description suffisamment longue',
       });
 

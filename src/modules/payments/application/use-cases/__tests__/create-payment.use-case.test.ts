@@ -1,8 +1,18 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { CreatePaymentUseCase } from '../create-payment.use-case';
 import { PaymentRepository } from '../../ports/payment.repository.interface';
 import { Payment } from '../../../domain/entities/payment.entity';
 import { PaymentMethod } from '../../../domain/value-objects/payment-method.vo';
+import { Result } from '@/shared/domain';
+
+const BASE_INPUT = {
+  orderId: 'order-123',
+  customerId: 'customer-123',
+  creatorId: 'creator-123',
+  amount: 2999,
+  currency: 'EUR',
+  paymentMethod: 'CARD',
+} as const;
 
 describe('CreatePayment Use Case', () => {
   let useCase: CreatePaymentUseCase;
@@ -12,6 +22,10 @@ describe('CreatePayment Use Case', () => {
     findByOrderId: Mock;
     findByCustomerId: Mock;
   };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   beforeEach(() => {
     mockRepository = {
@@ -28,14 +42,7 @@ describe('CreatePayment Use Case', () => {
     it('should create a payment successfully', async () => {
       mockRepository.findByOrderId.mockResolvedValue(null);
 
-      const result = await useCase.execute({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: 'CARD',
-      });
+      const result = await useCase.execute({ ...BASE_INPUT });
 
       expect(result.isSuccess).toBe(true);
       expect(result.value?.orderId).toBe('order-123');
@@ -44,75 +51,21 @@ describe('CreatePayment Use Case', () => {
       expect(mockRepository.save).toHaveBeenCalledTimes(1);
     });
 
-    it('should fail when orderId is missing', async () => {
-      const result = await useCase.execute({
-        orderId: '',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: 'CARD',
+    describe('validation failures', () => {
+      it.each([
+        { field: 'orderId', input: { ...BASE_INPUT, orderId: '' }, expectedError: 'Order ID' },
+        { field: 'customerId', input: { ...BASE_INPUT, customerId: '' }, expectedError: 'Customer ID' },
+        { field: 'creatorId', input: { ...BASE_INPUT, creatorId: '' }, expectedError: 'Creator ID' },
+        { field: 'amount (zero)', input: { ...BASE_INPUT, amount: 0 }, expectedError: 'montant' },
+        { field: 'paymentMethod (invalid)', input: { ...BASE_INPUT, paymentMethod: 'BITCOIN' }, expectedError: 'invalide' },
+        { field: 'paymentMethod (empty)', input: { ...BASE_INPUT, paymentMethod: '' }, expectedError: 'invalide' },
+      ])('should fail when $field is missing or invalid', async ({ input, expectedError }) => {
+        const result = await useCase.execute(input);
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toContain(expectedError);
+        expect(mockRepository.save).not.toHaveBeenCalled();
       });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Order ID');
-      expect(mockRepository.save).not.toHaveBeenCalled();
-    });
-
-    it('should fail when customerId is missing', async () => {
-      const result = await useCase.execute({
-        orderId: 'order-123',
-        customerId: '',
-        creatorId: 'creator-123',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: 'CARD',
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Customer ID');
-    });
-
-    it('should fail when creatorId is missing', async () => {
-      const result = await useCase.execute({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: '',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: 'CARD',
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Creator ID');
-    });
-
-    it('should fail when amount is zero', async () => {
-      const result = await useCase.execute({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: 0,
-        currency: 'EUR',
-        paymentMethod: 'CARD',
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('montant');
-    });
-
-    it('should fail when payment method is invalid', async () => {
-      const result = await useCase.execute({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: 'BITCOIN',
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('invalide');
     });
 
     it('should fail when payment already exists for order', async () => {
@@ -127,14 +80,7 @@ describe('CreatePayment Use Case', () => {
 
       mockRepository.findByOrderId.mockResolvedValue(existingPayment);
 
-      const result = await useCase.execute({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: 'CARD',
-      });
+      const result = await useCase.execute({ ...BASE_INPUT });
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('existe déjà');
@@ -175,6 +121,19 @@ describe('CreatePayment Use Case', () => {
         expect(result.isSuccess).toBe(true);
         expect(result.value?.paymentMethod).toBe(method);
       }
+    });
+
+    it('should fail when Payment.create returns a failure', async () => {
+      mockRepository.findByOrderId.mockResolvedValue(null);
+      vi.spyOn(Payment, 'create').mockReturnValue(
+        Result.fail<Payment>('Payment entity creation failed')
+      );
+
+      const result = await useCase.execute({ ...BASE_INPUT });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe('Payment entity creation failed');
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
 });

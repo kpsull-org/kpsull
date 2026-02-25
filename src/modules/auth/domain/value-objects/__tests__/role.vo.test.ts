@@ -181,4 +181,12 @@ describe('Role Value Object', () => {
       expect(role1.equals(role2)).toBe(false);
     });
   });
+
+  describe('toString', () => {
+    it('should return the role string value', () => {
+      const role = Role.create(RoleType.CREATOR).value;
+
+      expect(role.toString()).toBe(RoleType.CREATOR);
+    });
+  });
 });

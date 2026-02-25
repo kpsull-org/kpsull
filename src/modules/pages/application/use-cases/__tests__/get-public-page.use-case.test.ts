@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   GetPublicPageUseCase,
   type GetPublicPageInput,
@@ -6,22 +6,11 @@ import {
 import { PageRepository } from '../../ports/page.repository.interface';
 import { CreatorPage } from '../../../domain/entities/creator-page.entity';
 import { SectionType } from '../../../domain/value-objects/section-type.vo';
+import { createMockPageRepo, type MockPageRepo } from './page-test.helpers';
 
 describe('GetPublicPageUseCase', () => {
   let useCase: GetPublicPageUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   const createMockPage = (isPublished = true) => {
     const page = CreatorPage.create({
@@ -52,19 +41,7 @@ describe('GetPublicPageUseCase', () => {
   };
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn(),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
     useCase = new GetPublicPageUseCase(mockRepo as unknown as PageRepository);
   });
 
@@ -133,47 +110,12 @@ describe('GetPublicPageUseCase', () => {
     });
 
     it('should fail when page not found', async () => {
-      // Arrange
       mockRepo.findPublishedBySlug.mockResolvedValue(null);
 
-      const input: GetPublicPageInput = {
-        slug: 'non-existent',
-      };
+      const result = await useCase.execute({ slug: 'non-existent' });
 
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('Page non trouvee');
-    });
-
-    it('should fail when slug is empty', async () => {
-      // Arrange
-      const input: GetPublicPageInput = {
-        slug: '',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Slug est requis');
-    });
-
-    it('should fail when slug is whitespace only', async () => {
-      // Arrange
-      const input: GetPublicPageInput = {
-        slug: '   ',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Slug est requis');
     });
 
     it('should return sections in correct order by position', async () => {
@@ -181,12 +123,8 @@ describe('GetPublicPageUseCase', () => {
       const page = createMockPage(true);
       mockRepo.findPublishedBySlug.mockResolvedValue(page);
 
-      const input: GetPublicPageInput = {
-        slug: 'my-shop',
-      };
-
       // Act
-      const result = await useCase.execute(input);
+      const result = await useCase.execute({ slug: 'my-shop' });
 
       // Assert
       expect(result.isSuccess).toBe(true);
@@ -199,12 +137,8 @@ describe('GetPublicPageUseCase', () => {
       const page = createMockPage(true);
       mockRepo.findPublishedBySlug.mockResolvedValue(page);
 
-      const input: GetPublicPageInput = {
-        slug: 'my-shop',
-      };
-
       // Act
-      const result = await useCase.execute(input);
+      const result = await useCase.execute({ slug: 'my-shop' });
 
       // Assert
       expect(result.isSuccess).toBe(true);
@@ -212,6 +146,16 @@ describe('GetPublicPageUseCase', () => {
         heading: 'Bienvenue',
         subheading: 'Dans ma boutique',
       });
+    });
+
+    it.each([
+      { label: 'slug is empty', slug: '' },
+      { label: 'slug is whitespace only', slug: '   ' },
+    ])('should fail when $label', async ({ slug }) => {
+      const result = await useCase.execute({ slug });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Slug est requis');
     });
   });
 });

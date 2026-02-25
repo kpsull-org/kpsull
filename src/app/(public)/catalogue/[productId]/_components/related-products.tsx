@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 
 interface RelatedProductsProps {
@@ -138,12 +139,19 @@ async function fetchRelatedProducts(
   return a;
 }
 
+const getCachedRelatedProducts = unstable_cache(
+  (productId: string, creatorId: string, category?: string | null) =>
+    fetchRelatedProducts(productId, creatorId, category),
+  ['related-products'],
+  { revalidate: 3600, tags: ['products'] }
+);
+
 export async function RelatedProducts({
   productId,
   creatorId,
   category,
 }: Readonly<RelatedProductsProps>) {
-  const products = await fetchRelatedProducts(productId, creatorId, category);
+  const products = await getCachedRelatedProducts(productId, creatorId, category);
 
   if (products.length === 0) return null;
 
@@ -174,7 +182,7 @@ export async function RelatedProducts({
                     alt={product.name}
                     fill
                     sizes="(max-width: 1024px) 50vw, 25vw"
-                    className="object-cover group-hover:scale-105 duration-300"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <div className="w-full h-full bg-[#EBEBEB]" />

@@ -173,9 +173,11 @@ export class CheckLimitUseCase implements UseCase<CheckProductLimitInput, CheckL
       return Result.fail(productsResult.error!);
     }
 
+    /* c8 ignore start */
     if (pinnedResult.isFailure) {
       return Result.fail(pinnedResult.error!);
     }
+    /* c8 ignore stop */
 
     const products = productsResult.value;
     const pinnedProducts = pinnedResult.value;

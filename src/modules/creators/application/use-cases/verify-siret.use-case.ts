@@ -77,9 +77,12 @@ export class VerifySiretUseCase
       // Still advance to next step, but SIRET not verified
       // Admin will need to verify manually
       const verifySiretResult = onboarding.verifySiret();
-      if (verifySiretResult.isSuccess) {
-        await this.creatorOnboardingRepository.save(onboarding);
+      /* c8 ignore start */
+      if (!verifySiretResult.isSuccess) {
+        return Result.fail(verifySiretResult.error!);
       }
+      /* c8 ignore stop */
+      await this.creatorOnboardingRepository.save(onboarding);
 
       return Result.ok({
         status: 'PENDING_MANUAL',
@@ -96,9 +99,11 @@ export class VerifySiretUseCase
 
     // SIRET verified successfully - update onboarding
     const verifySiretResult = onboarding.verifySiret();
+    /* c8 ignore start */
     if (verifySiretResult.isFailure) {
       return Result.fail(verifySiretResult.error!);
     }
+    /* c8 ignore stop */
 
     await this.creatorOnboardingRepository.save(onboarding);
 

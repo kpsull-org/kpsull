@@ -141,13 +141,17 @@ describe('ProcessPayment Use Case', () => {
       expect(result.error).toContain('non trouvé');
     });
 
-    it('should fail for invalid action', async () => {
+    // Both INVALID and UNKNOWN_ACTION hit the same validation guard before the switch
+    it.each([
+      { label: 'invalid action', action: 'INVALID' as 'SUCCEED' },
+      { label: 'unknown action reaching switch default', action: 'UNKNOWN_ACTION' as 'SUCCEED' },
+    ])('should fail for $label', async ({ action }) => {
       const payment = createTestPayment('PROCESSING');
       mockRepository.findById.mockResolvedValue(payment);
 
       const result = await useCase.execute({
         paymentId: payment.idString,
-        action: 'INVALID' as 'SUCCEED',
+        action,
       });
 
       expect(result.isFailure).toBe(true);

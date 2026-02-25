@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   PublishPageUseCase,
   PublishPageInput,
@@ -7,22 +7,11 @@ import {
 } from '../publish-page.use-case';
 import { PageRepository } from '../../ports/page.repository.interface';
 import { CreatorPage } from '../../../domain/entities/creator-page.entity';
+import { createMockPageRepo, type MockPageRepo } from './page-test.helpers';
 
 describe('PublishPageUseCase', () => {
   let useCase: PublishPageUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   const createMockPage = (isPublished = false) => {
     const page = CreatorPage.create({
@@ -39,19 +28,7 @@ describe('PublishPageUseCase', () => {
   };
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn(),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
     useCase = new PublishPageUseCase(mockRepo as unknown as PageRepository);
   });
 
@@ -133,19 +110,7 @@ describe('PublishPageUseCase', () => {
 
 describe('UnpublishPageUseCase', () => {
   let useCase: UnpublishPageUseCase;
-  let mockRepo: {
-    findById: Mock;
-    findBySlug: Mock;
-    findByCreatorId: Mock;
-    save: Mock;
-    delete: Mock;
-    slugExists: Mock;
-    findSectionById: Mock;
-    saveSection: Mock;
-    deleteSection: Mock;
-    findPublishedBySlug: Mock;
-    countByCreatorId: Mock;
-  };
+  let mockRepo: MockPageRepo;
 
   const createMockPage = (isPublished = true) => {
     const page = CreatorPage.create({
@@ -162,19 +127,7 @@ describe('UnpublishPageUseCase', () => {
   };
 
   beforeEach(() => {
-    mockRepo = {
-      findById: vi.fn(),
-      findBySlug: vi.fn(),
-      findByCreatorId: vi.fn(),
-      save: vi.fn(),
-      delete: vi.fn(),
-      slugExists: vi.fn(),
-      findSectionById: vi.fn(),
-      saveSection: vi.fn(),
-      deleteSection: vi.fn(),
-      findPublishedBySlug: vi.fn(),
-      countByCreatorId: vi.fn(),
-    };
+    mockRepo = createMockPageRepo();
     useCase = new UnpublishPageUseCase(mockRepo as unknown as PageRepository);
   });
 

@@ -102,5 +102,82 @@ describe('StripePaymentProcessor', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('Stripe refund failed');
     });
+
+    it('should use "Unknown Stripe error" when createPaymentIntent throws a non-Error object', async () => {
+      vi.resetModules();
+      // Mock require('stripe') to return a constructor that throws a non-Error
+      vi.mock('stripe', () => ({
+        default: vi.fn().mockImplementation(() => ({
+          paymentIntents: {
+            create: vi.fn().mockRejectedValue('non-error string thrown'),
+          },
+          paymentIntents_retrieve: vi.fn(),
+          refunds: {
+            create: vi.fn(),
+          },
+        })),
+      }));
+      process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
+      const mod = await import('../stripe-payment-processor');
+      const processor = new mod.StripePaymentProcessor();
+
+      const result = await processor.createPaymentIntent({
+        amount: 1000,
+        currency: 'eur',
+      });
+
+      expect(result.isFailure).toBe(true);
+      // Either wraps as Error message or falls through as 'Unknown Stripe error'
+      expect(result.error).toContain('Stripe createPaymentIntent failed');
+      vi.unmock('stripe');
+    });
+
+    it('should use "Unknown Stripe error" when confirmPayment throws a non-Error object', async () => {
+      vi.resetModules();
+      vi.mock('stripe', () => ({
+        default: vi.fn().mockImplementation(() => ({
+          paymentIntents: {
+            create: vi.fn(),
+            retrieve: vi.fn().mockRejectedValue(42),
+          },
+          refunds: {
+            create: vi.fn(),
+          },
+        })),
+      }));
+      process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
+      const mod = await import('../stripe-payment-processor');
+      const processor = new mod.StripePaymentProcessor();
+
+      const result = await processor.confirmPayment('pi_test');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Stripe confirmPayment failed');
+      vi.unmock('stripe');
+    });
+
+    it('should use "Unknown Stripe error" when refund throws a non-Error object', async () => {
+      vi.resetModules();
+      vi.mock('stripe', () => ({
+        default: vi.fn().mockImplementation(() => ({
+          paymentIntents: {
+            create: vi.fn(),
+            retrieve: vi.fn(),
+          },
+          refunds: {
+            create: vi.fn().mockRejectedValue({ code: 'not_an_error' }),
+          },
+        })),
+      }));
+      process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
+      const mod = await import('../stripe-payment-processor');
+      const processor = new mod.StripePaymentProcessor();
+
+      const result = await processor.refund('pi_test');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Stripe refund failed');
+      vi.unmock('stripe');
+    });
   });
 });

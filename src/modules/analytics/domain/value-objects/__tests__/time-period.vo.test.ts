@@ -178,6 +178,15 @@ describe('TimePeriod Value Object', () => {
       expect(start.toDateString()).toBe(startDate.toDateString());
       expect(end.toDateString()).toBe(endDate.toDateString());
     });
+
+    it('should fallback to today when CUSTOM period has no dates', () => {
+      const period = TimePeriod.create('CUSTOM').value;
+      const { start, end } = period.getDateRange();
+
+      const today = new Date();
+      expect(start.toDateString()).toBe(today.toDateString());
+      expect(end.toDateString()).toBe(today.toDateString());
+    });
   });
 
   describe('getPreviousPeriod', () => {
@@ -193,6 +202,20 @@ describe('TimePeriod Value Object', () => {
       expectedPrevEnd.setDate(expectedPrevEnd.getDate() - 1);
 
       expect(prevEnd.toDateString()).toBe(expectedPrevEnd.toDateString());
+    });
+
+    it('should return a CUSTOM previous period for TODAY', () => {
+      const period = TimePeriod.today();
+      const previous = period.getPreviousPeriod();
+
+      // TODAY has start == end (1 day), so the previous period should also be 1 day ending yesterday
+      const { start: currentStart } = period.getDateRange();
+      const expectedPrevEnd = new Date(currentStart);
+      expectedPrevEnd.setDate(expectedPrevEnd.getDate() - 1);
+
+      const { end: prevEnd } = previous.getDateRange();
+      expect(prevEnd.toDateString()).toBe(expectedPrevEnd.toDateString());
+      expect(previous.isCustom).toBe(true);
     });
   });
 

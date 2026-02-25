@@ -33,7 +33,7 @@ export function NewsletterSection() {
     status === "loading" ? "..." : status === "success" ? "INSCRIT ✓" : "S'INSCRIRE";
 
   return (
-    <section className="border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-14 lg:px-20 lg:py-16">
+    <section className="kp-scroll-reveal border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-14 lg:px-20 lg:py-16">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between md:gap-12">
           {/* Texte gauche */}

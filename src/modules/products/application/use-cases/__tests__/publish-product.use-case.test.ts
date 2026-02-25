@@ -131,5 +131,15 @@ describe('PublishProductUseCase', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('Product ID');
     });
+
+    it('should fail when creatorId is empty', async () => {
+      const result = await useCase.execute({
+        productId: 'product-123',
+        creatorId: '',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Creator ID');
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma/client';
+import { requireAdminAuth } from '@/lib/api/require-auth';
 import type { CsvExportOptions } from '@/lib/utils/csv-export';
 
 /**
@@ -235,53 +235,55 @@ function generateAdminExportFilename(
 }
 
 /**
- * Fetch creators data for export
+ * Fetch creators data for export — batch queries (no N+1)
  */
 async function fetchCreatorsData(startDate: Date, endDate: Date): Promise<CreatorRecord[]> {
   const creators = await prisma.user.findMany({
-    where: {
-      role: 'CREATOR',
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-    include: {
-      accounts: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    where: { role: 'CREATOR', createdAt: { gte: startDate, lte: endDate } },
+    select: { id: true, name: true, email: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
   });
 
-  const records: CreatorRecord[] = [];
+  if (creators.length === 0) return [];
 
-  for (const creator of creators) {
-    // Get onboarding info
-    const onboarding = await prisma.creatorOnboarding.findUnique({
-      where: { userId: creator.id },
-    });
+  const creatorIds = creators.map((c) => c.id);
 
-    // Get subscription
-    const subscription = await prisma.subscription.findFirst({
-      where: { userId: creator.id },
-    });
+  // Batch load all related data in parallel
+  const [onboardings, subscriptions, productCounts, orderAggregates] = await Promise.all([
+    prisma.creatorOnboarding.findMany({
+      where: { userId: { in: creatorIds } },
+      select: { userId: true, brandName: true, siret: true },
+    }),
+    prisma.subscription.findMany({
+      where: { userId: { in: creatorIds } },
+      select: { userId: true, plan: true, status: true },
+    }),
+    prisma.product.groupBy({
+      by: ['creatorId'],
+      where: { creatorId: { in: creatorIds } },
+      _count: { id: true },
+    }),
+    prisma.order.groupBy({
+      by: ['creatorId'],
+      where: { creatorId: { in: creatorIds } },
+      _count: { id: true },
+      _sum: { totalAmount: true },
+    }),
+  ]);
 
-    // Get products count
-    const productsCount = await prisma.product.count({
-      where: { creatorId: creator.id },
-    });
+  // Build lookup maps for O(1) access
+  const onboardingMap = new Map(onboardings.map((o) => [o.userId, o]));
+  const subscriptionMap = new Map(subscriptions.map((s) => [s.userId, s]));
+  const productCountMap = new Map(productCounts.map((p) => [p.creatorId, p._count.id]));
+  const orderMap = new Map(
+    orderAggregates.map((o) => [o.creatorId, { count: o._count.id, revenue: o._sum.totalAmount ?? 0 }])
+  );
 
-    // Get orders count and revenue
-    const orders = await prisma.order.findMany({
-      where: { creatorId: creator.id },
-      select: { totalAmount: true },
-    });
-
-    const ordersCount = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-
-    records.push({
+  return creators.map((creator) => {
+    const onboarding = onboardingMap.get(creator.id);
+    const subscription = subscriptionMap.get(creator.id);
+    const orderData = orderMap.get(creator.id);
+    return {
       id: creator.id,
       name: creator.name ?? '',
       email: creator.email,
@@ -290,78 +292,81 @@ async function fetchCreatorsData(startDate: Date, endDate: Date): Promise<Creato
       plan: subscription?.plan ?? 'ESSENTIEL',
       status: subscription?.status ?? 'ACTIVE',
       createdAt: creator.createdAt,
-      productsCount,
-      ordersCount,
-      totalRevenue,
-    });
-  }
-
-  return records;
+      productsCount: productCountMap.get(creator.id) ?? 0,
+      ordersCount: orderData?.count ?? 0,
+      totalRevenue: orderData?.revenue ?? 0,
+    };
+  });
 }
 
 /**
- * Fetch orders data for export
+ * Fetch orders data for export — batch queries (no N+1)
  */
 async function fetchOrdersData(startDate: Date, endDate: Date): Promise<OrderRecord[]> {
   const orders = await prisma.order.findMany({
-    where: {
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
+    where: { createdAt: { gte: startDate, lte: endDate } },
+    select: {
+      orderNumber: true,
+      creatorId: true,
+      customerName: true,
+      customerEmail: true,
+      status: true,
+      totalAmount: true,
+      createdAt: true,
+      shippedAt: true,
+      deliveredAt: true,
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: { createdAt: 'desc' },
   });
 
-  const records: OrderRecord[] = [];
+  if (orders.length === 0) return [];
 
-  for (const order of orders) {
-    // Get creator name
-    const creator = await prisma.user.findUnique({
-      where: { id: order.creatorId },
-      select: { name: true },
-    });
+  // Batch load creator names in a single query
+  const creatorIds = [...new Set(orders.map((o) => o.creatorId))];
+  const creators = await prisma.user.findMany({
+    where: { id: { in: creatorIds } },
+    select: { id: true, name: true },
+  });
+  const creatorNameMap = new Map(creators.map((c) => [c.id, c.name ?? 'Inconnu']));
 
-    records.push({
-      orderNumber: order.orderNumber,
-      creatorName: creator?.name ?? 'Inconnu',
-      customerName: order.customerName,
-      customerEmail: order.customerEmail,
-      status: order.status,
-      totalAmount: order.totalAmount,
-      createdAt: order.createdAt,
-      shippedAt: order.shippedAt,
-      deliveredAt: order.deliveredAt,
-    });
-  }
-
-  return records;
+  return orders.map((order) => ({
+    orderNumber: order.orderNumber,
+    creatorName: creatorNameMap.get(order.creatorId) ?? 'Inconnu',
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    status: order.status,
+    totalAmount: order.totalAmount,
+    createdAt: order.createdAt,
+    shippedAt: order.shippedAt,
+    deliveredAt: order.deliveredAt,
+  }));
 }
 
 /**
- * Fetch revenue data for export (aggregated by creator and date)
+ * Fetch revenue data for export — batch queries (no N+1)
  */
 async function fetchRevenueData(startDate: Date, endDate: Date): Promise<RevenueRecord[]> {
   const orders = await prisma.order.findMany({
     where: {
-      createdAt: {
-        gte: startDate,
-        lte: endDate,
-      },
-      status: {
-        notIn: ['PENDING', 'CANCELED', 'REFUNDED'],
-      },
+      createdAt: { gte: startDate, lte: endDate },
+      status: { notIn: ['PENDING', 'CANCELED', 'REFUNDED'] },
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    select: { creatorId: true, totalAmount: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
   });
 
-  // Group orders by creator and month
+  if (orders.length === 0) return [];
+
+  // Batch load creator names in a single query
+  const creatorIds = [...new Set(orders.map((o) => o.creatorId))];
+  const creators = await prisma.user.findMany({
+    where: { id: { in: creatorIds } },
+    select: { id: true, name: true },
+  });
+  const creatorNameMap = new Map(creators.map((c) => [c.id, c.name ?? 'Inconnu']));
+
+  // Group orders by creator and month in memory
   const groupedData = new Map<string, {
-    creatorId: string;
     creatorName: string;
     month: string;
     ordersCount: number;
@@ -377,26 +382,17 @@ async function fetchRevenueData(startDate: Date, endDate: Date): Promise<Revenue
     const key = `${order.creatorId}_${month}`;
 
     if (!groupedData.has(key)) {
-      // Get creator name
-      const creator = await prisma.user.findUnique({
-        where: { id: order.creatorId },
-        select: { name: true },
-      });
-
       groupedData.set(key, {
-        creatorId: order.creatorId,
-        creatorName: creator?.name ?? 'Inconnu',
+        creatorName: creatorNameMap.get(order.creatorId) ?? 'Inconnu',
         month,
         ordersCount: 0,
         totalRevenue: 0,
       });
     }
 
-    const data = groupedData.get(key);
-    if (data) {
-      data.ordersCount += 1;
-      data.totalRevenue += order.totalAmount;
-    }
+    const data = groupedData.get(key)!;
+    data.ordersCount += 1;
+    data.totalRevenue += order.totalAmount;
   }
 
   return Array.from(groupedData.values()).map((data) => ({
@@ -427,20 +423,9 @@ async function fetchRevenueData(startDate: Date, endDate: Date): Promise<Revenue
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Acces reserve aux administrateurs' }, { status: 403 });
+    const authResult = await requireAdminAuth();
+    if (!authResult.success) {
+      return authResult.response;
     }
 
     // Parse query parameters

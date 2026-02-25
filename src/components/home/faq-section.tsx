@@ -42,16 +42,16 @@ export function FAQSection() {
   return (
     <section className="bg-[#F2F2F2] px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-10 font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">
+        <h2 className="kp-luxury-reveal mb-10 font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">
           FAQ
         </h2>
 
         <Accordion type="single" collapsible className="w-full">
-          {faqItems.map((item) => (
+          {faqItems.map((item, index) => (
             <AccordionItem
               key={item.id}
               value={item.id}
-              className="border-b border-black"
+              className={`kp-scroll-reveal-delay-${(index % 4) + 1} border-b border-black`}
             >
               <AccordionTrigger className="py-6 text-left font-[family-name:var(--font-montserrat)] text-base font-semibold md:text-lg">
                 {item.question}

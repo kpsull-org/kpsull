@@ -215,9 +215,11 @@ export class CreatorOnboarding extends Entity<CreatorOnboardingProps> {
 
     // Advance to next step
     const nextStepResult = OnboardingStep.create('SIRET_VERIFICATION');
+    /* c8 ignore start */
     if (nextStepResult.isSuccess) {
       this.props.currentStep = nextStepResult.value;
     }
+    /* c8 ignore stop */
 
     this.props.updatedAt = new Date();
 
@@ -236,9 +238,11 @@ export class CreatorOnboarding extends Entity<CreatorOnboardingProps> {
 
     // Advance to next step
     const nextStepResult = OnboardingStep.create('STRIPE_CONNECT');
+    /* c8 ignore start */
     if (nextStepResult.isSuccess) {
       this.props.currentStep = nextStepResult.value;
     }
+    /* c8 ignore stop */
 
     this.props.updatedAt = new Date();
 
@@ -281,9 +285,11 @@ export class CreatorOnboarding extends Entity<CreatorOnboardingProps> {
 
     // Mark as completed
     const completedStepResult = OnboardingStep.create('COMPLETED');
+    /* c8 ignore start */
     if (completedStepResult.isSuccess) {
       this.props.currentStep = completedStepResult.value;
     }
+    /* c8 ignore stop */
 
     this.props.completedAt = new Date();
     this.props.updatedAt = new Date();

@@ -151,8 +151,9 @@ export function ProductClient({
       <div className="w-full lg:w-[45%] border-r border-black self-start">
         {/* Main image — carrée sans padding */}
         <div
+          key={mainImage ?? 'no-image'}
           ref={imageContainerRef}
-          className="relative aspect-square w-full overflow-hidden bg-[#F5F5F3] cursor-crosshair"
+          className="relative aspect-square w-full overflow-hidden bg-[#F5F5F3] cursor-crosshair kp-blur-in"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
           onMouseMove={handleMouseMove}

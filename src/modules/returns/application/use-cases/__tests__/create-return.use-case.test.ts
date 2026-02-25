@@ -1,10 +1,7 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateReturnUseCase } from '../create-return.use-case';
 import type { ReturnRepository, ReturnRequest } from '../../ports/return.repository.interface';
-
-type MockReturnRepository = {
-  [K in keyof ReturnRepository]: Mock;
-};
+import { createMockReturnRepository, type MockReturnRepository } from './return.fixtures';
 
 describe('CreateReturnUseCase', () => {
   let useCase: CreateReturnUseCase;
@@ -12,14 +9,7 @@ describe('CreateReturnUseCase', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRepository = {
-      save: vi.fn(),
-      findById: vi.fn(),
-      findByOrderId: vi.fn(),
-      findByCreatorId: vi.fn(),
-      findByCustomerId: vi.fn(),
-      delete: vi.fn(),
-    };
+    mockRepository = createMockReturnRepository();
     useCase = new CreateReturnUseCase(mockRepository as unknown as ReturnRepository);
   });
 
@@ -131,5 +121,23 @@ describe('CreateReturnUseCase', () => {
   it('should fail without creatorId', async () => {
     const result = await useCase.execute({ ...createValidInput(), creatorId: '' });
     expect(result.isFailure).toBe(true);
+  });
+
+  it('should fail without reason', async () => {
+    const result = await useCase.execute({
+      ...createValidInput(),
+      reason: undefined as unknown as ReturnType<typeof createValidInput>['reason'],
+    });
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toContain('raison');
+  });
+
+  it('should fail without deliveredAt', async () => {
+    const result = await useCase.execute({
+      ...createValidInput(),
+      deliveredAt: undefined as unknown as Date,
+    });
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toContain('livraison');
   });
 });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma/client';
+import { requireCreatorAuth } from '@/lib/api/require-auth';
 import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories';
 import type { ReturnStatusValue } from '@/modules/returns/domain/value-objects/return-status.vo';
 
@@ -19,19 +19,12 @@ const returnRepository = new PrismaReturnRepository(prisma);
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
+    const authResult = await requireCreatorAuth();
+    if (!authResult.success) {
+      return authResult.response;
     }
 
-    // Check if user is a creator
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
-
-    if (!user || user.role !== 'CREATOR') {
-      return NextResponse.json({ error: 'Acces reserve aux createurs' }, { status: 403 });
-    }
+    const { id: creatorId } = authResult.user;
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
@@ -43,36 +36,41 @@ export async function GET(request: NextRequest) {
     const filters = status ? { status } : undefined;
 
     const { returns, total } = await returnRepository.findByCreatorId(
-      session.user.id,
+      creatorId,
       filters,
       { skip, take: limit }
     );
 
-    // Enrich with order details if needed
-    const enrichedReturns = await Promise.all(
-      returns.map(async (ret) => {
-        const order = await prisma.order.findUnique({
-          where: { id: ret.orderId },
-          include: { items: true },
-        });
+    // Batch load order details for all returns in a single query
+    const orderIds = returns.map((ret) => ret.orderId);
+    const orders = await prisma.order.findMany({
+      where: { id: { in: orderIds } },
+      select: {
+        id: true,
+        totalAmount: true,
+        items: { select: { productName: true, variantInfo: true, quantity: true, price: true, image: true } },
+      },
+    });
+    const orderMap = new Map(orders.map((o) => [o.id, o]));
 
-        return {
-          ...ret,
-          order: order
-            ? {
-                totalAmount: order.totalAmount,
-                items: order.items.map((item) => ({
-                  productName: item.productName,
-                  variantInfo: item.variantInfo,
-                  quantity: item.quantity,
-                  price: item.price,
-                  image: item.image,
-                })),
-              }
-            : null,
-        };
-      })
-    );
+    const enrichedReturns = returns.map((ret) => {
+      const order = orderMap.get(ret.orderId);
+      return {
+        ...ret,
+        order: order
+          ? {
+              totalAmount: order.totalAmount,
+              items: order.items.map((item) => ({
+                productName: item.productName,
+                variantInfo: item.variantInfo,
+                quantity: item.quantity,
+                price: item.price,
+                image: item.image,
+              })),
+            }
+          : null,
+      };
+    });
 
     return NextResponse.json({
       returns: enrichedReturns,

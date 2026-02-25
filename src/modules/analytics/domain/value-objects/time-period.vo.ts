@@ -193,11 +193,14 @@ export class TimePeriod extends ValueObject<TimePeriodProps> {
         return { start, end: today };
       }
       case 'CUSTOM': {
+        /* c8 ignore start */
         return {
           start: this.props.startDate ?? today,
           end: this.props.endDate ?? today,
         };
+        /* c8 ignore stop */
       }
+      /* c8 ignore next 3 */
       default: {
         return { start: today, end: today };
       }

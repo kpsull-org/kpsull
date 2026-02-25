@@ -31,7 +31,7 @@ export default function AboutPage() {
           priority
         />
         <div className="absolute inset-0 bg-black/30" />
-        <div className="relative flex h-full flex-col items-center justify-center gap-6">
+        <div className="relative flex h-full flex-col items-center justify-center gap-6 kp-luxury-reveal">
           <Logo
             size="xl"
             className="h-[160px] w-[160px] text-white md:h-[220px] md:w-[220px]"
@@ -45,10 +45,10 @@ export default function AboutPage() {
       {/* ─── L'ANTIDOTE À L'UNIFORME ─── */}
       <section className="px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40">
+          <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40 kp-luxury-reveal">
             L&apos;ANTIDOTE À L&apos;UNIFORME
           </h2>
-          <p className="text-xl font-light leading-[1.75] text-black md:text-2xl lg:text-[28px] lg:leading-[1.65]">
+          <p className="text-xl font-light leading-[1.75] text-black md:text-2xl lg:text-[28px] lg:leading-[1.65] kp-luxury-reveal">
             Nous en avions assez. Assez des vêtements conçus pour être
             remplacés, des matières qui s&apos;usent à la troisième lessive, des
             pièces standardisées qui sortent de la même chaîne de production
@@ -73,14 +73,14 @@ export default function AboutPage() {
       {/* ─── L'ÉQUIPE ─── */}
       <section className="px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
         <div className="mx-auto max-w-7xl">
-        <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black">
+        <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black kp-luxury-reveal">
           L&apos;ÉQUIPE
         </h2>
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-          {teamMembers.map((member) => (
-            <div key={member.name} className="group">
+          {teamMembers.map((member, idx) => (
+            <div key={member.name} className={`group kp-scroll-reveal-delay-${(idx % 4) + 1}`}>
               {/* Photo */}
-              <div className="mb-3 aspect-square w-full overflow-hidden bg-[#EBEBEB]">
+              <div className="mb-3 aspect-square w-full overflow-hidden bg-[#EBEBEB] kp-blur-in">
                 <img
                   src={member.photo}
                   alt={member.name}
@@ -105,11 +105,11 @@ export default function AboutPage() {
       {/* ─── NOTRE HISTOIRE ─── */}
       <section className="px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40">
+          <h2 className="mb-10 text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40 kp-luxury-reveal">
             NOTRE HISTOIRE
           </h2>
           <div className="grid gap-12 md:grid-cols-2 md:gap-16">
-            <div className="space-y-6 text-base leading-[1.8] text-black/80">
+            <div className="space-y-6 text-base leading-[1.8] text-black/80 kp-luxury-reveal">
               <p>
                 Tout a commencé sur les bancs de l&apos;école, autour
                 d&apos;une frustration partagée&nbsp;: bien s&apos;habiller ne
@@ -140,7 +140,7 @@ export default function AboutPage() {
             <img
               src="https://res.cloudinary.com/damucxy2t/image/upload/v1771845067/kpsull/notre-histoire.jpg"
               alt="Notre histoire KPSULL"
-              className="aspect-[4/5] w-full overflow-hidden border border-black object-cover md:aspect-auto"
+              className="aspect-[4/5] w-full overflow-hidden border border-black object-cover md:aspect-auto kp-blur-in"
             />
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function AboutPage() {
           <p className="mb-1 text-sm font-medium uppercase tracking-[0.15em] text-black/40">
             MyDigitalSchool Caen
           </p>
-          <p className="mb-10 text-2xl font-semibold uppercase tracking-tight text-black md:text-3xl lg:text-[36px]">
+          <p className="mb-10 text-2xl font-semibold uppercase tracking-tight text-black md:text-3xl lg:text-[36px] kp-luxury-reveal">
             6 RUE DU RECTEUR DAURE,
             <br />
             14000 CAEN

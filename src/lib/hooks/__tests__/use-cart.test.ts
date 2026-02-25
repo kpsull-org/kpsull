@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { CartItem } from '@/lib/stores/cart.store';
 
+// Mock next-auth/react signOut for SESSION_EXPIRED tests
+const mockSignOut = vi.hoisted(() => vi.fn());
+vi.mock('next-auth/react', () => ({
+  signOut: mockSignOut,
+}));
+
 // vi.hoisted() ensures these are initialized before vi.mock() factories run
 const {
   mockItems,
@@ -137,6 +143,26 @@ describe('useCart', () => {
     });
   });
 
+  describe('hydration error handling', () => {
+    it('should log error and rehydrate from store when getCartAction fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockGetCartAction.mockRejectedValue(new Error('Network failure'));
+
+      useCart(true);
+      for (const cb of effectCallbacks) {
+        await cb();
+      }
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[useCart]'),
+        expect.any(Error)
+      );
+      expect(mockRehydrate).toHaveBeenCalledOnce();
+
+      consoleSpy.mockRestore();
+    });
+  });
+
   describe('addItem', () => {
     it('should call addItemStore when adding an item', () => {
       const { addItem } = useCart(true);
@@ -240,6 +266,77 @@ describe('useCart', () => {
       expect(saveCartAction).not.toHaveBeenCalled();
 
       vi.useRealTimers();
+    });
+
+    it('should call signOut when saveCartAction returns SESSION_EXPIRED', async () => {
+      vi.useFakeTimers();
+      mockSaveCartAction.mockResolvedValue({ success: false, error: 'SESSION_EXPIRED' });
+      mockGetState.mockReturnValue({ items: [{ ...validItem, quantity: 1 }] });
+
+      const { addItem } = useCart(true);
+      addItem(validItem);
+      vi.advanceTimersByTime(600);
+      await vi.runAllTimersAsync();
+
+      expect(mockSignOut).toHaveBeenCalledWith({ callbackUrl: '/' });
+
+      vi.useRealTimers();
+    });
+
+    it('should clear existing timeout when saveToDb is called multiple times quickly', async () => {
+      vi.useFakeTimers();
+      mockSaveCartAction.mockResolvedValue({ success: true });
+      mockGetState.mockReturnValue({ items: [{ ...validItem, quantity: 1 }] });
+
+      const { addItem } = useCart(true);
+      addItem(validItem); // sets timeout
+      addItem(validItem); // clears previous timeout, sets new one
+      vi.advanceTimersByTime(600);
+      await vi.runAllTimersAsync();
+
+      // should only be called once since the first timeout was cleared
+      expect(saveCartAction).toHaveBeenCalledTimes(1);
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe('cleanup effect', () => {
+    it('should clear pending timeout on unmount when timeout is set', () => {
+      vi.useFakeTimers();
+      mockSaveCartAction.mockResolvedValue({ success: true });
+      mockGetState.mockReturnValue({ items: [{ ...validItem, quantity: 1 }] });
+
+      const { addItem } = useCart(true);
+
+      // Set a pending timeout via addItem (triggers saveToDb → setTimeout)
+      addItem(validItem);
+
+      // Second effect is the cleanup effect
+      const cleanupEffectFn = effectCallbacks[1];
+      expect(cleanupEffectFn).toBeDefined();
+
+      // Execute the effect body to get the cleanup function
+      const cleanup = cleanupEffectFn!() as (() => void) | undefined;
+
+      // saveTimeoutRef.current is now set to a timer ID → cleanup should clearTimeout
+      if (typeof cleanup === 'function') {
+        expect(() => cleanup()).not.toThrow();
+      }
+
+      vi.useRealTimers();
+    });
+
+    it('should not throw on unmount when no pending timeout', () => {
+      useCart(true);
+
+      const cleanupEffectFn = effectCallbacks[1];
+      if (cleanupEffectFn) {
+        const cleanup = cleanupEffectFn() as (() => void) | undefined;
+        if (typeof cleanup === 'function') {
+          expect(() => cleanup()).not.toThrow();
+        }
+      }
     });
   });
 });

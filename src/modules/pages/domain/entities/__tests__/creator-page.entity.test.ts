@@ -145,7 +145,7 @@ describe('CreatorPage Entity', () => {
       const result = CreatorPage.reconstitute({
         id: 'page-123',
         ...VALID_PAGE_PROPS,
-        status: 'INVALID_STATUS' as any,
+        status: 'INVALID_STATUS' as never,
         sections: [],
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -234,6 +234,15 @@ describe('CreatorPage Entity', () => {
       expect(page.description).toBe('Nouvelle description');
     });
 
+    it('should clear description when set to empty string', () => {
+      const page = createPageValue();
+      page.updateSettings({ description: 'Quelque chose' });
+      const result = page.updateSettings({ description: '   ' });
+
+      expect(result.isSuccess).toBe(true);
+      expect(page.description).toBeUndefined();
+    });
+
     it('should update slug successfully', () => {
       const page = createPageValue({ slug: 'old-slug' });
       const result = page.updateSettings({ slug: 'new-slug' });
@@ -259,6 +268,118 @@ describe('CreatorPage Entity', () => {
       const result = page.updateSettings({ slug: 'a'.repeat(51) });
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('50');
+    });
+
+    it('should fail when slug is empty string', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ slug: '' });
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('should fail when slug is too short', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ slug: 'ab' });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('3 caracteres');
+    });
+
+    it('should fail when title exceeds 200 characters', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ title: 'a'.repeat(201) });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('200');
+    });
+
+    it('should fail when description exceeds 500 characters', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ description: 'a'.repeat(501) });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('500');
+    });
+
+    it('should update bannerImage', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ bannerImage: 'https://example.com/banner.jpg' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.bannerImage).toBe('https://example.com/banner.jpg');
+    });
+
+    it('should clear bannerImage when empty string', () => {
+      const page = createPageValue();
+      page.updateSettings({ bannerImage: 'https://example.com/banner.jpg' });
+      const result = page.updateSettings({ bannerImage: '' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.bannerImage).toBeUndefined();
+    });
+
+    it('should update bannerPosition', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ bannerPosition: 'center' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.bannerPosition).toBe('center');
+    });
+
+    it('should clear bannerPosition when empty string', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ bannerPosition: '' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.bannerPosition).toBeUndefined();
+    });
+
+    it('should update tagline', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ tagline: 'My tagline' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.tagline).toBe('My tagline');
+    });
+
+    it('should clear tagline when blank string', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ tagline: '   ' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.tagline).toBeUndefined();
+    });
+
+    it('should update titleFont', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ titleFont: 'Inter' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.titleFont).toBe('Inter');
+    });
+
+    it('should clear titleFont when blank string', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ titleFont: '  ' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.titleFont).toBeUndefined();
+    });
+
+    it('should update titleColor', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ titleColor: '#ff0000' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.titleColor).toBe('#ff0000');
+    });
+
+    it('should clear titleColor when blank string', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ titleColor: '  ' });
+      expect(result.isSuccess).toBe(true);
+      expect(page.titleColor).toBeUndefined();
+    });
+
+    it('should update socialLinks', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ socialLinks: { instagram: 'https://instagram.com/me' } });
+      expect(result.isSuccess).toBe(true);
+      expect(page.socialLinks).toEqual({ instagram: 'https://instagram.com/me' });
+    });
+
+    it('should clear socialLinks when empty object', () => {
+      const page = createPageValue();
+      const result = page.updateSettings({ socialLinks: {} });
+      expect(result.isSuccess).toBe(true);
+      expect(page.socialLinks).toBeUndefined();
     });
   });
 

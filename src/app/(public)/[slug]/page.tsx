@@ -81,7 +81,7 @@ function formatPrice(cents: number): string {
 function ProductGrid({ variants }: { readonly variants: VariantWithProduct[] }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-      {variants.map((variant) => {
+      {variants.map((variant, idx) => {
         const images = Array.isArray(variant.images) ? (variant.images as string[]) : [];
         const img1 = images[0] ?? null;
         const img2 = images[1] ?? null;
@@ -91,7 +91,7 @@ function ProductGrid({ variants }: { readonly variants: VariantWithProduct[] }) 
           <Link
             key={variant.id}
             href={`/catalogue/${variant.product.id}?variant=${variant.id}`}
-            className="group block border-t border-black bg-white [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+3)]:border-t-0 lg:[&:nth-child(-n+4)]:border-t-0"
+            className={`group block border-t border-black bg-white [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+3)]:border-t-0 lg:[&:nth-child(-n+4)]:border-t-0 kp-scroll-reveal-delay-${(idx % 4) + 1}`}
           >
             <div className="relative aspect-square overflow-hidden bg-[#F5F5F3]">
               {img1 ? (
@@ -259,7 +259,7 @@ export default async function PublicCreatorPage({ params }: PageProps) {
               priority
             />
             <div className="absolute inset-0 bg-[rgba(2,20,8,0.45)]" />
-            <div className="relative flex h-full flex-col items-start justify-end pb-16 pl-6 md:pb-24 md:pl-12 lg:pb-32 lg:pl-[82px]">
+            <div className="relative flex h-full flex-col items-start justify-end pb-16 pl-6 md:pb-24 md:pl-12 lg:pb-32 lg:pl-[82px] kp-luxury-reveal">
               <h1 className={`${getTitleFontClass(page.titleFont)} text-4xl leading-none md:text-6xl lg:text-7xl ${page.titleColor === 'black' ? 'text-black' : 'text-white'}`}>
                 {page.title}
               </h1>
@@ -292,7 +292,7 @@ export default async function PublicCreatorPage({ params }: PageProps) {
 
         {/* ─── BIO + RÉSEAUX SOCIAUX ─── */}
         {(page.description || hasSocialLinks) && (
-          <section className="border-b border-black px-6 py-10 md:px-12">
+          <section className="border-b border-black px-6 py-10 md:px-12 kp-luxury-reveal">
             <div className="max-w-2xl">
               {page.description && (
                 <p className="mb-6 text-base leading-[1.8] text-black/70">
@@ -323,7 +323,7 @@ export default async function PublicCreatorPage({ params }: PageProps) {
           const collectionVariants = variantsByProject.get(project.id) ?? [];
           return (
             <section key={project.id} className="border-b border-black">
-              <div className="flex items-baseline gap-3 border-b border-black px-6 py-5 md:px-12">
+              <div className="flex items-baseline gap-3 border-b border-black px-6 py-5 md:px-12 kp-luxury-reveal">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black/40">
                   Collection
                 </p>

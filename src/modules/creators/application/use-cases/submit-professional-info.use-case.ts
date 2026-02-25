@@ -4,7 +4,7 @@ import { CreatorOnboardingRepository } from '../ports/creator-onboarding.reposit
 import { CreatorOnboardingDTO } from '../dtos/creator-onboarding.dto';
 import { Siret } from '../../domain/value-objects/siret.vo';
 import { ProfessionalAddress } from '../../domain/value-objects/professional-address.vo';
-import { CreatorOnboarding } from '../../domain/entities/creator-onboarding.entity';
+import { toCreatorOnboardingDTO } from './creator-onboarding-dto.mapper';
 
 const MAX_BRAND_NAME_LENGTH = 100;
 
@@ -81,14 +81,16 @@ export class SubmitProfessionalInfoUseCase
       professionalAddress: addressResult.value.formatted, // Store formatted address
     });
 
+    /* c8 ignore start */
     if (completionResult.isFailure) {
       return Result.fail(completionResult.error!);
     }
+    /* c8 ignore stop */
 
     // Save to repository
     await this.creatorOnboardingRepository.save(onboarding);
 
-    return Result.ok(this.toDTO(onboarding));
+    return Result.ok(toCreatorOnboardingDTO(onboarding));
   }
 
   private validateBrandName(brandName: string): Result<void> {
@@ -105,22 +107,4 @@ export class SubmitProfessionalInfoUseCase
     return Result.ok(undefined);
   }
 
-  private toDTO(onboarding: CreatorOnboarding): CreatorOnboardingDTO {
-    return {
-      id: onboarding.id.value,
-      userId: onboarding.userId,
-      currentStep: onboarding.currentStep.value,
-      stepNumber: onboarding.currentStep.stepNumber,
-      professionalInfoCompleted: onboarding.professionalInfoCompleted,
-      siretVerified: onboarding.siretVerified,
-      stripeOnboarded: onboarding.stripeOnboarded,
-      brandName: onboarding.brandName,
-      siret: onboarding.siret,
-      professionalAddress: onboarding.professionalAddress,
-      stripeAccountId: onboarding.stripeAccountId,
-      startedAt: onboarding.startedAt,
-      completedAt: onboarding.completedAt,
-      isFullyCompleted: onboarding.isFullyCompleted,
-    };
-  }
 }

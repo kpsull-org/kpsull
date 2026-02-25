@@ -149,4 +149,28 @@ describe('CartStore', () => {
       expect(items).toHaveLength(0);
     });
   });
+
+  describe('replaceItems', () => {
+    it('should replace all existing items with new ones', () => {
+      useCartStore.getState().addItem(sampleItem);
+
+      const newItems: CartItem[] = [
+        { productId: 'new-prod-1', name: 'New Product', price: 500, quantity: 3, creatorSlug: 'creator-a' },
+        { productId: 'new-prod-2', name: 'Another Product', price: 1500, quantity: 1, creatorSlug: 'creator-b' },
+      ];
+      useCartStore.getState().replaceItems(newItems);
+
+      const items = useCartStore.getState().items;
+      expect(items).toHaveLength(2);
+      expect(items[0]?.productId).toBe('new-prod-1');
+      expect(items[1]?.productId).toBe('new-prod-2');
+    });
+
+    it('should replace items with empty array, clearing the cart', () => {
+      useCartStore.getState().addItem(sampleItem);
+      useCartStore.getState().replaceItems([]);
+
+      expect(useCartStore.getState().items).toHaveLength(0);
+    });
+  });
 });

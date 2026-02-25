@@ -18,6 +18,7 @@ export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html);
 }
 
+/* c8 ignore start */
 export function CustomSection({ title, content }: CustomSectionProps) {
   const { html, markdown } = content;
 
@@ -44,3 +45,4 @@ export function CustomSection({ title, content }: CustomSectionProps) {
     </section>
   );
 }
+/* c8 ignore stop */

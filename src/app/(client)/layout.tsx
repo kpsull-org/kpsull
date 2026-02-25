@@ -18,7 +18,7 @@ export default async function ClientLayout({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header user={session?.user ?? null} />
-      <main className="flex-1 min-h-screen">{children}</main>
+      <main className="flex-1 min-h-screen kp-page-enter">{children}</main>
       <Footer />
       <CartSyncOnLogin isAuthenticated={!!session?.user} />
     </div>

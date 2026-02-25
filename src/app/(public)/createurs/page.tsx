@@ -94,7 +94,7 @@ export default async function CreateursPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40">
           Kpsull
         </p>
-        <h1 className="mt-1 text-2xl font-bold uppercase tracking-tight text-black md:text-3xl">
+        <h1 className="mt-1 text-2xl font-bold uppercase tracking-tight text-black md:text-3xl kp-luxury-reveal">
           Créateurs
         </h1>
         {pages.length > 0 && (
@@ -121,12 +121,13 @@ export default async function CreateursPage() {
                 className={[
                   'border-b border-black',
                   idx % 2 === 0 ? 'sm:border-r' : '',
+                  `kp-scroll-reveal-delay-${(idx % 4) + 1}`,
                 ].join(' ')}
               >
                 {/* Bannière + infos texte → lien vers la page créateur */}
                 <Link href={`/${page.slug}`} className="group block">
                   {/* Bannière */}
-                  <div className="relative aspect-video overflow-hidden bg-[#EBEBEB]">
+                  <div className="relative aspect-video overflow-hidden bg-[#EBEBEB] kp-blur-in">
                     {page.bannerImage ? (
                       <Image
                         src={page.bannerImage}

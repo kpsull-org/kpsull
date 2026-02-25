@@ -20,74 +20,21 @@ describe('Payment Entity', () => {
       expect(result.value?.currency).toBe('EUR');
     });
 
-    it('should fail when orderId is missing', () => {
+    it.each([
+      { label: 'orderId is missing', props: { orderId: '', customerId: 'customer-123', creatorId: 'creator-123', amount: 2999 }, expectedError: 'Order ID' },
+      { label: 'customerId is missing', props: { orderId: 'order-123', customerId: '', creatorId: 'creator-123', amount: 2999 }, expectedError: 'Customer ID' },
+      { label: 'creatorId is missing', props: { orderId: 'order-123', customerId: 'customer-123', creatorId: '', amount: 2999 }, expectedError: 'Creator ID' },
+      { label: 'amount is zero', props: { orderId: 'order-123', customerId: 'customer-123', creatorId: 'creator-123', amount: 0 }, expectedError: 'montant' },
+      { label: 'amount is negative', props: { orderId: 'order-123', customerId: 'customer-123', creatorId: 'creator-123', amount: -100 }, expectedError: 'montant' },
+    ])('should fail when $label', ({ props, expectedError }) => {
       const result = Payment.create({
-        orderId: '',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: 2999,
+        ...props,
         currency: 'EUR',
         paymentMethod: PaymentMethod.card(),
       });
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Order ID');
-    });
-
-    it('should fail when customerId is missing', () => {
-      const result = Payment.create({
-        orderId: 'order-123',
-        customerId: '',
-        creatorId: 'creator-123',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: PaymentMethod.card(),
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Customer ID');
-    });
-
-    it('should fail when creatorId is missing', () => {
-      const result = Payment.create({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: '',
-        amount: 2999,
-        currency: 'EUR',
-        paymentMethod: PaymentMethod.card(),
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Creator ID');
-    });
-
-    it('should fail when amount is zero', () => {
-      const result = Payment.create({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: 0,
-        currency: 'EUR',
-        paymentMethod: PaymentMethod.card(),
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('montant');
-    });
-
-    it('should fail when amount is negative', () => {
-      const result = Payment.create({
-        orderId: 'order-123',
-        customerId: 'customer-123',
-        creatorId: 'creator-123',
-        amount: -100,
-        currency: 'EUR',
-        paymentMethod: PaymentMethod.card(),
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('montant');
+      expect(result.error).toContain(expectedError);
     });
   });
 
@@ -303,6 +250,27 @@ describe('Payment Entity', () => {
       const payment = createTestPayment(2999);
 
       expect(payment.displayAmount).toBe(29.99);
+    });
+
+    it('should return createdAt and updatedAt', () => {
+      const payment = createTestPayment(2999);
+
+      expect(payment.createdAt).toBeInstanceOf(Date);
+      expect(payment.updatedAt).toBeInstanceOf(Date);
+    });
+
+    it('should default currency to EUR when not provided', () => {
+      const result = Payment.create({
+        orderId: 'order-123',
+        customerId: 'customer-123',
+        creatorId: 'creator-123',
+        amount: 1000,
+        currency: '',
+        paymentMethod: PaymentMethod.card(),
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.currency).toBe('EUR');
     });
   });
 });

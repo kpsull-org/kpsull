@@ -60,7 +60,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       {/* Header — visible immédiatement */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight kp-luxury-reveal">
           Bonjour {firstName}
         </h1>
         <p className="mt-1 text-muted-foreground">

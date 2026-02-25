@@ -7,9 +7,9 @@ export function AboutTeaser() {
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 lg:gap-16">
           {/* Photo */}
-          <div className="relative aspect-[4/5] overflow-hidden md:aspect-[4/3]">
+          <div className="kp-blur-in relative aspect-[4/5] overflow-hidden md:aspect-[4/3]">
             <Image
-              src="https://res.cloudinary.com/damucxy2t/image/upload/v1771845067/kpsull/notre-histoire.jpg"
+              src="https://res.cloudinary.com/damucxy2t/image/upload/f_auto,q_auto/v1771845067/kpsull/notre-histoire.jpg"
               alt="Notre histoire KPSULL"
               fill
               className="object-cover"
@@ -18,7 +18,7 @@ export function AboutTeaser() {
           </div>
 
           {/* Texte */}
-          <div className="flex flex-col justify-center">
+          <div className="kp-luxury-reveal flex flex-col justify-center">
             <p className="font-[family-name:var(--font-montserrat)] text-[11px] font-semibold uppercase tracking-[0.25em] text-black/40">
               QUI SOMMES-NOUS ?
             </p>

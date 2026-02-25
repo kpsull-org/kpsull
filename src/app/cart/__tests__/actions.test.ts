@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Prisma } from '@prisma/client';
 
 // Mock prisma BEFORE importing anything that uses it
 vi.mock('@/lib/prisma/client', () => ({
@@ -158,6 +159,28 @@ describe('Cart Actions', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('Items invalides');
     });
+
+    it('should return SESSION_EXPIRED when prisma throws P2003', async () => {
+      mockAuth.mockResolvedValue({ user: { id: 'user-123' } } as never);
+      const p2003Error = new Prisma.PrismaClientKnownRequestError('FK violation', {
+        code: 'P2003',
+        clientVersion: '5.0.0',
+      });
+      mockCartUpsert.mockRejectedValue(p2003Error);
+
+      const result = await saveCartAction([validCartItem]);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('SESSION_EXPIRED');
+    });
+
+    it('should rethrow non-P2003 errors from saveCartAction', async () => {
+      mockAuth.mockResolvedValue({ user: { id: 'user-123' } } as never);
+      const genericError = new Error('Connection failed');
+      mockCartUpsert.mockRejectedValue(genericError);
+
+      await expect(saveCartAction([validCartItem])).rejects.toThrow('Connection failed');
+    });
   });
 
   describe('clearCartAction', () => {
@@ -185,6 +208,27 @@ describe('Cart Actions', () => {
       mockCartUpsert.mockResolvedValue({} as never);
       const result = await clearCartAction();
       expect(result.success).toBe(true);
+    });
+
+    it('should return success false when clearCartAction throws P2003', async () => {
+      mockAuth.mockResolvedValue({ user: { id: 'user-123' } } as never);
+      const p2003Error = new Prisma.PrismaClientKnownRequestError('FK violation', {
+        code: 'P2003',
+        clientVersion: '5.0.0',
+      });
+      mockCartUpsert.mockRejectedValue(p2003Error);
+
+      const result = await clearCartAction();
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should rethrow non-P2003 errors from clearCartAction', async () => {
+      mockAuth.mockResolvedValue({ user: { id: 'user-123' } } as never);
+      const genericError = new Error('DB down');
+      mockCartUpsert.mockRejectedValue(genericError);
+
+      await expect(clearCartAction()).rejects.toThrow('DB down');
     });
   });
 });

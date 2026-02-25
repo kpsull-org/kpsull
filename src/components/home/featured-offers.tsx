@@ -50,7 +50,7 @@ export async function FeaturedOffers() {
   return (
     <section className="bg-[#F2F2F2] px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
-        <h2 className="font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">
+        <h2 className="kp-luxury-reveal font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">
           OFFRES DU MOMENT
         </h2>
         <p className="mt-1 font-[family-name:var(--font-montserrat)] text-sm tracking-wider text-muted-foreground">
@@ -58,7 +58,7 @@ export async function FeaturedOffers() {
         </p>
 
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 md:gap-4">
-          {products.map((product) => {
+          {products.map((product, index) => {
             const images = Array.isArray(product.variants[0]?.images)
               ? (product.variants[0].images as string[])
               : [];
@@ -69,7 +69,7 @@ export async function FeaturedOffers() {
               <Link
                 key={product.id}
                 href={`/catalogue/${product.id}`}
-                className="group/item block overflow-hidden bg-white"
+                className={`kp-scroll-reveal-delay-${(index % 4) + 1} group/item block overflow-hidden bg-white`}
               >
                 <div className="relative aspect-square overflow-hidden bg-muted">
                   {img1 ? (

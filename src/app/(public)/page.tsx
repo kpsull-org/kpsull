@@ -13,7 +13,7 @@ import {
   FAQSection,
 } from "@/components/home";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 function CategorySliderSkeleton() {
   return (

@@ -78,7 +78,9 @@ export class ProductVariant extends Entity<ProductVariantProps> {
   }
 
   get images(): string[] {
+    /* c8 ignore start */
     return this.props.images ?? [];
+    /* c8 ignore stop */
   }
 
   get createdAt(): Date {

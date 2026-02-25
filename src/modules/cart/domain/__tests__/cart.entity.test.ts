@@ -2,6 +2,24 @@ import { describe, it, expect } from 'vitest';
 import { Cart } from '../entities/cart.entity';
 import { CartItem } from '../entities/cart-item.entity';
 
+function createVariantItems() {
+  const variantA = CartItem.create({
+    productId: 'product-1',
+    variantId: 'variant-A',
+    name: 'Produit A - Taille S',
+    price: 2999,
+    creatorSlug: 'creator-slug',
+  }).value;
+  const variantB = CartItem.create({
+    productId: 'product-1',
+    variantId: 'variant-B',
+    name: 'Produit A - Taille M',
+    price: 2999,
+    creatorSlug: 'creator-slug',
+  }).value;
+  return { variantA, variantB };
+}
+
 describe('Cart Entity', () => {
   describe('create', () => {
     it('should create an empty cart', () => {
@@ -75,24 +93,11 @@ describe('Cart Entity', () => {
     it('should treat different variants as separate items', () => {
       // Arrange
       const cart = Cart.create({ userId: 'user-123' }).value;
-      const item1 = CartItem.create({
-        productId: 'product-1',
-        variantId: 'variant-A',
-        name: 'Produit A - Taille S',
-        price: 2999,
-        creatorSlug: 'creator-slug',
-      }).value;
-      const item2 = CartItem.create({
-        productId: 'product-1',
-        variantId: 'variant-B',
-        name: 'Produit A - Taille M',
-        price: 2999,
-        creatorSlug: 'creator-slug',
-      }).value;
+      const { variantA, variantB } = createVariantItems();
 
       // Act
-      cart.addItem(item1);
-      cart.addItem(item2);
+      cart.addItem(variantA);
+      cart.addItem(variantB);
 
       // Assert
       expect(cart.items).toHaveLength(2);
@@ -122,22 +127,9 @@ describe('Cart Entity', () => {
     it('should remove specific variant only', () => {
       // Arrange
       const cart = Cart.create({ userId: 'user-123' }).value;
-      const item1 = CartItem.create({
-        productId: 'product-1',
-        variantId: 'variant-A',
-        name: 'Produit A - Taille S',
-        price: 2999,
-        creatorSlug: 'creator-slug',
-      }).value;
-      const item2 = CartItem.create({
-        productId: 'product-1',
-        variantId: 'variant-B',
-        name: 'Produit A - Taille M',
-        price: 2999,
-        creatorSlug: 'creator-slug',
-      }).value;
-      cart.addItem(item1);
-      cart.addItem(item2);
+      const { variantA, variantB } = createVariantItems();
+      cart.addItem(variantA);
+      cart.addItem(variantB);
 
       // Act
       cart.removeItem('product-1', 'variant-A');
@@ -216,6 +208,23 @@ describe('Cart Entity', () => {
       // Assert
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('négative');
+    });
+
+    it('should update quantity for a specific variant', () => {
+      const cart = Cart.create({ userId: 'user-123' }).value;
+      const item = CartItem.create({
+        productId: 'product-1',
+        variantId: 'variant-A',
+        name: 'Produit A - Taille M',
+        price: 2999,
+        creatorSlug: 'creator-slug',
+      }).value;
+      cart.addItem(item);
+
+      const result = cart.updateQuantity('product-1', 3, 'variant-A');
+
+      expect(result.isSuccess).toBe(true);
+      expect(cart.items[0]?.quantity).toBe(3);
     });
   });
 
