@@ -10,6 +10,12 @@ function labels(sorted: SizeEntry[]): string[] {
   return sorted.map((e) => e.size);
 }
 
+function assertUnknownAtEnd(known: string, unknownInput: string[], expectedUnknowns: string[]) {
+  const result = labels(sortSizes(entries(known, ...unknownInput)));
+  expect(result[0]).toBe(known);
+  expect(result.slice(1)).toEqual(expectedUnknowns);
+}
+
 describe('CANONICAL_SIZE_ORDER', () => {
   it('commence par Unique', () => {
     expect(CANONICAL_SIZE_ORDER[0]).toBe('Unique');
@@ -46,56 +52,39 @@ describe('sortSizes', () => {
     expect(labels(result)[0]).toBe('Unique');
   });
 
-  it('trie les tailles lettres dans l\'ordre logique', () => {
-    const result = sortSizes(entries('XXL', 'S', 'XL', 'XS', 'M', 'L', '3XL'));
-    expect(labels(result)).toEqual(['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL']);
-  });
-
-  it('trie les tailles numériques dans l\'ordre canonique', () => {
-    const result = sortSizes(entries('44', '36', '40', '38'));
-    expect(labels(result)).toEqual(['36', '38', '40', '44']);
-  });
-
-  it('trie les tailles bébé dans l\'ordre chronologique', () => {
-    const result = sortSizes(entries('18 mois', '3 mois', '6 mois', '1 mois'));
-    expect(labels(result)).toEqual(['1 mois', '3 mois', '6 mois', '18 mois']);
-  });
-
-  it('trie les tailles enfant dans l\'ordre chronologique', () => {
-    const result = sortSizes(entries('10 ans', '3 ans', '7 ans', '2 ans'));
-    expect(labels(result)).toEqual(['2 ans', '3 ans', '7 ans', '10 ans']);
-  });
-
-  it('trie les tailles W×L dans l\'ordre canonique', () => {
-    const result = sortSizes(entries('36/32', '30/30', '34/30', '32/32'));
-    expect(labels(result)).toEqual(['30/30', '32/32', '34/30', '36/32']);
-  });
+  it.each([
+    ['lettres (XS→3XL)', ['XXL', 'S', 'XL', 'XS', 'M', 'L', '3XL'], ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL']],
+    ['numériques FR', ['44', '36', '40', '38'], ['36', '38', '40', '44']],
+    ['bébé (âge)', ['18 mois', '3 mois', '6 mois', '1 mois'], ['1 mois', '3 mois', '6 mois', '18 mois']],
+    ['enfant (âge)', ['10 ans', '3 ans', '7 ans', '2 ans'], ['2 ans', '3 ans', '7 ans', '10 ans']],
+    ['W×L', ['36/32', '30/30', '34/30', '32/32'], ['30/30', '32/32', '34/30', '36/32']],
+  ] as [string, string[], string[]][])(
+    'trie les tailles %s dans l\'ordre canonique',
+    (_label, input, expected) => {
+      expect(labels(sortSizes(entries(...input)))).toEqual(expected);
+    }
+  );
 
   it('place les tailles inconnues numériques à la fin, triées numériquement', () => {
-    const result = sortSizes(entries('M', '99', '60', '200'));
-    const sorted = labels(result);
-    expect(sorted[0]).toBe('M');
-    // Les inconnues numériques sont en ordre croissant
-    const unknowns = sorted.slice(1);
-    expect(unknowns).toEqual(['60', '99', '200']);
+    assertUnknownAtEnd('M', ['99', '60', '200'], ['60', '99', '200']);
   });
 
   it('place les tailles inconnues alphabétiques à la fin', () => {
-    const result = sortSizes(entries('M', 'XXXL', 'A', 'ZZ'));
-    const sorted = labels(result);
-    expect(sorted[0]).toBe('M');
-    const unknowns = sorted.slice(1);
-    expect(unknowns).toEqual(['A', 'XXXL', 'ZZ']);
+    assertUnknownAtEnd('M', ['XXXL', 'A', 'ZZ'], ['A', 'XXXL', 'ZZ']);
   });
 
   it('est insensible à la casse pour la correspondance canonique', () => {
-    const result = sortSizes(entries('xl', 'xs', 'm', 'l'));
-    expect(labels(result)).toEqual(['xs', 'm', 'l', 'xl']);
+    expect(labels(sortSizes(entries('xl', 'xs', 'm', 'l')))).toEqual(['xs', 'm', 'l', 'xl']);
   });
 
   it('combine Unique + bébé + lettres + inconnues dans le bon ordre global', () => {
-    const result = sortSizes(entries('L', 'Unique', '6 mois', 'XS', 'custom'));
-    expect(labels(result)).toEqual(['Unique', '6 mois', 'XS', 'L', 'custom']);
+    expect(labels(sortSizes(entries('L', 'Unique', '6 mois', 'XS', 'custom')))).toEqual([
+      'Unique',
+      '6 mois',
+      'XS',
+      'L',
+      'custom',
+    ]);
   });
 
   it('préserve les propriétés supplémentaires (weight, width, etc.)', () => {
