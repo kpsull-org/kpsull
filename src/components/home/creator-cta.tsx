@@ -10,7 +10,7 @@ const perks = [
     desc: "Des acheteurs qui veulent activement des pièces uniques et artisanales — pas des vitrines génériques.",
   },
   {
-    title: "Concentrez-vous sur créer",
+    title: "Concentrez-vous sur la création",
     desc: "La vitrine, les paiements, la visibilité — on s'en occupe. Vous, vous créez.",
   },
 ];
