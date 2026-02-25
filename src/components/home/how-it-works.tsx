@@ -21,7 +21,7 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+    <section className="kp-scroll-reveal border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 flex items-end justify-between md:mb-12">
           <h2 className="font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">

@@ -11,25 +11,28 @@ export function HeroSection() {
         src="/images/hero-skater.png"
         alt="Mode urbaine"
         fill
-        className="object-cover object-top"
+        className="kp-animate-hero-img object-cover object-top"
         priority
       />
 
+
+      {/* Gradient overlay for text readability */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
 
       {/* Content: K logo + title at bottom-left */}
       <div className="relative flex h-full flex-col items-start justify-end px-6 pb-12 md:px-12 md:pb-16 lg:pb-20 lg:pl-[83px]">
         {/* Logo K in yellow/accent (Figma: 281x282px) */}
         <Logo
           size="xl"
-          className="mb-6 h-[100px] w-[100px] text-white md:mb-8 md:h-[140px] md:w-[140px] lg:h-[160px] lg:w-[160px] xl:h-[180px] xl:w-[180px] 2xl:h-[220px] 2xl:w-[220px]"
+          className="kp-animate-hero-logo mb-6 h-[100px] w-[100px] text-white md:mb-8 md:h-[140px] md:w-[140px] lg:h-[160px] lg:w-[160px] xl:h-[180px] xl:w-[180px] 2xl:h-[220px] 2xl:w-[220px]"
         />
 
         {/* Title (Figma: Montserrat 600, 96px, color #D6C8BD) */}
-        <h1 className="font-[family-name:var(--font-montserrat)] text-2xl font-semibold leading-none tracking-tight text-[#D6C8BD] md:text-4xl lg:text-[40px] xl:text-[48px] 2xl:text-[64px]">
+        <h1 className="kp-animate-hero-title [text-shadow:0_2px_8px_rgba(0,0,0,0.4)] font-[family-name:var(--font-montserrat)] text-2xl font-semibold leading-none tracking-tight text-[#D6C8BD] md:text-4xl lg:text-[40px] xl:text-[48px] 2xl:text-[64px]">
           L&apos;ANTIDOTE A L&apos;UNIFORME.
         </h1>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:gap-4">
+        <div className="kp-animate-hero-cta mt-6 flex flex-col gap-3 sm:flex-row sm:gap-4">
           <Link
             href="/catalogue"
             className="border border-white bg-white px-8 py-3 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function AboutTeaser() {
   return (
-    <section className="border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+    <section className="kp-scroll-reveal border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 lg:gap-16">
           {/* Photo */}

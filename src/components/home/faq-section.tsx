@@ -40,7 +40,7 @@ const faqItems = [
 
 export function FAQSection() {
   return (
-    <section className="bg-[#F2F2F2] px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+    <section className="kp-scroll-reveal bg-[#F2F2F2] px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
         <h2 className="mb-10 font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">
           FAQ

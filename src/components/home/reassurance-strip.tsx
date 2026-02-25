@@ -80,7 +80,7 @@ const items = [
 
 export function ReassuranceStrip() {
   return (
-    <section className="border-t-2 border-b-2 border-black bg-[#D6C8BD]">
+    <section className="kp-scroll-reveal border-t-2 border-b-2 border-black bg-[#D6C8BD]">
       <div className="mx-auto grid max-w-7xl grid-cols-2 md:grid-cols-4">
         {items.map(({ label, sub, Icon }) => (
           <div

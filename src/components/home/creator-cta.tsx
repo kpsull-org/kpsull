@@ -17,7 +17,7 @@ const perks = [
 
 export function CreatorCta() {
   return (
-    <section className="border-t-2 border-black bg-[#F2F2F2] px-6 py-16 md:px-12 md:py-20 lg:px-20 lg:py-24">
+    <section className="kp-scroll-reveal border-t-2 border-black bg-[#F2F2F2] px-6 py-16 md:px-12 md:py-20 lg:px-20 lg:py-24">
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-16 lg:gap-24">
           {/* Gauche : titre + description + CTA */}

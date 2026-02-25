@@ -156,3 +156,60 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: var(--muted-foreground);
 }
+
+/* ========================================
+   ANIMATIONS — Subtle & Elegant
+   ======================================== */
+
+@keyframes kp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Hero entrance animations (triggered on page load) */
+.kp-animate-hero-img {
+  animation: kp-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.kp-animate-hero-logo {
+  animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.kp-animate-hero-title {
+  animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+.kp-animate-hero-cta {
+  animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+
+/* Scroll reveal — uses CSS scroll-driven animations (Chrome 115+, Firefox 114+, Safari 18+) */
+.kp-scroll-reveal {
+  animation: kp-fade-up linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 28%;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .kp-animate-hero-img,
+  .kp-animate-hero-logo,
+  .kp-animate-hero-title,
+  .kp-animate-hero-cta,
+  .kp-scroll-reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
