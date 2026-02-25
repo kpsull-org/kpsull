@@ -109,17 +109,17 @@ export class PrismaCreatorRepository implements CreatorRepository {
     return { creators: paginated, total: filteredTotal };
   }
 
-  async suspendCreator(creatorId: string): Promise<void> {
+  async suspendCreator(creatorId: string, adminId: string, reason: string): Promise<void> {
     await this.prisma.creatorSuspension.create({
       data: {
         creatorId,
-        suspendedBy: 'system', // Will be overridden by use case caller
-        reason: 'Suspended by admin',
+        suspendedBy: adminId,
+        reason,
       },
     });
   }
 
-  async reactivateCreator(creatorId: string): Promise<void> {
+  async reactivateCreator(creatorId: string, _adminId: string, _reason: string): Promise<void> {
     // Find the active suspension and mark it as reactivated
     const activeSuspension = await this.prisma.creatorSuspension.findFirst({
       where: { creatorId, reactivatedAt: null },

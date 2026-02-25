@@ -6,6 +6,7 @@ import { PrismaCreatorRepository } from '@/modules/analytics/infrastructure/repo
 import { prisma } from '@/lib/prisma/client';
 import { CreatorsPageClient } from './page-client';
 import type { CreatorSortField, CreatorStatus, SortDirection } from '@/modules/analytics/application/ports';
+import type { SerializedCreatorSummary } from './page-client';
 
 export const metadata: Metadata = {
   title: 'Gestion Createurs | Admin Kpsull',
@@ -70,6 +71,18 @@ export default async function CreatorsPage({ searchParams }: CreatorsPageProps) 
 
   const { creators, total, totalPages } = result.value;
 
+  // Serialize Date objects to ISO strings before passing to Client Component.
+  // Next.js cannot serialize Date objects across the Server/Client boundary,
+  // which causes a Server Component render crash (digest: 3975031236).
+  const serializedCreators: SerializedCreatorSummary[] = creators.map((creator) => ({
+    id: creator.id,
+    name: creator.name,
+    email: creator.email,
+    registeredAt: creator.registeredAt.toISOString(),
+    status: creator.status,
+    totalRevenue: creator.totalRevenue,
+  }));
+
   return (
     <div className="container max-w-7xl py-6 space-y-6">
       {/* Header */}
@@ -84,7 +97,7 @@ export default async function CreatorsPage({ searchParams }: CreatorsPageProps) 
 
       {/* Creators table with client-side interactivity */}
       <CreatorsPageClient
-        initialCreators={creators}
+        initialCreators={serializedCreators}
         initialTotal={total}
         initialPage={page}
         initialPageSize={10}
