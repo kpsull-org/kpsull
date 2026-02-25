@@ -6,7 +6,7 @@
     "seed": "bun run prisma/seed.ts"
   },
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --turbopack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
