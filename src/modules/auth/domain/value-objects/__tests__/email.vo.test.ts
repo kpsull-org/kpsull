@@ -17,46 +17,20 @@ describe('Email Value Object', () => {
       expect(result.value.value).toBe('test@example.com');
     });
 
-    it('should fail with empty string', () => {
-      const result = Email.create('');
+    describe('invalid email formats', () => {
+      it.each([
+        { label: 'empty string', input: '', expectedError: 'Email cannot be empty' },
+        { label: 'whitespace only', input: '   ', expectedError: 'Email cannot be empty' },
+        { label: 'no @', input: 'testexample.com', expectedError: 'Invalid email format' },
+        { label: 'no domain', input: 'test@', expectedError: 'Invalid email format' },
+        { label: 'no local part', input: '@example.com', expectedError: 'Invalid email format' },
+        { label: 'spaces', input: 'test @example.com', expectedError: 'Invalid email format' },
+      ])('should fail with $label', ({ input, expectedError }) => {
+        const result = Email.create(input);
 
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Email cannot be empty');
-    });
-
-    it('should fail with invalid email format - no @', () => {
-      const result = Email.create('testexample.com');
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Invalid email format');
-    });
-
-    it('should fail with invalid email format - no domain', () => {
-      const result = Email.create('test@');
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Invalid email format');
-    });
-
-    it('should fail with invalid email format - no local part', () => {
-      const result = Email.create('@example.com');
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Invalid email format');
-    });
-
-    it('should fail with invalid email format - spaces', () => {
-      const result = Email.create('test @example.com');
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Invalid email format');
-    });
-
-    it('should fail with whitespace only', () => {
-      const result = Email.create('   ');
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('Email cannot be empty');
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toBe(expectedError);
+      });
     });
   });
 
