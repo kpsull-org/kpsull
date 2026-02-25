@@ -86,4 +86,20 @@ describe('RefundReturnUseCase', () => {
     const result = await useCase.execute({ returnId: 'return-1', creatorId: '' });
     expect(result.isFailure).toBe(true);
   });
+
+  it('should call incrementStock when returnItems are present', async () => {
+    const { incrementStock } = await import('@/modules/products/application/services/stock.service');
+    const returnWithItems = {
+      ...createReceivedReturn(),
+      returnItems: [
+        { productId: 'prod-1', variantId: 'variant-1', quantity: 2, productName: 'T-Shirt', price: 2500 },
+      ],
+    };
+    mockRepository.findById.mockResolvedValue(returnWithItems);
+
+    const result = await useCase.execute({ returnId: 'return-1', creatorId: 'creator-123' });
+
+    expect(result.isSuccess).toBe(true);
+    expect(incrementStock).toHaveBeenCalledWith([{ variantId: 'variant-1', quantity: 2 }]);
+  });
 });

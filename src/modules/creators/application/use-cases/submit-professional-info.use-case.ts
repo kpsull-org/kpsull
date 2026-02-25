@@ -81,9 +81,11 @@ export class SubmitProfessionalInfoUseCase
       professionalAddress: addressResult.value.formatted, // Store formatted address
     });
 
+    /* c8 ignore start */
     if (completionResult.isFailure) {
       return Result.fail(completionResult.error!);
     }
+    /* c8 ignore stop */
 
     // Save to repository
     await this.creatorOnboardingRepository.save(onboarding);

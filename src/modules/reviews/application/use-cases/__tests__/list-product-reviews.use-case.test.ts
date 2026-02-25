@@ -126,6 +126,28 @@ describe('ListProductReviews Use Case', () => {
       );
     });
 
+    it('should apply maxRating filter correctly', async () => {
+      mockRepository.findByProductId.mockResolvedValue({ reviews: [], total: 0 });
+      mockRepository.getProductStats.mockResolvedValue({
+        averageRating: 0,
+        totalReviews: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      });
+
+      await useCase.execute({
+        productId: 'product-123',
+        page: 1,
+        pageSize: 10,
+        maxRating: 3,
+      });
+
+      expect(mockRepository.findByProductId).toHaveBeenCalledWith(
+        'product-123',
+        { maxRating: 3 },
+        { skip: 0, take: 10 }
+      );
+    });
+
     it('should fail when productId is missing', async () => {
       const result = await useCase.execute({
         productId: '',

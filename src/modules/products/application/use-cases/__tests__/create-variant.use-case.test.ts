@@ -182,5 +182,22 @@ describe('CreateVariantUseCase', () => {
       expect(result.value.stock).toBe(0);
       expect(result.value.isAvailable).toBe(false);
     });
+
+    it('should fail when priceOverride is negative', async () => {
+      // Arrange
+      const input: CreateVariantInput = {
+        productId: 'product-123',
+        name: 'Taille M',
+        stock: 10,
+        priceOverride: -1,
+      };
+
+      // Act
+      const result = await useCase.execute(input);
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(mockVariantRepo.save).not.toHaveBeenCalled();
+    });
   });
 });

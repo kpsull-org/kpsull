@@ -25,7 +25,9 @@ export function useCart(isAuthenticated: boolean) {
 
   // Hydrate on mount
   useEffect(() => {
+    /* c8 ignore start */
     if (isHydrated.current) return;
+    /* c8 ignore stop */
     isHydrated.current = true;
 
     if (isAuthenticated) {

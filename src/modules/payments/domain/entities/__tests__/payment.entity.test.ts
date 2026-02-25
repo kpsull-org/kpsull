@@ -304,6 +304,27 @@ describe('Payment Entity', () => {
 
       expect(payment.displayAmount).toBe(29.99);
     });
+
+    it('should return createdAt and updatedAt', () => {
+      const payment = createTestPayment(2999);
+
+      expect(payment.createdAt).toBeInstanceOf(Date);
+      expect(payment.updatedAt).toBeInstanceOf(Date);
+    });
+
+    it('should default currency to EUR when not provided', () => {
+      const result = Payment.create({
+        orderId: 'order-123',
+        customerId: 'customer-123',
+        creatorId: 'creator-123',
+        amount: 1000,
+        currency: '',
+        paymentMethod: PaymentMethod.card(),
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.currency).toBe('EUR');
+    });
   });
 });
 

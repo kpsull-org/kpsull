@@ -108,6 +108,17 @@ describe('ShipBackReturnUseCase', () => {
     expect(result.isFailure).toBe(true);
   });
 
+  it('should fail without customerId', async () => {
+    const result = await useCase.execute({
+      returnId: 'return-1',
+      customerId: '',
+      trackingNumber: 'TRACK-123',
+      carrier: 'Colissimo',
+    });
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toContain('Customer ID');
+  });
+
   it('should fail without trackingNumber', async () => {
     const result = await useCase.execute({
       returnId: 'return-1',

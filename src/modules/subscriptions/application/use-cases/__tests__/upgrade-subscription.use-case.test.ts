@@ -88,6 +88,22 @@ describe('UpgradeSubscriptionUseCase', () => {
       expect(result.value.billingInterval).toBe('year');
     });
 
+    it('should not change billing interval when it matches the current one', async () => {
+      mockRepo.set('creator-1', createTestSubscription({
+        billingInterval: 'year', productsUsed: 3, pinnedProductsUsed: 1,
+        stripeSubscriptionId: 'sub_yearly_123',
+      }));
+
+      const result = await useCase.execute({
+        creatorId: 'creator-1', targetPlan: 'STUDIO', billingInterval: 'year',
+        stripeSubscriptionId: 'sub_new_456', stripeCustomerId: 'cus_123', stripePriceId: 'price_studio_year',
+        periodStart, periodEnd,
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.billingInterval).toBe('year');
+    });
+
     it('should fail when trying to downgrade STUDIO to ESSENTIEL', async () => {
       mockRepo.set('creator-1', createTestSubscription({
         plan: 'STUDIO', productsUsed: 15, pinnedProductsUsed: 4,

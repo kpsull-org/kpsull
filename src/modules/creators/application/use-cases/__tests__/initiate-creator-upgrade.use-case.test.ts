@@ -1,14 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   InitiateCreatorUpgradeUseCase,
   InitiateCreatorUpgradeInput,
 } from '../initiate-creator-upgrade.use-case';
 import { CreatorOnboardingRepository } from '../../ports/creator-onboarding.repository.interface';
 import { CreatorOnboarding } from '../../../domain/entities/creator-onboarding.entity';
+import { Result } from '@/shared/domain/result';
 
 describe('InitiateCreatorUpgradeUseCase', () => {
   let useCase: InitiateCreatorUpgradeUseCase;
   let mockRepository: CreatorOnboardingRepository;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -99,6 +104,18 @@ describe('InitiateCreatorUpgradeUseCase', () => {
       const result = await useCase.execute(validInput);
 
       expect(result.value.startedAt).toEqual(new Date('2026-01-28T10:00:00Z'));
+    });
+
+    it('should fail when CreatorOnboarding.create returns a failure', async () => {
+      vi.mocked(mockRepository.findByUserId).mockResolvedValue(null);
+      vi.spyOn(CreatorOnboarding, 'create').mockReturnValue(
+        Result.fail('Creation failed') as ReturnType<typeof CreatorOnboarding.create>
+      );
+
+      const result = await useCase.execute(validInput);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe('Creation failed');
     });
   });
 });

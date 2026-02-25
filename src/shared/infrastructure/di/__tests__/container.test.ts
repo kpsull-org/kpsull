@@ -78,6 +78,12 @@ describe('Container', () => {
         'No registration found for token: missing'
       );
     });
+
+    it('should throw with symbol toString fallback when token has no description', () => {
+      const token = Symbol();
+
+      expect(() => container.get(token)).toThrow('No registration found for token:');
+    });
   });
 
   describe('reset', () => {

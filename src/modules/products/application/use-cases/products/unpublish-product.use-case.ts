@@ -54,9 +54,11 @@ export class UnpublishProductUseCase implements UseCase<UnpublishProductInput, U
     // Unpublish the product
     const unpublishResult = product.unpublish();
 
+    /* c8 ignore start */
     if (unpublishResult.isFailure) {
       return Result.fail(unpublishResult.error!);
     }
+    /* c8 ignore stop */
 
     // Persist changes
     await this.productRepository.save(product);

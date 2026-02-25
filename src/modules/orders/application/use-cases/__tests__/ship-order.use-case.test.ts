@@ -132,6 +132,17 @@ describe('ShipOrderUseCase', () => {
       expect(result.error).toContain('transporteur');
     });
 
+    it('should fail without orderId', async () => {
+      const result = await useCase.execute({
+        orderId: '',
+        creatorId: 'creator-123',
+        trackingNumber: 'TRACK123456',
+        carrier: 'Colissimo',
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Order ID');
+    });
+
     it('should fail if order not in shippable status', async () => {
       // Arrange (pending order, not paid)
       const order = createPendingOrder();

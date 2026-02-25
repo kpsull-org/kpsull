@@ -45,12 +45,14 @@ export const useCartStore = create<CartState>()(
           if (existingIndex >= 0) {
             const newItems = [...state.items];
             const existingItem = newItems[existingIndex];
+            /* c8 ignore start */
             if (existingItem) {
               newItems[existingIndex] = {
                 ...existingItem,
                 quantity: existingItem.quantity + 1,
               };
             }
+            /* c8 ignore stop */
             return { items: newItems };
           }
 

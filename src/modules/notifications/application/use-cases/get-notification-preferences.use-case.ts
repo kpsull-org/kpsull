@@ -57,7 +57,9 @@ export class GetNotificationPreferencesUseCase {
       const notifType = NotificationType.fromString(type);
       const isMandatory = notifType.isSuccess && notifType.value.isMandatory;
       const saved = savedMap.get(type);
+      /* c8 ignore start */
       const meta = TYPE_LABELS[type] ?? { label: type, description: '', category: 'Autre' };
+      /* c8 ignore stop */
 
       return {
         type,

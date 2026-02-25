@@ -101,6 +101,71 @@ describe('Order Entity', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('articles');
     });
+
+    it('should fail when creatorId is empty', () => {
+      const result = Order.create({
+        creatorId: '',
+        customerId: 'customer-123',
+        customerName: 'Jean Dupont',
+        customerEmail: 'jean@example.com',
+        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
+        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Creator ID');
+    });
+
+    it('should fail when customerId is empty', () => {
+      const result = Order.create({
+        creatorId: 'creator-123',
+        customerId: '',
+        customerName: 'Jean Dupont',
+        customerEmail: 'jean@example.com',
+        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
+        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Customer ID');
+    });
+
+    it('should fail when customerName is empty', () => {
+      const result = Order.create({
+        creatorId: 'creator-123',
+        customerId: 'customer-123',
+        customerName: '',
+        customerEmail: 'jean@example.com',
+        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
+        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('nom');
+    });
+
+    it('should fail when customerEmail is empty', () => {
+      const result = Order.create({
+        creatorId: 'creator-123',
+        customerId: 'customer-123',
+        customerName: 'Jean Dupont',
+        customerEmail: '',
+        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
+        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('email');
+    });
+
+    it('should fail when shippingAddress street is empty', () => {
+      const result = Order.create({
+        creatorId: 'creator-123',
+        customerId: 'customer-123',
+        customerName: 'Jean Dupont',
+        customerEmail: 'jean@example.com',
+        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
+        shippingAddress: { street: '', city: 'Paris', postalCode: '75001', country: 'France' },
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('adresse');
+    });
   });
 
   describe('markAsPaid', () => {
@@ -245,6 +310,17 @@ describe('Order Entity', () => {
       expect(result.isSuccess).toBe(true);
       expect(order.status.isRefunded).toBe(true);
       expect(order.stripeRefundId).toBe('re_stripe_123');
+    });
+
+    it('should refund a paid order without reason', () => {
+      const order = createTestOrder();
+      order.markAsPaid('pi_stripe_123');
+
+      const result = order.refund('re_stripe_456');
+
+      expect(result.isSuccess).toBe(true);
+      expect(order.stripeRefundId).toBe('re_stripe_456');
+      expect(order.cancellationReason).toBeUndefined();
     });
 
     it('should fail to refund pending order', () => {

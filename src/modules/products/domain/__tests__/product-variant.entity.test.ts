@@ -216,6 +216,20 @@ describe('ProductVariant Entity', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value.priceOverride).toBeUndefined();
     });
+
+    it('should return empty array when images are not set', () => {
+      const result = ProductVariant.reconstitute({
+        id: 'variant-123',
+        productId: 'product-123',
+        name: 'Taille S',
+        stock: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.images).toEqual([]);
+    });
   });
 
   describe('updateStock', () => {
@@ -508,6 +522,36 @@ describe('ProductVariant Entity', () => {
 
       // Assert
       expect(variant.hasPriceOverride).toBe(false);
+    });
+  });
+
+  describe('updateColor', () => {
+    it('should update color and colorCode', () => {
+      const variant = ProductVariant.create({
+        productId: 'product-123',
+        name: 'Taille M',
+        stock: 10,
+      }).value;
+
+      variant.updateColor('Rouge', '#FF0000');
+
+      expect(variant.color).toBe('Rouge');
+      expect(variant.colorCode).toBe('#FF0000');
+    });
+
+    it('should set color and colorCode to undefined', () => {
+      const variant = ProductVariant.create({
+        productId: 'product-123',
+        name: 'Taille M',
+        stock: 10,
+        color: 'Bleu',
+        colorCode: '#0000FF',
+      }).value;
+
+      variant.updateColor(undefined, undefined);
+
+      expect(variant.color).toBeUndefined();
+      expect(variant.colorCode).toBeUndefined();
     });
   });
 });

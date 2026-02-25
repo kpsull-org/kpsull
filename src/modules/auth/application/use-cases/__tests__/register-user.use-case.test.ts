@@ -110,4 +110,26 @@ describe('RegisterUserUseCase', () => {
       'Jean OAuth' // keeps existing name
     );
   });
+
+  it('should use provided name when OAuth user has no existing name', async () => {
+    vi.mocked(mockAccountRepo.findUserWithAccountsByEmail).mockResolvedValue({
+      id: 'oauth-user-id',
+      email: 'jean@example.com',
+      name: null,
+      hashedPassword: null,
+      accounts: [],
+    });
+
+    await useCase.execute({
+      name: 'Jean Nouveau',
+      email: 'jean@example.com',
+      password: 'Password123!',
+    });
+
+    expect(mockAccountRepo.linkPassword).toHaveBeenCalledWith(
+      'oauth-user-id',
+      'hashed-password',
+      'Jean Nouveau' // falls back to provided name
+    );
+  });
 });

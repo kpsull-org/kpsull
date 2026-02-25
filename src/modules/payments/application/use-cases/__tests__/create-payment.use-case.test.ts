@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { CreatePaymentUseCase } from '../create-payment.use-case';
 import { PaymentRepository } from '../../ports/payment.repository.interface';
 import { Payment } from '../../../domain/entities/payment.entity';
 import { PaymentMethod } from '../../../domain/value-objects/payment-method.vo';
+import { Result } from '@/shared/domain';
 
 describe('CreatePayment Use Case', () => {
   let useCase: CreatePaymentUseCase;
@@ -12,6 +13,10 @@ describe('CreatePayment Use Case', () => {
     findByOrderId: Mock;
     findByCustomerId: Mock;
   };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   beforeEach(() => {
     mockRepository = {
@@ -175,6 +180,26 @@ describe('CreatePayment Use Case', () => {
         expect(result.isSuccess).toBe(true);
         expect(result.value?.paymentMethod).toBe(method);
       }
+    });
+
+    it('should fail when Payment.create returns a failure', async () => {
+      mockRepository.findByOrderId.mockResolvedValue(null);
+      vi.spyOn(Payment, 'create').mockReturnValue(
+        Result.fail('Payment entity creation failed') as ReturnType<typeof Payment.create>
+      );
+
+      const result = await useCase.execute({
+        orderId: 'order-123',
+        customerId: 'customer-123',
+        creatorId: 'creator-123',
+        amount: 2999,
+        currency: 'EUR',
+        paymentMethod: 'CARD',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe('Payment entity creation failed');
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
 });

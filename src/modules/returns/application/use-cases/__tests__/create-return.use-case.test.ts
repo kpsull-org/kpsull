@@ -132,4 +132,22 @@ describe('CreateReturnUseCase', () => {
     const result = await useCase.execute({ ...createValidInput(), creatorId: '' });
     expect(result.isFailure).toBe(true);
   });
+
+  it('should fail without reason', async () => {
+    const result = await useCase.execute({
+      ...createValidInput(),
+      reason: undefined as unknown as ReturnType<typeof createValidInput>['reason'],
+    });
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toContain('raison');
+  });
+
+  it('should fail without deliveredAt', async () => {
+    const result = await useCase.execute({
+      ...createValidInput(),
+      deliveredAt: undefined as unknown as Date,
+    });
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toContain('livraison');
+  });
 });

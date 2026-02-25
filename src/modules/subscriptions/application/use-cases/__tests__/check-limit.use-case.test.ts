@@ -12,6 +12,18 @@ describe('CheckLimitUseCase', () => {
     useCase = new CheckLimitUseCase(mockRepo);
   });
 
+  describe('execute', () => {
+    it('should delegate to checkProductLimit', async () => {
+      mockRepo.set('creator-1', createTestSubscription({ productsUsed: 5 }));
+
+      const result = await useCase.execute({ creatorId: 'creator-1' });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.status).toBe(LimitStatus.OK);
+      expect(result.value.current).toBe(5);
+    });
+  });
+
   describe('checkProductLimit', () => {
     it('should return BLOCKED when product limit is reached (ESSENTIEL: 10/10)', async () => {
       mockRepo.set('creator-1', createTestSubscription({ productsUsed: 10 }));

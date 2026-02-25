@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Result } from '@/shared/domain';
 import { HandlePaymentFailedUseCase } from '../handle-payment-failed.use-case';
 import { TestSubscriptionRepository } from '../../../__tests__/helpers/test-subscription.repository';
 import { createTestSubscription } from '../../../__tests__/helpers/subscription.factory';
@@ -92,6 +93,19 @@ describe('HandlePaymentFailedUseCase', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.status).toBe('PAST_DUE');
+    });
+
+    it('should fail when markAsPastDue returns a failure', async () => {
+      const subscription = createTestSubscription({
+        plan: 'STUDIO', productsUsed: 10, pinnedProductsUsed: 3,
+      });
+      vi.spyOn(subscription, 'markAsPastDue').mockReturnValue(Result.fail('Cannot mark as past due'));
+      mockRepo.set('creator-1', subscription);
+
+      const result = await useCase.execute({ stripeSubscriptionId: 'sub_stripe_123', failedAt: new Date() });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe('Cannot mark as past due');
     });
   });
 });

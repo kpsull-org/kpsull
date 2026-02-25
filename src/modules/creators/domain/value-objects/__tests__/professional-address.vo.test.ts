@@ -29,6 +29,18 @@ describe('ProfessionalAddress Value Object', () => {
       expect(result.value.country).toBe('France');
     });
 
+    it('should use default country when empty string is provided', () => {
+      const result = ProfessionalAddress.create({
+        street: '10 rue de la Paix',
+        city: 'Paris',
+        postalCode: '75001',
+        country: '',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.country).toBe('France');
+    });
+
     it('should fail when street is empty', () => {
       const result = ProfessionalAddress.create({
         street: '',

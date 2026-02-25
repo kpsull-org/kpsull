@@ -297,6 +297,41 @@ describe('UpdateSectionUseCase', () => {
       });
     });
 
+    it('should show section successfully', async () => {
+      const { page, section } = createMockPageWithSection();
+      // Hide it first so we can show it
+      section.hide();
+      mockRepo.findById.mockResolvedValue(page);
+
+      const input: UpdateSectionInput = {
+        sectionId: section.idString,
+        pageId: page.idString,
+        creatorId: 'creator-123',
+        isVisible: true,
+      };
+
+      const result = await useCase.execute(input);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.isVisible).toBe(true);
+    });
+
+    it('should fail when title is too long', async () => {
+      const { page, section } = createMockPageWithSection();
+      mockRepo.findById.mockResolvedValue(page);
+
+      const input: UpdateSectionInput = {
+        sectionId: section.idString,
+        pageId: page.idString,
+        creatorId: 'creator-123',
+        title: 'a'.repeat(201),
+      };
+
+      const result = await useCase.execute(input);
+
+      expect(result.isFailure).toBe(true);
+    });
+
     it('should hide section successfully', async () => {
       // Arrange
       const { page, section } = createMockPageWithSection();

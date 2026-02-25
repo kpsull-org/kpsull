@@ -140,6 +140,18 @@ describe('GetOrderDetailUseCase', () => {
       expect(result.error).toContain('autorisé');
     });
 
+    it('should fail without creatorId', async () => {
+      // Act
+      const result = await useCase.execute({
+        orderId: 'some-id',
+        creatorId: '',
+      });
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Creator ID');
+    });
+
     it('should fail without orderId', async () => {
       // Act
       const result = await useCase.execute({

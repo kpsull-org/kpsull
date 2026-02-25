@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Result } from '@/shared/domain';
 import { CancelSubscriptionUseCase } from '../cancel-subscription.use-case';
 import { TestSubscriptionRepository } from '../../../__tests__/helpers/test-subscription.repository';
 import { createTestSubscription } from '../../../__tests__/helpers/subscription.factory';
@@ -144,6 +145,17 @@ describe('CancelSubscriptionUseCase', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.status).toBe('CANCELLED');
+    });
+
+    it('should fail when cancelSubscription returns a failure', async () => {
+      const subscription = createTestSubscription({ plan: 'STUDIO', productsUsed: 10, pinnedProductsUsed: 3 });
+      vi.spyOn(subscription, 'cancelSubscription').mockReturnValue(Result.fail('Cancellation not allowed'));
+      mockRepo.set('creator-1', subscription);
+
+      const result = await useCase.execute({ creatorId: 'creator-1', immediate: true });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe('Cancellation not allowed');
     });
   });
 });

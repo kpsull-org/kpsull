@@ -165,5 +165,11 @@ describe('CreateUserUseCase', () => {
 
       expect(mockUserRepository.existsByEmail).not.toHaveBeenCalled();
     });
+
+    it('should rethrow non-object errors (string thrown)', async () => {
+      vi.mocked(mockUserRepository.save).mockRejectedValue('raw string error');
+
+      await expect(useCase.execute(validInput)).rejects.toBe('raw string error');
+    });
   });
 });

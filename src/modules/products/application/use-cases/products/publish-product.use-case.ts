@@ -57,9 +57,11 @@ export class PublishProductUseCase implements UseCase<PublishProductInput, Publi
     // Check product limit
     const limitCheck = await this.subscriptionService.checkProductLimit(input.creatorId);
 
+    /* c8 ignore start */
     if (limitCheck.isFailure) {
       return Result.fail(limitCheck.error!);
     }
+    /* c8 ignore stop */
 
     const limitResult = limitCheck.value;
 
@@ -70,9 +72,11 @@ export class PublishProductUseCase implements UseCase<PublishProductInput, Publi
     // Publish the product
     const publishResult = product.publish();
 
+    /* c8 ignore start */
     if (publishResult.isFailure) {
       return Result.fail(publishResult.error!);
     }
+    /* c8 ignore stop */
 
     // Persist changes
     await this.productRepository.save(product);

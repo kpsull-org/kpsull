@@ -104,4 +104,12 @@ describe('Email Value Object', () => {
       expect(email.localPart).toBe('john.doe');
     });
   });
+
+  describe('toString', () => {
+    it('should return the email string value', () => {
+      const email = Email.create('test@example.com').value;
+
+      expect(email.toString()).toBe('test@example.com');
+    });
+  });
 });

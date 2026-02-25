@@ -217,6 +217,23 @@ describe('Cart Entity', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('négative');
     });
+
+    it('should update quantity for a specific variant', () => {
+      const cart = Cart.create({ userId: 'user-123' }).value;
+      const item = CartItem.create({
+        productId: 'product-1',
+        variantId: 'variant-A',
+        name: 'Produit A - Taille M',
+        price: 2999,
+        creatorSlug: 'creator-slug',
+      }).value;
+      cart.addItem(item);
+
+      const result = cart.updateQuantity('product-1', 3, 'variant-A');
+
+      expect(result.isSuccess).toBe(true);
+      expect(cart.items[0]?.quantity).toBe(3);
+    });
   });
 
   describe('clear', () => {

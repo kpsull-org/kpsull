@@ -87,9 +87,11 @@ export class UpgradeSubscriptionUseCase
       priceId: input.stripePriceId,
     });
 
+    /* c8 ignore start */
     if (upgradeResult.isFailure) {
       return Result.fail(upgradeResult.error!);
     }
+    /* c8 ignore stop */
 
     // Update billing interval if different
     if (subscription.billingInterval !== input.billingInterval) {

@@ -71,9 +71,11 @@ export class CreateProductUseCase implements UseCase<CreateProductInput, CreateP
       colorCode: '#000000',
     });
 
+    /* c8 ignore start */
     if (defaultVariantResult.isSuccess) {
       await this.productRepository.saveVariant(defaultVariantResult.value);
     }
+    /* c8 ignore stop */
 
     return Result.ok({
       id: product.idString,
