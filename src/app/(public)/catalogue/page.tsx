@@ -119,6 +119,7 @@ export default async function CataloguePage({
         if (sort === "price_desc") return { product: { price: "desc" as const } };
         return { product: { publishedAt: "desc" as const } };
       })(),
+      take: 200,
     }),
     prisma.product.findFirst({
       where: { status: "PUBLISHED" },

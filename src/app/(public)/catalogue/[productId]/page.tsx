@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+
+export const revalidate = 3600;
 import { ProductClient } from "./_components/product-client";
 import { RelatedProducts } from "./_components/related-products";
 
