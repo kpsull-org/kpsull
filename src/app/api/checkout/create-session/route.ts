@@ -89,13 +89,9 @@ export async function POST(request: Request): Promise<NextResponse> {
   let items: CartStoreItem[];
   if (Array.isArray(dbItems) && dbItems.length > 0) {
     items = dbItems;
-  /* c8 ignore start */
   } else if (parsed.data.items && parsed.data.items.length > 0) {
-  /* c8 ignore stop */
     // Fallback: utiliser les items envoyés par le client si le cart DB est vide
-    /* c8 ignore start */
-    items = parsed.data.items as CartStoreItem[];
-    /* c8 ignore stop */
+    items = /* c8 ignore next */ parsed.data.items as CartStoreItem[];
   } else {
     return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
   }

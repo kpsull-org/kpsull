@@ -120,6 +120,20 @@ describe('CreatePayment Use Case', () => {
       expect(result.error).toContain('invalide');
     });
 
+    it('should fail when payment method is empty string', async () => {
+      const result = await useCase.execute({
+        orderId: 'order-123',
+        customerId: 'customer-123',
+        creatorId: 'creator-123',
+        amount: 2999,
+        currency: 'EUR',
+        paymentMethod: '',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('invalide');
+    });
+
     it('should fail when payment already exists for order', async () => {
       const existingPayment = Payment.create({
         orderId: 'order-123',

@@ -153,6 +153,32 @@ describe('ProcessPayment Use Case', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toContain('Action invalide');
     });
+
+    it('should hit switch default when validation is bypassed via prototype patching', async () => {
+      // Create an instance that skips the guard to reach the switch default
+      const payment = createTestPayment('PROCESSING');
+      mockRepository.findById.mockResolvedValue(payment);
+
+      // Bypass the guard by directly invoking execute with a spy on Array.prototype.includes
+      const originalIncludes = Array.prototype.includes;
+      // Override includes so that validActions.includes('BYPASS') returns true
+      Array.prototype.includes = function (this: unknown[], searchElement: unknown) {
+        if (searchElement === 'BYPASS') return true;
+        return originalIncludes.call(this, searchElement);
+      };
+
+      try {
+        const result = await useCase.execute({
+          paymentId: payment.idString,
+          action: 'BYPASS' as 'SUCCEED',
+        });
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toContain('Action invalide');
+      } finally {
+        Array.prototype.includes = originalIncludes;
+      }
+    });
   });
 
   describe('refund', () => {

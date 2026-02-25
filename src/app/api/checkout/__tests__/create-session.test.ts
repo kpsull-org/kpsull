@@ -167,6 +167,18 @@ describe('POST /api/checkout/create-session', () => {
       expect(response.status).toBe(400);
       expect(body.error).toBe('Panier vide');
     });
+
+    it('should use inline items from body when DB cart is empty', async () => {
+      mockPrisma.cart.findUnique.mockResolvedValueOnce({ items: [] });
+      const bodyWithInlineItems = {
+        ...validBody,
+        items: [
+          { productId: 'prod-1', name: 'T-shirt', price: 2500, quantity: 2, creatorSlug: 'creator-slug-1' },
+        ],
+      };
+      const response = await POST(makeRequest(bodyWithInlineItems));
+      expect(response.status).toBe(200);
+    });
   });
 
   describe('body validation', () => {

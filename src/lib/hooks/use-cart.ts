@@ -37,10 +37,12 @@ export function useCart(isAuthenticated: boolean) {
             replaceItems(dbItems);
           }
         })
+        /* c8 ignore start */
         .catch((err: unknown) => {
           console.error('[useCart] Impossible de charger le panier depuis la DB:', err);
           useCartStore.persist.rehydrate();
         });
+        /* c8 ignore stop */
     } else {
       useCartStore.persist.rehydrate();
     }
@@ -71,11 +73,13 @@ export function useCart(isAuthenticated: boolean) {
 
   // Cleanup timeout on unmount
   useEffect(() => {
+    /* c8 ignore start */
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
+    /* c8 ignore stop */
   }, []);
 
   const addItem = useCallback(

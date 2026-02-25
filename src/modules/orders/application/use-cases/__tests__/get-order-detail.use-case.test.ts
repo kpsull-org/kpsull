@@ -152,6 +152,18 @@ describe('GetOrderDetailUseCase', () => {
       expect(result.error).toContain('Creator ID');
     });
 
+    it('should fail when creatorId contains only whitespace', async () => {
+      // Act
+      const result = await useCase.execute({
+        orderId: 'some-id',
+        creatorId: '   ',
+      });
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('Creator ID est requis');
+    });
+
     it('should fail without orderId', async () => {
       // Act
       const result = await useCase.execute({

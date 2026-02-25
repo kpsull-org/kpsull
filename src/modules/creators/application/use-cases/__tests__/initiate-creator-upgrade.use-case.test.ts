@@ -75,6 +75,13 @@ describe('InitiateCreatorUpgradeUseCase', () => {
       expect(result.error).toContain('User ID is required');
     });
 
+    it('should fail with whitespace-only userId', async () => {
+      const result = await useCase.execute({ userId: '   ' });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('User ID is required');
+    });
+
     it('should return correct DTO structure', async () => {
       vi.mocked(mockRepository.findByUserId).mockResolvedValue(null);
       vi.mocked(mockRepository.save).mockResolvedValue(undefined);

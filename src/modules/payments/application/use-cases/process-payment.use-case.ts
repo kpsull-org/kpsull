@@ -70,7 +70,7 @@ export class ProcessPaymentUseCase
         actionResult = payment.refund(input.stripeRefundId);
         break;
 
-      /* c8 ignore start */
+      /* c8 ignore start */ /* istanbul ignore next */
       default:
         return Result.fail(`Action invalide: ${input.action}`);
       /* c8 ignore stop */
