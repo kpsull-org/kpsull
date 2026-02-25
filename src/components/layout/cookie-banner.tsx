@@ -50,7 +50,7 @@ export function CookieBanner() {
     <dialog
       open
       aria-label="Gestion des cookies"
-      className="fixed bottom-0 left-0 right-0 z-[9999] m-0 max-w-none border-t-2 border-black bg-white p-0 font-[family-name:var(--font-montserrat)]"
+      className="fixed bottom-0 left-0 right-0 z-[9999] m-0 w-full max-w-none border-t-2 border-black bg-white p-0 font-[family-name:var(--font-montserrat)]"
     >
       {/* Ligne décorative double — cohérent avec le header */}
       <div className="h-[2px] w-full bg-black" />
