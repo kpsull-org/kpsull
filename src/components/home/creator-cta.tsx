@@ -1,5 +1,11 @@
 import { BeCreatorButton } from "@/components/home/be-creator-button";
 
+const PERK_DELAY_CLASSES = [
+  "kp-scroll-reveal-delay-1",
+  "kp-scroll-reveal-delay-2",
+  "kp-scroll-reveal-delay-3",
+] as const;
+
 const perks = [
   {
     title: "Commission à partir de 3%",
@@ -44,8 +50,8 @@ export function CreatorCta() {
 
           {/* Droite : 3 avantages */}
           <div className="flex flex-col justify-center divide-y divide-black/10">
-            {perks.map((perk) => (
-              <div key={perk.title} className="py-7">
+            {perks.map((perk, i) => (
+              <div key={perk.title} className={`${PERK_DELAY_CLASSES[i]} py-7`}>
                 <p className="font-[family-name:var(--font-montserrat)] text-base font-bold uppercase tracking-tight text-black">
                   {perk.title}
                 </p>

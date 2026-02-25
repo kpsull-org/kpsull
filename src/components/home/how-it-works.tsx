@@ -1,3 +1,9 @@
+const STEP_DELAY_CLASSES = [
+  "kp-scroll-reveal-delay-1",
+  "kp-scroll-reveal-delay-2",
+  "kp-scroll-reveal-delay-3",
+] as const;
+
 export function HowItWorks() {
   const steps = [
     {
@@ -21,9 +27,9 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="kp-scroll-reveal border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
+    <section className="border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-10 flex items-end justify-between md:mb-12">
+        <div className="kp-scroll-reveal mb-10 flex items-end justify-between md:mb-12">
           <h2 className="font-[family-name:var(--font-montserrat)] text-lg font-semibold uppercase md:text-xl lg:text-2xl">
             COMMENT ÇA MARCHE ?
           </h2>
@@ -36,7 +42,7 @@ export function HowItWorks() {
           {steps.map((step, i) => (
             <div
               key={step.number}
-              className={`border-t-2 border-black pt-6 pb-8 md:pt-8 md:pb-10 ${
+              className={`${STEP_DELAY_CLASSES[i]} border-t-2 border-black pt-6 pb-8 md:pt-8 md:pb-10 ${
                 i < 2 ? "md:border-r-2 md:pr-8 lg:pr-12" : ""
               } ${i > 0 ? "md:pl-8 lg:pl-12" : ""}`}
             >

@@ -71,6 +71,13 @@ function IconLock() {
   );
 }
 
+const ITEM_DELAY_CLASSES = [
+  "kp-scroll-reveal-delay-1",
+  "kp-scroll-reveal-delay-2",
+  "kp-scroll-reveal-delay-3",
+  "kp-scroll-reveal-delay-3",
+] as const;
+
 const items = [
   { label: "LIVRAISON RAPIDE", sub: "Expédié sous 48h", Icon: IconTruck },
   { label: "PIÈCES UNIQUES", sub: "Éditions limitées", Icon: IconDiamond },
@@ -80,12 +87,12 @@ const items = [
 
 export function ReassuranceStrip() {
   return (
-    <section className="kp-scroll-reveal border-t-2 border-b-2 border-black bg-[#D6C8BD]">
+    <section className="border-t-2 border-b-2 border-black bg-[#D6C8BD]">
       <div className="mx-auto grid max-w-7xl grid-cols-2 md:grid-cols-4">
-        {items.map(({ label, sub, Icon }) => (
+        {items.map(({ label, sub, Icon }, i) => (
           <div
             key={label}
-            className="flex flex-col items-center gap-4 px-6 py-10 text-center md:py-12"
+            className={`${ITEM_DELAY_CLASSES[i]} flex flex-col items-center gap-4 px-6 py-10 text-center md:py-12`}
           >
             <Icon />
             <div>
