@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cart.store";
 
@@ -26,6 +27,7 @@ interface ProductClientProps {
   productPrice: number;
   productName: string;
   creatorSlug: string;
+  creatorImage?: string | null;
   brandName?: string | null;
   description?: string | null;
   infoRows?: { key: string; value: string }[];
@@ -47,6 +49,7 @@ export function ProductClient({
   productPrice,
   productName,
   creatorSlug,
+  creatorImage,
   brandName,
   description,
   infoRows,
@@ -282,9 +285,23 @@ export function ProductClient({
               {productName}
             </h1>
             {brandName && (
-              <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-black/55">
-                {brandName}
-              </p>
+              <div className="mt-1 flex items-center gap-1.5">
+                {creatorImage && (
+                  <Image
+                    src={creatorImage}
+                    alt={brandName}
+                    width={16}
+                    height={16}
+                    className="rounded-full object-cover shrink-0"
+                  />
+                )}
+                <Link
+                  href={`/${creatorSlug}`}
+                  className="text-[11px] uppercase tracking-[0.1em] text-black/55 hover:text-black transition-colors"
+                >
+                  {brandName}
+                </Link>
+              </div>
             )}
           </div>
 
