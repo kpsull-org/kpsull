@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient, ProductStatus as PrismaProductStatus } from '@prisma/client';
 import { PublicProductListRepository } from '../../application/use-cases/public/list-public-products.use-case';
-import { PublicProductRepository } from '../../application/use-cases/public/get-public-product.use-case';
+import { PublicProductRepository, type PublicCreatorOutput } from '../../application/use-cases/public/get-public-product.use-case';
 import { ProjectProductsRepository } from '../../application/use-cases/public/list-products-by-project.use-case';
 import { Product } from '../../domain/entities/product.entity';
 import { ProductVariant } from '../../domain/entities/product-variant.entity';
@@ -114,6 +114,40 @@ export class PrismaPublicProductRepository
     return variants
       .map((v) => this.toDomainVariant(v))
       .filter((v): v is ProductVariant => v !== null);
+  }
+
+  async findCreatorByProductId(productId: string): Promise<PublicCreatorOutput | null> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: {
+        creatorId: true,
+      },
+    });
+
+    if (!product) {
+      return null;
+    }
+
+    const [user, creatorPage] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: product.creatorId },
+        select: { name: true, image: true },
+      }),
+      this.prisma.creatorPage.findUnique({
+        where: { creatorId: product.creatorId },
+        select: { slug: true },
+      }),
+    ]);
+
+    if (!user || !creatorPage) {
+      return null;
+    }
+
+    return {
+      name: user.name,
+      image: user.image,
+      slug: creatorPage.slug,
+    };
   }
 
   async findPublishedProjectById(id: string): Promise<Project | null> {

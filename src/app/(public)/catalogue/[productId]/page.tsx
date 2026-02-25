@@ -48,8 +48,8 @@ export default async function ProductPage({
 
   if (!product) notFound();
 
-  // Fetch brand name and creator slug in parallel
-  const [creatorOnboarding, creatorPage] = await Promise.all([
+  // Fetch brand name, creator slug and creator image in parallel
+  const [creatorOnboarding, creatorPage, creatorUser] = await Promise.all([
     prisma.creatorOnboarding.findUnique({
       where: { userId: product.creatorId },
       select: { brandName: true },
@@ -58,10 +58,15 @@ export default async function ProductPage({
       where: { creatorId: product.creatorId },
       select: { slug: true },
     }),
+    prisma.user.findUnique({
+      where: { id: product.creatorId },
+      select: { image: true },
+    }),
   ]);
 
   const brandName = creatorOnboarding?.brandName ?? null;
   const creatorSlug = creatorPage?.slug ?? '';
+  const creatorImage = creatorUser?.image ?? null;
 
   // Determine selected variant
   const validVariant =
@@ -115,6 +120,7 @@ export default async function ProductPage({
         description={product.description ?? null}
         infoRows={infoRows}
         creatorSlug={creatorSlug}
+        creatorImage={creatorImage}
       />
       <RelatedProducts
         productId={productId}

@@ -3,9 +3,16 @@ import { UseCase } from '@/shared/application/use-case.interface';
 import { Product } from '../../../domain/entities/product.entity';
 import { ProductVariant } from '../../../domain/entities/product-variant.entity';
 
+export interface PublicCreatorOutput {
+  name: string | null;
+  image: string | null;
+  slug: string;
+}
+
 export interface PublicProductRepository {
   findPublishedById(id: string): Promise<Product | null>;
   findVariantsByProductId(productId: string): Promise<ProductVariant[]>;
+  findCreatorByProductId(productId: string): Promise<PublicCreatorOutput | null>;
 }
 
 export interface GetPublicProductInput {
@@ -34,6 +41,7 @@ export interface GetPublicProductOutput {
   variants: PublicVariantOutput[];
   images: string[];
   publishedAt?: Date;
+  creator: PublicCreatorOutput;
 }
 
 /**
@@ -62,8 +70,11 @@ export class GetPublicProductUseCase implements UseCase<GetPublicProductInput, G
       return Result.fail('Produit non trouve');
     }
 
-    // Fetch variants
-    const variants = await this.productRepository.findVariantsByProductId(productId);
+    // Fetch variants and creator info in parallel
+    const [variants, creator] = await Promise.all([
+      this.productRepository.findVariantsByProductId(productId),
+      this.productRepository.findCreatorByProductId(productId),
+    ]);
 
     // Filter only available variants (stock > 0)
     const availableVariants = variants.filter((v) => v.isAvailable);
@@ -96,6 +107,7 @@ export class GetPublicProductUseCase implements UseCase<GetPublicProductInput, G
       variants: variantDtos,
       images: allImages,
       publishedAt: product.publishedAt,
+      creator: creator ?? { name: null, image: null, slug: '' },
     };
 
     return Result.ok(output);
