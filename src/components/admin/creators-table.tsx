@@ -27,7 +27,7 @@ import type {
 } from '@/modules/analytics/application/ports';
 
 // Re-export types for convenience
-export type { CreatorStatus, CreatorSortField, SortDirection };
+export type { CreatorStatus, CreatorSortField, SortDirection } from '@/modules/analytics/application/ports';
 
 /**
  * Serialized version of CreatorSummary with Date fields as ISO strings.

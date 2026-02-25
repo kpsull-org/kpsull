@@ -13,7 +13,7 @@ import type {
 } from '@/modules/analytics/application/ports';
 import { suspendCreatorAction, reactivateCreatorAction } from './actions';
 
-export type { SerializedCreatorSummary };
+export type { SerializedCreatorSummary } from '@/components/admin/creators-table';
 
 export interface CreatorsPageClientProps {
   initialCreators: SerializedCreatorSummary[];
