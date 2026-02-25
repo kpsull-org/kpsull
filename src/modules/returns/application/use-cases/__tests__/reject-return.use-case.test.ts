@@ -54,99 +54,6 @@ describe('RejectReturnUseCase', () => {
       );
     });
 
-    it('should fail if return not found', async () => {
-      // Arrange
-      mockRepository.findById.mockResolvedValue(null);
-
-      // Act
-      const result = await useCase.execute({
-        returnId: 'non-existent',
-        creatorId: 'creator-123',
-        reason: 'Raison',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('non trouvee');
-    });
-
-    it('should fail if not the creator owner', async () => {
-      // Arrange
-      const returnRequest = createRequestedReturn();
-      mockRepository.findById.mockResolvedValue(returnRequest);
-
-      // Act
-      const result = await useCase.execute({
-        returnId: 'return-1',
-        creatorId: 'different-creator',
-        reason: 'Raison',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('autorise');
-    });
-
-    it('should fail without reason', async () => {
-      // Arrange
-      const returnRequest = createRequestedReturn();
-      mockRepository.findById.mockResolvedValue(returnRequest);
-
-      // Act
-      const result = await useCase.execute({
-        returnId: 'return-1',
-        creatorId: 'creator-123',
-        reason: '',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('motif');
-    });
-
-    it('should fail without returnId', async () => {
-      // Act
-      const result = await useCase.execute({
-        returnId: '',
-        creatorId: 'creator-123',
-        reason: 'Raison',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Return ID');
-    });
-
-    it('should fail without creatorId', async () => {
-      // Act
-      const result = await useCase.execute({
-        returnId: 'return-1',
-        creatorId: '',
-        reason: 'Raison',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Creator ID');
-    });
-
-    it('should fail if return is not in REQUESTED status', async () => {
-      // Arrange
-      const returnRequest = { ...createRequestedReturn(), status: 'REJECTED' as const };
-      mockRepository.findById.mockResolvedValue(returnRequest);
-
-      // Act
-      const result = await useCase.execute({
-        returnId: 'return-1',
-        creatorId: 'creator-123',
-        reason: 'Raison',
-      });
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('en attente');
-    });
-
     it('should trim the reason', async () => {
       // Arrange
       const returnRequest = createRequestedReturn();
@@ -162,6 +69,60 @@ describe('RejectReturnUseCase', () => {
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.value.rejectionReason).toBe('Raison avec espaces');
+    });
+
+    it('should fail if return not found', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+
+      const result = await useCase.execute({
+        returnId: 'non-existent',
+        creatorId: 'creator-123',
+        reason: 'Raison',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('non trouvee');
+    });
+
+    it('should fail if not the creator owner', async () => {
+      mockRepository.findById.mockResolvedValue(createRequestedReturn());
+
+      const result = await useCase.execute({
+        returnId: 'return-1',
+        creatorId: 'different-creator',
+        reason: 'Raison',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('autorise');
+    });
+
+    it('should fail if return is not in REQUESTED status', async () => {
+      mockRepository.findById.mockResolvedValue({ ...createRequestedReturn(), status: 'REJECTED' as const });
+
+      const result = await useCase.execute({
+        returnId: 'return-1',
+        creatorId: 'creator-123',
+        reason: 'Raison',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain('en attente');
+    });
+
+    it.each([
+      { label: 'without reason', input: { returnId: 'return-1', creatorId: 'creator-123', reason: '' }, errorContains: 'motif', needsReturn: true },
+      { label: 'without returnId', input: { returnId: '', creatorId: 'creator-123', reason: 'Raison' }, errorContains: 'Return ID', needsReturn: false },
+      { label: 'without creatorId', input: { returnId: 'return-1', creatorId: '', reason: 'Raison' }, errorContains: 'Creator ID', needsReturn: false },
+    ])('should fail $label', async ({ input, errorContains, needsReturn }) => {
+      if (needsReturn) {
+        mockRepository.findById.mockResolvedValue(createRequestedReturn());
+      }
+
+      const result = await useCase.execute(input);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toContain(errorContains);
     });
   });
 });

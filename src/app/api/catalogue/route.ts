@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 import { shuffleInterleaved } from '@/lib/utils/catalogue-shuffle';
+import { fetchCatalogueVariants } from '@/lib/utils/catalogue-query';
 
 const PAGE_SIZE = 32;
 
@@ -16,23 +17,6 @@ const getCachedMaxPrice = unstable_cache(
   ['catalogue-max-price'],
   { revalidate: 600, tags: ['products'] }
 );
-
-type VariantItem = {
-  id: string;
-  images: unknown;
-  priceOverride: number | null;
-  productId: string;
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    style: { name: string } | null;
-    category: string | null;
-    gender: string | null;
-    creatorId: string;
-  };
-  skus: { size: string | null; stock: number }[];
-};
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -55,59 +39,16 @@ export async function GET(request: NextRequest) {
   const maxPriceEuros = searchParams.get('maxPrice') && !Number.isNaN(maxRaw) ? maxRaw : dynamicMaxPrice;
   const maxPrice = maxPriceEuros * 100;
 
-  // Expand genders (Unisexe logic)
-  const expandedGenders = new Set(selectedGenders);
-  if (expandedGenders.has('Homme') || expandedGenders.has('Femme')) {
-    expandedGenders.add('Unisexe');
-  } else if (expandedGenders.size === 1 && expandedGenders.has('Unisexe')) {
-    expandedGenders.add('Homme');
-    expandedGenders.add('Femme');
-  }
-  const gendersForQuery = [...expandedGenders];
-
-  // P10 : filtre prix poussé dans la clause WHERE Prisma
-  const variants = await prisma.productVariant.findMany({
-    where: {
-      product: {
-        status: 'PUBLISHED',
-        ...(selectedStyles.length > 0 ? { style: { name: { in: selectedStyles } } } : {}),
-        ...(gendersForQuery.length > 0 ? { gender: { in: gendersForQuery } } : {}),
-      },
-      ...(selectedSizes.length > 0 ? { skus: { some: { size: { in: selectedSizes }, stock: { gt: 0 } } } } : {}),
-      OR: [
-        { priceOverride: { gte: minPrice, lte: maxPrice } },
-        {
-          priceOverride: null,
-          product: { price: { gte: minPrice, lte: maxPrice } },
-        },
-      ],
-    },
-    include: {
-      product: {
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          style: { select: { name: true } },
-          category: true,
-          gender: true,
-          creatorId: true,
-        },
-      },
-      skus: {
-        select: { size: true, stock: true },
-        where: { stock: { gt: 0 } },
-      },
-    },
-    orderBy: (() => {
-      if (sort === 'price_asc') return { product: { price: 'asc' as const } };
-      if (sort === 'price_desc') return { product: { price: 'desc' as const } };
-      return { product: { publishedAt: 'desc' as const } };
-    })(),
-    take: 200,
+  const variants = await fetchCatalogueVariants({
+    selectedStyles,
+    selectedSizes,
+    selectedGenders,
+    sort,
+    minPriceCents: minPrice,
+    maxPriceCents: maxPrice,
   });
 
-  let sorted: VariantItem[];
+  let sorted: typeof variants;
   if (sort === 'price_asc') {
     sorted = [...variants].sort((a, b) => (a.priceOverride ?? a.product.price) - (b.priceOverride ?? b.product.price));
   } else if (sort === 'price_desc') {

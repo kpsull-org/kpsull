@@ -8,6 +8,12 @@ describe('CreatePageUseCase', () => {
   let useCase: CreatePageUseCase;
   let mockRepo: MockPageRepo;
 
+  const defaultInput: CreatePageInput = {
+    creatorId: 'creator-123',
+    slug: 'my-shop',
+    title: 'Ma Boutique',
+  };
+
   beforeEach(() => {
     mockRepo = createMockPageRepo();
     mockRepo.slugExists.mockResolvedValue(false);
@@ -18,9 +24,7 @@ describe('CreatePageUseCase', () => {
     it('should create a page successfully', async () => {
       // Arrange
       const input: CreatePageInput = {
-        creatorId: 'creator-123',
-        slug: 'my-shop',
-        title: 'Ma Boutique',
+        ...defaultInput,
         description: 'Description de ma boutique',
       };
 
@@ -39,9 +43,7 @@ describe('CreatePageUseCase', () => {
     it('should create a page with template', async () => {
       // Arrange
       const input: CreatePageInput = {
-        creatorId: 'creator-123',
-        slug: 'my-shop',
-        title: 'Ma Boutique',
+        ...defaultInput,
         templateId: 'template-1',
       };
 
@@ -58,9 +60,8 @@ describe('CreatePageUseCase', () => {
       mockRepo.slugExists.mockResolvedValue(true);
 
       const input: CreatePageInput = {
-        creatorId: 'creator-123',
+        ...defaultInput,
         slug: 'existing-slug',
-        title: 'Ma Boutique',
       };
 
       // Act
@@ -72,102 +73,41 @@ describe('CreatePageUseCase', () => {
       expect(mockRepo.save).not.toHaveBeenCalled();
     });
 
-    it('should fail when title is empty', async () => {
-      // Arrange
-      const input: CreatePageInput = {
-        creatorId: 'creator-123',
-        slug: 'my-shop',
-        title: '',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('titre');
-    });
-
-    it('should fail when slug is invalid', async () => {
-      // Arrange
-      const input: CreatePageInput = {
-        creatorId: 'creator-123',
-        slug: 'invalid_slug!',
-        title: 'Ma Boutique',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-    });
-
-    it('should fail when creatorId is empty', async () => {
-      // Arrange
-      const input: CreatePageInput = {
-        creatorId: '',
-        slug: 'my-shop',
-        title: 'Ma Boutique',
-      };
-
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Creator ID');
-    });
-
     it('should return page with id', async () => {
-      // Arrange
-      const input: CreatePageInput = {
-        creatorId: 'creator-123',
-        slug: 'my-shop',
-        title: 'Ma Boutique',
-      };
+      const result = await useCase.execute(defaultInput);
 
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.value.id).toBeDefined();
       expect(result.value.id.length).toBeGreaterThan(0);
     });
 
     it('should normalize slug to lowercase', async () => {
-      // Arrange
-      const input: CreatePageInput = {
-        creatorId: 'creator-123',
-        slug: 'My-Shop',
-        title: 'Ma Boutique',
-      };
+      const result = await useCase.execute({ ...defaultInput, slug: 'My-Shop' });
 
-      // Act
-      const result = await useCase.execute(input);
-
-      // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.value.slug).toBe('my-shop');
     });
 
     it('should save the correct page to repository', async () => {
-      // Arrange
-      const input: CreatePageInput = {
-        creatorId: 'creator-123',
-        slug: 'my-shop',
-        title: 'Ma Boutique',
-      };
+      await useCase.execute(defaultInput);
 
-      // Act
-      await useCase.execute(input);
-
-      // Assert
       expect(mockRepo.save).toHaveBeenCalledWith(expect.any(CreatorPage));
       const savedPage = mockRepo.save.mock.calls[0]![0] as CreatorPage;
       expect(savedPage.slug).toBe('my-shop');
       expect(savedPage.title).toBe('Ma Boutique');
+    });
+
+    it.each([
+      { label: 'title is empty', input: { ...defaultInput, title: '' }, errorContains: 'titre' },
+      { label: 'slug is invalid', input: { ...defaultInput, slug: 'invalid_slug!' }, errorContains: undefined },
+      { label: 'creatorId is empty', input: { ...defaultInput, creatorId: '' }, errorContains: 'Creator ID' },
+    ])('should fail when $label', async ({ input, errorContains }) => {
+      const result = await useCase.execute(input);
+
+      expect(result.isFailure).toBe(true);
+      if (errorContains) {
+        expect(result.error).toContain(errorContains);
+      }
     });
   });
 });

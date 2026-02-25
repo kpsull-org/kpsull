@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma/client';
+import { requireCreatorAuth } from '@/lib/api/require-auth';
 import { PrismaReturnRepository } from '@/modules/returns/infrastructure/repositories';
 import type { ReturnStatusValue } from '@/modules/returns/domain/value-objects/return-status.vo';
 
@@ -19,20 +19,12 @@ const returnRepository = new PrismaReturnRepository(prisma);
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
+    const authResult = await requireCreatorAuth();
+    if (!authResult.success) {
+      return authResult.response;
     }
 
-    // Check if user is a creator
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== 'CREATOR') {
-      return NextResponse.json({ error: 'Acces reserve aux createurs' }, { status: 403 });
-    }
+    const { id: creatorId } = authResult.user;
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
@@ -44,7 +36,7 @@ export async function GET(request: NextRequest) {
     const filters = status ? { status } : undefined;
 
     const { returns, total } = await returnRepository.findByCreatorId(
-      session.user.id,
+      creatorId,
       filters,
       { skip, take: limit }
     );

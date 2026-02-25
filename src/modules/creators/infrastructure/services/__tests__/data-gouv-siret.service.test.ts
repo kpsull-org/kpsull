@@ -163,28 +163,16 @@ describe('DataGouvSiretService', () => {
       expect(result.error).toContain('non trouvé');
     });
 
-    it('should fail on API error (500)', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
+    it.each([
+      { label: 'API error (500)', mockSetup: () => mockFetch.mockResolvedValueOnce({ ok: false, status: 500 }), errorContains: 'Erreur API' },
+      { label: 'rate limit (429)', mockSetup: () => mockFetch.mockResolvedValueOnce({ ok: false, status: 429 }), errorContains: 'Trop de requêtes' },
+    ])('should fail on $label', async ({ mockSetup, errorContains }) => {
+      mockSetup();
 
       const result = await service.verifySiret('87869129400010');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Erreur API');
-    });
-
-    it('should fail on rate limit (429)', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 429,
-      });
-
-      const result = await service.verifySiret('87869129400010');
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Trop de requêtes');
+      expect(result.error).toContain(errorContains);
     });
 
     it('should return timeout error when request times out', async () => {
@@ -375,28 +363,15 @@ describe('DataGouvSiretService', () => {
 });
 
 describe('validateSiretClient', () => {
-  it('should return invalid for empty string', () => {
-    const result = validateSiretClient('');
+  it.each([
+    { label: 'empty string', siret: '', errorContains: 'requis' },
+    { label: 'wrong length', siret: '12345', errorContains: '14 chiffres' },
+    { label: 'non-digit characters', siret: '1234567890123A', errorContains: 'chiffres' },
+    { label: 'failed Luhn checksum', siret: '87869129400011', errorContains: 'invalide' },
+  ])('should return invalid for $label', ({ siret, errorContains }) => {
+    const result = validateSiretClient(siret);
     expect(result.isValid).toBe(false);
-    expect(result.error).toContain('requis');
-  });
-
-  it('should return invalid for wrong length', () => {
-    const result = validateSiretClient('12345');
-    expect(result.isValid).toBe(false);
-    expect(result.error).toContain('14 chiffres');
-  });
-
-  it('should return invalid for non-digit characters', () => {
-    const result = validateSiretClient('1234567890123A');
-    expect(result.isValid).toBe(false);
-    expect(result.error).toContain('chiffres');
-  });
-
-  it('should return invalid for failed Luhn checksum', () => {
-    const result = validateSiretClient('87869129400011');
-    expect(result.isValid).toBe(false);
-    expect(result.error).toContain('invalide');
+    expect(result.error).toContain(errorContains);
   });
 
   it('should return valid for a correct SIRET', () => {

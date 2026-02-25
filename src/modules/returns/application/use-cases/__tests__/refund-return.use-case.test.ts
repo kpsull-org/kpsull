@@ -7,7 +7,13 @@ vi.mock('@/modules/products/application/services/stock.service', () => ({
 
 import { RefundReturnUseCase } from '../refund-return.use-case';
 import type { ReturnRepository } from '../../ports/return.repository.interface';
-import { createReceivedReturn, createMockReturnRepository, type MockReturnRepository } from './return.fixtures';
+import {
+  createReceivedReturn,
+  createMockReturnRepository,
+  assertFailsWhenReturnNotFound,
+  assertFailsWhenNotCreatorOwner,
+  type MockReturnRepository,
+} from './return.fixtures';
 
 describe('RefundReturnUseCase', () => {
   let useCase: RefundReturnUseCase;
@@ -40,21 +46,18 @@ describe('RefundReturnUseCase', () => {
   });
 
   it('should fail if return not found', async () => {
-    mockRepository.findById.mockResolvedValue(null);
-
-    const result = await useCase.execute({ returnId: 'non-existent', creatorId: 'creator-123' });
-
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toContain('non trouvee');
+    await assertFailsWhenReturnNotFound(
+      (input) => useCase.execute(input),
+      mockRepository
+    );
   });
 
   it('should fail if not the creator owner', async () => {
-    mockRepository.findById.mockResolvedValue(createReceivedReturn());
-
-    const result = await useCase.execute({ returnId: 'return-1', creatorId: 'different-creator' });
-
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toContain('autorise');
+    await assertFailsWhenNotCreatorOwner(
+      (input) => useCase.execute(input),
+      mockRepository,
+      createReceivedReturn()
+    );
   });
 
   it('should fail if return is not in RECEIVED status', async () => {

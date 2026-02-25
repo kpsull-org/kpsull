@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma/client';
+import { requireAdminAuth } from '@/lib/api/require-auth';
 import type { CsvExportOptions } from '@/lib/utils/csv-export';
 
 /**
@@ -423,20 +423,9 @@ async function fetchRevenueData(startDate: Date, endDate: Date): Promise<Revenue
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Non authentifie' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Acces reserve aux administrateurs' }, { status: 403 });
+    const authResult = await requireAdminAuth();
+    if (!authResult.success) {
+      return authResult.response;
     }
 
     // Parse query parameters

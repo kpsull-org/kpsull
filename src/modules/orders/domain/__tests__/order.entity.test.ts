@@ -2,6 +2,20 @@ import { describe, it, expect } from 'vitest';
 import { Order } from '../entities/order.entity';
 import { OrderItem } from '../entities/order-item.entity';
 
+const DEFAULT_ADDRESS = {
+  street: '123 Rue de Paris',
+  city: 'Paris',
+  postalCode: '75001',
+  country: 'France',
+};
+
+const DEFAULT_ITEM_PROPS = {
+  productId: 'p1',
+  productName: 'Produit A',
+  price: 1000,
+  quantity: 1,
+};
+
 describe('Order Entity', () => {
   describe('create', () => {
     it('should create a pending order', () => {
@@ -22,12 +36,7 @@ describe('Order Entity', () => {
         customerName: 'Jean Dupont',
         customerEmail: 'jean@example.com',
         items,
-        shippingAddress: {
-          street: '123 Rue de Paris',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-        },
+        shippingAddress: DEFAULT_ADDRESS,
       });
 
       // Assert
@@ -48,34 +57,18 @@ describe('Order Entity', () => {
         }).value,
       ];
 
-      // Act
-      const order1 = Order.create({
+      const orderProps = {
         creatorId: 'creator-123',
         customerId: 'customer-123',
         customerName: 'Jean Dupont',
         customerEmail: 'jean@example.com',
         items,
-        shippingAddress: {
-          street: '123 Rue de Paris',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-        },
-      }).value;
+        shippingAddress: DEFAULT_ADDRESS,
+      };
 
-      const order2 = Order.create({
-        creatorId: 'creator-123',
-        customerId: 'customer-123',
-        customerName: 'Jean Dupont',
-        customerEmail: 'jean@example.com',
-        items,
-        shippingAddress: {
-          street: '123 Rue de Paris',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-        },
-      }).value;
+      // Act
+      const order1 = Order.create(orderProps).value;
+      const order2 = Order.create(orderProps).value;
 
       // Assert
       expect(order1.orderNumber).not.toBe(order2.orderNumber);
@@ -89,12 +82,7 @@ describe('Order Entity', () => {
         customerName: 'Jean Dupont',
         customerEmail: 'jean@example.com',
         items: [],
-        shippingAddress: {
-          street: '123 Rue de Paris',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-        },
+        shippingAddress: DEFAULT_ADDRESS,
       });
 
       // Assert
@@ -102,56 +90,35 @@ describe('Order Entity', () => {
       expect(result.error).toContain('articles');
     });
 
-    it('should fail when creatorId is empty', () => {
+    it.each([
+      {
+        label: 'creatorId is empty',
+        props: { creatorId: '', customerId: 'customer-123', customerName: 'Jean Dupont', customerEmail: 'jean@example.com' },
+        errorContains: 'Creator ID',
+      },
+      {
+        label: 'customerId is empty',
+        props: { creatorId: 'creator-123', customerId: '', customerName: 'Jean Dupont', customerEmail: 'jean@example.com' },
+        errorContains: 'Customer ID',
+      },
+      {
+        label: 'customerName is empty',
+        props: { creatorId: 'creator-123', customerId: 'customer-123', customerName: '', customerEmail: 'jean@example.com' },
+        errorContains: 'nom',
+      },
+      {
+        label: 'customerEmail is empty',
+        props: { creatorId: 'creator-123', customerId: 'customer-123', customerName: 'Jean Dupont', customerEmail: '' },
+        errorContains: 'email',
+      },
+    ])('should fail when $label', ({ props, errorContains }) => {
       const result = Order.create({
-        creatorId: '',
-        customerId: 'customer-123',
-        customerName: 'Jean Dupont',
-        customerEmail: 'jean@example.com',
-        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
-        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
+        ...props,
+        items: [OrderItem.create(DEFAULT_ITEM_PROPS).value],
+        shippingAddress: DEFAULT_ADDRESS,
       });
       expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Creator ID');
-    });
-
-    it('should fail when customerId is empty', () => {
-      const result = Order.create({
-        creatorId: 'creator-123',
-        customerId: '',
-        customerName: 'Jean Dupont',
-        customerEmail: 'jean@example.com',
-        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
-        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
-      });
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Customer ID');
-    });
-
-    it('should fail when customerName is empty', () => {
-      const result = Order.create({
-        creatorId: 'creator-123',
-        customerId: 'customer-123',
-        customerName: '',
-        customerEmail: 'jean@example.com',
-        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
-        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
-      });
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('nom');
-    });
-
-    it('should fail when customerEmail is empty', () => {
-      const result = Order.create({
-        creatorId: 'creator-123',
-        customerId: 'customer-123',
-        customerName: 'Jean Dupont',
-        customerEmail: '',
-        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
-        shippingAddress: { street: '123 Rue de Paris', city: 'Paris', postalCode: '75001', country: 'France' },
-      });
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('email');
+      expect(result.error).toContain(errorContains);
     });
 
     it('should fail when shippingAddress street is empty', () => {
@@ -160,7 +127,7 @@ describe('Order Entity', () => {
         customerId: 'customer-123',
         customerName: 'Jean Dupont',
         customerEmail: 'jean@example.com',
-        items: [OrderItem.create({ productId: 'p1', productName: 'Produit A', price: 1000, quantity: 1 }).value],
+        items: [OrderItem.create(DEFAULT_ITEM_PROPS).value],
         shippingAddress: { street: '', city: 'Paris', postalCode: '75001', country: 'France' },
       });
       expect(result.isFailure).toBe(true);
@@ -352,11 +319,6 @@ function createTestOrder(): Order {
     customerName: 'Jean Dupont',
     customerEmail: 'jean@example.com',
     items,
-    shippingAddress: {
-      street: '123 Rue de Paris',
-      city: 'Paris',
-      postalCode: '75001',
-      country: 'France',
-    },
+    shippingAddress: DEFAULT_ADDRESS,
   }).value;
 }

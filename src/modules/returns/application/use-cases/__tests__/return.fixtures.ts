@@ -1,4 +1,4 @@
-import { vi, type Mock } from 'vitest';
+import { vi, expect, type Mock } from 'vitest';
 import type { ReturnRequest, ReturnRepository } from '../../ports/return.repository.interface';
 
 export type MockReturnRepository = {
@@ -63,4 +63,32 @@ export function createReceivedReturn(): ReturnRequest {
     shippedAt: new Date(),
     receivedAt: new Date(),
   });
+}
+
+type SimpleReturnInput = { returnId: string; creatorId: string };
+type SimpleExecuteFn = (input: SimpleReturnInput) => Promise<{ isFailure: boolean; error?: string }>;
+
+export async function assertFailsWhenReturnNotFound(
+  executeFn: SimpleExecuteFn,
+  mockRepository: MockReturnRepository
+): Promise<void> {
+  mockRepository.findById.mockResolvedValue(null);
+
+  const result = await executeFn({ returnId: 'non-existent', creatorId: 'creator-123' });
+
+  expect(result.isFailure).toBe(true);
+  expect(result.error).toContain('non trouvee');
+}
+
+export async function assertFailsWhenNotCreatorOwner(
+  executeFn: SimpleExecuteFn,
+  mockRepository: MockReturnRepository,
+  returnFixture: ReturnRequest
+): Promise<void> {
+  mockRepository.findById.mockResolvedValue(returnFixture);
+
+  const result = await executeFn({ returnId: 'return-1', creatorId: 'different-creator' });
+
+  expect(result.isFailure).toBe(true);
+  expect(result.error).toContain('autorise');
 }

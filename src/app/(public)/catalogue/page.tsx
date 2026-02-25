@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma/client";
 import { shuffleInterleaved } from "@/lib/utils/catalogue-shuffle";
+import { fetchCatalogueVariants } from "@/lib/utils/catalogue-query";
 import { FilterSidebar } from "./_components/filter-sidebar";
 import { CatalogueInfiniteGrid } from "./_components/catalogue-infinite-grid";
 
@@ -61,65 +62,13 @@ const getCatalogueVariants = unstable_cache(
     minPriceCents: number,
     maxPriceCents: number
   ) => {
-    const selectedStyles = styleKey ? styleKey.split(",") : [];
-    const selectedSizes = sizeKey ? sizeKey.split(",") : [];
-    const selectedGenders = genderKey ? genderKey.split(",") : [];
-
-    const expandedGenders = new Set(selectedGenders);
-    if (expandedGenders.has("Homme") || expandedGenders.has("Femme")) {
-      expandedGenders.add("Unisexe");
-    } else if (expandedGenders.size === 1 && expandedGenders.has("Unisexe")) {
-      expandedGenders.add("Homme");
-      expandedGenders.add("Femme");
-    }
-    const gendersForQuery = [...expandedGenders];
-
-    return prisma.productVariant.findMany({
-      where: {
-        product: {
-          status: "PUBLISHED",
-          ...(selectedStyles.length > 0
-            ? { style: { name: { in: selectedStyles } } }
-            : {}),
-          ...(gendersForQuery.length > 0
-            ? { gender: { in: gendersForQuery } }
-            : {}),
-        },
-        ...(selectedSizes.length > 0
-          ? { skus: { some: { size: { in: selectedSizes }, stock: { gt: 0 } } } }
-          : {}),
-        // P10 : filtre prix dans la WHERE (priceOverride ?? product.price)
-        OR: [
-          { priceOverride: { gte: minPriceCents, lte: maxPriceCents } },
-          {
-            priceOverride: null,
-            product: { price: { gte: minPriceCents, lte: maxPriceCents } },
-          },
-        ],
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            style: { select: { name: true } },
-            category: true,
-            gender: true,
-            creatorId: true,
-          },
-        },
-        skus: {
-          select: { size: true, stock: true },
-          where: { stock: { gt: 0 } },
-        },
-      },
-      orderBy: (() => {
-        if (sort === "price_asc") return { product: { price: "asc" as const } };
-        if (sort === "price_desc") return { product: { price: "desc" as const } };
-        return { product: { publishedAt: "desc" as const } };
-      })(),
-      take: 200,
+    return fetchCatalogueVariants({
+      selectedStyles: styleKey ? styleKey.split(",") : [],
+      selectedSizes: sizeKey ? sizeKey.split(",") : [],
+      selectedGenders: genderKey ? genderKey.split(",") : [],
+      sort,
+      minPriceCents,
+      maxPriceCents,
     });
   },
   ["catalogue-variants"],

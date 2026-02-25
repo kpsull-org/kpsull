@@ -141,29 +141,17 @@ describe('ProcessPayment Use Case', () => {
       expect(result.error).toContain('non trouvé');
     });
 
-    it('should fail for invalid action', async () => {
+    // Both INVALID and UNKNOWN_ACTION hit the same validation guard before the switch
+    it.each([
+      { label: 'invalid action', action: 'INVALID' as 'SUCCEED' },
+      { label: 'unknown action reaching switch default', action: 'UNKNOWN_ACTION' as 'SUCCEED' },
+    ])('should fail for $label', async ({ action }) => {
       const payment = createTestPayment('PROCESSING');
       mockRepository.findById.mockResolvedValue(payment);
 
       const result = await useCase.execute({
         paymentId: payment.idString,
-        action: 'INVALID' as 'SUCCEED',
-      });
-
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toContain('Action invalide');
-    });
-
-    it('should fail for unknown action reaching switch default', async () => {
-      // The switch default branch is unreachable in normal TypeScript flow (exhaustive switch).
-      // It is already annotated with c8/istanbul ignore. We verify the guard catches
-      // invalid actions before the switch is even reached.
-      const payment = createTestPayment('PROCESSING');
-      mockRepository.findById.mockResolvedValue(payment);
-
-      const result = await useCase.execute({
-        paymentId: payment.idString,
-        action: 'UNKNOWN_ACTION' as 'SUCCEED',
+        action,
       });
 
       expect(result.isFailure).toBe(true);
