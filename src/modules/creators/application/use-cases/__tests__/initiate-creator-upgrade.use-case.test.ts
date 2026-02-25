@@ -116,7 +116,7 @@ describe('InitiateCreatorUpgradeUseCase', () => {
     it('should fail when CreatorOnboarding.create returns a failure', async () => {
       vi.mocked(mockRepository.findByUserId).mockResolvedValue(null);
       vi.spyOn(CreatorOnboarding, 'create').mockReturnValue(
-        Result.fail('Creation failed') as ReturnType<typeof CreatorOnboarding.create>
+        Result.fail<CreatorOnboarding>('Creation failed')
       );
 
       const result = await useCase.execute(validInput);

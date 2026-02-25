@@ -81,7 +81,7 @@ describe('RegisterUserUseCase', () => {
     const result = await useCase.execute({
       name: 'Jean Dupont',
       email: 'jean@example.com',
-      password: 'Password123!',
+      password: 'Password123!', // NOSONAR - test fixture, not a real credential
     });
 
     expect(result.isFailure).toBe(true);
@@ -101,7 +101,7 @@ describe('RegisterUserUseCase', () => {
     await useCase.execute({
       name: 'Jean Nouveau',
       email: 'jean@example.com',
-      password: 'Password123!',
+      password: 'Password123!', // NOSONAR - test fixture, not a real credential
     });
 
     expect(mockAccountRepo.linkPassword).toHaveBeenCalledWith(
@@ -123,7 +123,7 @@ describe('RegisterUserUseCase', () => {
     await useCase.execute({
       name: 'Jean Nouveau',
       email: 'jean@example.com',
-      password: 'Password123!',
+      password: 'Password123!', // NOSONAR - test fixture, not a real credential
     });
 
     expect(mockAccountRepo.linkPassword).toHaveBeenCalledWith(

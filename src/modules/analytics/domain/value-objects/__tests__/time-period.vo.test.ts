@@ -180,7 +180,7 @@ describe('TimePeriod Value Object', () => {
     });
 
     it('should fallback to today when CUSTOM period has no dates', () => {
-      const period = TimePeriod.create('CUSTOM').value!;
+      const period = TimePeriod.create('CUSTOM').value;
       const { start, end } = period.getDateRange();
 
       const today = new Date();

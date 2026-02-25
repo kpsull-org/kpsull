@@ -19,6 +19,36 @@ const SELECTORS = [
   '.kp-scale-divider',
 ].join(', ');
 
+function observeAll(io: IntersectionObserver, root: ParentNode = document) {
+  root.querySelectorAll<Element>(SELECTORS).forEach((el) => io.observe(el));
+}
+
+function handleIntersection(
+  entries: IntersectionObserverEntry[],
+  io: IntersectionObserver
+) {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('kp-revealed');
+      // Animation one-shot : on arrête d'observer l'élément
+      io.unobserve(entry.target);
+    }
+  });
+}
+
+function handleMutation(
+  mutations: MutationRecord[],
+  io: IntersectionObserver
+) {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (!(node instanceof Element)) return;
+      if (node.matches(SELECTORS)) io.observe(node);
+      observeAll(io, node);
+    });
+  });
+}
+
 /**
  * ScrollRevealProvider
  *
@@ -31,35 +61,15 @@ export function ScrollRevealProvider() {
   useEffect(() => {
     // Déclenche l'animation une fois que 15% de l'élément est visible
     const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('kp-revealed');
-            // Animation one-shot : on arrête d'observer l'élément
-            io.unobserve(entry.target);
-          }
-        });
-      },
+      (entries) => handleIntersection(entries, io),
       { threshold: 0.15 }
     );
 
-    const observeAll = (root: ParentNode = document) => {
-      root.querySelectorAll<Element>(SELECTORS).forEach((el) => io.observe(el));
-    };
-
     // Observer tous les éléments déjà dans le DOM
-    observeAll();
+    observeAll(io);
 
     // Observer les nouveaux éléments ajoutés (infinite scroll, lazy load…)
-    const mo = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (!(node instanceof Element)) return;
-          if (node.matches(SELECTORS)) io.observe(node);
-          observeAll(node);
-        });
-      });
-    });
+    const mo = new MutationObserver((mutations) => handleMutation(mutations, io));
 
     mo.observe(document.body, { childList: true, subtree: true });
 

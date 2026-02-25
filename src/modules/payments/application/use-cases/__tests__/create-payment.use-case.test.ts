@@ -199,7 +199,7 @@ describe('CreatePayment Use Case', () => {
     it('should fail when Payment.create returns a failure', async () => {
       mockRepository.findByOrderId.mockResolvedValue(null);
       vi.spyOn(Payment, 'create').mockReturnValue(
-        Result.fail('Payment entity creation failed') as ReturnType<typeof Payment.create>
+        Result.fail<Payment>('Payment entity creation failed')
       );
 
       const result = await useCase.execute({

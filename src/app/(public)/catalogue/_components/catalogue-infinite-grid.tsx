@@ -178,8 +178,8 @@ export function CatalogueInfiniteGrid({
         })}
 
         {/* Skeleton loaders pendant le chargement — complète la grille */}
-        {loading && Array.from({ length: 4 }).map((_, i) => (
-          <ProductSkeleton key={`sk-${i}`} />
+        {loading && ['sk-0', 'sk-1', 'sk-2', 'sk-3'].map((key) => (
+          <ProductSkeleton key={key} />
         ))}
       </div>
 

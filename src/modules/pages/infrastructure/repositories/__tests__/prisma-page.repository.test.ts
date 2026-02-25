@@ -29,6 +29,45 @@ vi.mock('@/lib/prisma/client', () => ({
 
 import { PrismaPageRepository } from '../prisma-page.repository';
 
+// Helper to build a minimal valid Prisma page
+function buildPage(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'page-123',
+    creatorId: 'creator-456',
+    slug: 'my-shop',
+    title: 'My Shop',
+    description: null,
+    bannerImage: null,
+    bannerPosition: null,
+    tagline: null,
+    titleFont: null,
+    titleColor: null,
+    socialLinks: null,
+    templateId: null,
+    status: 'DRAFT',
+    publishedAt: null,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    sections: [],
+    ...overrides,
+  };
+}
+
+function buildSection(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'section-1',
+    pageId: 'page-123',
+    type: 'HERO',
+    title: 'Hero',
+    content: {},
+    position: 0,
+    isVisible: true,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    ...overrides,
+  };
+}
+
 describe('PrismaPageRepository', () => {
   let repository: PrismaPageRepository;
 
@@ -223,45 +262,6 @@ describe('PrismaPageRepository', () => {
       });
     });
   });
-
-  // Helper to build a minimal valid Prisma page
-  function buildPage(overrides: Record<string, unknown> = {}) {
-    return {
-      id: 'page-123',
-      creatorId: 'creator-456',
-      slug: 'my-shop',
-      title: 'My Shop',
-      description: null,
-      bannerImage: null,
-      bannerPosition: null,
-      tagline: null,
-      titleFont: null,
-      titleColor: null,
-      socialLinks: null,
-      templateId: null,
-      status: 'DRAFT',
-      publishedAt: null,
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
-      sections: [],
-      ...overrides,
-    };
-  }
-
-  function buildSection(overrides: Record<string, unknown> = {}) {
-    return {
-      id: 'section-1',
-      pageId: 'page-123',
-      type: 'HERO',
-      title: 'Hero',
-      content: {},
-      position: 0,
-      isVisible: true,
-      createdAt: new Date('2024-01-01'),
-      updatedAt: new Date('2024-01-01'),
-      ...overrides,
-    };
-  }
 
   describe('findById', () => {
     it('should return null when page not found', async () => {

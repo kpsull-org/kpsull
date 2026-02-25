@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { DataGouvSiretService } from '../data-gouv-siret.service';
+import { DataGouvSiretService, validateSiretClient, formatSiret } from '../data-gouv-siret.service';
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -373,8 +373,6 @@ describe('DataGouvSiretService', () => {
     });
   });
 });
-
-import { validateSiretClient, formatSiret } from '../data-gouv-siret.service';
 
 describe('validateSiretClient', () => {
   it('should return invalid for empty string', () => {
