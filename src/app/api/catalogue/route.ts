@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma/client';
 
 const PAGE_SIZE = 32;
+
+// P1 : cache du prix max (rarement modifié — 10 min)
+const getCachedMaxPrice = unstable_cache(
+  async () =>
+    prisma.product.findFirst({
+      where: { status: 'PUBLISHED' },
+      orderBy: { price: 'desc' },
+      select: { price: true },
+    }),
+  ['catalogue-max-price'],
+  { revalidate: 600, tags: ['products'] }
+);
 
 function seededRng(seed: string) {
   let h = 2166136261;
@@ -98,6 +111,13 @@ export async function GET(request: NextRequest) {
   const minPriceEuros = searchParams.get('minPrice') && !Number.isNaN(minRaw) ? Math.max(0, minRaw) : 0;
   const minPrice = minPriceEuros * 100;
 
+  // P1 : prix max via cache
+  const maxPriceProduct = await getCachedMaxPrice();
+  const dynamicMaxPrice = Math.ceil((maxPriceProduct?.price ?? 50000) / 100);
+  const maxRaw = Number.parseInt(searchParams.get('maxPrice') ?? '', 10);
+  const maxPriceEuros = searchParams.get('maxPrice') && !Number.isNaN(maxRaw) ? maxRaw : dynamicMaxPrice;
+  const maxPrice = maxPriceEuros * 100;
+
   // Expand genders (Unisexe logic)
   const expandedGenders = new Set(selectedGenders);
   if (expandedGenders.has('Homme') || expandedGenders.has('Femme')) {
@@ -108,64 +128,55 @@ export async function GET(request: NextRequest) {
   }
   const gendersForQuery = [...expandedGenders];
 
-  const [variants, maxPriceProduct] = await Promise.all([
-    prisma.productVariant.findMany({
-      where: {
-        product: {
-          status: 'PUBLISHED',
-          ...(selectedStyles.length > 0 ? { style: { name: { in: selectedStyles } } } : {}),
-          ...(gendersForQuery.length > 0 ? { gender: { in: gendersForQuery } } : {}),
-        },
-        ...(selectedSizes.length > 0 ? { skus: { some: { size: { in: selectedSizes }, stock: { gt: 0 } } } } : {}),
+  // P10 : filtre prix poussé dans la clause WHERE Prisma
+  const variants = await prisma.productVariant.findMany({
+    where: {
+      product: {
+        status: 'PUBLISHED',
+        ...(selectedStyles.length > 0 ? { style: { name: { in: selectedStyles } } } : {}),
+        ...(gendersForQuery.length > 0 ? { gender: { in: gendersForQuery } } : {}),
       },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            style: { select: { name: true } },
-            category: true,
-            gender: true,
-            creatorId: true,
-          },
+      ...(selectedSizes.length > 0 ? { skus: { some: { size: { in: selectedSizes }, stock: { gt: 0 } } } } : {}),
+      OR: [
+        { priceOverride: { gte: minPrice, lte: maxPrice } },
+        {
+          priceOverride: null,
+          product: { price: { gte: minPrice, lte: maxPrice } },
         },
-        skus: {
-          select: { size: true, stock: true },
-          where: { stock: { gt: 0 } },
+      ],
+    },
+    include: {
+      product: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          style: { select: { name: true } },
+          category: true,
+          gender: true,
+          creatorId: true,
         },
       },
-      orderBy: (() => {
-        if (sort === 'price_asc') return { product: { price: 'asc' as const } };
-        if (sort === 'price_desc') return { product: { price: 'desc' as const } };
-        return { product: { publishedAt: 'desc' as const } };
-      })(),
-      take: 200,
-    }),
-    prisma.product.findFirst({
-      where: { status: 'PUBLISHED' },
-      orderBy: { price: 'desc' },
-      select: { price: true },
-    }),
-  ]);
-
-  const dynamicMaxPrice = Math.ceil((maxPriceProduct?.price ?? 50000) / 100);
-  const maxRaw = Number.parseInt(searchParams.get('maxPrice') ?? '', 10);
-  const maxPriceEuros = searchParams.get('maxPrice') && !Number.isNaN(maxRaw) ? maxRaw : dynamicMaxPrice;
-  const maxPrice = maxPriceEuros * 100;
-
-  const filtered = variants.filter((v) => {
-    const price = v.priceOverride ?? v.product.price;
-    return price >= minPrice && price <= maxPrice;
+      skus: {
+        select: { size: true, stock: true },
+        where: { stock: { gt: 0 } },
+      },
+    },
+    orderBy: (() => {
+      if (sort === 'price_asc') return { product: { price: 'asc' as const } };
+      if (sort === 'price_desc') return { product: { price: 'desc' as const } };
+      return { product: { publishedAt: 'desc' as const } };
+    })(),
+    take: 200,
   });
 
   let sorted: VariantItem[];
   if (sort === 'price_asc') {
-    sorted = [...filtered].sort((a, b) => (a.priceOverride ?? a.product.price) - (b.priceOverride ?? b.product.price));
+    sorted = [...variants].sort((a, b) => (a.priceOverride ?? a.product.price) - (b.priceOverride ?? b.product.price));
   } else if (sort === 'price_desc') {
-    sorted = [...filtered].sort((a, b) => (b.priceOverride ?? b.product.price) - (a.priceOverride ?? a.product.price));
+    sorted = [...variants].sort((a, b) => (b.priceOverride ?? b.product.price) - (a.priceOverride ?? a.product.price));
   } else {
-    sorted = shuffleInterleaved(filtered, seed);
+    sorted = shuffleInterleaved(variants, seed);
   }
 
   const totalCount = sorted.length;

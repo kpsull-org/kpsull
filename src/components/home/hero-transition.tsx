@@ -2,7 +2,10 @@ import Image from "next/image";
 
 export function HeroTransition() {
   return (
-    <section className="relative w-full overflow-hidden">
+    <>
+      {/* P7 : preload tartan-pattern.png — découvert trop tard via CSS backgroundImage */}
+      <link rel="preload" as="image" href="/images/tartan-pattern.png" />
+      <section className="relative w-full overflow-hidden">
       {/* Tartan pattern as BACKGROUND of this band */}
       <div
         className="absolute inset-0"
@@ -40,6 +43,7 @@ export function HeroTransition() {
           />
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }

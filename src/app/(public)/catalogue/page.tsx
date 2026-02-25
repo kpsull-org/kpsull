@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { Filter } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -16,78 +17,153 @@ export const metadata: Metadata = {
     "Découvrez les créations uniques de nos créateurs de mode locaux.",
 };
 
-interface CataloguePageProps {
-  searchParams: Promise<{
-    style?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    size?: string;
-    sort?: string;
-    gender?: string;
-  }>;
+// ─── Helpers (module-level pour éviter la recréation à chaque render) ──────────
+
+function seededRng(seed: string) {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.codePointAt(i) ?? 0;
+    h = Math.imul(h, 16777619);
+  }
+  return () => {
+    h ^= h << 13;
+    h ^= h >> 17;
+    h ^= h << 5;
+    return (h >>> 0) / 0x100000000;
+  };
 }
 
-export default async function CataloguePage({
-  searchParams,
-}: Readonly<CataloguePageProps>) {
-  const params = await searchParams;
+function shuffleInterleaved<T extends { productId: string; product: { creatorId: string } }>(
+  items: T[],
+  rngSeed: string
+): T[] {
+  const rand = seededRng(rngSeed);
+  const fyShuffle = <U,>(arr: U[]): U[] => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      const tmp = a[i] as U;
+      a[i] = a[j] as U;
+      a[j] = tmp;
+    }
+    return a;
+  };
 
-  const selectedStyles = params.style ? params.style.split(",").filter(Boolean) : [];
-  const selectedSizes = params.size ? params.size.split(",").filter(Boolean) : [];
-  const selectedGenders = params.gender ? params.gender.split(",").filter(Boolean) : [];
-  // Expansion genre : Unisexe est toujours associé à Homme et Femme (dans les deux sens)
-  // - Sélection Homme ou Femme → inclut aussi Unisexe
-  // - Sélection Unisexe seul → inclut aussi Homme et Femme
-  // - Bébé et Enfant restent isolés
-  const expandedGenders = new Set(selectedGenders);
-  if (expandedGenders.has("Homme") || expandedGenders.has("Femme")) {
-    expandedGenders.add("Unisexe");
-  } else if (expandedGenders.size === 1 && expandedGenders.has("Unisexe")) {
-    expandedGenders.add("Homme");
-    expandedGenders.add("Femme");
+  const creatorMap = new Map<string, Map<string, T[]>>();
+  for (const item of items) {
+    const cId = item.product.creatorId;
+    const pId = item.productId;
+    if (!creatorMap.has(cId)) creatorMap.set(cId, new Map());
+    const productMap = creatorMap.get(cId)!;
+    const g = productMap.get(pId) ?? [];
+    g.push(item);
+    productMap.set(pId, g);
   }
-  const gendersForQuery = [...expandedGenders];
-  const sort = params.sort ?? "newest";
 
-  // Price in euros from search params, convert to cents for DB query
-  const minRaw = Number.parseInt(params.minPrice ?? "", 10);
-  const minPriceEuros = params.minPrice && !Number.isNaN(minRaw) ? Math.max(0, minRaw) : 0;
+  const interleavedPerCreator: T[][] = fyShuffle(
+    [...creatorMap.values()].map((productMap) => {
+      const shuffledGroups = fyShuffle(
+        [...productMap.values()].map((g) => fyShuffle(g))
+      );
+      const result: T[] = [];
+      const maxLen = Math.max(...shuffledGroups.map((g) => g.length));
+      for (let i = 0; i < maxLen; i++) {
+        for (const group of shuffledGroups) {
+          if (i < group.length) result.push(group[i] as T);
+        }
+      }
+      return result;
+    })
+  );
 
-  const [styles, skuSizesRaw, variants, maxPriceProduct] = await Promise.all([
-    prisma.style.findMany({
-      where: { status: "APPROVED", isCustom: false },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.productSku.findMany({
-      where: {
-        stock: { gt: 0 },
-        product: { status: "PUBLISHED" },
-        size: { not: null },
-      },
-      select: { size: true },
-      distinct: ["size"],
-    }),
-    prisma.productVariant.findMany({
+  const finalResult: T[] = [];
+  const maxLen = Math.max(...interleavedPerCreator.map((g) => g.length), 0);
+  for (let i = 0; i < maxLen; i++) {
+    for (const group of interleavedPerCreator) {
+      if (i < group.length) finalResult.push(group[i] as T);
+    }
+  }
+  return finalResult;
+}
+
+// ─── P1 : Cache metadata des filtres (styles, tailles, prix max) — 10 min ────
+
+const getCatalogueFilterMeta = unstable_cache(
+  async () => {
+    const [styles, skuSizesRaw, maxPriceProduct] = await Promise.all([
+      prisma.style.findMany({
+        where: { status: "APPROVED", isCustom: false },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.productSku.findMany({
+        where: {
+          stock: { gt: 0 },
+          product: { status: "PUBLISHED" },
+          size: { not: null },
+        },
+        select: { size: true },
+        distinct: ["size"],
+      }),
+      prisma.product.findFirst({
+        where: { status: "PUBLISHED" },
+        orderBy: { price: "desc" },
+        select: { price: true },
+      }),
+    ]);
+    return { styles, skuSizesRaw, maxPriceProduct };
+  },
+  ["catalogue-filter-meta"],
+  { revalidate: 600, tags: ["styles", "products"] }
+);
+
+// ─── P1 + P10 : Cache variantes par combinaison de filtres — 2 min ────────────
+// Le filtre prix est poussé dans la clause WHERE Prisma (P10).
+
+const getCatalogueVariants = unstable_cache(
+  async (
+    styleKey: string,
+    sizeKey: string,
+    genderKey: string,
+    sort: string,
+    minPriceCents: number,
+    maxPriceCents: number
+  ) => {
+    const selectedStyles = styleKey ? styleKey.split(",") : [];
+    const selectedSizes = sizeKey ? sizeKey.split(",") : [];
+    const selectedGenders = genderKey ? genderKey.split(",") : [];
+
+    const expandedGenders = new Set(selectedGenders);
+    if (expandedGenders.has("Homme") || expandedGenders.has("Femme")) {
+      expandedGenders.add("Unisexe");
+    } else if (expandedGenders.size === 1 && expandedGenders.has("Unisexe")) {
+      expandedGenders.add("Homme");
+      expandedGenders.add("Femme");
+    }
+    const gendersForQuery = [...expandedGenders];
+
+    return prisma.productVariant.findMany({
       where: {
         product: {
           status: "PUBLISHED",
           ...(selectedStyles.length > 0
-            ? {
-                style: {
-                  name: { in: selectedStyles },
-                },
-              }
+            ? { style: { name: { in: selectedStyles } } }
             : {}),
-          ...(gendersForQuery.length > 0 ? { gender: { in: gendersForQuery } } : {}),
+          ...(gendersForQuery.length > 0
+            ? { gender: { in: gendersForQuery } }
+            : {}),
         },
         ...(selectedSizes.length > 0
-          ? {
-              skus: {
-                some: { size: { in: selectedSizes }, stock: { gt: 0 } },
-              },
-            }
+          ? { skus: { some: { size: { in: selectedSizes }, stock: { gt: 0 } } } }
           : {}),
+        // P10 : filtre prix dans la WHERE (priceOverride ?? product.price)
+        OR: [
+          { priceOverride: { gte: minPriceCents, lte: maxPriceCents } },
+          {
+            priceOverride: null,
+            product: { price: { gte: minPriceCents, lte: maxPriceCents } },
+          },
+        ],
       },
       include: {
         product: {
@@ -112,112 +188,69 @@ export default async function CataloguePage({
         return { product: { publishedAt: "desc" as const } };
       })(),
       take: 200,
-    }),
-    prisma.product.findFirst({
-      where: { status: "PUBLISHED" },
-      orderBy: { price: "desc" },
-      select: { price: true },
-    }),
-  ]);
+    });
+  },
+  ["catalogue-variants"],
+  { revalidate: 120, tags: ["products"] }
+);
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+interface CataloguePageProps {
+  searchParams: Promise<{
+    style?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    size?: string;
+    sort?: string;
+    gender?: string;
+  }>;
+}
+
+export default async function CataloguePage({
+  searchParams,
+}: Readonly<CataloguePageProps>) {
+  const params = await searchParams;
+  const sort = params.sort ?? "newest";
+
+  // P1 : métadonnées des filtres (cachées 10 min)
+  const { styles, skuSizesRaw, maxPriceProduct } = await getCatalogueFilterMeta();
   const dynamicMaxPrice = Math.ceil((maxPriceProduct?.price ?? 50000) / 100);
 
-  // Apply price filter after fetching dynamicMaxPrice
+  // Calcul des prix en centimes
+  const minRaw = Number.parseInt(params.minPrice ?? "", 10);
+  const minPriceEuros = params.minPrice && !Number.isNaN(minRaw) ? Math.max(0, minRaw) : 0;
   const maxRaw = Number.parseInt(params.maxPrice ?? "", 10);
   const maxPriceEuros =
     params.maxPrice && !Number.isNaN(maxRaw) ? maxRaw : dynamicMaxPrice;
-  const minPrice = minPriceEuros * 100;
-  const maxPrice = maxPriceEuros * 100;
+  const minPriceCents = minPriceEuros * 100;
+  const maxPriceCents = maxPriceEuros * 100;
+
+  // P1 + P10 : variantes avec filtre prix dans WHERE, résultat caché 2 min
+  const variants = await getCatalogueVariants(
+    params.style ?? "",
+    params.size ?? "",
+    params.gender ?? "",
+    sort,
+    minPriceCents,
+    maxPriceCents
+  );
 
   // Graine aléatoire par requête : change à chaque rechargement
   const seed = Math.random().toString(36);
 
-  function seededRng(seed: string) {
-    let h = 2166136261;
-    for (let i = 0; i < seed.length; i++) {
-      h ^= seed.codePointAt(i) ?? 0;
-      h = Math.imul(h, 16777619);
-    }
-    return () => {
-      h ^= h << 13;
-      h ^= h >> 17;
-      h ^= h << 5;
-      return (h >>> 0) / 0x100000000;
-    };
-  }
-
-  function shuffleInterleaved<T extends { productId: string; product: { creatorId: string } }>(
-    items: T[],
-    rngSeed: string
-  ): T[] {
-    const rand = seededRng(rngSeed);
-    const fyShuffle = <U,>(arr: U[]): U[] => {
-      const a = [...arr];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(rand() * (i + 1));
-        const tmp = a[i] as U;
-        a[i] = a[j] as U;
-        a[j] = tmp;
-      }
-      return a;
-    };
-
-    // Grouper par (creatorId, productId) pour interleaving à 2 niveaux
-    const creatorMap = new Map<string, Map<string, T[]>>();
-    for (const item of items) {
-      const cId = item.product.creatorId;
-      const pId = item.productId;
-      if (!creatorMap.has(cId)) creatorMap.set(cId, new Map());
-      const productMap = creatorMap.get(cId)!;
-      const g = productMap.get(pId) ?? [];
-      g.push(item);
-      productMap.set(pId, g);
-    }
-
-    // Pour chaque créateur : interleaving round-robin des variantes par produit
-    const interleavedPerCreator: T[][] = fyShuffle(
-      [...creatorMap.values()].map((productMap) => {
-        const shuffledGroups = fyShuffle(
-          [...productMap.values()].map((g) => fyShuffle(g))
-        );
-        const result: T[] = [];
-        const maxLen = Math.max(...shuffledGroups.map((g) => g.length));
-        for (let i = 0; i < maxLen; i++) {
-          for (const group of shuffledGroups) {
-            if (i < group.length) result.push(group[i] as T);
-          }
-        }
-        return result;
-      })
-    );
-
-    // Interleaving round-robin des créateurs : jamais 2 produits du même créateur côte à côte
-    const finalResult: T[] = [];
-    const maxLen = Math.max(...interleavedPerCreator.map((g) => g.length), 0);
-    for (let i = 0; i < maxLen; i++) {
-      for (const group of interleavedPerCreator) {
-        if (i < group.length) finalResult.push(group[i] as T);
-      }
-    }
-    return finalResult;
-  }
-
   const allFilteredVariants = (() => {
-    const filtered = variants.filter((v) => {
-      const price = v.priceOverride ?? v.product.price;
-      return price >= minPrice && price <= maxPrice;
-    });
     if (sort === "price_asc") {
-      return [...filtered].sort(
+      return [...variants].sort(
         (a, b) => (a.priceOverride ?? a.product.price) - (b.priceOverride ?? b.product.price),
       );
     }
     if (sort === "price_desc") {
-      return [...filtered].sort(
+      return [...variants].sort(
         (a, b) => (b.priceOverride ?? b.product.price) - (a.priceOverride ?? a.product.price),
       );
     }
-    return shuffleInterleaved(filtered, seed);
+    return shuffleInterleaved(variants, seed);
   })();
 
   // Pagination : SSR des 32 premiers, le reste chargé via CatalogueInfiniteGrid
