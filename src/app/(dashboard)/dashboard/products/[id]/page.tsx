@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma/client';
 import { ProductActions } from './product-actions';
 import { ProductDetailClient } from './product-detail-client';
 import { parseSizes, type SizeEntry } from '@/lib/utils/parse-sizes';
+import { sortSizes } from '@/lib/utils/sort-sizes';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { GetProductDetailUseCase } from '@/modules/products/application/use-cases/products/get-product-detail.use-case';
@@ -95,7 +96,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   }));
 
   const sizesFromProduct = parseSizes(productExtra?.sizes);
-  const initialSizes: SizeEntry[] = (() => {
+  const initialSizes: SizeEntry[] = sortSizes((() => {
     if (sizesFromProduct.length > 0) return sizesFromProduct;
     // Fallback: dériver les tailles depuis les SKUs existants quand Product.sizes n'est pas renseigné
     const seen = new Set<string>();
@@ -107,7 +108,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       }
     }
     return derived;
-  })();
+  })());
 
   const initialSkus: SkuOutput[] = rawSkus.map((s) => ({
     id: s.id,
