@@ -714,6 +714,13 @@ async function seedCreator(
           });
         }
       }
+      // Sync Product.sizes avec le sizeSet du créateur
+      if (def.sizeSet.length > 0) {
+        await prisma.product.update({
+          where: { id: productId },
+          data: { sizes: def.sizeSet.map((size) => ({ size })) },
+        });
+      }
     }
   }
 
