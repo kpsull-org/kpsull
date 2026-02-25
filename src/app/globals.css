@@ -244,84 +244,91 @@ body {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
 }
 
-/* Scroll reveal — uses CSS scroll-driven animations (Chrome 115+, Firefox 114+, Safari 18+) */
-/* animation-range: entry 20% = animation starts when 20% of the element is visible */
-.kp-scroll-reveal {
+/* Scroll reveal — IntersectionObserver déclenche .kp-revealed quand 15% visible */
+/* L'état initial masque les éléments ; .kp-revealed lance l'animation time-based */
+
+/* ── État initial : éléments cachés avant reveal ────────────────────────────── */
+.kp-scroll-reveal,
+.kp-scroll-reveal-delay-1,
+.kp-scroll-reveal-delay-2,
+.kp-scroll-reveal-delay-3,
+.kp-scroll-reveal-delay-4 {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+.kp-blur-in {
+  opacity: 0;
+  filter: blur(14px);
+  transform: scale(1.03);
+}
+
+.kp-luxury-reveal,
+.kp-luxury-delay-1,
+.kp-luxury-delay-2,
+.kp-luxury-delay-3,
+.kp-luxury-delay-4 {
+  opacity: 0;
+  transform: translateY(64px);
+}
+
+.kp-scale-divider {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* ── Revealed : animation one-shot déclenchée par .kp-revealed ──────────────── */
+.kp-scroll-reveal.kp-revealed {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-timeline: view();
-  animation-range: entry 20% entry 70%;
 }
 
 /* Stagger variants for grid children */
-.kp-scroll-reveal-delay-1 {
+.kp-scroll-reveal-delay-1.kp-revealed {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-  animation-timeline: view();
-  animation-range: entry 20% entry 70%;
 }
 
-.kp-scroll-reveal-delay-2 {
+.kp-scroll-reveal-delay-2.kp-revealed {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-  animation-timeline: view();
-  animation-range: entry 20% entry 70%;
 }
 
-.kp-scroll-reveal-delay-3 {
+.kp-scroll-reveal-delay-3.kp-revealed {
   animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
-  animation-timeline: view();
-  animation-range: entry 20% entry 70%;
+}
+
+.kp-scroll-reveal-delay-4.kp-revealed {
+  animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
 }
 
 /* Blur-in pour images (bannières créateur, hero images) */
-.kp-blur-in {
+.kp-blur-in.kp-revealed {
   animation: kp-blur-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-timeline: view();
-  animation-range: entry 20% entry 65%;
 }
 
 /* Luxury reveal — version lente pour titres et sections */
-.kp-luxury-reveal {
+.kp-luxury-reveal.kp-revealed {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-timeline: view();
-  animation-range: entry 15% entry 65%;
 }
 
 /* Variantes stagger luxury — délais de 0.2s (vs 0.1s standard) */
-.kp-luxury-delay-1 {
+.kp-luxury-delay-1.kp-revealed {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-  animation-timeline: view();
-  animation-range: entry 15% entry 65%;
 }
 
-.kp-luxury-delay-2 {
+.kp-luxury-delay-2.kp-revealed {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
-  animation-timeline: view();
-  animation-range: entry 15% entry 65%;
 }
 
-.kp-luxury-delay-3 {
+.kp-luxury-delay-3.kp-revealed {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
-  animation-timeline: view();
-  animation-range: entry 15% entry 65%;
 }
 
-.kp-luxury-delay-4 {
+.kp-luxury-delay-4.kp-revealed {
   animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
-  animation-timeline: view();
-  animation-range: entry 15% entry 65%;
 }
 
 /* Scalex pour séparateurs visuels */
-.kp-scale-divider {
+.kp-scale-divider.kp-revealed {
   animation: kp-scale-x 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-timeline: view();
-  animation-range: entry 15% entry 60%;
-}
-
-/* Fix stagger delay-4 manquant (bug reassurance-strip) */
-.kp-scroll-reveal-delay-4 {
-  animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
-  animation-timeline: view();
-  animation-range: entry 20% entry 70%;
 }
 
 /* Animation d'entrée de page — déclenche au montage du composant */
@@ -335,21 +342,47 @@ body {
   .kp-animate-hero-logo,
   .kp-animate-hero-title,
   .kp-animate-hero-cta,
+  .kp-page-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* État initial annulé — contenu visible immédiatement */
   .kp-scroll-reveal,
   .kp-scroll-reveal-delay-1,
   .kp-scroll-reveal-delay-2,
   .kp-scroll-reveal-delay-3,
+  .kp-scroll-reveal-delay-4,
   .kp-blur-in,
   .kp-luxury-reveal,
   .kp-luxury-delay-1,
   .kp-luxury-delay-2,
   .kp-luxury-delay-3,
   .kp-luxury-delay-4,
-  .kp-scale-divider,
-  .kp-scroll-reveal-delay-4,
-  .kp-page-enter {
+  .kp-scale-divider {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* Revealed state : pas d'animation non plus */
+  .kp-scroll-reveal.kp-revealed,
+  .kp-scroll-reveal-delay-1.kp-revealed,
+  .kp-scroll-reveal-delay-2.kp-revealed,
+  .kp-scroll-reveal-delay-3.kp-revealed,
+  .kp-scroll-reveal-delay-4.kp-revealed,
+  .kp-blur-in.kp-revealed,
+  .kp-luxury-reveal.kp-revealed,
+  .kp-luxury-delay-1.kp-revealed,
+  .kp-luxury-delay-2.kp-revealed,
+  .kp-luxury-delay-3.kp-revealed,
+  .kp-luxury-delay-4.kp-revealed,
+  .kp-scale-divider.kp-revealed {
     animation: none;
     opacity: 1;
     transform: none;
+    filter: none;
   }
 }
