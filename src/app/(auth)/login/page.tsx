@@ -12,7 +12,7 @@ type Props = {
   searchParams: Promise<{ callbackUrl?: string }>;
 };
 
-export default async function LoginPage({ searchParams }: Props) {
+export default async function LoginPage({ searchParams }: Readonly<Props>) {
   const { callbackUrl } = await searchParams;
   const safeCallbackUrl = callbackUrl ?? '/';
 
@@ -39,7 +39,7 @@ export default async function LoginPage({ searchParams }: Props) {
         </div>
       </div>
 
-      <GoogleSignInButton mode="signin" callbackUrl={safeCallbackUrl !== '/' ? safeCallbackUrl : '/auth/redirect'} />
+      <GoogleSignInButton mode="signin" callbackUrl={safeCallbackUrl === '/' ? '/auth/redirect' : safeCallbackUrl} />
     </AuthCard>
   );
 }

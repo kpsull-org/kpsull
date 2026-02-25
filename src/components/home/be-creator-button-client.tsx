@@ -15,7 +15,7 @@ export function BeCreatorButtonClient({
   isAuthenticated,
   className,
   children,
-}: BeCreatorButtonClientProps) {
+}: Readonly<BeCreatorButtonClientProps>) {
   const router = useRouter();
 
   function handleClick() {

@@ -3,15 +3,16 @@ import { prisma } from "@/lib/prisma/client";
 import { Resend } from "resend";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const schema = z.object({
   email: z.string().email(),
 });
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM =
-  process.env.RESEND_FROM_ADDRESS ?? "Kpsull <noreply@kpsull.com>";
-
 export async function POST(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const FROM =
+    process.env.RESEND_FROM_ADDRESS ?? "Kpsull <noreply@kpsull.com>";
   let body: unknown;
   try {
     body = await req.json();

@@ -47,11 +47,10 @@ export function CookieBanner() {
   if (status !== null) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="false"
+    <dialog
+      open
       aria-label="Gestion des cookies"
-      className="fixed bottom-0 left-0 right-0 z-[9999] border-t-2 border-black bg-white font-[family-name:var(--font-montserrat)]"
+      className="fixed bottom-0 left-0 right-0 z-[9999] m-0 max-w-none border-t-2 border-black bg-white p-0 font-[family-name:var(--font-montserrat)]"
     >
       {/* Ligne décorative double — cohérent avec le header */}
       <div className="h-[2px] w-full bg-black" />
@@ -93,7 +92,7 @@ export function CookieBanner() {
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -102,6 +101,6 @@ export function CookieBanner() {
  * Utiliser dans les composants qui conditionnent PostHog / Sentry.
  */
 export function getCookieConsent(): ConsentStatus {
-  if (typeof window === "undefined") return null;
+  if (typeof globalThis.window === "undefined") return null;
   return localStorage.getItem(CONSENT_KEY) as ConsentStatus;
 }

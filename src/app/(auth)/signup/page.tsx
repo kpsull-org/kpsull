@@ -12,7 +12,7 @@ type Props = {
   searchParams: Promise<{ callbackUrl?: string }>;
 };
 
-export default async function SignupPage({ searchParams }: Props) {
+export default async function SignupPage({ searchParams }: Readonly<Props>) {
   const { callbackUrl } = await searchParams;
   const safeCallbackUrl = callbackUrl ?? '/';
 

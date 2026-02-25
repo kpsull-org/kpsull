@@ -9,7 +9,7 @@ interface BeCreatorButtonProps {
 export async function BeCreatorButton({
   className,
   children,
-}: BeCreatorButtonProps) {
+}: Readonly<BeCreatorButtonProps>) {
   const session = await auth();
   const isAuthenticated = !!session?.user;
 

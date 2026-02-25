@@ -105,7 +105,7 @@ export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProp
         } else {
           router.refresh();
           const session = await getSession();
-          router.push(callbackUrl !== '/' ? callbackUrl : getRoleRedirectUrl(session?.user?.role));
+          router.push(callbackUrl === '/' ? getRoleRedirectUrl(session?.user?.role) : callbackUrl);
         }
       } else {
         // Login validation
@@ -135,7 +135,7 @@ export function CredentialsForm({ mode, callbackUrl = '/' }: CredentialsFormProp
 
         router.refresh();
         const session = await getSession();
-        router.push(callbackUrl !== '/' ? callbackUrl : getRoleRedirectUrl(session?.user?.role));
+        router.push(callbackUrl === '/' ? getRoleRedirectUrl(session?.user?.role) : callbackUrl);
       }
     } catch {
       setError('Une erreur est survenue. Veuillez reessayer.');

@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 const CONSENT_KEY = "kpsull_cookie_consent";
-const hasConsent = typeof window !== "undefined"
+const hasConsent = typeof globalThis.window !== "undefined"
   && localStorage.getItem(CONSENT_KEY) === "accepted";
 
 Sentry.init({

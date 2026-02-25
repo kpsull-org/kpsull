@@ -29,6 +29,9 @@ export function NewsletterSection() {
     }
   }
 
+  const buttonLabel =
+    status === "loading" ? "..." : status === "success" ? "INSCRIT ✓" : "S'INSCRIRE";
+
   return (
     <section className="border-t-2 border-black bg-white px-6 py-12 md:px-12 md:py-14 lg:px-20 lg:py-16">
       <div className="mx-auto max-w-7xl">
@@ -68,11 +71,7 @@ export function NewsletterSection() {
                 disabled={status === "loading" || status === "success"}
                 className="border border-black bg-black px-6 py-3 font-[family-name:var(--font-montserrat)] text-[11px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-white hover:text-black disabled:opacity-50"
               >
-                {status === "loading"
-                  ? "..."
-                  : status === "success"
-                    ? "INSCRIT ✓"
-                    : "S'INSCRIRE"}
+                {buttonLabel}
               </button>
             </form>
             {status === "error" && (
