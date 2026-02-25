@@ -14,19 +14,19 @@ export async function CategorySlider() {
   return (
     <section className="bg-[#F2F2F2] px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex justify-center md:mb-10">
+        <div className="kp-luxury-reveal mb-8 flex justify-center md:mb-10">
           <h2 className="rounded-full bg-black px-8 py-2 font-[family-name:var(--font-montserrat)] text-sm font-semibold uppercase tracking-widest text-white md:px-10 md:py-2.5 md:text-base lg:text-lg">
             DECOUVRIR LES STYLES
           </h2>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
-          {styles.map((style) => {
+          {styles.map((style, index) => {
             return (
               <Link
                 key={style.name}
                 href={`/catalogue?style=${encodeURIComponent(style.name)}`}
-                className="group relative aspect-[2/1] overflow-hidden"
+                className={`kp-scroll-reveal-delay-${(index % 4) + 1} group relative aspect-[2/1] overflow-hidden`}
               >
                 {style.imageUrl ? (
                   <Image

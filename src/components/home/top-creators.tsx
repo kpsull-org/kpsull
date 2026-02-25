@@ -98,12 +98,12 @@ export async function TopCreators() {
   return (
     <section className="bg-[#F2F2F2] px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20">
       <div className="mx-auto max-w-7xl">
-        <h2 className="font-[family-name:var(--font-montserrat)] text-lg font-semibold md:text-xl lg:text-2xl">
+        <h2 className="kp-luxury-reveal font-[family-name:var(--font-montserrat)] text-lg font-semibold md:text-xl lg:text-2xl">
           Top créateurs du mois
         </h2>
 
         <div className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4">
-          {creatorPages.map((page) => {
+          {creatorPages.map((page, index) => {
             const brandName = brandByCreator[page.creatorId] ?? page.title;
             const user = userById[page.creatorId];
             const product = productByCreator[page.creatorId];
@@ -116,7 +116,7 @@ export async function TopCreators() {
               <Link
                 key={page.slug}
                 href={`/${page.slug}`}
-                className="group block overflow-hidden bg-white"
+                className={`kp-luxury-delay-${index + 1} group block overflow-hidden bg-white`}
               >
                 <div className="relative aspect-square overflow-hidden bg-muted">
                   {coverImage ? (
