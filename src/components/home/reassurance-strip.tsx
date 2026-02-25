@@ -75,7 +75,7 @@ const ITEM_DELAY_CLASSES = [
   "kp-scroll-reveal-delay-1",
   "kp-scroll-reveal-delay-2",
   "kp-scroll-reveal-delay-3",
-  "kp-scroll-reveal-delay-3",
+  "kp-scroll-reveal-delay-4",
 ] as const;
 
 const items = [

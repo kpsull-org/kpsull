@@ -177,6 +177,56 @@ body {
   to { opacity: 1; }
 }
 
+/* Luxury blur-in — pour les images hero et bannières */
+@keyframes kp-blur-in {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: scale(1);
+  }
+}
+
+/* Luxury fade-up — plus dramatique, translateY plus large */
+@keyframes kp-luxury-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(64px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scale horizontal — pour les lignes/séparateurs */
+@keyframes kp-scale-x {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+/* Page entry — rapide et propre, pour l'entrée de page */
+@keyframes kp-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Hero entrance animations (triggered on page load) */
 .kp-animate-hero-img {
   animation: kp-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -220,6 +270,64 @@ body {
   animation-range: entry 0% entry 55%;
 }
 
+/* Blur-in pour images (bannières créateur, hero images) */
+.kp-blur-in {
+  animation: kp-blur-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 50%;
+}
+
+/* Luxury reveal — version lente pour titres et sections */
+.kp-luxury-reveal {
+  animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 45%;
+}
+
+/* Variantes stagger luxury — délais de 0.2s (vs 0.1s standard) */
+.kp-luxury-delay-1 {
+  animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 45%;
+}
+
+.kp-luxury-delay-2 {
+  animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 45%;
+}
+
+.kp-luxury-delay-3 {
+  animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 45%;
+}
+
+.kp-luxury-delay-4 {
+  animation: kp-luxury-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 45%;
+}
+
+/* Scalex pour séparateurs visuels */
+.kp-scale-divider {
+  animation: kp-scale-x 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 40%;
+}
+
+/* Fix stagger delay-4 manquant (bug reassurance-strip) */
+.kp-scroll-reveal-delay-4 {
+  animation: kp-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 55%;
+}
+
+/* Animation d'entrée de page — déclenche au montage du composant */
+.kp-page-enter {
+  animation: kp-page-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .kp-animate-hero-img,
@@ -229,7 +337,16 @@ body {
   .kp-scroll-reveal,
   .kp-scroll-reveal-delay-1,
   .kp-scroll-reveal-delay-2,
-  .kp-scroll-reveal-delay-3 {
+  .kp-scroll-reveal-delay-3,
+  .kp-blur-in,
+  .kp-luxury-reveal,
+  .kp-luxury-delay-1,
+  .kp-luxury-delay-2,
+  .kp-luxury-delay-3,
+  .kp-luxury-delay-4,
+  .kp-scale-divider,
+  .kp-scroll-reveal-delay-4,
+  .kp-page-enter {
     animation: none;
     opacity: 1;
     transform: none;
