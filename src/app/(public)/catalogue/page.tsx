@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
 import { Filter } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma/client";
 import { FilterSidebar } from "./_components/filter-sidebar";
+import { CatalogueInfiniteGrid } from "./_components/catalogue-infinite-grid";
+
+const PAGE_SIZE = 32;
 
 export const dynamic = 'force-dynamic';
 
@@ -24,15 +25,6 @@ interface CataloguePageProps {
     sort?: string;
     gender?: string;
   }>;
-}
-
-function formatPrice(cents: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
 }
 
 export default async function CataloguePage({
@@ -210,7 +202,7 @@ export default async function CataloguePage({
     return finalResult;
   }
 
-  const filteredVariants = (() => {
+  const allFilteredVariants = (() => {
     const filtered = variants.filter((v) => {
       const price = v.priceOverride ?? v.product.price;
       return price >= minPrice && price <= maxPrice;
@@ -225,9 +217,12 @@ export default async function CataloguePage({
         (a, b) => (b.priceOverride ?? b.product.price) - (a.priceOverride ?? a.product.price),
       );
     }
-    // Par défaut : ordre vraiment aléatoire, change à chaque reload
     return shuffleInterleaved(filtered, seed);
   })();
+
+  // Pagination : SSR des 32 premiers, le reste chargé via CatalogueInfiniteGrid
+  const initialVariants = allFilteredVariants.slice(0, PAGE_SIZE);
+  const hasMore = allFilteredVariants.length > PAGE_SIZE;
 
   const sizes = skuSizesRaw
     .map((s) => s.size)
@@ -290,74 +285,13 @@ export default async function CataloguePage({
             </Sheet>
           </div>
 
-          {/* Grid */}
-          {filteredVariants.length === 0 ? (
-            <div className="flex items-center justify-center py-24">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-black/30">
-                Aucun produit
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-              {filteredVariants.map((variant, idx) => {
-                const images = Array.isArray(variant.images)
-                  ? (variant.images as string[])
-                  : [];
-                const firstImage = images[0] ?? null;
-                const secondImage = images[1] ?? null;
-                const displayPrice =
-                  variant.priceOverride ?? variant.product.price;
-
-                return (
-                  <Link
-                    key={variant.id}
-                    href={`/catalogue/${variant.product.id}?variant=${variant.id}`}
-                    className={`group block bg-white border-t border-black [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+3)]:border-t-0 lg:[&:nth-child(-n+4)]:border-t-0 kp-scroll-reveal-delay-${(idx % 4) + 1}`}
-                  >
-                    {/* Image carrée */}
-                    <div className="aspect-square relative overflow-hidden bg-[#F5F5F3]">
-                      {firstImage ? (
-                        <>
-                          <Image
-                            src={firstImage}
-                            alt={variant.product.name}
-                            fill
-                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            className={`object-cover transition-all duration-500 ${
-                              secondImage
-                                ? "group-hover:opacity-0"
-                                : "group-hover:scale-105"
-                            }`}
-                          />
-                          {secondImage && (
-                            <Image
-                              src={secondImage}
-                              alt={`${variant.product.name} — vue 2`}
-                              fill
-                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                              className="absolute inset-0 object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                            />
-                          )}
-                        </>
-                      ) : (
-                        <div className="w-full h-full bg-[#EBEBEB]" />
-                      )}
-                    </div>
-
-                    {/* Info — séparée par une bordure */}
-                    <div className="border-t border-black px-3 py-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-black truncate">
-                        {variant.product.name}
-                      </p>
-                      <p className="text-[12px] font-bold text-black mt-0.5">
-                        {formatPrice(displayPrice)}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          {/* Grid infinite scroll */}
+          <CatalogueInfiniteGrid
+            initialVariants={initialVariants}
+            hasMore={hasMore}
+            seed={seed}
+            currentParams={currentParams}
+          />
         </main>
       </div>
     </div>
