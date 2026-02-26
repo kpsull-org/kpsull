@@ -165,7 +165,7 @@ export function Header({ user }: HeaderProps) {
         {/* Desktop header */}
         <div className="hidden h-full items-center px-12 md:flex lg:px-[90px]">
           {/* Logo */}
-          <Link href="/" className="shrink-0">
+          <Link href="/" className="shrink-0" aria-label="Accueil KPSULL">
             <Logo size="sm" className="h-[41px] w-[40px]" />
           </Link>
 
@@ -330,7 +330,7 @@ export function Header({ user }: HeaderProps) {
           </button>
 
           {/* Logo center */}
-          <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2" aria-label="Accueil KPSULL">
             <Logo size="sm" className="h-7 w-7" />
           </Link>
 

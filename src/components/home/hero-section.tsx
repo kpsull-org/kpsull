@@ -5,13 +5,14 @@ import { BeCreatorButton } from "@/components/home/be-creator-button";
 
 export function HeroSection() {
   return (
-    <section className="relative -mt-[98px] h-screen w-full overflow-hidden">
+    <section className="relative -mt-[98px] h-dvh w-full overflow-hidden">
       {/* Background image -- NO tartan overlay on image */}
       <Image
         src="/images/hero-skater.png"
         alt="Mode urbaine"
         fill
-        className="kp-animate-hero-img object-cover object-top"
+        sizes="100vw"
+        className="object-cover object-top"
         priority
       />
 
