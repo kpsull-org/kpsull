@@ -38,12 +38,12 @@ export function CartItem({
 
   return (
     <div
-      className={`group border-b border-black/10 py-6 font-sans -mx-3 px-3 hover:bg-black/[0.02] transition-colors duration-200 ${getStaggerClass(index)}`}
+      className={`group border-b border-black/10 py-6 font-sans hover:bg-black/[0.02] transition-colors duration-200 ${getStaggerClass(index)}`}
     >
-      <div className="flex gap-5">
+      <div className="flex gap-4 sm:gap-5 min-w-0">
         {/* Image */}
         <Link href={productUrl} className="flex-shrink-0">
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-[#F2F2F2] overflow-hidden">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-[#F2F2F2] overflow-hidden">
             {item.image ? (
               <Image
                 src={item.image}

@@ -17,7 +17,7 @@ export function CartSummary({
   const total = subtotal + (shippingEstimate || 0);
 
   return (
-    <div className="bg-white border border-black/12 p-6 shadow-sm font-sans sticky top-8">
+    <div className="bg-white border border-black/12 p-6 shadow-sm font-sans lg:sticky lg:top-8">
       <h2 className="text-[10px] font-bold tracking-widest uppercase text-black/50 mb-6">
         Récapitulatif
       </h2>
