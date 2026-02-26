@@ -24,7 +24,7 @@ export default function AboutPage() {
       {/* ─── HERO ─── */}
       <section className="relative -mt-[98px] h-screen w-full overflow-hidden">
         <Image
-          src="/images/hero-about.png"
+          src="kpsull/static/hero-about"
           alt="Coton et nature"
           fill
           className="object-cover"

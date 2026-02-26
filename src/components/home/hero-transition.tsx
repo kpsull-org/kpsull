@@ -4,13 +4,13 @@ export function HeroTransition() {
   return (
     <>
       {/* P7 : preload tartan-pattern.png — découvert trop tard via CSS backgroundImage */}
-      <link rel="preload" as="image" href="/images/tartan-pattern.png" />
+      <link rel="preload" as="image" href="https://res.cloudinary.com/damucxy2t/image/upload/f_auto,q_auto/kpsull/static/tartan-pattern" />
       <section className="relative w-full overflow-hidden">
       {/* Tartan pattern as BACKGROUND of this band */}
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: "url(/images/tartan-pattern.png)",
+          backgroundImage: "url(https://res.cloudinary.com/damucxy2t/image/upload/f_auto,q_auto/kpsull/static/tartan-pattern)",
           backgroundRepeat: "repeat",
           backgroundSize: "auto 100%",
         }}
@@ -35,7 +35,7 @@ export function HeroTransition() {
         {/* Cleaning icons */}
         <div className="kp-scroll-reveal-delay-1 ml-6 hidden shrink-0 items-center sm:flex md:ml-8">
           <Image
-            src="/images/cleaning-icons.png"
+            src="kpsull/static/cleaning-icons"
             alt="Certifications de lavage"
             width={175}
             height={62}

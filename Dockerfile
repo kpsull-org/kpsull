@@ -58,7 +58,7 @@ COPY --from=builder /app/prisma.config.ts ./
 # Re-generate Prisma client after bun add to avoid version mismatch with installed @prisma/client
 # Also install cloudinary + dotenv for the cleanup script, and download supercronic for cron scheduling
 RUN bun add -g prisma@7 \
-    && bun add bcryptjs pg @prisma/adapter-pg cloudinary dotenv sharp \
+    && bun add bcryptjs pg @prisma/adapter-pg cloudinary dotenv \
     && bunx prisma generate --schema prisma/schema.prisma \
     && wget -q \
        "https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64" \
