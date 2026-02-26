@@ -3,42 +3,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { PriceRangeInput } from "@/components/ui/slider";
+import {
+  type FilterParams,
+  GENDER_OPTIONS,
+  SORT_OPTIONS,
+  PRICE_MIN,
+  safeParseInt,
+} from "./filter-shared";
 
 interface FilterSidebarProps {
   styles: { id: string; name: string }[];
   sizes: string[];
   priceMax: number;
-  currentParams: {
-    style?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    size?: string;
-    sort?: string;
-    gender?: string;
-  };
+  currentParams: FilterParams;
 }
-
-const GENDER_OPTIONS = [
-  { value: "Homme", label: "Homme" },
-  { value: "Femme", label: "Femme" },
-  { value: "Unisexe", label: "Unisexe" },
-  { value: "Enfant", label: "Enfant" },
-  { value: "Bébé", label: "Bébé" },
-];
-
-const SORT_OPTIONS = [
-  { value: "newest", label: "Nouveautés" },
-  { value: "price_asc", label: "Prix croissant" },
-  { value: "price_desc", label: "Prix décroissant" },
-];
-
-const PRICE_MIN = 0;
-
-const safeParseInt = (value: string | undefined, fallback: number): number => {
-  if (!value) return fallback;
-  const n = Number.parseInt(value, 10);
-  return Number.isNaN(n) ? fallback : n;
-};
 
 export function FilterSidebar({
   styles,

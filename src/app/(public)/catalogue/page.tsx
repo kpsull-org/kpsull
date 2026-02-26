@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
-import { Filter } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma/client";
 import { shuffleInterleaved } from "@/lib/utils/catalogue-shuffle";
 import { fetchCatalogueVariants } from "@/lib/utils/catalogue-query";
 import { FilterSidebar } from "./_components/filter-sidebar";
+import { MobileFilterBar } from "./_components/mobile-filter-bar";
 import { CatalogueInfiniteGrid } from "./_components/catalogue-infinite-grid";
 
 const PAGE_SIZE = 32;
@@ -168,36 +166,13 @@ export default async function CataloguePage({
 
         {/* Main content */}
         <main className="flex-1 min-w-0">
-          {/* Mobile filter button */}
-          <div className="md:hidden px-4 py-3 border-b border-black">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full border border-black/20 text-black/60 uppercase text-[10px] tracking-[0.15em] rounded-none"
-                >
-                  <Filter className="w-3 h-3 mr-2" />
-                  Filtres
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0">
-                <div className="px-5 py-4 border-b border-black">
-                  <span className="text-[9px] uppercase tracking-[0.2em] font-semibold">
-                    Filtres
-                  </span>
-                </div>
-                <div className="p-5">
-                  <FilterSidebar
-                    styles={styles}
-                    sizes={sizes}
-                    priceMax={dynamicMaxPrice}
-                    currentParams={currentParams}
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+          {/* Mobile filter bar */}
+          <MobileFilterBar
+            styles={styles}
+            sizes={sizes}
+            priceMax={dynamicMaxPrice}
+            currentParams={currentParams}
+          />
 
           {/* Grid infinite scroll */}
           <CatalogueInfiniteGrid
