@@ -8,7 +8,7 @@ export function HeroSection() {
     <section className="relative -mt-[98px] h-dvh w-full overflow-hidden">
       {/* Background image -- NO tartan overlay on image */}
       <Image
-        src="/images/hero-skater.png"
+        src="kpsull/static/hero-skater"
         alt="Mode urbaine"
         fill
         sizes="100vw"

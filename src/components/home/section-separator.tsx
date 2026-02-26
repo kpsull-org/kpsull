@@ -11,7 +11,7 @@ export function SectionSeparator({ className }: SectionSeparatorProps = {}) {
       <div className="mx-auto max-w-7xl">
         <div className="relative h-8 overflow-hidden rounded-sm md:h-10">
           <Image
-            src="/images/separator-tartan.png"
+            src="kpsull/static/separator-tartan"
             alt=""
             fill
             sizes="(max-width: 1280px) 100vw, 1280px"

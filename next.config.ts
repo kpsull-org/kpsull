@@ -9,13 +9,14 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    loader: 'custom',
+    loaderFile: './src/lib/cloudinary/image-loader.ts',
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'picsum.photos' },
     ],
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 3600,
+    minimumCacheTTL: 86400,
   },
   async headers() {
     return [

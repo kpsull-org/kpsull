@@ -9,7 +9,7 @@ export function TartanStripe({ className }: TartanStripeProps) {
     <div
       className={cn("h-6 w-full", className)}
       style={{
-        backgroundImage: "url(/images/tartan-stripe.png)",
+        backgroundImage: "url(https://res.cloudinary.com/damucxy2t/image/upload/f_auto,q_auto/kpsull/static/tartan-stripe)",
         backgroundRepeat: "repeat-x",
         backgroundSize: "auto 100%",
       }}
