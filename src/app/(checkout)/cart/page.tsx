@@ -47,16 +47,16 @@ export default function CartPage() {
 
   if (!isHydrated) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 font-sans">
+      <div className="max-w-4xl mx-auto py-8 sm:py-12 font-sans">
         <div className="h-4 w-32 bg-black/10 animate-pulse mb-10" />
         <div className="h-7 w-48 bg-black/10 animate-pulse mb-8" />
-        <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12">
+          <div className="space-y-4">
             <div className="h-28 bg-black/5 animate-pulse" />
             <div className="h-28 bg-black/5 animate-pulse" />
             <div className="h-28 bg-black/5 animate-pulse" />
           </div>
-          <div className="lg:col-span-1">
+          <div>
             <div className="h-64 bg-black/5 animate-pulse" />
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 font-sans">
+    <div className="max-w-4xl mx-auto py-8 sm:py-12 font-sans">
       {/* Breadcrumb */}
       <div className="mb-10">
         <Link
@@ -86,9 +86,9 @@ export default function CartPage() {
         <span className="text-black/40 font-normal text-lg">({items.length})</span>
       </h1>
 
-      <div className="grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12">
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-12 items-start">
         {/* Items */}
-        <div>
+        <div className="w-full min-w-0">
           {/* Desktop column headers */}
           <div className="hidden lg:grid grid-cols-[1fr_auto_auto_auto] gap-6 pb-3 border-b border-black/10 mb-1">
             <span className="text-[10px] font-medium tracking-widest uppercase text-black/40">
@@ -118,7 +118,7 @@ export default function CartPage() {
         </div>
 
         {/* Summary */}
-        <div>
+        <div className="w-full lg:w-auto">
           <CartSummary subtotal={getTotal()} formatPrice={formatPrice} />
         </div>
       </div>
