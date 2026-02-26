@@ -137,6 +137,7 @@ export function CatalogueInfiniteGrid({
             <Link
               key={variant.id}
               href={`/catalogue/${variant.product.id}?variant=${variant.id}`}
+              suppressHydrationWarning
               className={`group block bg-white border-t border-black [&:nth-child(-n+2)]:border-t-0 sm:[&:nth-child(-n+3)]:border-t-0 lg:[&:nth-child(-n+4)]:border-t-0 kp-scroll-reveal-delay-${(idx % 4) + 1}`}
             >
               <div className="aspect-square relative overflow-hidden bg-[#F5F5F3]">
