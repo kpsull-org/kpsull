@@ -4,6 +4,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma/client';
+import { CreatorSuspendedPage } from '@/components/creator/creator-suspended';
+import { getSuspendedCreatorIds } from '@/lib/utils/suspended-creators';
 
 // Déduplique la query entre generateMetadata et la page dans le même rendu (Vercel best practice 3.6)
 // try/catch: DB peut être désynchronisée au build (colonnes manquantes avant migration) → retourne null
@@ -136,8 +138,12 @@ function ProductGrid({ variants }: { readonly variants: VariantWithProduct[] }) 
 
 export async function generateStaticParams() {
   try {
+    const suspendedIds = await getSuspendedCreatorIds();
     const pages = await prisma.creatorPage.findMany({
-      where: { status: 'PUBLISHED' },
+      where: {
+        status: 'PUBLISHED',
+        ...(suspendedIds.length > 0 ? { creatorId: { notIn: suspendedIds } } : {}),
+      },
       select: { slug: true },
       take: 100,
     });
@@ -189,6 +195,14 @@ export default async function PublicCreatorPage({ params }: PageProps) {
   const page = await getCreatorPage(slug);
 
   if (!page) notFound();
+
+  const suspension = await prisma.creatorSuspension.findFirst({
+    where: { creatorId: page.creatorId, reactivatedAt: null },
+    select: { id: true },
+  });
+  if (suspension) {
+    return <CreatorSuspendedPage />;
+  }
 
   const [projects, variants] = await Promise.all([
     prisma.project.findMany({

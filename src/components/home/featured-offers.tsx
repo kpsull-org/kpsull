@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
+import { getSuspendedCreatorIds } from "@/lib/utils/suspended-creators";
 
 function formatPrice(cents: number): string {
   return new Intl.NumberFormat('fr-FR', {
@@ -12,13 +13,15 @@ function formatPrice(cents: number): string {
   }).format(cents / 100);
 }
 
-// Cache cross-request 5 min (server-cache-lru — Vercel best practice 3.3)
-const getFeaturedProducts = unstable_cache(
+// Cache cross-request 5 min — sans filtre suspension pour que la clé de cache soit stable.
+// Le filtrage des créateurs suspendus se fait post-cache dans le composant,
+// car les arguments de la fonction cachée ne sont pas inclus dans la clé par Next.js.
+const getAllFeaturedProducts = unstable_cache(
   async () => {
     return prisma.product.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { publishedAt: 'desc' },
-      take: 16,
+      take: 32,
       include: {
         variants: {
           take: 1,
@@ -41,9 +44,17 @@ function fisherYatesShuffle<T>(arr: T[]): T[] {
 }
 
 export async function FeaturedOffers() {
-  const pool = await getFeaturedProducts();
+  const [suspendedIds, pool] = await Promise.all([
+    getSuspendedCreatorIds(),   // toujours fraîche
+    getAllFeaturedProducts(),    // cachée 5 min
+  ]);
+
+  const filtered = suspendedIds.length > 0
+    ? pool.filter((p) => !suspendedIds.includes(p.creatorId))
+    : pool;
+
   // Shuffle côté serveur (par requête) puis on prend 8
-  const products = fisherYatesShuffle(pool).slice(0, 8);
+  const products = fisherYatesShuffle(filtered).slice(0, 8);
 
   if (products.length === 0) return null;
 

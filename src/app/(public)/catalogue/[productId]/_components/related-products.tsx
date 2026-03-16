@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
+import { getSuspendedCreatorIds } from "@/lib/utils/suspended-creators";
 
 interface RelatedProductsProps {
   productId: string;
@@ -79,13 +80,15 @@ async function fetchRelatedProducts(
     excludedIds.push(...mapped.map((p) => p.id));
   }
 
-  // Batch 2: same category (all creators)
+  // Batch 2: same category (all creators except suspended)
   if (category && collected.length < target) {
+    const suspendedIds = await getSuspendedCreatorIds();
     const batch = await prisma.product.findMany({
       where: {
         id: { notIn: excludedIds },
         status: "PUBLISHED",
         category,
+        ...(suspendedIds.length > 0 ? { creatorId: { notIn: suspendedIds } } : {}),
       },
       orderBy: { publishedAt: "desc" },
       take: target - collected.length,

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma/client';
+import { getSuspendedCreatorIds } from '@/lib/utils/suspended-creators';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,8 +41,12 @@ function fisherYatesShuffle<T>(arr: T[]): T[] {
 }
 
 export default async function CreateursPage() {
+  const suspendedIds = await getSuspendedCreatorIds();
   const pagesRaw = await prisma.creatorPage.findMany({
-    where: { status: 'PUBLISHED' },
+    where: {
+      status: 'PUBLISHED',
+      ...(suspendedIds.length > 0 ? { creatorId: { notIn: suspendedIds } } : {}),
+    },
     orderBy: { publishedAt: 'desc' },
   });
   // Ordre aléatoire à chaque rechargement
