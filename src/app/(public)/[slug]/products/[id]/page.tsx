@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth';
 import { GetPublicProductUseCase } from '@/modules/products/application/use-cases/public/get-public-product.use-case';
 import { PrismaPublicProductRepository } from '@/modules/products/infrastructure/repositories/prisma-public-product.repository';
 import { ProductDetail } from '@/components/products/product-detail';
+import { CreatorSuspendedPage } from '@/components/creator/creator-suspended';
 
 interface PageProps {
   params: Promise<{ slug: string; id: string }>;
@@ -90,16 +91,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const product = result.value;
 
-  // Check if the current user is the creator of this product
-  let isOwnProduct = false;
+  // Fetch creator page once for both suspension check and ownership check
+  const creatorPage = await prisma.creatorPage.findUnique({
+    where: { slug },
+    select: { creatorId: true },
+  });
 
-  if (session?.user?.id) {
-    const creatorPage = await prisma.creatorPage.findUnique({
-      where: { slug },
-      select: { creatorId: true },
+  if (creatorPage) {
+    const suspension = await prisma.creatorSuspension.findFirst({
+      where: { creatorId: creatorPage.creatorId, reactivatedAt: null },
+      select: { id: true },
     });
-    isOwnProduct = creatorPage?.creatorId === session.user.id;
+    if (suspension) {
+      return <CreatorSuspendedPage />;
+    }
   }
+
+  // Check if the current user is the creator of this product
+  const isOwnProduct = session?.user?.id
+    ? creatorPage?.creatorId === session.user.id
+    : false;
 
   return (
     <ProductDetail

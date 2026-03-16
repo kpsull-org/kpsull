@@ -2,13 +2,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
+import { getSuspendedCreatorIds } from "@/lib/utils/suspended-creators";
 
+// Cache cross-request 5 min — sans filtre suspension pour que la clé de cache soit stable.
+// Le filtrage des créateurs suspendus se fait post-cache dans le composant.
 const getTopCreatorsData = unstable_cache(
   async () => {
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
+    // On récupère plus de résultats pour compenser le filtrage post-cache
     const topByRevenue = await prisma.order.groupBy({
       by: ['creatorId'],
       where: {
@@ -17,7 +21,7 @@ const getTopCreatorsData = unstable_cache(
       },
       _sum: { totalAmount: true },
       orderBy: { _sum: { totalAmount: 'desc' } },
-      take: 4,
+      take: 8,
     });
 
     const rankedCreatorIds = topByRevenue.map((r) => r.creatorId);
@@ -33,18 +37,16 @@ const getTopCreatorsData = unstable_cache(
       .map((id) => rankedPages.find((p) => p.creatorId === id))
       .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
-    const needed = 4 - rankedPagesOrdered.length;
-    const fallbackPages = needed > 0
-      ? await prisma.creatorPage.findMany({
-          where: {
-            status: 'PUBLISHED',
-            creatorId: { notIn: rankedCreatorIds },
-          },
-          orderBy: { publishedAt: 'desc' },
-          take: needed,
-          select: { slug: true, title: true, creatorId: true },
-        })
-      : [];
+    // Fallback: récupérer plus de candidats pour compenser le filtrage post-cache
+    const fallbackPages = await prisma.creatorPage.findMany({
+      where: {
+        status: 'PUBLISHED',
+        creatorId: { notIn: rankedCreatorIds },
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 8,
+      select: { slug: true, title: true, creatorId: true },
+    });
 
     const creatorPages = [...rankedPagesOrdered, ...fallbackPages];
 
@@ -85,11 +87,21 @@ const getTopCreatorsData = unstable_cache(
 );
 
 export async function TopCreators() {
-  const data = await getTopCreatorsData();
+  const [suspendedIds, data] = await Promise.all([
+    getSuspendedCreatorIds(),   // toujours fraîche
+    getTopCreatorsData(),       // cachée 5 min
+  ]);
 
   if (!data) return null;
 
-  const { creatorPages, onboardings, users, firstProducts } = data;
+  const { creatorPages: allCreatorPages, onboardings, users, firstProducts } = data;
+
+  // Filtrer les créateurs suspendus post-cache, puis limiter à 4
+  const creatorPages = (
+    suspendedIds.length > 0
+      ? allCreatorPages.filter((p) => !suspendedIds.includes(p.creatorId))
+      : allCreatorPages
+  ).slice(0, 4);
 
   const brandByCreator = Object.fromEntries(onboardings.map((o) => [o.userId, o.brandName]));
   const userById = Object.fromEntries(users.map((u) => [u.id, u]));

@@ -50,6 +50,13 @@ export default async function ProductPage({
 
   if (!product) notFound();
 
+  // Vérifier si le créateur est suspendu
+  const suspension = await prisma.creatorSuspension.findFirst({
+    where: { creatorId: product.creatorId, reactivatedAt: null },
+    select: { id: true },
+  });
+  if (suspension) notFound();
+
   // Fetch brand name, creator slug and creator image in parallel
   const [creatorOnboarding, creatorPage, creatorUser] = await Promise.all([
     prisma.creatorOnboarding.findUnique({

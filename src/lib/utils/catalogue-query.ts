@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma/client';
+import { getSuspendedCreatorIds } from '@/lib/utils/suspended-creators';
 
 /**
  * Shared Prisma include definition for catalogue variant queries.
@@ -69,11 +70,13 @@ export async function fetchCatalogueVariants({
   maxPriceCents,
 }: CatalogueVariantFilters) {
   const gendersForQuery = expandGenders(selectedGenders);
+  const suspendedIds = await getSuspendedCreatorIds();
 
   return prisma.productVariant.findMany({
     where: {
       product: {
         status: 'PUBLISHED',
+        ...(suspendedIds.length > 0 ? { creatorId: { notIn: suspendedIds } } : {}),
         ...(selectedStyles.length > 0 ? { style: { name: { in: selectedStyles } } } : {}),
         ...(gendersForQuery.length > 0 ? { gender: { in: gendersForQuery } } : {}),
       },
