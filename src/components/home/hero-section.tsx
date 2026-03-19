@@ -8,10 +8,10 @@ export function HeroSection() {
     <section className="relative -mt-[98px] h-screen w-full overflow-hidden">
       {/* Background image -- NO tartan overlay on image */}
       <Image
-        src="/images/hero-skater.png"
+        src="/images/hero-skater.jpg"
         alt="Mode urbaine"
         fill
-        className="kp-animate-hero-img object-cover object-top"
+        className="kp-animate-hero-img object-cover object-center"
         priority
       />
 
