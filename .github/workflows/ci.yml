@@ -106,30 +106,15 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Run Trivy vulnerability scanner (filesystem)
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          trivyignores: '.trivyignore'
+        run: trivy fs --exit-code 1 --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH --ignorefile .trivyignore .
 
       - name: Run Trivy vulnerability scanner (SARIF)
-        uses: aquasecurity/trivy-action@v0.29.0
         if: always()
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH,MEDIUM'
+        run: trivy fs --exit-code 0 --ignore-unfixed --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM --format sarif --output trivy-results.sarif .
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@9e907b5e64f6b83e7804b09294d44122997950d6 # v4
@@ -157,17 +142,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Trivy dependency audit
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'library'
-          severity: 'CRITICAL,HIGH'
-          trivyignores: '.trivyignore'
+        run: trivy fs --exit-code 0 --ignore-unfixed --vuln-type library --severity CRITICAL,HIGH --ignorefile .trivyignore .
 
   # ============================================================================
   # Security - Secret Scanning
@@ -182,14 +161,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Run Trivy secret scanner
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          scanners: 'secret'
-          format: 'table'
-          exit-code: '1'
+        run: trivy fs --scanners secret --format table --exit-code 1 .
 
   # ============================================================================
   # Dockerfile Lint (hadolint)

@@ -31,16 +31,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
-          trivyignores: '.trivyignore'
+        run: trivy fs --vuln-type os,library --severity CRITICAL,HIGH,MEDIUM,LOW --ignorefile .trivyignore --format sarif --output trivy-results.sarif .
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@9e907b5e64f6b83e7804b09294d44122997950d6 # v4
@@ -48,14 +43,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Run Trivy (table output for logs)
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          trivyignores: '.trivyignore'
+        run: trivy fs --vuln-type os,library --severity CRITICAL,HIGH --ignorefile .trivyignore .
 
   # ============================================================================
   # Secret Detection
@@ -70,13 +58,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Run Trivy secret scanner
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          scanners: 'secret'
-          format: 'table'
+        run: trivy fs --scanners secret --format table .
 
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@v3.88.0
@@ -105,26 +91,14 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Trivy dependency review
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          vuln-type: 'library'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
-          trivyignores: '.trivyignore'
+        run: trivy fs --vuln-type library --severity CRITICAL,HIGH,MEDIUM,LOW --ignorefile .trivyignore .
 
       - name: Trivy dependency review (summary)
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'json'
-          output: 'trivy-deps.json'
-          vuln-type: 'library'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
-          trivyignores: '.trivyignore'
+        run: trivy fs --vuln-type library --severity CRITICAL,HIGH,MEDIUM,LOW --ignorefile .trivyignore --format json --output trivy-deps.json .
 
       - name: Generate summary
         run: |
@@ -146,14 +120,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+
       - name: Run Trivy license scanner
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          scanners: 'license'
-          format: 'table'
-          severity: 'UNKNOWN,HIGH,CRITICAL'
+        run: trivy fs --scanners license --severity UNKNOWN,HIGH,CRITICAL .
         continue-on-error: true
 
   # ============================================================================
