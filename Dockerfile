@@ -57,8 +57,11 @@ COPY --from=builder /app/prisma.config.ts ./
 # Install prisma CLI for migrate deploy + seed dependencies (not in standalone build)
 # Re-generate Prisma client after bun add to avoid version mismatch with installed @prisma/client
 # Also install cloudinary + dotenv for the cleanup script, and download supercronic for cron scheduling
+# Pin Next.js to the exact version built by the builder to prevent bun add from upgrading it
+# (a version mismatch between the built server.js and the runtime next package causes crashes)
 RUN bun add -g prisma@7 \
-    && bun add bcryptjs pg @prisma/adapter-pg postgres-array cloudinary dotenv \
+    && NEXT_VER=$(bun -e "console.log(require('./node_modules/next/package.json').version)") \
+    && bun add bcryptjs pg @prisma/adapter-pg postgres-array cloudinary dotenv "next@${NEXT_VER}" \
     && bunx prisma generate --schema prisma/schema.prisma \
     && wget -q \
        "https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64" \
