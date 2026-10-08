@@ -74,7 +74,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \
+HEALTHCHECK --interval=300s --timeout=30s --start-period=110s --retries=1 \
   CMD wget -qO- http://localhost:${PORT:-3000}/ || exit 1
 
 # Startup: cron (background) + diagnostics (non-blocking) + migrate + server
